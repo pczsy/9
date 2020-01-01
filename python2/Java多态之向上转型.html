@@ -1,0 +1,132 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Java多态之向上转型' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Java多态之向上转型</center></div><div class='banquan'>原文出处:本文由博客园博主天乔巴夏丶提供。<br/>
+原文连接:https://www.cnblogs.com/summerday152/p/12046777.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#java多态之向上转型">Java多态之向上转型</a><ul>
+        <li><a href="#多态的优点">多态的优点</a></li>
+        <li><a href="#向上转型">向上转型</a><ul>
+        <li><a href="#概念">概念</a></li>
+        <li><a href="#向上转型好在哪">向上转型好在哪</a></li>
+        </ul></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="java多态之向上转型">Java多态之向上转型</h1>
+<p><strong>多态性是面向对象的第三大特征。</strong></p>
+<h2 id="多态的优点">多态的优点</h2>
+<ul>
+<li>改善代码的组织结构和可读性。</li>
+<li>能够创建可扩展的程序。（<strong>随时可以加入新功能</strong>）</li>
+<li>消除类型之间的<strong>耦合</strong>关系。</li>
+</ul>
+<p>说实话，作为小白的我，并不太能够理解上面三个优点。随着深入学习，理解应该会越来越深吧，共勉。</p>
+<h2 id="向上转型">向上转型</h2>
+<h3 id="概念">概念</h3>
+<p><strong>Java允许把子类对象赋值给父类的引用变量，不用做任何强制转换，系统自动完成</strong>。向上转型来自于自下而上的继承关系，子类继承父类，子类是一种特殊的父类，所以向上转型的操作其实是情理之中的。</p>
+<p>下面依照简单的代码，来试着理解向上转型的概念与好处。</p>
+<pre><code><code>package com.my.pac14;
+
+/**
+ * @auther Summerday
+ */
+public class DynamicBinding {
+    //Object是所有类的超类，根据向上转型，该方法可以接受任何类型的对象
+    public static void test(Object x) {
+        System.out.println(x.toString());
+    }
+
+    public static void main(String[] args) {
+        test(new PrimaryStudent());//Student
+        test(new Student());//Student
+        test(new Person());//Person
+        test(new Object());//java.lang.Object@1b6d3586
+    }
+}
+
+class Person extends Object {
+    @Override
+    public String toString() {
+        return &quot;Person&quot;;
+    }
+}
+
+class Student extends Person {
+    @Override
+    public String toString() {
+        return &quot;Student&quot;;
+    }
+}
+
+class PrimaryStudent extends Student {
+}</code></pre>
+<ul>
+<li>我们可以看到，下面的方法接收一个<code>Object</code>类型的对象，并调用该对象的<code>toString()</code>方法。</li>
+</ul>
+<pre><code><code> public static void test(Object x) {
+        System.out.println(x.toString());
+    }</code></pre>
+<ul>
+<li>下面是调用语句，除了第四句，其他的传入对象都看起来与形参类型不符,但当然是可以运行的，这里面就蕴含着我们说的<strong>向上转型</strong>。</li>
+</ul>
+<pre><code><code>public static void main(String[] args) {
+    test(new PrimaryStudent());//Student
+    test(new Student());//Student
+    test(new Person());//Person
+    test(new Object());//java.lang.Object@1b6d3586
+}</code></pre>
+<ul>
+<li>就拿传入Student类型的对象来说吧，拆解一下，是以下的表达式：</li>
+</ul>
+<pre><code><code>Object x = new Student();</code></pre>
+<ul>
+<li>Object类是所有类的超类，上式中将创建的子类类型对象直接赋给父类类型的引用变量，这在Java中是允许的，这就是所谓的向上转型。能够实现的原因，也是<u>因为子类在向上转型的过程中，也许会缩小接口，但至少不会比父类中有的接口还要窄</u>。</li>
+</ul>
+<blockquote>
+<p>举个简单的例子，假设人类可以分为很多很多种，我们可以说<u>学生是人类的一种，却不能说人类是学生的一种</u>。向上转型一定程度上允许子类扩展超类的部分丢失，通过父类引用变量只能调用父类中的方法来实现，<u>我们去操作人类的时候，只能在人类具有的行为属性中做选择，而不能直接以学生类的标准去操作它，因为我们并不知道他是哪一类，万一不是学生呢</u>，对吧，用人类总没错，因为我人类有的东西，你学生类一定有。这就是我所理解的向上转型。</p>
+</blockquote>
+<h3 id="向上转型好在哪">向上转型好在哪</h3>
+<p>如果没有向上转型机制，我们想要达到原来的效果，就需要增加许多重载的<code>test</code>方法，这样就显得过于繁琐。如果要增加类似<code>test()</code>的方法或者添加从<code>Object</code>导出的新类，还会做更多复杂的操作，不利于扩展，不可取不可取。</p>
+<pre><code><code>// 原来的情况：需要创建很多很多的测试方法。
+    public static void test(Object x) {
+        System.out.println(x.toString());
+    }
+    public static void test(Person x) {
+        System.out.println(x.toString());
+    }
+    public static void test(Student x) {
+        System.out.println(x.toString());
+    }
+    public static void test(PrimaryStudent x) {
+        System.out.println(x.toString());
+    }</code></pre>
+<p>多态的存在正好解决了这个棘手的问题，为了利于扩展，<strong>只需要写一个仅接收基类作为参数的简单方法，不管导出类如何，在运行时自动选择调用对应导出类的方法</strong>，真的就很舒服。</p>
+<blockquote>
+<p>那么，编译器又是如何确定应该调用哪个方法呢？这就涉及到所谓的“绑定”啦，这个呢，我们在下片总结。</p>
+</blockquote>
+<p>参考书籍：《Thinking in Java》</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

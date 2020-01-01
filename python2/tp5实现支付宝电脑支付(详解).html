@@ -1,0 +1,627 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修tp5实现支付宝电脑支付(详解)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>tp5实现支付宝电脑支付(详解)</center></div><div class='banquan'>原文出处:本文由博客园博主不睡提供。<br/>
+原文连接:https://www.cnblogs.com/bushui/p/12008774.html</div><br>
+    <p><span style="font-size: 16px;">首先吐槽一下支付宝的官方文档，它只是简单介绍一下开发的流程和参数，而对于新人来说如果只看它的官方文档很多时候是看不懂的，我也是边看文档边网上查资料才把它弄懂。下面我详细介绍支付宝的电脑支付是如何实现</span></p>
+<p><span style="font-size: 18pt;"><strong>电脑网站支付</strong></span></p>
+<p><strong><span style="font-size: 18px;">第一步：进入官网，在电脑网站支付下载它的demo</span></strong></p>
+<p><span style="font-size: 16px;"><img src="./images/tp5实现支付宝电脑支付(详解)0.png" alt="" width="917" height="421" /></span></p>
+<p><strong><span style="font-size: 18px;">第二步：沙箱环境</span></strong></p>
+<p><span style="font-size: 16px;">想要实现支付宝支付，你要准备一堆东西，对于只想测试的人来说这太麻烦了，而支付宝为我们提供了沙箱环境，这里面有我们开发测试需要的东西</span></p>
+<p><span style="font-size: 16px;"><img src="./images/tp5实现支付宝电脑支付(详解)1.png" alt="" width="910" height="476" /></span></p>
+<p><span style="font-size: 16px;">进入沙箱环境，在沙箱应用里下载沙箱钱包(<strong>只支持扫一扫、付款码、门店详情页功能，其余功能不提供</strong>)，它是用户测试扫码支付用的</span></p>
+<p><span style="font-size: 18px;"><strong>第三步：把demo放进项目</strong></span></p>
+<p><span style="font-size: 16px;">一般来说支付宝demo属于扩展文件，所以我把它放到extend目录下</span></p>
+<p><img src="./images/tp5实现支付宝电脑支付(详解)2.png" alt="" width="336" height="215" /></p>
+<p><span style="font-size: 16px;">然后把config.php放到application\extra(注：可以不放，我放在里面只是方便调用它配置参数)</span></p>
+<p><span style="font-size: 16px;"><img src="./images/tp5实现支付宝电脑支付(详解)3.png" alt="" width="337" height="285" /></span></p>
+<p><strong><span style="font-size: 18px;">第四步： 填写配置参数</span></strong></p>
+<p><span style="font-size: 16px;">这里的参数在沙箱环境都已经有，你就根据它的注释填写就可以</span></p>
+<p><strong><span style="font-size: 18px;"><img src="./images/tp5实现支付宝电脑支付(详解)4.png" alt="" width="951" height="363" /></span></strong></p>
+<p>支付宝的公钥和商户私钥，你要下载"<a href="http://p.tb.cn/rmsportal_6680_secret_key_tools_RSA_win.zip" target="_blank">支付宝开放平台开发助手</a>"，它可以生成秘钥，然后把<strong>应用公钥</strong>放在设置里面<img src="./images/tp5实现支付宝电脑支付(详解)5.png" alt="" width="907" height="390" /></p>
+<p><span style="font-size: 16px;">这样他就生成<strong>支付宝公钥</strong>，你就把它放到alipay的里面的<strong>支付宝公钥</strong>，而<strong>应用私钥</strong>直接放到alipay的<strong>商户秘钥</strong></span></p>
+<p><img src="./images/tp5实现支付宝电脑支付(详解)6.png" alt="" width="695" height="497" /></p>
+<p><span style="font-size: 16px;">这里我主要说一下同步和异步通知地址，新人肯定不知道是有什么用，大佬略过即可。<strong>支付宝支付成功后会执行这两个方法（注：同步是支付宝支付成功要跳转的地址）</strong>，系统会把你支付的信息用POST方式异步传给你的方法。因为是异步,所以页面是没有变化的，在异步这个方法里可以写你自己的业务逻辑。比如接收值，存入数据库之类。这里有个大坑，坑了我两天，即在<strong>异步方法里是没法用session取值的</strong>,我原本想用session取用户登录id存入数据库中,后来问了师傅才知道,异步是服务器和服务器之间的交互，所以没有cookieId，没有cookieId当然没有session值。</span></p>
+<p><span style="font-size: 16px; color: #ff0000;">注意：异步通知程序执行完后必须打印输出&ldquo;success&rdquo;（不包含引号）。如果商户反馈给支付宝的字符不是success这7个字符，支付宝服务器会不断重发通知，直到超过24小时22分钟。一般情况下，25小时以内完成8次通知（通知的间隔频率一般是：4m,10m,10m,1h,2h,6h,15h）；</span></p>
+<p><span style="font-size: 18px;"><strong>第五步： 调用支付接口</strong></span></p>
+<p><span style="font-size: 16px;">首先我们要修改extend\alipay\pagepay\<span style="color: #ff0000;">Pagepay</span>.php，因为直接调用的话会报错：</span></p>
+<div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('cf2e3714-60dd-4e27-a95a-61afea5d7728')"><img id="code_img_closed_cf2e3714-60dd-4e27-a95a-61afea5d7728" class="code_img_closed" src="./images/tp5实现支付宝电脑支付(详解)7.png" alt="" /><img id="code_img_opened_cf2e3714-60dd-4e27-a95a-61afea5d7728" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('cf2e3714-60dd-4e27-a95a-61afea5d7728',event)" src="./images/tp5实现支付宝电脑支付(详解)8.png" alt="" />
+<div id="cnblogs_code_open_cf2e3714-60dd-4e27-a95a-61afea5d7728" class="cnblogs_code_hide">
+<pre><code>&lt;?<span style="color: #000000;">php
+</span><span style="color: #0000ff;">use</span><span style="color: #000000;"> think\Loader;
+Loader</span>::import("alipay.pagepay.service.AlipayTradeService",<span style="color: #000000;">EXTEND_PATH);
+Loader</span>::import('alipay.pagepay.buildermodel.AlipayTradePagePayContentBuilder',<span style="color: #000000;">EXTEND_PATH);
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Pagepay
+{
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">支付入口</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> pay(<span style="color: #800080;">$params</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">第一步：校检参数</span>
+        self::checkParams(<span style="color: #800080;">$params</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">第二步：构造参数</span>
+        <span style="color: #800080;">$payRequestBuilder</span> = <span style="color: #0000ff;">new</span><span style="color: #000000;"> AlipayTradePagePayContentBuilder();
+        </span><span style="color: #800080;">$payRequestBuilder</span>-&gt;setBody(<span style="color: #800080;">$params</span>['t_body']);<span style="color: #008000;">//</span><span style="color: #008000;">描述</span>
+        <span style="color: #800080;">$payRequestBuilder</span>-&gt;setSubject(<span style="color: #800080;">$params</span>['trade_name']);<span style="color: #008000;">//</span><span style="color: #008000;">订单名称，必填</span>
+        <span style="color: #800080;">$payRequestBuilder</span>-&gt;setTotalAmount(<span style="color: #800080;">$params</span>['total_amount']);<span style="color: #008000;">//</span><span style="color: #008000;">付款金额，必填</span>
+        <span style="color: #800080;">$payRequestBuilder</span>-&gt;setOutTradeNo(<span style="color: #800080;">$params</span>['out_trade_no']);<span style="color: #008000;">//</span><span style="color: #008000;">商户订单号，商户网站订单系统中唯一订单号，必填
+
+        //第三步：获取配置</span>
+        <span style="color: #800080;">$config</span> = config('alipay'<span style="color: #000000;">);
+        </span><span style="color: #800080;">$aop</span> = <span style="color: #0000ff;">new</span> AlipayTradeService(<span style="color: #800080;">$config</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+         * 第四步：电脑网站支付请求(会自动跳转到支付页面)
+         * @param $builder 业务参数，使用buildmodel中的对象生成。
+         * @param $return_url 同步跳转地址，公网可以访问
+         * @param $notify_url 异步通知地址，公网可以访问
+         * @return $response 支付宝返回的信息
+         </span><span style="color: #008000;">*/</span>
+        <span style="color: #800080;">$aop</span>-&gt;pagePay(<span style="color: #800080;">$payRequestBuilder</span>, <span style="color: #800080;">$config</span>['return_url'], <span style="color: #800080;">$config</span>['notify_url'<span style="color: #000000;">]);
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">支付检验</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> checkParams(<span style="color: #800080;">$params</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">商户订单号</span>
+        <span style="color: #0000ff;">if</span>(<span style="color: #0000ff;">empty</span>(<span style="color: #008080;">trim</span>(<span style="color: #800080;">$params</span>['out_trade_no'<span style="color: #000000;">]))){
+            self</span>::processError("你输入的商户订单号有误！"<span style="color: #000000;">);
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">订单名称</span>
+        <span style="color: #0000ff;">if</span>(<span style="color: #0000ff;">empty</span>(<span style="color: #008080;">trim</span>(<span style="color: #800080;">$params</span>['trade_name'<span style="color: #000000;">]))){
+            self</span>::processError("订单名称为空！"<span style="color: #000000;">);
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">付款金额</span>
+        <span style="color: #0000ff;">if</span>(<span style="color: #008080;">floatval</span>(<span style="color: #008080;">trim</span>(<span style="color: #800080;">$params</span>['total_amount'])) &lt;= 0<span style="color: #000000;">){
+            self</span>::processError("付款金额有误！！"<span style="color: #000000;">);
+        }
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">统一错误处理接口</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> processError(<span style="color: #800080;">$msg</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> \think\<span style="color: #0000ff;">Exception</span>(<span style="color: #800080;">$msg</span><span style="color: #000000;">);
+    }
+
+}</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+</div>
+<p><span style="font-size: 16px;">修改完之后我们就可以在控制器里调用支付宝接口：</span></p>
+<div>
+<div class="cnblogs_code">
+<pre><code>&lt;?<span style="color: #000000;">php
+namespace app\aliyun\controller;
+</span><span style="color: #0000ff;">use</span><span style="color: #000000;"> think\Controller;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">支付控制器</span>
+<span style="color: #0000ff;">class</span> Pay <span style="color: #0000ff;">extends</span><span style="color: #000000;"> Controller
+{
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> index(){
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">$this</span>-&gt;<span style="color: #000000;">fetch();
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">电脑支付宝接口</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> index2(){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">付款金额</span>
+        <span style="color: #800080;">$total_amount</span> = input('WIDtotal_amount'<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">if</span>(<span style="color: #800080;">$total_amount</span><span style="color: #000000;">){
+            </span><span style="color: #800080;">$params</span> =<span style="color: #000000;"> [
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">商户订单号，商户网站订单系统中唯一订单号，必填</span>
+                'out_trade_no'  =&gt;  input('WIDout_trade_no'),
+                <span style="color: #008000;">//</span><span style="color: #008000;">订单名称，必填</span>
+                'trade_name'       =&gt;  input('WIDsubject'),
+                <span style="color: #008000;">//</span><span style="color: #008000;">付款金额，必填</span>
+                'total_amount'  =&gt;  <span style="color: #800080;">$total_amount</span>,
+                <span style="color: #008000;">//</span><span style="color: #008000;">描述</span>
+                't_body'        =&gt;  input('WIDbody'),<span style="color: #000000;">
+            ];
+
+            import(</span>'alipay.pagepay.Pagepay',<span style="color: #000000;">EXTEND_PATH);
+            \Pagepay</span>::pay(<span style="color: #800080;">$params</span><span style="color: #000000;">);
+        }
+    }
+
+
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">异步通知地址</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> notify_url(){
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;"> *
+         *************************页面功能说明*************************
+         * 创建该页面文件时，请留心该页面文件中无任何HTML代码及空格。
+         * 该页面不能在本机电脑测试，请到服务器上做测试。请确保外部可以访问该页面。
+         * 如果没有收到该页面返回的 success 信息，支付宝会在24小时内按一定的时间策略重发通知
+         </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+        import(</span>'alipay.pagepay.service.AlipayTradeService',<span style="color: #000000;">EXTEND_PATH);
+
+        </span><span style="color: #800080;">$arr</span> = <span style="color: #800080;">$this</span>-&gt;request-&gt;<span style="color: #000000;">param();
+        </span><span style="color: #800080;">$alipaySevice</span> = <span style="color: #0000ff;">new</span> \AlipayTradeService(config('alipay'<span style="color: #000000;">));
+        </span><span style="color: #800080;">$alipaySevice</span>-&gt;writeLog(<span style="color: #008080;">var_export</span>(<span style="color: #800080;">$arr</span>, <span style="color: #0000ff;">true</span><span style="color: #000000;">));
+        </span><span style="color: #800080;">$result</span> = <span style="color: #800080;">$alipaySevice</span>-&gt;check(<span style="color: #800080;">$arr</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;"> 实际验证过程建议商户添加以下校验。
+        1、商户需要验证该通知数据中的out_trade_no是否为商户系统中创建的订单号，
+        2、判断total_amount是否确实为该订单的实际金额（即商户订单创建时的金额），
+        3、校验通知中的seller_id（或者seller_email) 是否为out_trade_no这笔单据的对应的操作方（有的时候，一个商户可能有多个seller_id/seller_email）
+        4、验证app_id是否为该商户本身。
+        </span><span style="color: #008000;">*/</span>
+        <span style="color: #0000ff;">if</span> (<span style="color: #800080;">$result</span>) {<span style="color: #008000;">//</span><span style="color: #008000;">验证成功
+            //商户订单号</span>
+            <span style="color: #800080;">$out_trade_no</span> = <span style="color: #800080;">$arr</span>['out_trade_no'<span style="color: #000000;">];
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">支付宝交易号</span>
+            <span style="color: #800080;">$trade_no</span> = <span style="color: #800080;">$arr</span>['trade_no'<span style="color: #000000;">];
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">交易状态</span>
+            <span style="color: #800080;">$trade_status</span> = <span style="color: #800080;">$arr</span>['trade_status'<span style="color: #000000;">];
+
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">TRADE_FINISHED：交易完成，  TRADE_SUCCESS：支付成功</span>
+            <span style="color: #0000ff;">if</span> (<span style="color: #800080;">$arr</span>['trade_status'] == 'TRADE_FINISHED' || <span style="color: #800080;">$arr</span>['trade_status'] == 'TRADE_SUCCESS'<span style="color: #000000;">) {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">做逻辑处理，例如：保存数据</span>
+                <span style="color: #008080;">file_put_contents</span>("../extend/sites.txt",<span style="color: #008080;">implode</span>("，",<span style="color: #800080;">$arr</span>).<span style="color: #ff00ff;">PHP_EOL</span>,FILE_APPEND |<span style="color: #000000;"> LOCK_EX);
+            }
+            </span><span style="color: #0000ff;">echo</span> "success"<span style="color: #000000;">;
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">验证失败</span>
+            <span style="color: #0000ff;">echo</span> "fail"<span style="color: #000000;">;
+        }
+    }
+
+
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">同步跳转，支付成功,由客户的浏览器触发的一个通知</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> return_url(){
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;"> *
+         * 功能：支付宝页面跳转同步通知页面
+         * 版本：2.0
+         * 修改日期：2017-05-01
+         * 说明：
+         * 以下代码只是为了方便商户测试而提供的样例代码，商户可以根据自己网站的需要，按照技术文档编写,并非一定要使用该代码。
+
+         *************************页面功能说明*************************
+         * 该页面可在本机电脑测试
+         * 可放入HTML等美化页面的代码、商户业务逻辑程序代码
+         </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+        import(</span>'alipay.pagepay.service.AlipayTradeService',<span style="color: #000000;">EXTEND_PATH);
+
+        </span><span style="color: #800080;">$arr</span> = <span style="color: #800080;">$this</span>-&gt;request-&gt;<span style="color: #000000;">param();
+        </span><span style="color: #800080;">$alipaySevice</span> = <span style="color: #0000ff;">new</span> \AlipayTradeService(config('alipay'<span style="color: #000000;">));
+        </span><span style="color: #800080;">$result</span> = <span style="color: #800080;">$alipaySevice</span>-&gt;check(<span style="color: #800080;">$arr</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;"> 实际验证过程建议商户添加以下校验。
+        1、商户需要验证该通知数据中的out_trade_no是否为商户系统中创建的订单号，
+        2、判断total_amount是否确实为该订单的实际金额（即商户订单创建时的金额），
+        3、校验通知中的seller_id（或者seller_email) 是否为out_trade_no这笔单据的对应的操作方（有的时候，一个商户可能有多个seller_id/seller_email）
+        4、验证app_id是否为该商户本身。
+        </span><span style="color: #008000;">*/</span>
+        <span style="color: #0000ff;">if</span> (<span style="color: #800080;">$result</span>) {<span style="color: #008000;">//</span><span style="color: #008000;">验证成功
+            //做逻辑处理，例如：保存数据</span>
+            <span style="color: #0000ff;">echo</span> "&lt;pre&gt;"<span style="color: #000000;">;
+            </span><span style="color: #008080;">print_r</span>(<span style="color: #800080;">$arr</span><span style="color: #000000;">);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">file_put_contents("../extend/sites.txt",implode("，",$arr).PHP_EOL,FILE_APPEND | LOCK_EX);</span>
+        } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">验证失败</span>
+            <span style="color: #0000ff;">echo</span> "验证失败"<span style="color: #000000;">;
+        }
+    }
+}</span></pre>
+</div>
+</div>
+<p><span style="font-size: 16px;">到了这一步基本就完成了，点击付款就会跳转到这个页面，我们可以使用沙箱钱包扫码支付或登录沙箱账号支付</span></p>
+<p><img src="./images/tp5实现支付宝电脑支付(详解)9.png" alt="" width="930" height="665" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p class="title-article"><strong><span style="font-size: 18pt;">付款遇到的问题及解决方案</span></strong></p>
+<p><span style="font-size: 16px;">如果是新手的第一次接入支付宝接口，或多或少遇到一些问题，今天我就把我遇到的问题作总结</span></p>
+<p><strong><span style="font-size: 18px;">问题一：调试错误，请回到请求来源地，重新发起请求</span></strong></p>
+<p><img src="./images/tp5实现支付宝电脑支付(详解)10.png" alt="" width="1039" height="360" /></p>
+<p><span style="font-size: 16px;">这很有可以就是你得网关有问题，沙箱环境支付宝网关如下：</span></p>
+<div class="cnblogs_code">
+<pre><code>https:<span style="color: #008000;">//</span><span style="color: #008000;">openapi.alipaydev.com/gateway.do</span></pre>
+</div>
+<p><span style="font-size: 16px;">没有修改之前demo文件支付宝网关是已经写好，<strong>但默认的网关没有加dev，如果你在沙箱环境中必须加上dev</strong></span></p>
+<p><img src="./images/tp5实现支付宝电脑支付(详解)11.png" alt="" width="1051" height="570" /></p>
+<p><strong><span style="font-size: 18px;">问题二：each()函数报错</span></strong></p>
+<p><strong><span style="font-size: 18px;"><img src="./images/tp5实现支付宝电脑支付(详解)12.png" alt="" width="1178" height="397" /></span></strong></p>
+<p><span style="font-size: 16px;">支付宝支付的时候遇到的，因为php7+以上版本抛弃了each函数导致，找到extend\alipay\aop\</span>AopClient.php<span style="font-size: 16px;">：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">while</span> (<span style="color: #0000ff;">list</span> (<span style="color: #800080;">$key</span>, <span style="color: #800080;">$val</span>) = <span style="color: #008080;">each</span> (<span style="color: #800080;">$para_temp</span>)) {</pre>
+</div>
+<p><span style="font-size: 16px;">改为</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">foreach</span> (<span style="color: #800080;">$para_temp</span> <span style="color: #0000ff;">as</span> <span style="color: #800080;">$key</span> =&gt; <span style="color: #800080;">$val</span>) {</pre>
+</div>
+<p><span style="font-size: 18px;">&nbsp;<strong>问题三：</strong></span><span style="font-size: 18px;"><strong>收不到异步通知自查方案-支付宝接口常见错误系列</strong></span></p>
+<p><span style="font-size: 16px;">&nbsp; 1.需http://或者https://格式的完整路径&nbsp;</span><br /><span style="font-size: 16px;">&nbsp;&nbsp;<span style="color: #ff0000;">例：https://您的域名/notify_url.php&nbsp;&nbsp;，支持ip地址方式。（推荐使用域名）&nbsp;</span></span></p>
+<p><span style="font-size: 16px;">&nbsp;&nbsp;2.不能加?id=123这类自定义参数&nbsp;</span><br /><span style="font-size: 16px;">&nbsp;<span style="color: #ff0000;">&nbsp;错误示例：https://您的域名/notify_url.php？id=123&amp;test=abc&nbsp;</span></span></p>
+<p><span style="font-size: 16px;">&nbsp;&nbsp;3.<strong>必须外网可以正常访问</strong>，这个不难理解，在您的异步地址没有代码逻辑的情况下，直接访问应该是一个空白页面并且http状态是200（不支持http200以外的状态），<strong>即不能在本机电脑测试，要到服务器上做测试，同时也要确保外部可以访问该页面。</strong></span></p>
+<p><span style="font-size: 16px;">&nbsp;&nbsp;4.不能有重定向&nbsp;如：http302&nbsp;</span></p>
+<p><span style="font-size: 16px;">&nbsp;&nbsp;5.使用POST方式接收，请确保服务器路由已经开放POST通知&nbsp;</span></p>
+<p><span style="font-size: 16px;">支付宝社区：<a href="https://openclub.alipay.com/club/history/read/1314">https://openclub.alipay.com/club/history/read/1314</a></span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18pt;"><strong>查询交易记录</strong></span></p>
+<p><span style="font-size: 16px;">修改extend\alipay\pagepay\<span style="color: #ff0000;">Query</span>.php，因为直接调用的话会报错：</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('42503869-c730-4b81-be82-87b92d807910')"><img id="code_img_closed_42503869-c730-4b81-be82-87b92d807910" class="code_img_closed" src="./images/tp5实现支付宝电脑支付(详解)7.png" alt="" /><img id="code_img_opened_42503869-c730-4b81-be82-87b92d807910" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('42503869-c730-4b81-be82-87b92d807910',event)" src="./images/tp5实现支付宝电脑支付(详解)8.png" alt="" />
+<div id="cnblogs_code_open_42503869-c730-4b81-be82-87b92d807910" class="cnblogs_code_hide">
+<pre><code>&lt;?<span style="color: #000000;">php
+</span><span style="color: #0000ff;">use</span><span style="color: #000000;"> think\Loader;
+Loader</span>::import('alipay.pagepay.service.AlipayTradeService',<span style="color: #000000;">EXTEND_PATH);
+Loader</span>::import('alipay.pagepay.buildermodel.AlipayTradeQueryContentBuilder',<span style="color: #000000;">EXTEND_PATH);
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Query
+{
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 商户订单号(out_trade_no) or 支付宝交易号(trade_no) 二选一</span>
+    <span style="color: #0000ff;">const</span> QUERY_TYPE = 'out_trade_no'<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> <span style="color: #008080;">exec</span>(<span style="color: #800080;">$query_no</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.设置请求参数</span>
+        <span style="color: #800080;">$RequestBuilder</span> = <span style="color: #0000ff;">new</span><span style="color: #000000;"> \AlipayTradeQueryContentBuilder();
+        </span><span style="color: #0000ff;">if</span> (self::QUERY_TYPE == 'trade_no'<span style="color: #000000;">) {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setTradeNo(<span style="color: #008080;">trim</span>(<span style="color: #800080;">$query_no</span><span style="color: #000000;">));
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setOutTradeNo(<span style="color: #800080;">$query_no</span><span style="color: #000000;">);
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.获取配置</span>
+        <span style="color: #800080;">$config</span> = config('alipay'<span style="color: #000000;">);
+        </span><span style="color: #800080;">$aop</span>    = <span style="color: #0000ff;">new</span> \AlipayTradeService(<span style="color: #800080;">$config</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.发起请求</span>
+        <span style="color: #800080;">$response</span> = <span style="color: #800080;">$aop</span>-&gt;Query(<span style="color: #800080;">$RequestBuilder</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.转为数组格式返回</span>
+        <span style="color: #800080;">$response</span> = json_decode(json_encode(<span style="color: #800080;">$response</span>), <span style="color: #0000ff;">true</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 5.进行结果处理</span>
+        <span style="color: #0000ff;">if</span> (!<span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$response</span>['code']) &amp;&amp; <span style="color: #800080;">$response</span>['code'] != '10000'<span style="color: #000000;">) {
+            self</span>::processError('交易查询接口出错, 错误码: '.<span style="color: #800080;">$response</span>['code'].' 错误原因: '.<span style="color: #800080;">$response</span>['sub_msg'<span style="color: #000000;">]);
+        }
+
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">$response</span><span style="color: #000000;">;
+    }
+
+
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 统一错误处理接口
+     * @param  string $msg 错误描述
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> processError(<span style="color: #800080;">$msg</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> \think\<span style="color: #0000ff;">Exception</span>(<span style="color: #800080;">$msg</span><span style="color: #000000;">);
+    }
+}</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p><span style="font-size: 16px;">商户订单号和支付宝交易号二选一，</span><span style="font-size: 16px;">控制器这里默认获取商户订单号：</span></p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">交易查询</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> query(){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">商户订单号</span>
+        <span style="color: #800080;">$trade_no</span> = input('WIDTQout_trade_no'<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">echo</span> <span style="color: #800080;">$trade_no</span><span style="color: #000000;">;
+</span><span style="color: #008000;">//</span><span style="color: #008000;">        return;</span>
+
+        <span style="color: #0000ff;">if</span>(<span style="color: #800080;">$trade_no</span><span style="color: #000000;">){
+            import(</span>'alipay.pagepay.Query',<span style="color: #000000;">EXTEND_PATH);
+            </span><span style="color: #800080;">$response</span> = \Query::<span style="color: #008080;">exec</span>(<span style="color: #800080;">$trade_no</span><span style="color: #000000;">);
+            </span><span style="color: #008080;">print_r</span>(<span style="color: #800080;">$response</span><span style="color: #000000;">);
+        }
+    }</span></pre>
+</div>
+<p><span style="font-size: 16px;">注意：商户订单号和支付宝交易号不能同时为空。 trade_no、 out_trade_no如果同时存在优先取trade_no</span></p>
+<p><span style="font-size: 16px;">&nbsp;</span></p>
+<p>&nbsp;</p>
+<p><strong><span style="font-size: 18pt;">退款</span></strong></p>
+<p><span style="font-size: 16px;">修改extend\alipay\pagepay\</span><span style="font-size: 16px; color: #ff0000;">Refund</span><span style="font-size: 16px;">.php</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('1673d461-ffc1-4197-a7d5-c775dab661e6')"><img id="code_img_closed_1673d461-ffc1-4197-a7d5-c775dab661e6" class="code_img_closed" src="./images/tp5实现支付宝电脑支付(详解)7.png" alt="" /><img id="code_img_opened_1673d461-ffc1-4197-a7d5-c775dab661e6" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('1673d461-ffc1-4197-a7d5-c775dab661e6',event)" src="./images/tp5实现支付宝电脑支付(详解)8.png" alt="" />
+<div id="cnblogs_code_open_1673d461-ffc1-4197-a7d5-c775dab661e6" class="cnblogs_code_hide">
+<pre><code>&lt;?<span style="color: #000000;">php
+</span><span style="color: #0000ff;">use</span><span style="color: #000000;"> think\Loader;
+Loader</span>::import('alipay.pagepay.service.AlipayTradeService',<span style="color: #000000;">EXTEND_PATH);
+Loader</span>::import('alipay.pagepay.buildermodel.AlipayTradeRefundContentBuilder',<span style="color: #000000;">EXTEND_PATH);
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Refund
+{
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 主入口
+     * @param  array $params 退款参数, 具体如下
+     * @param string $params['trade_no']/$params['out_trade_no'] 商户订单号或支付宝单号其中之一
+     * @param string $params['out_request_no'] 商户退款号(可选, 如同一笔交易多次退款, 则必填)
+     * @param float  $params['refund_amount'] 退款金额
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> <span style="color: #008080;">exec</span>(<span style="color: #800080;">$params</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.校检参数</span>
+        self::checkParams(<span style="color: #800080;">$params</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.构造请求参数</span>
+        <span style="color: #800080;">$RequestBuilder</span> = self::builderParams(<span style="color: #800080;">$params</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.获取配置</span>
+        <span style="color: #800080;">$config</span> = config('alipay'<span style="color: #000000;">);
+        </span><span style="color: #800080;">$aop</span>    = <span style="color: #0000ff;">new</span> \AlipayTradeService(<span style="color: #800080;">$config</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.发送请求</span>
+        <span style="color: #800080;">$response</span> = <span style="color: #800080;">$aop</span>-&gt;Refund(<span style="color: #800080;">$RequestBuilder</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 5.转为数组格式返回</span>
+        <span style="color: #800080;">$response</span> = json_decode(json_encode(<span style="color: #800080;">$response</span>), <span style="color: #0000ff;">true</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 6.进行结果处理</span>
+        <span style="color: #0000ff;">if</span> (!<span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$response</span>['code']) &amp;&amp; <span style="color: #800080;">$response</span>['code'] != '10000'<span style="color: #000000;">) {
+            self</span>::processError('交易退款接口出错, 错误码: '.<span style="color: #800080;">$response</span>['code'].' 错误原因: '.<span style="color: #800080;">$response</span>['sub_msg'<span style="color: #000000;">]);
+        }
+
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">$response</span><span style="color: #000000;">;
+    }
+
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 校检参数
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> checkParams(<span style="color: #800080;">$params</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$params</span>['trade_no']) &amp;&amp; <span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$params</span>['out_trade_no'<span style="color: #000000;">])) {
+            self</span>::processError('商户订单号(out_trade_no)和支付宝单号(trade_no)不得通知为空'<span style="color: #000000;">);
+        }
+
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #008080;">floatval</span>(<span style="color: #008080;">trim</span>(<span style="color: #800080;">$params</span>['refund_amount'])) &lt;= 0<span style="color: #000000;">) {
+            self</span>::processError('退款金额(refund_amount)为大于0的数'<span style="color: #000000;">);
+        }
+    }
+
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 构造请求参数
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> builderParams(<span style="color: #800080;">$params</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #800080;">$RequestBuilder</span> = <span style="color: #0000ff;">new</span><span style="color: #000000;"> \AlipayTradeRefundContentBuilder();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.判断单号类型</span>
+        <span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">isset</span>(<span style="color: #800080;">$params</span>['trade_no'<span style="color: #000000;">])) {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setTradeNo(<span style="color: #800080;">$params</span>['trade_no'<span style="color: #000000;">]);
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setOutTradeNo(<span style="color: #800080;">$params</span>['out_trade_no'<span style="color: #000000;">]);
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.判断是否部分退款</span>
+        <span style="color: #0000ff;">if</span> (!<span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$params</span>['out_request_no'<span style="color: #000000;">])) {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setOutRequestNo(<span style="color: #800080;">$params</span>['out_request_no'<span style="color: #000000;">]);
+        }
+
+        </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setRefundAmount(<span style="color: #800080;">$params</span>['refund_amount'<span style="color: #000000;">]);
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">$RequestBuilder</span><span style="color: #000000;">;
+    }
+
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 统一错误处理接口
+     * @param  string $msg 错误描述
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> processError(<span style="color: #800080;">$msg</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> \think\<span style="color: #0000ff;">Exception</span>(<span style="color: #800080;">$msg</span><span style="color: #000000;">);
+    }
+}</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p><span style="font-size: 16px;">商户订单号和支付宝交易号二选一，控制器这里默认商户订单号：</span></p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">退款</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> refund(){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">付款金额</span>
+        <span style="color: #800080;">$total_amount</span> = input('WIDTRrefund_amount'<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">if</span>(<span style="color: #800080;">$total_amount</span><span style="color: #000000;">){
+            </span><span style="color: #800080;">$params</span> =<span style="color: #000000;"> [
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">商户订单号，商户网站订单系统中唯一订单号，必填</span>
+                'out_trade_no'      =&gt;  input('WIDTRout_trade_no'),
+                <span style="color: #008000;">//</span><span style="color: #008000;">付款金额，必填</span>
+                'refund_amount'     =&gt;  <span style="color: #800080;">$total_amount</span>,
+                <span style="color: #008000;">//</span><span style="color: #008000;">退款单号，如果是部分退款，必填</span>
+                'out_request_no'    =&gt;  input('WIDTRout_request_no'),<span style="color: #000000;">
+            ];
+            import(</span>'alipay.pagepay.Refund',<span style="color: #000000;">EXTEND_PATH);
+            </span><span style="color: #800080;">$res</span> = \Refund::<span style="color: #008080;">exec</span>(<span style="color: #800080;">$params</span><span style="color: #000000;">);
+
+            </span><span style="color: #0000ff;">echo</span> "&lt;pre&gt;"<span style="color: #000000;">;
+            </span><span style="color: #008080;">print_r</span>(<span style="color: #800080;">$res</span><span style="color: #000000;">);
+        }
+    }</span></pre>
+</div>
+<p class="blog-title" style="box-sizing: border-box; font-family: PingFangSC, 'helvetica neue', 'hiragino sans gb', arial, 'microsoft yahei ui', 'microsoft yahei', simsun, sans-serif; line-height: 36px; margin: 0px; font-size: 32px; padding: 0px; overflow-wrap: break-word;" data-spm-anchor-id="a2c4e.11153940.0.i7.7e4a3724nz8WwQ"><span style="font-size: 18px;"><strong>退款单号(out_request_no)：</strong></span></p>
+<p class="blog-title" style="box-sizing: border-box; font-family: PingFangSC, 'helvetica neue', 'hiragino sans gb', arial, 'microsoft yahei ui', 'microsoft yahei', simsun, sans-serif; line-height: 36px; margin: 0px; font-size: 32px; padding: 0px; overflow-wrap: break-word;" data-spm-anchor-id="a2c4e.11153940.0.i7.7e4a3724nz8WwQ"><strong><span style="font-size: 16px;">1、</span><span style="color: #ff0000; font-family: PingFangSC-Regular; font-size: 16px;">全额退款不传，部分退款必传</span></strong></p>
+<p class="blog-title" style="box-sizing: border-box; font-family: PingFangSC, 'helvetica neue', 'hiragino sans gb', arial, 'microsoft yahei ui', 'microsoft yahei', simsun, sans-serif; line-height: 36px; margin: 0px; font-size: 32px; padding: 0px; overflow-wrap: break-word;" data-spm-anchor-id="a2c4e.11153940.0.i7.7e4a3724nz8WwQ"><span style="color: #000000;"><strong><span style="font-family: PingFangSC-Regular; font-size: 16px;">2、</span></strong></span><span style="font-size: 16px;"><span style="box-sizing: border-box; color: #333333; font-family: PingFangSC-Regular;" data-spm-anchor-id="a2c4e.11153940.0.i12.7e4a3724nz8WwQ">out_request_no：标识一次退款请求，<strong>同一笔交易多次退款需要保证唯一</strong>，如需</span>部分退款，则此参数必传<span style="box-sizing: border-box; color: #333333; font-family: PingFangSC-Regular;">。也可以理解为同一笔交易退款，退款金额小于付款金额是，必须传这个参数，而且</span><span style="font-size: 14px; box-sizing: border-box; font-family: PingFangSC-Regular; color: #ff0000;" data-spm-anchor-id="a2c4e.11153940.0.i11.7e4a3724nz8WwQ"><span style="font-size: 16px;">同一笔交易分多次退款的话</span>，<span style="font-size: 16px;">out_request_no每次传值都不能重复</span></span><span style="box-sizing: border-box; color: #333333; font-family: PingFangSC-Regular;">，必须保证唯一性</span></span></p>
+<p class="blog-title" style="box-sizing: border-box; font-family: PingFangSC, 'helvetica neue', 'hiragino sans gb', arial, 'microsoft yahei ui', 'microsoft yahei', simsun, sans-serif; line-height: 36px; margin: 0px; font-size: 32px; padding: 0px; overflow-wrap: break-word;" data-spm-anchor-id="a2c4e.11153940.0.i7.7e4a3724nz8WwQ">&nbsp;</p>
+<p class="blog-title" style="box-sizing: border-box; font-family: PingFangSC, 'helvetica neue', 'hiragino sans gb', arial, 'microsoft yahei ui', 'microsoft yahei', simsun, sans-serif; line-height: 36px; margin: 0px; font-size: 32px; padding: 0px; overflow-wrap: break-word;" data-spm-anchor-id="a2c4e.11153940.0.i7.7e4a3724nz8WwQ">&nbsp;</p>
+<p class="blog-title" style="box-sizing: border-box; font-family: PingFangSC, 'helvetica neue', 'hiragino sans gb', arial, 'microsoft yahei ui', 'microsoft yahei', simsun, sans-serif; line-height: 36px; margin: 0px; font-size: 32px; padding: 0px; overflow-wrap: break-word;" data-spm-anchor-id="a2c4e.11153940.0.i7.7e4a3724nz8WwQ"><span style="font-size: 16px;"><span style="box-sizing: border-box; color: #333333; font-family: PingFangSC-Regular;"><strong style="color: #000000; font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px;"><span style="font-size: 18pt;">退款查询</span></strong></span></span></p>
+<p class="blog-title" style="box-sizing: border-box; font-family: PingFangSC, 'helvetica neue', 'hiragino sans gb', arial, 'microsoft yahei ui', 'microsoft yahei', simsun, sans-serif; line-height: 36px; margin: 0px; font-size: 32px; padding: 0px; overflow-wrap: break-word;" data-spm-anchor-id="a2c4e.11153940.0.i7.7e4a3724nz8WwQ"><span style="font-size: 16px;"><span style="box-sizing: border-box; color: #333333; font-family: PingFangSC-Regular;"><span style="color: #000000; font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;">修改extend\alipay\pagepay\</span></span><span style="font-family: 'Microsoft YaHei UI'; color: #ff0000;">RefundQuery</span><span style="font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;">.php</span></span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('5b00f633-30dc-48bf-a40d-25b848e8183a')"><img id="code_img_closed_5b00f633-30dc-48bf-a40d-25b848e8183a" class="code_img_closed" src="./images/tp5实现支付宝电脑支付(详解)7.png" alt="" /><img id="code_img_opened_5b00f633-30dc-48bf-a40d-25b848e8183a" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('5b00f633-30dc-48bf-a40d-25b848e8183a',event)" src="./images/tp5实现支付宝电脑支付(详解)8.png" alt="" />
+<div id="cnblogs_code_open_5b00f633-30dc-48bf-a40d-25b848e8183a" class="cnblogs_code_hide">
+<pre><code>&lt;?<span style="color: #000000;">php
+</span><span style="color: #0000ff;">use</span><span style="color: #000000;"> think\Loader;
+Loader</span>::import('alipay.pagepay.service.AlipayTradeService',<span style="color: #000000;">EXTEND_PATH);
+Loader</span>::import('alipay.pagepay.buildermodel.AlipayTradeFastpayRefundQueryContentBuilder',<span style="color: #000000;">EXTEND_PATH);
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> RefundQuery
+{
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 主入口
+     * @param  array $params 退款查询参数, 具体如下:
+     * @param string $params['trade_no']/$params['out_trade_no'] 商户订单号或支付宝单号其中之一
+     * @param string $params['out_request_no'] 可空, 为空时, 退款号为订单号
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> <span style="color: #008080;">exec</span>(<span style="color: #800080;">$params</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.校检参数</span>
+        <span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$params</span>['trade_no']) &amp;&amp; <span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$params</span>['out_trade_no'<span style="color: #000000;">])) {
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> \think\<span style="color: #0000ff;">Exception</span>('商户订单号(out_trade_no)和支付宝单号(trade_no)不得通知为空'<span style="color: #000000;">);
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.构造请求参数</span>
+        <span style="color: #800080;">$RequestBuilder</span> = self::builderParams(<span style="color: #800080;">$params</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.获取配置</span>
+        <span style="color: #800080;">$config</span> = config('alipay'<span style="color: #000000;">);
+        </span><span style="color: #800080;">$aop</span>    = <span style="color: #0000ff;">new</span> \AlipayTradeService(<span style="color: #800080;">$config</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.发起请求</span>
+        <span style="color: #800080;">$response</span> = <span style="color: #800080;">$aop</span>-&gt;refundQuery(<span style="color: #800080;">$RequestBuilder</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 5.转为数组格式返回</span>
+        <span style="color: #800080;">$response</span> = json_decode(json_encode(<span style="color: #800080;">$response</span>), <span style="color: #0000ff;">true</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 6.进行结果处理</span>
+        <span style="color: #0000ff;">if</span> (!<span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$response</span>['code']) &amp;&amp; <span style="color: #800080;">$response</span>['code'] != '10000'<span style="color: #000000;">) {
+            self</span>::processError('退款查询接口出错, 错误码为: '.<span style="color: #800080;">$response</span>['code'].', 错误原因为: '.<span style="color: #800080;">$response</span>['sub_msg'<span style="color: #000000;">]);
+        }
+
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">$response</span><span style="color: #000000;">;
+    }
+
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 构造请求参数
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> builderParams(<span style="color: #800080;">$params</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #800080;">$RequestBuilder</span> = <span style="color: #0000ff;">new</span><span style="color: #000000;"> \AlipayTradeFastpayRefundQueryContentBuilder();
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">isset</span>(<span style="color: #800080;">$params</span>['trade_no'<span style="color: #000000;">])) {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setTradeNo(<span style="color: #800080;">$params</span>['trade_no'<span style="color: #000000;">]);
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setOutTradeNo(<span style="color: #800080;">$params</span>['out_trade_no'<span style="color: #000000;">]);
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 如果未传退款号, 则以单号为退款号查询</span>
+        <span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">isset</span>(<span style="color: #800080;">$params</span>['out_request_no'<span style="color: #000000;">])) {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setOutRequestNo(<span style="color: #800080;">$params</span>['out_request_no'<span style="color: #000000;">]);
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #800080;">$out_request_no</span> = <span style="color: #0000ff;">isset</span>(<span style="color: #800080;">$params</span>['trade_no']) ? <span style="color: #800080;">$params</span>['trade_no'] : <span style="color: #800080;">$params</span>['out_trade_no'<span style="color: #000000;">];
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setOutRequestNo(<span style="color: #800080;">$out_request_no</span><span style="color: #000000;">);
+        }
+
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">$RequestBuilder</span><span style="color: #000000;">;
+    }
+
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 统一错误处理接口
+     * @param  string $msg 错误描述
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> processError(<span style="color: #800080;">$msg</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> \think\<span style="color: #0000ff;">Exception</span>(<span style="color: #800080;">$msg</span><span style="color: #000000;">);
+    }
+}</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p><span style="font-size: 16px;">商户订单号和支付宝交易号二选一，控制器这里默认商户订单号：</span></p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">退款查询</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> refundquery(){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">商户订单号</span>
+        <span style="color: #800080;">$params</span>['out_trade_no'] = input('WIDRQout_trade_no'<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">退款请求号</span>
+        <span style="color: #800080;">$params</span>['out_request_no'] = input('WIDRQout_request_no'<span style="color: #000000;">);
+
+        </span><span style="color: #0000ff;">if</span>(<span style="color: #800080;">$params</span>['out_trade_no'<span style="color: #000000;">]){
+            import(</span>'alipay.pagepay.RefundQuery',<span style="color: #000000;">EXTEND_PATH);
+            </span><span style="color: #800080;">$response</span> = \RefundQuery::<span style="color: #008080;">exec</span>(<span style="color: #800080;">$params</span><span style="color: #000000;">);
+            </span><span style="color: #0000ff;">echo</span> "&lt;pre&gt;"<span style="color: #000000;">;
+            </span><span style="color: #008080;">print_r</span>(<span style="color: #800080;">$response</span><span style="color: #000000;">);
+        }
+    }</span></pre>
+</div>
+<p><span style="color: #ff0000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;">注意：退款请求号值(</span><span style="font-family: 'Courier New'; font-size: 16px; color: #ff0000;">out_request_no</span><span style="color: #ff0000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;">)必传，退款时传的值，如果退款时没传则无法查询；商户订单号和支付宝交易号不能同时为空。 trade_no、 out_trade_no如果同时存在优先取trade_no</span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="color: #ff0000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;"><strong style="color: #000000; font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px;"><span style="font-size: 18pt;">关闭交易</span></strong></span></p>
+<p><span style="color: #ff0000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;"><span style="box-sizing: border-box; color: #333333; font-family: PingFangSC-Regular;"><span style="color: #000000; font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;">修改extend\alipay\pagepay\</span></span><span style="font-family: 'Microsoft YaHei UI';">Close</span><span style="font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;">.php</span></span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('18f345e9-a007-4af0-855a-cd8e8f019e10')"><img id="code_img_closed_18f345e9-a007-4af0-855a-cd8e8f019e10" class="code_img_closed" src="./images/tp5实现支付宝电脑支付(详解)7.png" alt="" /><img id="code_img_opened_18f345e9-a007-4af0-855a-cd8e8f019e10" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('18f345e9-a007-4af0-855a-cd8e8f019e10',event)" src="./images/tp5实现支付宝电脑支付(详解)8.png" alt="" />
+<div id="cnblogs_code_open_18f345e9-a007-4af0-855a-cd8e8f019e10" class="cnblogs_code_hide">
+<pre><code>&lt;?<span style="color: #000000;">php
+</span><span style="color: #0000ff;">use</span><span style="color: #000000;"> think\Loader;
+Loader</span>::import('alipay.pagepay.service.AlipayTradeService',<span style="color: #000000;">EXTEND_PATH);
+Loader</span>::import('alipay.pagepay.buildermodel.AlipayTradeCloseContentBuilder',<span style="color: #000000;">EXTEND_PATH);
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Close
+{
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 商户订单号(out_trade_no) or 支付宝交易号(trade_no) 二选一</span>
+    <span style="color: #0000ff;">const</span> QUERY_TYPE = 'out_trade_no'<span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> <span style="color: #008080;">exec</span>(<span style="color: #800080;">$query_no</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.构建请求参数</span>
+        <span style="color: #800080;">$RequestBuilder</span> = <span style="color: #0000ff;">new</span><span style="color: #000000;"> \AlipayTradeCloseContentBuilder();
+        </span><span style="color: #0000ff;">if</span> (self::QUERY_TYPE == 'trade_no'<span style="color: #000000;">) {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setTradeNo(<span style="color: #008080;">trim</span>(<span style="color: #800080;">$query_no</span><span style="color: #000000;">));
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #800080;">$RequestBuilder</span>-&gt;setOutTradeNo(<span style="color: #008080;">trim</span>(<span style="color: #800080;">$query_no</span><span style="color: #000000;">));
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.获取配置</span>
+        <span style="color: #800080;">$config</span> = config('alipay'<span style="color: #000000;">);
+        </span><span style="color: #800080;">$aop</span>    = <span style="color: #0000ff;">new</span> \AlipayTradeService(<span style="color: #800080;">$config</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.发起请求</span>
+        <span style="color: #800080;">$response</span> = <span style="color: #800080;">$aop</span>-&gt;Close(<span style="color: #800080;">$RequestBuilder</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.转为数组格式返回</span>
+        <span style="color: #800080;">$response</span> = json_decode(json_encode(<span style="color: #800080;">$response</span>), <span style="color: #0000ff;">true</span><span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 5.进行结果处理</span>
+        <span style="color: #0000ff;">if</span> (!<span style="color: #0000ff;">empty</span>(<span style="color: #800080;">$response</span>['code']) &amp;&amp; <span style="color: #800080;">$response</span>['code'] != '10000'<span style="color: #000000;">) {
+            self</span>::processError('交易关闭接口出错, 错误码: '.<span style="color: #800080;">$response</span>['code'].' 错误原因: '.<span style="color: #800080;">$response</span>['sub_msg'<span style="color: #000000;">]);
+        }
+
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">$response</span><span style="color: #000000;">;
+    }
+
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;">*
+     * 统一错误处理接口
+     * @param  string $msg 错误描述
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">function</span> processError(<span style="color: #800080;">$msg</span><span style="color: #000000;">)
+    {
+        </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> \think\<span style="color: #0000ff;">Exception</span>(<span style="color: #800080;">$msg</span><span style="color: #000000;">);
+    }
+}</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p><span style="color: #000000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;"><span style="font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif;">商户订单号和支付宝交易号二选一，控制器这里默认商户订单号：</span></span></p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">关闭交易</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> close(){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">商户订单号</span>
+        <span style="color: #800080;">$out_trade_no</span> = input('WIDTCout_trade_no'<span style="color: #000000;">);
+
+        </span><span style="color: #0000ff;">if</span>(<span style="color: #800080;">$out_trade_no</span><span style="color: #000000;">){
+            import(</span>'alipay.pagepay.Close',<span style="color: #000000;">EXTEND_PATH);
+            </span><span style="color: #800080;">$response</span> = \Close::<span style="color: #008080;">exec</span>(<span style="color: #800080;">$out_trade_no</span><span style="color: #000000;">);
+            </span><span style="color: #0000ff;">echo</span> "&lt;pre&gt;"<span style="color: #000000;">;
+            </span><span style="color: #008080;">print_r</span>(<span style="color: #800080;">$response</span><span style="color: #000000;">);
+        }
+    }</span></pre>
+</div>
+<p><strong><span style="color: #000000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;">注意：</span></strong></p>
+<p><span style="color: #000000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;">1.商户订单号和支付宝交易号不能同时为空。 trade_no、 out_trade_no如果同时存在优先取trade_no</span></p>
+<p><span style="color: #000000; font-family: 'Helvetica Neue', Helvetica, Arial, 'Lucida Grande', sans-serif; font-size: 16px;">2.交易开始不是在点付款时，<strong>而是在扫码付款但没有支付时，这是才可以关闭交易</strong></span></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

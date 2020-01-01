@@ -1,0 +1,346 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Dapr 运用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Dapr 运用</center></div><div class='banquan'>原文出处:本文由博客园博主Zhang_Xiang提供。<br/>
+原文连接:https://www.cnblogs.com/Zhang-Xiang/p/12035354.html</div><br>
+    <h1 id="dapr-运用">Dapr 运用</h1>
+<ul>
+<li>前置条件
+<ul>
+<li>Docker</li>
+<li>Win10</li>
+</ul></li>
+</ul>
+<h2 id="dapr-部署">Dapr 部署</h2>
+<p>本文将采用本地部署的方式。</p>
+<h3 id="安装-dapr-cli">安装 Dapr CLI</h3>
+<p>打开 Windows PowerShell 或 cmd ，运行以下命令以安装 <code>Dapr CLI</code>，并添加安装路径到系统环境变量中。</p>
+<pre><code><code>powershell -Command &quot;iwr -useb https://raw.githubusercontent.com/dapr/cli/master/install/install.ps1 | iex&quot;</code></pre>
+<p>这里安装可能会失败。如果失败可以手动安装。</p>
+<ul>
+<li>打开 Dapr <a href="https://github.com/dapr/cli/releases">发布</a>页面下载 <code>dapr_windows_amd64.zip</code></li>
+<li>解压文件 zip 文件</li>
+<li>把解压后的文件拷贝到 <code>C:\dapr</code> 中</li>
+</ul>
+<h3 id="安装-mysql">安装 MySql</h3>
+<p>Docker 启动 Mysql</p>
+<pre class="docker"><code>docker run --name mysqltest -e MYSQL_ROOT_PASSWORD=123456 -d mysql</code></pre>
+<h3 id="使用-dapr-cli-安装-darp-runtime">使用 Dapr CLI 安装 Darp runtime</h3>
+<p>在 Windows PowerShell 或 cmd 中使用命令 <code>dapr init</code> 以安装 Dapr。</p>
+<p><img src="./images/Dapr 运用0.png" /></p>
+<p>同时可以在 Docker 中查看 Dapr 容器。</p>
+<p><img src="./images/Dapr 运用1.png" /></p>
+<p>至此，一个本地 Dapr 服务搭建完成。</p>
+<h2 id="使用-asp.net-core-搭建-productservice-服务">使用 <code>Asp.Net Core</code> 搭建 ProductService 服务</h2>
+<p>ProductService 提供两个服务</p>
+<ul>
+<li>获取所有产品集合</li>
+<li>添加产品</li>
+</ul>
+<ol>
+<li><p>使用 <code>ASP.Net Core</code> 创建 ProductService ，具体参考源码</p></li>
+<li><p>Dapr 启动 ProductService</p>
+<pre class="cmd"><code>dapr run --app-id productService --app-port 5000 dotnet run</code></pre></li>
+<li><p>获取所有产品集合，使用 curl 命令</p>
+<pre class="curl"><code>curl -X GET http://localhost:5000/getlist</code></pre>
+<p>或者</p>
+<pre class="curl"><code>curl -X GET http://localhost:54680/v1.0/invoke/productService/method/getlist</code></pre></li>
+<li><p>添加一个产品</p>
+<pre class="curl"><code>curl -X POST https://localhost:5001/product -H &quot;Content-Type: application/json&quot; -d &quot;{ \&quot;id\&quot;: \&quot;14a3611d-1561-455f-9c72-381eed2f6ee3\&quot; }&quot;</code></pre></li>
+<li><p><em>重点</em>，通过 Dapr 添加一个产品，先看添加产品的代码</p>
+<pre class="csharp"><code> /// &lt;summary&gt;
+ /// 创建产品
+ /// &lt;/summary&gt;
+ /// &lt;param name=&quot;productCreate&quot;&gt;产品创建模型&lt;/param&gt;
+ /// &lt;returns&gt;&lt;/returns&gt;
+ [Topic(&quot;product&quot;)]
+ [HttpPost(&quot;product&quot;)]
+ public async Task&lt;bool&gt; CreateProduct(ProductCreate productCreate)
+ {
+     _productContext.Products.Add(new Product
+     {
+         ProductID = productCreate.ID
+     });
+     return await _productContext.SaveChangesAsync() == 1;
+ }</code></pre>
+<ul>
+<li><p>使用 Dapr cli 发布事件</p>
+<pre class="cmd"><code> dapr invoke -a productService -m product -p &quot;{\&quot;id\&quot;:\&quot;b1ccf14a-408a-428e-b0f0-06b97cbe4135\&quot;}&quot;</code></pre>
+<p>输出为：</p>
+<pre class="cmd"><code>true
+App invoked successfully</code></pre></li>
+<li><p>使用 curl 命令直接请求 ProductService 地址</p>
+<pre class="curl"><code>curl -X POST http://localhost:5000/product -H &quot;Content-Type: application/json&quot; -d &quot;{ \&quot;id\&quot;: \&quot;14a3611d-1561-455f-9c72-381eed2f64e3\&quot; }&quot;</code></pre>
+<p>输出为：</p>
+<pre class="cmd"><code>true</code></pre></li>
+<li><p>使用 curl 命令通过 Dapr runtime</p>
+<pre class="curl"><code>curl -X POST http://localhost:54680/v1.0/invoke/productService/method/product -H &quot;Content-Type: application/json&quot; -d &quot;{ \&quot;id\&quot;: \&quot;14a3611d-1561-455f-9c72-381eed2f54e3\&quot; }&quot;</code></pre>
+<p>输出为：</p>
+<pre class="cmd"><code>true</code></pre></li>
+</ul></li>
+</ol>
+<blockquote>
+<p><strong>注意：</strong></p>
+<ul>
+<li>Dapr 使用 App 端口号应与服务端口号相同，例如：<code>ASP.Net Core</code> 服务端口号为5000，则在使用 Dapr 托管应用程序时的端口号也应使用 5000</li>
+</ul>
+</blockquote>
+<p>至此， ProductService 创建完成。</p>
+<h2 id="使用-golang-创建-grpc-server">使用 Golang 创建 gRPC Server</h2>
+<ol>
+<li><p>创建 Server</p>
+<pre class="go"><code>package main
+
+import (
+    &quot;context&quot;
+    &quot;fmt&quot;
+    &quot;log&quot;
+    &quot;net&quot;
+
+    &quot;github.com/golang/protobuf/ptypes/any&quot;
+    &quot;github.com/golang/protobuf/ptypes/empty&quot;
+
+    pb &quot;github.com/dapr/go-sdk/daprclient&quot;
+    &quot;google.golang.org/grpc&quot;
+)
+
+// server is our user app
+type server struct {
+}
+
+func main() {
+    // create listiner
+    lis, err := net.Listen(&quot;tcp&quot;, &quot;:4000&quot;)
+    if err != nil {
+        log.Fatalf(&quot;failed to listen: %v&quot;, err)
+    }
+
+    // create grpc server
+    s := grpc.NewServer()
+    pb.RegisterDaprClientServer(s, &amp;server{})
+
+    fmt.Println(&quot;Client starting...&quot;)
+
+    // and start...
+    if err := s.Serve(lis); err != nil {
+        log.Fatalf(&quot;failed to serve: %v&quot;, err)
+    }
+}
+
+// Sample method to invoke
+func (s *server) MyMethod() string {
+    return &quot;Hi there!&quot;
+}
+
+// This method gets invoked when a remote service has called the app through Dapr
+// The payload carries a Method to identify the method, a set of metadata properties and an optional payload
+func (s *server) OnInvoke(ctx context.Context, in *pb.InvokeEnvelope) (*any.Any, error) {
+    var response string
+
+    fmt.Println(fmt.Sprintf(&quot;Got invoked with: %s&quot;, string(in.Data.Value)))
+
+    switch in.Method {
+    case &quot;MyMethod&quot;:
+        response = s.MyMethod()
+    }
+    return &amp;any.Any{
+        Value: []byte(response),
+    }, nil
+}
+
+// Dapr will call this method to get the list of topics the app wants to subscribe to. In this example, we are telling Dapr
+// To subscribe to a topic named TopicA
+func (s *server) GetTopicSubscriptions(ctx context.Context, in *empty.Empty) (*pb.GetTopicSubscriptionsEnvelope, error) {
+    return &amp;pb.GetTopicSubscriptionsEnvelope{
+        Topics: []string{&quot;TopicA&quot;},
+    }, nil
+}
+
+// Dapper will call this method to get the list of bindings the app will get invoked by. In this example, we are telling Dapr
+// To invoke our app with a binding named storage
+func (s *server) GetBindingsSubscriptions(ctx context.Context, in *empty.Empty) (*pb.GetBindingsSubscriptionsEnvelope, error) {
+    return &amp;pb.GetBindingsSubscriptionsEnvelope{
+        Bindings: []string{&quot;storage&quot;},
+    }, nil
+}
+
+// This method gets invoked every time a new event is fired from a registerd binding. The message carries the binding name, a payload and optional metadata
+func (s *server) OnBindingEvent(ctx context.Context, in *pb.BindingEventEnvelope) (*pb.BindingResponseEnvelope, error) {
+    fmt.Println(&quot;Invoked from binding&quot;)
+    return &amp;pb.BindingResponseEnvelope{}, nil
+}
+
+// This method is fired whenever a message has been published to a topic that has been subscribed. Dapr sends published messages in a CloudEvents 0.3 envelope.
+func (s *server) OnTopicEvent(ctx context.Context, in *pb.CloudEventEnvelope) (*empty.Empty, error) {
+    fmt.Println(&quot;Topic message arrived&quot;)
+    return &amp;empty.Empty{}, nil
+}
+</code></pre></li>
+<li><p>使用 Dapr 命令启动 StorageService</p>
+<pre class="cmd"><code> dapr run --app-id client --protocol grpc --app-port 4000 go run main.go</code></pre></li>
+</ol>
+<blockquote>
+<p><strong>注意：</strong></p>
+<ul>
+<li>Dapr 使用 App 端口号应与服务端口号相同，使用 --protocal grpc 指定通讯协议为 grpc 。此外，OnInvoke 中的 switch 方法用于调用者路由。</li>
+</ul>
+</blockquote>
+<h2 id="使用-asp.net-core-创建-storageservice">使用 <code>ASP.NET Core</code> 创建 StorageService</h2>
+<ol>
+<li>使用 NuGet 获取程序管理包控制台安装以下包
+<ul>
+<li>Dapr.AspNetCore</li>
+<li>Dapr.Client.Grpc</li>
+<li>Grpc.AspNetCore</li>
+<li>Grpc.Net.Client</li>
+<li>Grpc.Tools</li>
+</ul></li>
+<li><p><code>Startup.cs</code> 文件中修改代码如下：</p>
+<pre class="csharp"><code>/// &lt;summary&gt;
+/// This method gets called by the runtime. Use this method to add services to the container.
+/// &lt;/summary&gt;
+/// &lt;param name=&quot;services&quot;&gt;Services.&lt;/param&gt;
+public void ConfigureServices(IServiceCollection services)
+{
+    services.AddControllers().AddDapr();
+    services.AddDbContextPool&lt;StorageContext&gt;(options =&gt; { options.UseMySql(Configuration.GetConnectionString(&quot;MysqlConnection&quot;)); });
+}</code></pre>
+<pre class="csharp"><code> /// &lt;summary&gt;
+/// This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
+/// &lt;/summary&gt;
+/// &lt;param name=&quot;app&quot;&gt;app.&lt;/param&gt;
+/// &lt;param name=&quot;env&quot;&gt;env.&lt;/param&gt;
+public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+{
+    if (env.IsDevelopment())
+    {
+        app.UseDeveloperExceptionPage();
+    }
+
+    app.UseRouting();
+    app.UseCloudEvents();
+
+    app.UseAuthorization();
+
+    app.UseEndpoints(endpoints =&gt;
+    {
+        endpoints.MapSubscribeHandler();
+        endpoints.MapControllers();
+    });
+}</code></pre></li>
+<li><p>添加 <code>StorageController.cs</code> 文件，内容如下</p>
+<pre class="csharp"><code>using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Dapr.Client.Grpc;
+using Google.Protobuf;
+using Grpc.Net.Client;
+using Microsoft.AspNetCore.Mvc;
+using StorageService.Api.Entities;
+
+namespace StorageService.Api.Controllers
+{
+    [ApiController]
+    public class StorageController : ControllerBase
+    {
+        private readonly StorageContext _storageContext;
+
+        public StorageController(StorageContext storageContext)
+        {
+            _storageContext = storageContext;
+        }
+
+        /// &lt;summary&gt;
+        /// 初始化仓库.
+        /// &lt;/summary&gt;
+        /// &lt;returns&gt;是否成功.&lt;/returns&gt;
+        [HttpGet(&quot;InitialStorage&quot;)]
+        public async Task&lt;bool&gt; InitialStorage()
+        {
+            string defaultPort = Environment.GetEnvironmentVariable(&quot;DAPR_GRPC_PORT&quot;) ?? &quot;54681&quot;;
+
+            // Set correct switch to make insecure gRPC service calls. This switch must be set before creating the GrpcChannel.
+            AppContext.SetSwitch(&quot;System.Net.Http.SocketsHttpHandler.Http2UnencryptedSupport&quot;, true);
+
+            // Create Client
+            string daprUri = $&quot;http://127.0.0.1:{defaultPort}&quot;;
+            GrpcChannel channel = GrpcChannel.ForAddress(daprUri);
+            var client = new Dapr.Client.Grpc.Dapr.DaprClient(channel);
+            Console.WriteLine(daprUri);
+
+            InvokeServiceResponseEnvelope result = await client.InvokeServiceAsync(new InvokeServiceEnvelope
+            {
+                Method = &quot;MyMethod&quot;,
+                Id = &quot;client&quot;,
+                Data = new Google.Protobuf.WellKnownTypes.Any
+                {
+                    Value = ByteString.CopyFromUtf8(&quot;Hello ProductService&quot;)
+                }
+            });
+            Console.WriteLine(&quot;this is call result:&quot; + result.Data.Value.ToStringUtf8());
+            //var productResult = result.Data.Unpack&lt;ProductList.V1.ProductList&gt;();
+            //Console.WriteLine(&quot;this is call result:&quot; + productResult.Results.FirstOrDefault());
+            return true;
+        }
+
+        /// &lt;summary&gt;
+        /// 修改库存
+        /// &lt;/summary&gt;
+        /// &lt;param name=&quot;storage&quot;&gt;&lt;/param&gt;
+        /// &lt;returns&gt;&lt;/returns&gt;
+        [HttpPut(&quot;Reduce&quot;)]
+        public bool Reduce(Storage storage)
+        {
+            Storage storageFromDb = _storageContext.Storage.FirstOrDefault(q =&gt; q.ProductID.Equals(storage.ProductID));
+            if (storageFromDb == null)
+            {
+                return false;
+            }
+
+            if (storageFromDb.Amount &lt;= storage.Amount)
+            {
+                return false;
+            }
+
+            storageFromDb.Amount -= storage.Amount;
+            return true;
+        }
+    }
+}</code></pre></li>
+<li><p>使用 Dapr cli 启用 StorageService 服务</p>
+<pre><code><code>dapr run --app-id storageService --app-port 5003 dotnet run</code></pre></li>
+<li><p>使用 curl 命令访问 StorageService InitialStorage 方法</p>
+<pre class="curl"><code>curl -X GET http://localhost:56349/v1.0/invoke/storageService/method/InitialStorage</code></pre>
+<p>输入</p>
+<pre class="cmd"><code>true</code></pre>
+<p>其中打印信息为：</p>
+<pre class="cmd"><code>this is call result:Hi there!</code></pre></li>
+</ol>
+<blockquote>
+<p><strong>注意：</strong></p>
+<ul>
+<li>Dapr 使用 App 端口号应与服务端口号相同，例如：<code>ASP.Net Core</code> 服务端口号为5003，则在使用 Dapr 托管应用程序时的端口号也应使用 5003，在 Client.InvokeServiceAsync 中的 Id 指被调用方的 App-Id ,Method 指被调用方方法名称。参考 Go Server 中 OnInvoke 方法的 Switch 。</li>
+</ul>
+</blockquote>
+<p><a href="https://github.com/SoMeDay-Zhang/DaprDemos">源码地址</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

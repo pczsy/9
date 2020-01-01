@@ -1,0 +1,251 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python 之  并发编程（线程Event、协程）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python 之  并发编程（线程Event、协程）</center></div><div class='banquan'>原文出处:本文由博客园博主small_white-提供。<br/>
+原文连接:https://www.cnblogs.com/mylu/p/11253143.html</div><br>
+    <h3 class="md-end-block md-heading md-focus"><span class="md-plain">9.14 线程Event</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">connect线程执行到event.wait()时开始等待，直到check线程执行event.set()后立即继续线程connect</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> threading <span style="color: #0000ff;">import</span><span style="color: #000000;"> Event,current_thread,Thread
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+event</span>=<span style="color: #000000;">Event()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> check():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s 正在检测服务是否正常....</span><span style="color: #800000;">'</span> %<span style="color: #000000;">current_thread().name)
+    time.sleep(</span>3<span style="color: #000000;">)
+    event.set()
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> connect():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s 等待连接...</span><span style="color: #800000;">'</span> %<span style="color: #000000;">current_thread().name)
+    event.wait()
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s 开始连接...</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> current_thread().name)
+​
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    t1</span>=Thread(target=<span style="color: #000000;">connect)
+    t2</span>=Thread(target=<span style="color: #000000;">connect)
+    t3</span>=Thread(target=<span style="color: #000000;">connect)
+​
+    c1</span>=Thread(target=<span style="color: #000000;">check)
+​
+    t1.start()
+    t2.start()
+    t3.start()
+    c1.start()</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">connect线程执行到event.wait(1)时开始等待1秒，count计数+1，如果到check线程执行event.set()前已经4秒，则终止线程connect，否则event.is_set() is True ,立即继续线程connect</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('d9259363-1baa-4d19-a59a-cde7539d2d01')"><img id="code_img_closed_d9259363-1baa-4d19-a59a-cde7539d2d01" class="code_img_closed" src="./images/python 之  并发编程（线程Event、协程）0.png" alt="" /><img id="code_img_opened_d9259363-1baa-4d19-a59a-cde7539d2d01" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('d9259363-1baa-4d19-a59a-cde7539d2d01',event)" src="./images/python 之  并发编程（线程Event、协程）1.png" alt="" />
+<div id="cnblogs_code_open_d9259363-1baa-4d19-a59a-cde7539d2d01" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> threading <span style="color: #0000ff;">import</span><span style="color: #000000;"> Event,current_thread,Thread
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+event</span>=<span style="color: #000000;">Event()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> check():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s 正在检测服务是否正常....</span><span style="color: #800000;">'</span> %<span style="color: #000000;">current_thread().name)
+    time.sleep(</span>5<span style="color: #000000;">)
+    event.set()
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> connect():
+    count</span>=1
+    <span style="color: #0000ff;">while</span> <span style="color: #0000ff;">not</span> event.is_set():   <span style="color: #008000;">#</span><span style="color: #008000;">event是否被set过，是返回True,否返回False</span>
+        <span style="color: #0000ff;">if</span> count ==  4<span style="color: #000000;">:
+            </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">尝试的次数过多，请稍后重试</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            </span><span style="color: #0000ff;">return</span>
+        <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s 尝试第%s次连接...</span><span style="color: #800000;">'</span> %<span style="color: #000000;">(current_thread().name,count))
+        event.wait(</span>1<span style="color: #000000;">)
+        count</span>+=1
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s 开始连接...</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> current_thread().name)
+​
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    t1</span>=Thread(target=<span style="color: #000000;">connect)
+    t2</span>=Thread(target=<span style="color: #000000;">connect)
+    t3</span>=Thread(target=<span style="color: #000000;">connect)
+​
+    c1</span>=Thread(target=<span style="color: #000000;">check)
+​
+    t1.start()
+    t2.start()
+    t3.start()
+    c1.start()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<h3 class="md-end-block md-heading"><span class="md-plain">9.15 协程</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">协程：是单线程下的并发，又称微线程，纤程。一句话说明什么是线程：协程是一种用户态的轻量级线程，即协程是由用户程序自己控制调度的。</span></p>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">python的线程属于内核级别的，即由操作系统控制调度（如单线程遇到i/o或执行时间过长就会被迫交出cpu执行权限，切换其他线程运行）</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">单线程内开启协程，一旦遇到i/o，就会从应用程序级别（而非操作系统）控制切换到其他任务，以此来提升效率（非i/o操作的切换与效率无关）</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">对比操作系统控制线程的切换，用户在单线程内控制协程的切换</span></p>
+</li>
+</ol>
+<pre class="md-fences md-end-block ty-contain-cm modeLoaded"><span>  优点:<br /><span>  1. 协程的切换开销更小，属于程序级别的切换，操作系统完全感知不到，因而更加轻量级<br /><span>  2. 单线程内就可以实现并发的效果，最大限度地利用cpu<br /><span> &nbsp; &nbsp; <br /><span>  缺点：<br /><span>  1. 协程的本质是单线程下，无法利用多核，可以是一个程序开启多个进程，每个进程内开启多个线程，每个线程内开启协程<br /><span>  2. 协程指的是单个线程，因而一旦协程出现阻塞，将会阻塞整个线程</span></span></span></span></span></span></span></pre>
+<h4 class="md-end-block md-heading"><span class="md-plain">9.151 greenlet模块</span></h4>
+<div class="cnblogs_code">
+<pre><code> <span style="color: #0000ff;">from</span> greenlet <span style="color: #0000ff;">import</span><span style="color: #000000;"> greenlet
+  </span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+  
+  </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> eat(name):
+      </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+      </span><span style="color: #008000;">#</span><span style="color: #008000;">time.sleep(30)           遇到i/o不能自动切换</span>
+      g2.switch(<span style="color: #800000;">'</span><span style="color: #800000;">alex</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+      </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+      g2.switch()
+  </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> play(name):
+      </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+      g1.switch()
+      </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+  
+  g1</span>=<span style="color: #000000;">greenlet(eat)
+  g2</span>=<span style="color: #000000;">greenlet(play)
+  
+  g1.switch(</span><span style="color: #800000;">'</span><span style="color: #800000;">egon</span><span style="color: #800000;">'</span>) <span style="color: #008000;">#</span><span style="color: #008000;"> egon eat 1   alex play 1   egon eat 2   alex play 2</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain">9.152 gevent模块</span></h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> gevent
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> eat(name):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+    gevent.sleep(</span>5)         <span style="color: #008000;">#</span><span style="color: #008000;">只检测gevent的i/o</span>
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> play(name):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+    gevent.sleep(</span>3<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+​
+g1</span>=gevent.spawn(eat,<span style="color: #800000;">'</span><span style="color: #800000;">egon</span><span style="color: #800000;">'</span>) <span style="color: #008000;">#</span><span style="color: #008000;">异步提交任务</span>
+g2=gevent.spawn(play,<span style="color: #800000;">'</span><span style="color: #800000;">alex</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+​
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> gevent.sleep(100)</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> g1.join()</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> g2.join()                # joinall等待任务执行完毕再结束线程</span>
+gevent.joinall([g1,g2])     <span style="color: #008000;">#</span><span style="color: #008000;"> egon eat 1     alex play 1    alex play 2   egon eat 2</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> gevent <span style="color: #0000ff;">import</span> monkey;monkey.patch_all()<span style="color: #008000;">#</span><span style="color: #008000;">标记所有(包括time等)的i/o</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> gevent
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> eat(name):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+    time.sleep(</span>5)            <span style="color: #008000;">#</span><span style="color: #008000;">time的i/o也可以检测</span>
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> play(name):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+    time.sleep(</span>3<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">name)
+​
+g1</span>=gevent.spawn(eat,<span style="color: #800000;">'</span><span style="color: #800000;">egon</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+g2</span>=gevent.spawn(play,<span style="color: #800000;">'</span><span style="color: #800000;">alex</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+​
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> gevent.sleep(100)</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> g1.join()</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> g2.join()</span>
+gevent.joinall([g1,g2])       <span style="color: #008000;">#</span><span style="color: #008000;"> egon eat 1   alex play 1    alex play 2   egon eat 2</span></pre>
+</div>
+<p>验证协程的假名：</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('69f94d6b-0fdd-41d8-b606-40e36e240ef1')"><img id="code_img_closed_69f94d6b-0fdd-41d8-b606-40e36e240ef1" class="code_img_closed" src="./images/python 之  并发编程（线程Event、协程）0.png" alt="" /><img id="code_img_opened_69f94d6b-0fdd-41d8-b606-40e36e240ef1" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('69f94d6b-0fdd-41d8-b606-40e36e240ef1',event)" src="./images/python 之  并发编程（线程Event、协程）1.png" alt="" />
+<div id="cnblogs_code_open_69f94d6b-0fdd-41d8-b606-40e36e240ef1" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> gevent <span style="color: #0000ff;">import</span> monkey;monkey.patch_all()<span style="color: #008000;">#</span><span style="color: #008000;">标记所有time等的i/o</span>
+<span style="color: #0000ff;">from</span> threading <span style="color: #0000ff;">import</span><span style="color: #000000;"> current_thread
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> gevent
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> eat():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">current_thread().name)
+    time.sleep(</span>5<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s eat 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">current_thread().name)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> play():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 1</span><span style="color: #800000;">'</span> %<span style="color: #000000;">current_thread().name)
+    time.sleep(</span>3<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">%s play 2</span><span style="color: #800000;">'</span> %<span style="color: #000000;">current_thread().name)
+​
+g1</span>=<span style="color: #000000;">gevent.spawn(eat)
+g2</span>=<span style="color: #000000;">gevent.spawn(play)
+​
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> gevent.sleep(100)</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> g1.join()</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> g2.join()</span>
+<span style="color: #0000ff;">print</span>(current_thread().name)<span style="color: #008000;">#</span><span style="color: #008000;">MainThread</span>
+gevent.joinall([g1,g2])     <span style="color: #008000;">#</span><span style="color: #008000;">DummyThread-1 eat 1     DummyThread-2 play 1  DummyThread-2 play 2                             DummyThread-1 eat 2</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<h4 class="md-end-block md-heading"><span class="md-plain">9.153 基于协程实现并发的套接字通信</span></h4>
+<p class="md-end-block md-p"><span><strong>服务端：</strong></span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('e13503b2-8478-4775-a494-4d2ca2e926dd')"><img id="code_img_closed_e13503b2-8478-4775-a494-4d2ca2e926dd" class="code_img_closed" src="./images/python 之  并发编程（线程Event、协程）0.png" alt="" /><img id="code_img_opened_e13503b2-8478-4775-a494-4d2ca2e926dd" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('e13503b2-8478-4775-a494-4d2ca2e926dd',event)" src="./images/python 之  并发编程（线程Event、协程）1.png" alt="" />
+<div id="cnblogs_code_open_e13503b2-8478-4775-a494-4d2ca2e926dd" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> gevent <span style="color: #0000ff;">import</span> monkey,spawn;monkey.patch_all()<span style="color: #008000;">#</span><span style="color: #008000;">标记所有time等的i/o</span>
+<span style="color: #0000ff;">from</span> threading <span style="color: #0000ff;">import</span><span style="color: #000000;"> Thread
+</span><span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *<span style="color: #000000;">
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> talk(conn):
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            data</span>=conn.recv(1024<span style="color: #000000;">)
+            </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> data:<span style="color: #0000ff;">break</span><span style="color: #000000;">
+            conn.send(data.upper())
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> ConnectionResetError:
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;">
+    conn.close()
+​
+</span><span style="color: #0000ff;">def</span> server(ip,port,backlog=5<span style="color: #000000;">):
+    s </span>=<span style="color: #000000;"> socket()
+    s.bind((ip,port))
+    s.listen(backlog)
+​
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        conn, addr </span>=<span style="color: #000000;"> s.accept()
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(addr)
+      
+        g</span>=spawn(talk,conn)  <span style="color: #008000;">#</span><span style="color: #008000;"> 通信</span>
+<span style="color: #000000;">    s.close()
+​
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    spawn(server,</span><span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>,8080<span style="color: #000000;">).join()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> server(('127.0.0.1',8080))</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p class="md-end-block md-p"><span><strong>客户端：</strong></span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('2849f4d4-4987-40a7-b76e-3c0bbfe7122e')"><img id="code_img_closed_2849f4d4-4987-40a7-b76e-3c0bbfe7122e" class="code_img_closed" src="./images/python 之  并发编程（线程Event、协程）0.png" alt="" /><img id="code_img_opened_2849f4d4-4987-40a7-b76e-3c0bbfe7122e" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('2849f4d4-4987-40a7-b76e-3c0bbfe7122e',event)" src="./images/python 之  并发编程（线程Event、协程）1.png" alt="" />
+<div id="cnblogs_code_open_2849f4d4-4987-40a7-b76e-3c0bbfe7122e" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> threading <span style="color: #0000ff;">import</span><span style="color: #000000;"> Thread,current_thread
+</span><span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> client():
+    client </span>=<span style="color: #000000;"> socket()
+    client.connect((</span><span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8080<span style="color: #000000;">))
+​
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        data </span>= <span style="color: #800000;">'</span><span style="color: #800000;">%s hello</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> current_thread().name
+        client.send(data.encode(</span><span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+        res </span>= client.recv(1024<span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span>(res.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+​
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1000<span style="color: #000000;">):
+        t</span>=Thread(target=<span style="color: #000000;">client)
+        t.start()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

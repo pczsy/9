@@ -1,0 +1,310 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）</center></div><div class='banquan'>原文出处:本文由博客园博主北京-宏哥提供。<br/>
+原文连接:https://www.cnblogs.com/du-hong/p/11982646.html</div><br>
+    <h3>1. 简介</h3>
+<p>&nbsp;　　本文是练习篇的最后一篇文章，虽然练习篇的文章到此就要和大家说拜拜了，但是我们的学习之路才刚刚开始。不要停下你的脚步，大步朝前走吧！比你优秀的人还在走着，我们有什么理由停下自己的脚步了，生命不止，学习亦是如此。好了，宏哥的毒鸡汤好</p>
+<p>喝吧，喝够了就开始学习吧。</p>
+<p>　　本文主要是练习如何处理iframe切换、处理alert弹窗、获取当前页面全部信息、获取页面href属性和如何截图保存等等内容，希望小伙伴或者童鞋们喜欢哈！！！</p>
+<h3 class="title-article">2. 处理iframe切换</h3>
+<p>　　本文介绍如何利用Selenium中方法，在不同iframe中切换。</p>
+<p>问题：有时候我们发现元素定位没问题，在测试回放的过程，发现就是找不到元素报错。</p>
+<h4>2.1 示例一：</h4>
+<p>　　由于没有找到合适的iframe网站，这里不好用代码举例，简单文字加图片来介绍。但是宏哥辗转反侧的睡不着，最后实在是没招了。于是自己写了一个简陋比较low的网页，利用iframe网页框架，把网页分成上下两个不同iframe控制的页面，把下面html代码保存到</p>
+<p>一个记事本，然后修改名称为index.html。</p>
+<h4>2.2 index.html</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>iframe test page<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">iframe </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="frame1"</span><span style="color: #ff0000;"> src</span><span style="color: #0000ff;">="https://www.baidu.com"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="slider"</span><span style="color: #ff0000;"> height</span><span style="color: #0000ff;">="325"</span><span style="color: #ff0000;"> width</span><span style="color: #0000ff;">="550"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">iframe</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">iframe </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="frame2"</span><span style="color: #ff0000;"> src</span><span style="color: #0000ff;">="http://example.com"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="example"</span><span style="color: #ff0000;"> height</span><span style="color: #0000ff;">="325"</span><span style="color: #ff0000;"> width</span><span style="color: #0000ff;">="550"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">iframe</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>用本地浏览器打开如下图：</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）0.png" alt="" /></p>
+<p>用firepath来获得百度文本输入框的XPath截图</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）1.png" alt="" /></p>
+<p>看到了红圈位置不是显示Top Window，说明你要定位的目标元素在一个iframe里，如果要操作这个元素，首先需要从默认的Top Window，利用switch_to.frame('iframeid')方法来切换到具体的iframe，然后才能去操作目标元素。</p>
+<p>正常百度页面，文本输入框截图</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）2.png" alt="" /></p>
+<p>方法介绍：</p>
+<p>driver.switch_to.frame("iframe1")<br /># 操作目标元素，这个目标元素在 iframe1里面，这里就是百度文本输入框输入文字<br />driver.switch_to.default_content()&nbsp;<br />如果有具体项目页面利用了iframe, 自己动手写一下脚本。</p>
+<h4>2.3 示例二：</h4>
+<p>　　宏哥最后终于找到了一个合适的demo来给小伙伴们或者童鞋们来用代码实际演练的例子如下：</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）3.png" alt="" /></p>
+<p>步骤：</p>
+<p>1.先确认你要操作的元素，是否存在与iframe中，如果元素在iframe中就需要切换</p>
+<p>2.找到该iframe</p>
+<p>3.切换到该iframe （两种方式）</p>
+<p>&nbsp; &nbsp;第一种方式：有三种方法，只是单纯的切换<br />&nbsp; &nbsp;driver.switch_to.frame(1) #通过index（下标）<br />&nbsp; &nbsp;driver.switch_to.frame('login_frame_qq') #通过name<br />&nbsp; &nbsp;driver.switch_to.frame(driver.find_element_by_xpath('//iframe[@name="login_frame_qq"]')) #通过webelement</p>
+<p>&nbsp; &nbsp;第两种方式：既等待元素可见又进行了iframe切换</p>
+<p>&nbsp; &nbsp;WebDriverWait(driver,20).until(EC.frame_to_be_available_and_switch_to_it('login_frame_qq'))</p>
+<p>4.切换完后，就以这个iframe中的html为主html</p>
+<p>5.返回默认的html页面，无论现在在那一层的iframe，执行一次即可。<br />&nbsp; &nbsp;driver.switch_to.default_content()</p>
+<h5>2.3.1 代码实现：</h5>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）4.png" alt="" /></p>
+<h5>2.3.2 参考代码：</h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-09
+@author: 北京-宏哥   QQ交流群：705269076
+Project: python+ selenium自动化测试练习篇8
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+</span><span style="color: #0000ff;">from</span> selenium.webdriver.support.wait <span style="color: #0000ff;">import</span><span style="color: #000000;"> WebDriverWait
+</span><span style="color: #0000ff;">from</span> selenium.webdriver.support <span style="color: #0000ff;">import</span><span style="color: #000000;"> expected_conditions as EC
+</span><span style="color: #0000ff;">from</span> selenium.webdriver.common.by <span style="color: #0000ff;">import</span><span style="color: #000000;"> By
+
+driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+driver.maximize_window()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 登录腾讯课堂页面</span>
+driver.get(<span style="color: #800000;">'</span><span style="color: #800000;">https://ke.qq.com/course/list</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 点击首页登录</span>
+WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.XPATH,<span style="color: #800000;">'</span><span style="color: #800000;">//a[@id="js_login"]</span><span style="color: #800000;">'</span><span style="color: #000000;">)))
+driver.find_element_by_id(</span><span style="color: #800000;">"</span><span style="color: #800000;">js_login</span><span style="color: #800000;">"</span><span style="color: #000000;">).click()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 登录弹窗点击QQ登录</span>
+WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.XPATH,<span style="color: #800000;">'</span><span style="color: #800000;">//a[contains(@class,"btns-enter-qq")]</span><span style="color: #800000;">'</span><span style="color: #000000;">)))
+driver.find_element_by_xpath(</span><span style="color: #800000;">'</span><span style="color: #800000;">//a[contains(@class,"btns-enter-qq")]</span><span style="color: #800000;">'</span><span style="color: #000000;">).click()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> iframe切换</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> driver.switch_to.frame('login_frame_qq') #通过name</span>
+driver.switch_to.frame(driver.find_element_by_xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//iframe[@name="login_frame_qq"]</span><span style="color: #800000;">'</span>)) <span style="color: #008000;">#</span><span style="color: #008000;">通过webelement</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 弹窗点击账户密码登录switcher_plogin</span><span style="color: #008000;">
+#</span><span style="color: #008000;">WebDriverWait(driver,20).until(EC.visibility_of_element_located((By.XPATH,'//a[@id="switcher_plogin"]')))</span>
+time.sleep(10<span style="color: #000000;">)
+driver.find_element_by_xpath(</span><span style="color: #800000;">'</span><span style="color: #800000;">//a[@id="switcher_plogin"]</span><span style="color: #800000;">'</span>).click()</pre>
+</div>
+<h5>2.3.3 运行结果：</h5>
+<p>运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）5.png" alt="" /></p>
+<h5>2.3.4 浏览器运行结果：</h5>
+<p>浏览器的运行过程，宏哥这里就不做屏幕录制了，这个我们看一下结果。浏览器运行结果如下：</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）6.png" alt="" /></p>
+<h3 class="title-article">3. 处理Alert弹窗</h3>
+<p>本文来介绍如何通过Selenium方法去处理网页Alert弹窗，和处理iframe类似，都是通过switch_to方法。这里还是没有找到合适的alert弹窗网站，我们就自己创建一个吧，前面文章介绍了如何通过执行JS来增加一个弹窗。</p>
+<p>（1）使用switch_to方法先切换到浏览器弹出框<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;driver.switch_to.alert<br />（2）Alert类提供了一系列的操作方法<br />&nbsp; &nbsp; &nbsp; &nbsp; dismiss(): 否<br />&nbsp; &nbsp; &nbsp; &nbsp; accept(): 是<br />&nbsp; &nbsp; &nbsp; &nbsp; text(): 获取弹出框里的文本内容<br />&nbsp; &nbsp; &nbsp; &nbsp; send_keys(): 在弹出框里输入文本</p>
+<p>相关脚本代码如下：</p>
+<h4>3.1 代码实现：</h4>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）7.png" alt="" /></p>
+<h4>3.2 参考代码：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-09
+@author: 北京-宏哥   QQ交流群：705269076
+Project: python+ selenium自动化测试练习篇8
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+
+
+driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+driver.maximize_window()
+driver.implicitly_wait(</span>6<span style="color: #000000;">)
+driver.get(</span><span style="color: #800000;">"</span><span style="color: #800000;">https://www.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+time.sleep(</span>1<span style="color: #000000;">)
+
+driver.execute_script(</span><span style="color: #800000;">"</span><span style="color: #800000;">window.alert('这是一个测试Alert弹窗');</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+time.sleep(</span>2<span style="color: #000000;">)
+driver.switch_to_alert().accept() </span><span style="color: #008000;">#</span><span style="color: #008000;"> 点击弹出里面的确定按钮</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;">driver.switch_to_alert().dismiss() # 点击弹出上面的X按</span></pre>
+</div>
+<h4>3.3 运行结果：</h4>
+<p>运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）8.png" alt="" /></p>
+<p>注意：<br />driver.switch_to_alert().accept()</p>
+<p>这是一个老方法，在有些编辑器（后面会介绍一款Python的IDE工具）会提示这个方法划横线，说明在最新Selenium在Pyhton支持包里，这个方法被丢弃，虽然还是可以用，现在新的方法是switch_to.alert(),用这个最新方法，我测试了下，无法模拟点击确定和点击关</p>
+<p>闭弹窗按钮，所以这个地方选择了旧的方法switch_to_alert()</p>
+<h3 class="title-article">4. 获取当前页面全部图片信息</h3>
+<p>本文来介绍下如何获取当前页面全部的图片信息，图片信息可能包括，图片名称，图片大小等。</p>
+<p>相关脚本代码如下：</p>
+<h4>4.1 代码实现：</h4>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）9.png" alt="" /></p>
+<h4>4.2 参考代码：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-09
+@author: 北京-宏哥   QQ交流群：705269076
+Project: python+ selenium自动化测试练习篇8
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+
+
+driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+driver.maximize_window()
+driver.implicitly_wait(</span>6<span style="color: #000000;">)
+driver.get(</span><span style="color: #800000;">"</span><span style="color: #800000;">http://news.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+time.sleep(</span>1<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">for</span> image <span style="color: #0000ff;">in</span> driver.find_elements_by_tag_name(<span style="color: #800000;">"</span><span style="color: #800000;">img</span><span style="color: #800000;">"</span><span style="color: #000000;">):
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;"> (image.text)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;"> (image.size)
+    </span><span style="color: #0000ff;">print</span> (image.tag_name)</pre>
+</div>
+<h4>4.3 运行结果：</h4>
+<p>运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）10.png" alt="" /></p>
+<p>运行结果：</p>
+<p>运行结果，发现没有图片名称打印出来，说明百度新闻页面，所有图片都没有给出text这个属性，前端的妹子没有写图片的text属性。不相信的同学或者小伙伴们可以通过F12查看一下图片是否有text这个属性。</p>
+<h3 class="title-article">5. 获取页面元素的href属性</h3>
+<p>本文来介绍如何通过Selenium获取页面元素的某一个属性。一个元素可能有多个属性，例如 class, id, name, text, href, vale等等。这里我们举例一个爬虫中经常需要处理的链接问题：找出当前页面所有的超链接。</p>
+<p>已百度首页为例，打印所有包含href的元素的链接。</p>
+<p>相关脚本代码如下：</p>
+<h4>5.1 代码实现：</h4>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）11.png" alt="" /></p>
+<h4>5.2 参考代码：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-09
+@author: 北京-宏哥   QQ交流群：705269076
+Project: python+ selenium自动化测试练习篇8
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+
+
+driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+driver.maximize_window()
+driver.implicitly_wait(</span>6<span style="color: #000000;">)
+driver.get(</span><span style="color: #800000;">"</span><span style="color: #800000;">https://www.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+time.sleep(</span>1<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">for</span> link <span style="color: #0000ff;">in</span> driver.find_elements_by_xpath(<span style="color: #800000;">"</span><span style="color: #800000;">//*[@href]</span><span style="color: #800000;">"</span><span style="color: #000000;">):
+    </span><span style="color: #0000ff;">print</span> (link.get_attribute(<span style="color: #800000;">'</span><span style="color: #800000;">href</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+driver.quit()</span></pre>
+</div>
+<h4>5.3 运行结果：</h4>
+<p>运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）12.png" alt="" /></p>
+<p>这里只是找元素的href属性，如果你需要其它属性，例如你需要查看页面所有元素具有id值的话，你可以这样写：&nbsp;<strong>print (link.get_attribute('id'))</strong></p>
+<h3 class="title-article">6. 如何截图并保存</h3>
+<p>本文介绍如何利用Selenium的方法进行截图，在测试过程中，是有必要截图，特别是遇到错误的时候进行截图。在selenium for python中主要有三个截图方法，我们挑选其中最常用的一种。</p>
+<p><strong>get_screenshot_as_file()</strong></p>
+<p><strong><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）13.png" alt="" /></strong></p>
+<p>相关代码如下：</p>
+<h4>6.1 代码实现：</h4>
+<p><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）14.png" alt="" /></p>
+<h4>6.2 参考代码：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-09
+@author: 北京-宏哥   QQ交流群：705269076
+Project: python+ selenium自动化测试练习篇8
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+
+
+driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+driver.maximize_window()
+driver.implicitly_wait(</span>6<span style="color: #000000;">)
+driver.get(</span><span style="color: #800000;">"</span><span style="color: #800000;">https://www.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+time.sleep(</span>1<span style="color: #000000;">)
+
+driver.get_screenshot_as_file(</span><span style="color: #800000;">"</span><span style="color: #800000;">C:\\Users\\你的账户名\\Desktop\\baidu.png</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+driver.quit()</span></pre>
+</div>
+<h4>6.3 运行结果：</h4>
+<p>运行代码后，控制台打印如下图的结果</p>
+<h4><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）15.png" alt="" /></h4>
+<h4>6.4 执行结果：</h4>
+<p>会在桌面保存一张百度首页的截图，图片后缀是png。注意路径是要两个&nbsp;<strong>\\&nbsp;</strong>。如下图：</p>
+<p><strong><img src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）16.png" alt="" /></strong></p>
+<h3>7. 小结</h3>
+<h4>7.1 多个iframe的切换问题</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 如：有两个iframe：f1、f2</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 1.定位到f1</span>
+driver.switch_to_frame(<span style="color: #800000;">"</span><span style="color: #800000;">f1</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.操作元素</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> &middot;&middot;&middot;&middot;&middot;&middot;</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 3.退出iframe</span>
+<span style="color: #000000;">driver.switch_to_default_content()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 4.定位到f2</span>
+driver.switch_to_frame(<span style="color: #800000;">"</span><span style="color: #800000;">f2</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> &middot;&middot;&middot;&middot;&middot;&middot;</span></pre>
+</div>
+<h4>7.2 嵌套：f1中嵌套着f2</h4>
+<div class="cnblogs_code">
+<pre><code>driver.switch_to_frame(<span style="color: #800000;">"</span><span style="color: #800000;">f1</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+driver.switch_to_frame(</span><span style="color: #800000;">"</span><span style="color: #800000;">f2</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 操作元素</span></pre>
+</div>
+<h4>7.3 退出iframe：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 第一种方式：跳出所有iframe，回到主界面</span>
+<span style="color: #000000;">driver.switch_to_default_content()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 第二种方式：回到f1（返回上一级）</span>
+driver.switch_to.parent_frame()</pre>
+</div>
+<p>好了，今天的练习就到这里，希望大家好好的练习和理解。&nbsp;</p>
+<p>&nbsp;</p>
+<p style="text-align: center;"><span style="font-size: 14pt;"><strong><strong>您的肯定就是我进步的动力。</strong>如果你感觉还不错，就请鼓励一下吧！记得点波<span style="font-size: 18pt; color: #ff0000;">&nbsp;推荐</span>&nbsp;不要忘记哦！！！</strong></span></p>
+<p style="text-align: center;">&nbsp;</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/《手把手教你》系列练习篇之8-python+ selenium自动化测试 -压台篇（详细教程）17.png" alt="" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

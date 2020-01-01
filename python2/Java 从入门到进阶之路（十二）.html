@@ -1,0 +1,200 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Java 从入门到进阶之路（十二）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Java 从入门到进阶之路（十二）</center></div><div class='banquan'>原文出处:本文由博客园博主丰寸提供。<br/>
+原文连接:https://www.cnblogs.com/weijiutao/p/11188532.html</div><br>
+    <p>在之前的文章我们介绍了一下 Java 类的重写及与重载的区别，本章我们来看一下 Java 类的 private，static，final。</p>
+<p>我们在之前引入 Java 类概念的时候是通过商场收银台来引入的，如下：</p>
+<p><img src="./images/Java 从入门到进阶之路（十二）0.png" alt="" width="213" height="208" /></p>
+<p>如果我们使用刷卡的形式进行付账，我们需要出示一张有足够余额的银行卡或者会员卡来进行付款，在付款的时候我们仅仅是通过刷卡，输入密码来完成支付，在这个过程中，收银员是不能看到我们的卡号，密码，余额这些私密性的数据，否则可能会出现被盗刷或者其他问题，收银员在收银的时候只需要做的就是我们输入密码时对我们输入的密码与原始密码时候匹对和账户余额是否大于等于商品价格就可以了。</p>
+<p>根据上面的分析我们我们可以定义一个 Card 类：</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Card{
+</span><span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">private</span> String cartId; <span style="color: #008000;">//</span><span style="color: #008000;"> 卡号</span>
+<span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">private</span> String cardPwd; <span style="color: #008000;">//</span><span style="color: #008000;"> 密码</span>
+<span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">double</span> balance; <span style="color: #008000;">//</span><span style="color: #008000;"> 余额</span>
+<span style="color: #008080;"> 5</span>     <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span> payMoney(<span style="color: #0000ff;">double</span> money){ <span style="color: #008000;">//</span><span style="color: #008000;"> 支付</span>
+<span style="color: #008080;"> 6</span>         <span style="color: #0000ff;">if</span>(balance &gt;=<span style="color: #000000;"> money){
+</span><span style="color: #008080;"> 7</span>             balance -=<span style="color: #000000;"> money;
+</span><span style="color: #008080;"> 8</span>             <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">10</span>         <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+</span><span style="color: #008080;">11</span> 
+<span style="color: #008080;">12</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">13</span>     <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span> checkPwd(String pwd){ <span style="color: #008000;">//</span><span style="color: #008000;"> 检查密码</span>
+<span style="color: #008080;">14</span>         <span style="color: #0000ff;">if</span><span style="color: #000000;">(cardPwd.equals(pwd)){
+</span><span style="color: #008080;">15</span>             <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+</span><span style="color: #008080;">16</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">17</span>         <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+</span><span style="color: #008080;">18</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">19</span> }</pre>
+</div>
+<p>在上面的代码中，我们将变量前的修饰词写成了 private，将方法前的修饰词写成了 public。接下来我们看一下 private 和 public 之间的区别。</p>
+<p>private 修饰从成员变量和方法只能在本类中调用，public 修饰的成员变量和方法可以在任何地方调用。</p>
+<p>private 修饰的内容是对内实现的封装，public 修饰的内容是对外提供可以被调用的功能。</p>
+<p>另外还有两种：protected 和 默认不写，我们称之为访问控制修饰符，他们的控制范围分别是：</p>
+<p>1）public：公开的，任何类</p>
+<p>2）private：私有的，本类</p>
+<p>3）protected：受保护的，本类、子类、同包类</p>
+<p>4）默认的（什么也不写）：本类、同包类</p>
+<p>&nbsp;<img src="./images/Java 从入门到进阶之路（十二）1.png" alt="" width="355" height="165" /></p>
+<p>&nbsp;</p>
+<p>接下来我们看一下关键字 static 。</p>
+<p>之前我们在类中定义的变量其实可以叫做实例变量，还有一种变量叫做静态变量，即用 static 关键字修饰。我们先来看一下两种变量之间的区别：</p>
+<p>1、实例变量：</p>
+<p>　1）属于对象的，存在对重</p>
+<p>　2）有几个对象就有几份实例变量</p>
+<p>　3）必须通过 对象名. 来访问</p>
+<p>2、静态变量：</p>
+<p>　1）属于类的，存在方法区中</p>
+<p>　2）只有一份</p>
+<p>　3）必须通过 类名. 来访问</p>
+<p>我们通过下面的代码来实际看一下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> HelloWorld {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+</span><span style="color: #008080;"> 3</span>         Aoo aoo1 = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Aoo();
+</span><span style="color: #008080;"> 4</span>         aoo1.show(); <span style="color: #008000;">//</span><span style="color: #008000;"> a=1 b=1</span>
+<span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span>         Aoo aoo2 = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Aoo();
+</span><span style="color: #008080;"> 7</span>         aoo2.show(); <span style="color: #008000;">//</span><span style="color: #008000;"> a=1 b=2</span>
+<span style="color: #008080;"> 8</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">10</span> 
+<span style="color: #008080;">11</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Aoo {
+</span><span style="color: #008080;">12</span>     <span style="color: #0000ff;">int</span><span style="color: #000000;"> a;
+</span><span style="color: #008080;">13</span>     <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> b;
+</span><span style="color: #008080;">14</span> 
+<span style="color: #008080;">15</span> <span style="color: #000000;">    Aoo() {
+</span><span style="color: #008080;">16</span>         a++<span style="color: #000000;">;
+</span><span style="color: #008080;">17</span>         b++<span style="color: #000000;">;
+</span><span style="color: #008080;">18</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">19</span> 
+<span style="color: #008080;">20</span>     <span style="color: #0000ff;">void</span><span style="color: #000000;"> show() {
+</span><span style="color: #008080;">21</span>         System.out.println("a=" +<span style="color: #000000;"> a);
+</span><span style="color: #008080;">22</span>         System.out.println("b=" +<span style="color: #000000;"> b);
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">24</span> }</pre>
+</div>
+<p>在上面的代码中我们分别定义了实例变量a 和静态变量b，然后实例化了两次 Aoo，再通过两次调用实例化 Aoo 后调用 show() 方法可以看出我们实例化后调用的实例变量 a 的值不变，即每实例一次就会复制出一个 a，而静态变量 b 则每实例化一次后值会变化，即实例化后并不会重新复制一个 b，而是继续使用上一次的。</p>
+<p>&nbsp;</p>
+<p>接下来我们看一下 static 关键字的静态方法。</p>
+<p>静态方法和上面的静态变量大体上相同，但也有特殊的地方。</p>
+<p>　1）属于类的，存在方法区中</p>
+<p>　2）只有一份</p>
+<p>　3）必须通过 类名. 来访问</p>
+<p>　4）没有隐式的 this 传递，静态方法中不能直接访问实例变量</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Aoo {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">int</span> a; <span style="color: #008000;">//</span><span style="color: #008000;"> 实例变量---对象点访问</span>
+<span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">int</span> b; <span style="color: #008000;">//</span><span style="color: #008000;"> 静态变量---类名点访问</span>
+<span style="color: #008080;"> 4</span> 
+<span style="color: #008080;"> 5</span>     <span style="color: #0000ff;">void</span> test1() { <span style="color: #008000;">//</span><span style="color: #008000;"> 实例方法</span>
+<span style="color: #008080;"> 6</span>         a++<span style="color: #000000;">;
+</span><span style="color: #008080;"> 7</span>         b++<span style="color: #000000;">;
+</span><span style="color: #008080;"> 8</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span>     <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> test2() { <span style="color: #008000;">//</span><span style="color: #008000;"> 静态方法</span>
+<span style="color: #008080;">11</span>         a++; <span style="color: #008000;">//</span><span style="color: #008000;"> 编译错误</span>
+<span style="color: #008080;">12</span>         test1(); <span style="color: #008000;">//</span><span style="color: #008000;"> 编译错误</span>
+<span style="color: #008080;">13</span>         b++<span style="color: #000000;">;
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">15</span> }</pre>
+</div>
+<p>在上面的代码中，我们通过 static 关键字将变量 b 变为静态变量，将 test2() 变为静态方法，当我们在 test1() 的实例方法中 a++ 和 b++ 时，系统会默认为我们写成 this.a++ 和 Aoo.b++；而在 test2() 中，由于静态方法没有隐式 this，所以 a++ 和 test1() 方法并没有。</p>
+<p>&nbsp;</p>
+<p>接下来我们看一下 static 关键字的静态块。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> HelloWorld {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+</span><span style="color: #008080;"> 3</span>         Aoo aoo1 = <span style="color: #0000ff;">new</span> Aoo(); <span style="color: #008000;">//</span><span style="color: #008000;"> 静态块 构造方法</span>
+<span style="color: #008080;"> 4</span>         Aoo aoo2 = <span style="color: #0000ff;">new</span> Aoo(); <span style="color: #008000;">//</span><span style="color: #008000;"> 构造方法</span>
+<span style="color: #008080;"> 5</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 6</span> <span style="color: #000000;">}
+</span><span style="color: #008080;"> 7</span> 
+<span style="color: #008080;"> 8</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Aoo {
+</span><span style="color: #008080;"> 9</span>     <span style="color: #0000ff;">static</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">10</span>         System.out.println("静态块"<span style="color: #000000;">);
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">12</span> 
+<span style="color: #008080;">13</span> <span style="color: #000000;">    Aoo(){
+</span><span style="color: #008080;">14</span>         System.out.println("构造方法"<span style="color: #000000;">);
+</span><span style="color: #008080;">15</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">16</span> }</pre>
+</div>
+<p>在上面的代码中，我们在 Aoo 中创建了一个构造方法，并且通过&nbsp;&nbsp;<span class="cnblogs_code"><span style="color: #0000ff;">static</span> { }</span>&nbsp;创建了一个静态块，我们实例化了两个 Aoo 类，我们发现静态块只加载一次，而静态方法每实例化一次就加载一次。</p>
+<p>静态块在实际应用中可以加载图片，音频，视频等静态资源，比如我们逛淘宝时图片只加载一次，不可能每个人近义词淘宝网站就加载一次，服务器压力也受不了。</p>
+<p>&nbsp;</p>
+<p>接下来我们来看一下 final 关键字。</p>
+<p>1、final 修饰成员变量，两种方式初始化：</p>
+<p>　　1）声明的同事初始化</p>
+<p>　　2）构造方法中初始化</p>
+<p>2、final 修饰局部变量，只要在用之前初始化即可。</p>
+<p>代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Aoo {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">int</span> a = 10<span style="color: #000000;">;
+</span><span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">int</span><span style="color: #000000;"> b;
+</span><span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> c = 10; <span style="color: #008000;">//</span><span style="color: #008000;"> 声明同时初始化
+</span><span style="color: #008080;"> 5</span>     <span style="color: #008000;">//</span><span style="color: #008000;">    final int d; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 编译错误 声明未初始化</span>
+<span style="color: #008080;"> 6</span>     <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> e;
+</span><span style="color: #008080;"> 7</span> 
+<span style="color: #008080;"> 8</span> <span style="color: #000000;">    Aoo() {
+</span><span style="color: #008080;"> 9</span>         e = 10; <span style="color: #008000;">//</span><span style="color: #008000;"> 构造方法中初始化</span>
+<span style="color: #008080;">10</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">11</span> 
+<span style="color: #008080;">12</span>     <span style="color: #0000ff;">void</span><span style="color: #000000;"> test() {
+</span><span style="color: #008080;">13</span>         <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> f; <span style="color: #008000;">//</span><span style="color: #008000;"> 局部变量：用之前赋值即可，不用刻意不用赋值</span>
+<span style="color: #008080;">14</span>         a = 20<span style="color: #000000;">;
+</span><span style="color: #008080;">15</span> <span style="color: #008000;">//</span><span style="color: #008000;">        c = 20; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 编译错误，final 修饰变量不能被改变</span>
+<span style="color: #008080;">16</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">17</span> 
+<span style="color: #008080;">18</span> }</pre>
+</div>
+<p>&nbsp;</p>
+<p>final 修饰方法：final 修饰方法不能被重写。</p>
+<p>代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Aoo {
+</span><span style="color: #008080;">2</span>     <span style="color: #0000ff;">void</span><span style="color: #000000;"> test(){}
+</span><span style="color: #008080;">3</span>     <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> show(){}
+</span><span style="color: #008080;">4</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">5</span> 
+<span style="color: #008080;">6</span> <span style="color: #0000ff;">class</span> Boo <span style="color: #0000ff;">extends</span><span style="color: #000000;"> Aoo{
+</span><span style="color: #008080;">7</span>     <span style="color: #0000ff;">void</span><span style="color: #000000;"> test(){}
+</span><span style="color: #008080;">8</span>     <span style="color: #0000ff;">void</span> show(){} <span style="color: #008000;">//</span><span style="color: #008000;"> 编译错误，final 方法不能被重写</span>
+<span style="color: #008080;">9</span> }</pre>
+</div>
+<p>&nbsp;</p>
+<p>final 修饰类：final 修饰的类不能被继承，但是能继承其他类</p>
+<p>代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Aoo {}
+</span><span style="color: #008080;">2</span> <span style="color: #0000ff;">class</span> Boo <span style="color: #0000ff;">extends</span><span style="color: #000000;"> Aoo{}
+</span><span style="color: #008080;">3</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">class</span> Coo <span style="color: #0000ff;">extends</span> Aoo{} <span style="color: #008000;">//</span><span style="color: #008000;"> final 修饰的类可以继承别的类</span>
+<span style="color: #008080;">4</span> 
+<span style="color: #008080;">5</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Doo{}
+</span><span style="color: #008080;">6</span> <span style="color: #0000ff;">class</span> Eoo <span style="color: #0000ff;">extends</span> Doo{} <span style="color: #008000;">//</span><span style="color: #008000;"> 编译错误，final 修饰的类不能被继承</span></pre>
+</div>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

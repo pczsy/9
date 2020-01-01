@@ -1,0 +1,206 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Redis 动态字符串 SDS 源码解析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Redis 动态字符串 SDS 源码解析</center></div><div class='banquan'>原文出处:本文由博客园博主Pushy提供。<br/>
+原文连接:https://www.cnblogs.com/Pushy/p/12081020.html</div><br>
+    <blockquote>
+<p>本文作者： Pushy<br />
+本文链接： <a href="http://pushy.site/2019/12/21/redis-sds/" class="uri">http://pushy.site/2019/12/21/redis-sds/</a><br />
+版权声明： 本博客所有文章除特别声明外，均采用 CC BY-NC-SA 3.0 许可协议。转载请注明出处！</p>
+</blockquote>
+<h2 id="什么是-sds">1. 什么是 SDS</h2>
+<p>众所周知，在 Redis 的五种数据解构中，最简单的就是字符串：</p>
+<pre><code><code>redis&gt; set msg &quot;Hello World&quot;</code></pre>
+<p>而 Redis 并没有直接使用 C 语言传统的字符串表示，而是自己构建了一个名为<strong>简单动态字符串</strong>（Simple dynamic string，即 SDS）的抽象数据结构。</p>
+<p>执行上面的 Redis 命令，在 Server 的数据库中将创建一个键值对，即：</p>
+<ul>
+<li>键为 “msg” 的 SDS；</li>
+<li>值为 “Hello World” 的 SDS。</li>
+</ul>
+<p>我们再来看下 SDS 的定义，在 Redis 的源码目录 <code>sds.h</code> 头文件中，定义了 SDS 的结构体：</p>
+<pre class="c"><code>struct sdshdr {
+    // 记录 buf 数组中当前已使用的字节数量
+    unsigned int len;
+    // 记录 buf 数组中空闲空间长度
+    unsigned int free;
+    // 字节数组
+    char buf[];
+
+};</code></pre>
+<p>可以看到，SDS 通过 <code>len</code> 和 <code>free</code> 属性值来描述字节数组 <code>buf</code> 当前的存储状况，这样在之后的扩展和其他操作中有很大的作用，还能<strong>以 O(1) 的复杂度获取到字符串的长度（我们知道，C 自带的字符串本身并不记录长度信息，只能遍历整个字符串统计）</strong>。</p>
+<p>那么为什么 Redis 要自己实现一套字符串数据解构呢？下面慢慢来研究！</p>
+<h2 id="sds-的优势">2. SDS 的优势</h2>
+<h3 id="杜绝缓冲区溢出">杜绝缓冲区溢出</h3>
+<p>除了获取字符串长度的复杂度为较高之外，C 字符串不记录自身长度信息带来的另一个问题就是<strong>容易造成内存溢出</strong>。举个例子，通过 C 内置的 <code>strcat</code> 方法将字符串 <code>motto</code> 追加到 <code>s1</code> 字符串后边：</p>
+<pre class="c"><code>void wrong_strcat() {
+    char *s1, *s2;
+
+    s1 = malloc(5 * sizeof(char));
+    strcpy(s1, &quot;Hello&quot;);
+    s2 = malloc(5 * sizeof(char));
+    strcpy(s2, &quot;World&quot;);
+
+    char *motto = &quot; To be or not to be, this is a question.&quot;;
+    s1 = strcat(s1, motto);
+
+    printf(&quot;s1 = %s \n&quot;, s1);
+    printf(&quot;s2 = %s \n&quot;, s2);
+}
+
+// s1 = Hello To be or not to be, this is a question. 
+// s2 = s a question. </code></pre>
+<p>但是输出却出乎意料，我们只想修改 <code>s1</code> 字符串的值，而 <code>s2</code> 字符串也被修改了。这是因为 <code>strcat</code> 方法假定用户在执行前已经为 <code>s1</code> 分配了足够的内存，可以容纳 <code>motto</code> 字符串中的内容。<strong>而一旦这个假设不成立，就会产生缓冲区溢出</strong>。</p>
+<p>通过 Debug 我们看到，s1 变量内存的初始位置为 <code>94458843619936</code> （10进制）， s2 初始位置为 <code>94458843619968</code>，是一段相邻的内存块：</p>
+<p><img src="./images/Redis 动态字符串 SDS 源码解析0.png" alt="wrong_strcat.png" /></p>
+<p>所以一旦<strong>通过</strong> <code>strcat</code> <strong>追加到 s1 的字符串 motto 的长度大于 s1 到 s2 的内存地址间隔时，将会修改到 s2 变量的值</strong>。而正确的做法应该是在 <code>strcat</code> 之前为 s1 重新调整内存大小，这样就不会修改 s2 变量的值了：</p>
+<pre class="c"><code>void correct_strcat() {
+    char *s1, *s2;
+
+    s1 = malloc(5 * sizeof(char));
+    strcpy(s1, &quot;Hello&quot;);
+    s2 = malloc(5 * sizeof(char));
+    strcpy(s2, &quot;World&quot;);
+
+    char *motto = &quot; To be or not to be, this is a question.&quot;;
+    // 为 s1 变量扩展内存，扩展的内存大小为 motto * sizeof(char) + 空字符结尾(1)
+    s1 = realloc(s1, (strlen(motto) * sizeof(char)) + 1);
+    s1 = strcat(s1, motto);
+
+    printf(&quot;s1 = %s \n&quot;, s1);
+    printf(&quot;s2 = %s \n&quot;, s2);
+}
+
+// s1 = Hello To be or not to be, this is a question. 
+// s2 = World </code></pre>
+<p>可以看到，扩容后的 s1 变量内存地址起始位置变为了 <code>94806242149024</code>（十进制），s2 起始地址为 <code>94806242148992</code>。这时候 s1 与 s2 内存地址的间隔大小已经足够 motto 字符串的存放了：</p>
+<p><img src="./images/Redis 动态字符串 SDS 源码解析1.png" alt="correct_strcat.png" /></p>
+<p>而与 C 字符串不同， <strong>SDS 的空间分配策略完全杜绝了发生缓冲区溢出的可能性</strong>，具体的实现在 <code>sds.c</code> 中。通过阅读源码，我们可以明白之所以 SDS 能杜绝缓冲区溢出是因为再调用 <code>sdsMakeRoomFor</code> 时，会检查 SDS 的空间是否满足修改所需的要求（即 <code>free &gt;= addlen</code> 条件），如果满足 Redis 将会将 SDS 的空间扩展至执行所需的大小，在执行实际的 concat 操作，这样就避免了溢出发生：</p>
+<pre class="c"><code>// 与 C 语言 string.h/strcat 功能类似，其将一个 C 字符串追加到 sds
+sds sdscat(sds s, const char *t) {
+    return sdscatlen(s, t, strlen(t));
+}
+
+sds sdscatlen(sds s, const char *t, size_t len) {
+    struct sdshdr *sh;
+    size_t curlen = sdslen(s);  // 获取 sds 的 len 属性值
+
+    s = sdsMakeRoomFor(s, len);
+    if (s == NULL) return NULL;
+    // 将 sds 转换为 sdshdr，下边会介绍
+    sh = (void *) (s - sizeof(struct sdshdr));
+    // 将字符串 t 复制到以 s+curlen 开始的内存地址空间
+    memcpy(s + curlen, t, len);
+    sh-&gt;len = curlen + len;     // concat后的长度 = 原先的长度 + len
+    sh-&gt;free = sh-&gt;free - len;  // concat后的free = 原来 free 空间大小 - len
+    s[curlen + len] = &#39;\0&#39;;     // 与 C 字符串一样，都是以空字符 \0 结尾
+    return s;
+}
+
+// 确保有足够的空间容纳加入的 C 字符串, 并且还会分配额外的未使用空间
+// 这样就杜绝了发生缓冲区溢出的可能性
+sds sdsMakeRoomFor(sds s, size_t addlen) {
+    struct sdshdr *sh, *newsh;
+    size_t free = sdsavail(s);  // 当前 free 空间大小
+    size_t len, newlen;
+
+    if (free &gt;= addlen) {
+        /* 如果空余空间足够容纳加入的 C 字符串大小, 则直接返回, 否则将执行下边的代码进行扩展 buf 字节数组 */
+        return s;
+    }
+    len = sdslen(s);  // 当前已使用的字节数量
+    sh = (void *) (s - (sizeof(struct sdshdr)));
+    newlen = (len + addlen);  // 拼接后新的字节长度
+
+    if (newlen &lt; SDS_MAX_PREALLOC)
+        newlen *= 2;
+    else
+        newlen += SDS_MAX_PREALLOC;
+    newsh = realloc(sh, sizeof(struct sdshdr) + newlen + 1);
+    if (newsh == NULL) return NULL; // 申请内存失败
+
+    /* 新的 sds 的空余空间 = 新的大小 - 拼接的 C 字符串大小 */
+    newsh-&gt;free = newlen - len;
+    return newsh-&gt;buf;
+}</code></pre>
+<p>另外，在看源码时我对 <code>sh = (void *) (s - sizeof(struct sdshdr));</code> 一脸懵逼，如果不懂可以看：<a href="https://blog.csdn.net/u014303647/article/details/88740109">Redis（一）之 struct sdshdr <em>sh = (void</em>) (s-(sizeof(struct sdshdr)))讲解</a></p>
+<h3 id="减少修改字符带来的内存重分配次数">减少修改字符带来的内存重分配次数</h3>
+<p><strong>对于包含 N 个字符的 C 字符串来说，底层总是由 N+1 个连续内存的数组来实现</strong>。由于存在这种关系，因此每次修改时，程序都需要对这个 C 字符串数组进行一次内存重分配操作：</p>
+<ul>
+<li>如果是拼接操作：扩展底层数组的大小，<strong>防止出现缓冲区溢出</strong>（前面提到的）；</li>
+<li>如果是截断操作：需要释放不使用的内存空间，<strong>防止出现内存泄漏</strong>。</li>
+</ul>
+<p>Redis 作为频繁被访问修改的数据库，为了减少修改字符带来的内存重分配的性能影响，SDS 也变得非常需要。因为在 SDS 中，<strong>buf 数组的长度不一定就是字符串数量 + 1，可以包含未使用的字符，通过 free 属性值记录</strong>。通过未使用空间，SDS 实现了以下两种优化策略：</p>
+<p><strong>Ⅰ、空间预分配</strong></p>
+<p>空间预分配用于优化 SDS 增长的操作：当对 SDS 进行修改时，并且需要对 SDS 进行空间扩展时，Redis 不仅会为 SDS 分配修改所必须的空间，<strong>还会对 SDS 分配额外的未使用空间</strong>。</p>
+<p>在前面的 <code>sdsMakeRoomFor</code> 方法可以看到，额外分配的未使用空间数量存在两种策略：</p>
+<ul>
+<li>SDS 小于 <code>SDS_MAX_PREALLOC</code>：这时 len 属性值将会和 free 属性相等；</li>
+<li>SDS 大于等于 <code>SDS_MAX_PREALLOC</code>：直接分配 <code>SDS_MAX_PREALLOC</code> 大小。</li>
+</ul>
+<pre class="c"><code>sds sdsMakeRoomFor(sds s, const char *t, size_t len) {
+    ...
+    if (newlen &lt; SDS_MAX_PREALLOC)
+        newlen *= 2;
+    else
+        newlen += SDS_MAX_PREALLOC;
+    newsh = realloc(sh, sizeof(struct sdshdr) + newlen + 1);
+    if (newsh == NULL) return NULL;
+    newsh-&gt;free = newlen - len;
+    return newsh-&gt;buf;
+}</code></pre>
+<p>通过空间预分配策略，Redis 可以减少连续执行字符串增长操作所需的内存重分配次数。</p>
+<p><strong>Ⅱ、惰性空间释放</strong></p>
+<p>惰性空间释放用于优化 SDS 字符串缩短操作，当需要缩短 SDS 保存的字符串时，<strong>Redis 并不立即使用内存重分配来回收缩短多出来的字节，而是使用 free 属性将这些字节记录起来，并等待来使用</strong>。</p>
+<p>举个例子，可以看到执行完 <code>sdstrim</code> 并没有立即回收释放多出来的 22 字节的空间，而是通过 free 变量值保存起来。当执行 <code>sdscat</code> 时，先前所释放的 22 字节的空间足够容纳追加的 C 字符串 11 字节的大小，也就不需要再进行内存空间扩展重分配了。</p>
+<pre class="c"><code>#include &quot;src/sds.h&quot;
+
+int main() {
+    // sds{len = 32, free = 0, buf = &quot;AA...AA.a.aa.aHelloWorld     :::&quot;}
+    s = sdsnew(&quot;AA...AA.a.aa.aHelloWorld     :::&quot;);  
+    // sds{len = 10, free = 22, buf = &quot;HelloWorld&quot;}
+    s = sdstrim(s, &quot;Aa. :&quot;);  
+    // sds{len = 21, free = 11, buf = &quot;HelloWorld! I&#39;m Redis&quot;}
+    s = sdscat(s, &quot;! I&#39;m Redis&quot;);   
+    return 0;
+}</code></pre>
+<p>通过惰性空间释放策略，SDS 避免了缩短字符串时所需内存重分配操作，并会将来可能增长操作提供优化。与此同时，SDS 也有相应的 API 真正地释放 SDS 的未使用空间。</p>
+<h3 id="二进制安全">二进制安全</h3>
+<p>C 字符串必须符合某种编码，并且除了字符串的末尾之外，字符串不能包含空字符（<code>\0</code>）,否则会被误认为字符串的末尾。这些限制导致不能保存图片、音频等这种二进制数据。</p>
+<p>但是 Redis 就可以存储二进制数据，原因是因为 SDS 是使用 len 属性值而不是空字符来判断字符串是否结束的。</p>
+<h3 id="兼容部分-c-字符串函数">兼容部分 C 字符串函数</h3>
+<p>我们发现， SDS 的字节数组有和 C 字符串相似的地方，例如也是以 <code>\0</code> 结尾（但是不是以这个标志作为字符串的结束）。这就使得 SDS 可以重用 <code>&lt;string.h&gt;</code> 库定义的函数：</p>
+<pre class="c"><code>#include &lt;stdio.h&gt;
+#include &lt;strings.h&gt;
+#include &quot;src/sds.h&quot;
+
+int main() {
+    s = sdsnew(&quot;Cat&quot;);
+    // 根据字符集比较大小
+    int ret = strcasecmp(s, &quot;Dog&quot;);
+    printf(&quot;%d&quot;, ret);
+    return 0;
+}</code></pre>
+<h2 id="总结">3. 总结</h2>
+<p>看完 Redis 的 SDS 的实现，终于知道 Redis 只所以快，肯定和 epoll 的网络 I/O 模型分不开，但是也和底层优化的简单数据结构分不开。</p>
+<p>SDS 精妙之处在于通过 len 和 free 属性值来协调字节数组的扩展和伸缩，带来了较比 C 字符串太多的性能更好的优点。什么叫牛逼？这就叫牛逼！</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

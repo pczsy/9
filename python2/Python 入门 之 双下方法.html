@@ -1,0 +1,284 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 入门 之 双下方法' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 入门 之 双下方法</center></div><div class='banquan'>原文出处:本文由博客园博主永亮提供。<br/>
+原文连接:https://www.cnblogs.com/caiyongliang/p/11716430.html</div><br>
+    <h1 id="python-入门-之-双下方法">Python 入门 之 双下方法</h1>
+<h2 id="双下方法">1、双下方法</h2>
+<p>​ 定义：双下方法是特殊方法，它是解释器提供的 由双下划线加方法名加双下划线 <strong>方法名</strong>的具有特殊意义的方法,双下方法主要是python源码程序员使用的，我们在开发中尽量不要使用双下方法，但是深入研究双下方法，更有益于我们阅读源码。</p>
+<h3 id="调用不同的双下方法有不同的触发方式">（1）调用：不同的双下方法有不同的触发方式，</h3>
+<h4 id="len__----len-触发">&lt;1&gt; __ len__ -- len() 触发</h4>
+<pre><code><code>class A(object):
+
+    def __init__(self,name):
+        self.name = name
+        print(&quot;触发了__init__&quot;)
+
+    def __len__(self):     # len() 触发
+        print(&quot;走这里&quot;)
+        return len(self.name)    # return len(&quot;xqrqwr&quot;)  str中__len__
+        # 必须有返回值,返回值的类型必须是整型
+
+a = A(&quot;xqrqwr&quot;)
+print(len(a))
+
+# str
+a = &quot;12345&quot;      # str这个类的实例
+lst = [1,2,3,4,4,5,5,5,5] # list这个类的实例
+print(len(a))
+print(len(lst))</code></pre>
+<h4 id="hash__---hash-触发">&lt;2&gt; __ hash__ --hash() 触发</h4>
+<pre><code><code>class A(object):
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age = age
+
+    def __hash__(self):  # hash()
+        hash({1,2,345})  # 可变数据类,不可数据类型
+        return 1
+        # 必须有返回值,返回值的类型必须是整型
+
+a = A(&quot;meet&quot;,25)
+print(hash(a))</code></pre>
+<h4 id="str__---print-或者-str-触发">&lt;3&gt; __ str__ --print 或者 str() 触发</h4>
+<pre><code><code>class A:
+
+    def __init__(self,name,age,sex):
+        self.name = name
+        self.age = age
+        self.sex = sex
+
+    def __str__(self):   # print 触发 str()
+        print(111)
+        return f&quot;姓名:{self.name} 年龄:{self.age} 性别:{self.sex}&quot;
+        # 必须有返回值,返回值的类型必须是字符串
+
+
+a = A(&quot;mee&quot;,20,&quot;男&quot;)
+a1 = A(&quot;mee1&quot;,200,&quot;男1&quot;)
+str(a)
+print(a)
+print(a1)
+
+
+# 以下对比：
+a = A(&quot;mee&quot;,20,&quot;男&quot;)
+a1 = A(&quot;mee2&quot;,200,&quot;女&quot;)
+
+print(f&quot;姓名:{a.name} 年龄:{a.age} 性别:{a.sex}&quot;)   # &quot;姓名:meet 年龄:20 性别:男&quot;
+print(f&quot;姓名:{a1.name} 年龄:{a1.age} 性别:{a1.sex}&quot;)  # &quot;姓名:meet2 年龄:200 性别:女&quot;</code></pre>
+<h4 id="repr__---print-或者-r-触发">&lt;4&gt; __ repr__ --print 或者 %r 触发</h4>
+<pre><code><code>class A:
+
+    def __init__(self):
+        pass
+
+
+    def __repr__(self):   # print触发  %r
+        print(1111)
+        return &quot;天魔&quot;
+
+    def __str__(self):   # str 优先级高于 repr  两个都存在就只执行str
+        return &quot;小元&quot;
+
+a = A()
+print(&quot;%r&quot;%(a))</code></pre>
+<h4 id="call__---对象调用时触发对象后加括号即对象-或者-类">&lt;5&gt; __ call__ --对象调用时触发，对象后加括号即：对象() 或者 类()()</h4>
+<pre><code><code>class A:
+
+    def __init__(self):
+        pass
+
+    def __call__(self, *args, **kwargs):  # 对象()时调用的__call__
+        print(&quot;走我&quot;)
+        print(*args, **kwargs)
+
+a = A()
+a()</code></pre>
+<h4 id="eq__-等于">&lt;6&gt; __ eq__ 等于</h4>
+<pre><code><code>class A(object):
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age = age
+
+    def __eq__(self, other):     #  a == a1
+        if self.name == other.name:
+            return True
+        else:
+            return False
+
+a = A(&quot;mee&quot;,56)
+a1 = A(&quot;mee&quot;,108)
+
+print(a == a1)</code></pre>
+<h4 id="del__-构造方法当对象在内存中被释放时自动触发执行">&lt;7&gt; __ del__ 构造方法，当对象在内存中被释放时，自动触发执行</h4>
+<p>​ 此方法一般情况下无需定义，因为python是一门高级语言，程序员在使用时无需关心内存的分配和释放，因为内存的分配和释放都是交给python解释器类执行，所以，析构函数的调用是由解释器在进行垃圾回收时自动触发执行的。</p>
+<pre><code><code>class A:
+    def __init__(self):
+        pass
+
+    def __del__(self):    del 触发
+        print(&quot;删除时执行我&quot;)
+
+a = A()
+
+import time
+time.sleep(5)
+del a
+
+a = 1
+b = a
+a = b</code></pre>
+<pre><code><code>垃圾回收机制：
+    # 80  5/s
+    # 引用计数
+    # 标记清除
+    # 分袋回收 袋一:10 2/h  袋二: 5/3 4h  袋三: 3 20h</code></pre>
+<h4 id="item__-系列-可以像操作字典一样操作实例方法">&lt;8&gt; __ item__ 系列 可以像操作字典一样操作实例方法</h4>
+<pre><code><code>dic[&quot;键&quot;] = 值
+del dic[&quot;键&quot;]
+dic[&quot;键&quot;]
+</code></pre>
+<pre><code><code>class A:
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age = age
+
+    def __getitem__(self, item):
+        print(self.__dict__)
+        print(self.__dict__[item])  # self.__dict__ 获取的就是字典
+
+    def __setitem__(self, key, value):
+        self.__dict__[key] = value
+
+    def __delitem__(self, key):
+        del self.__dict__[key]
+
+a = A(&quot;meet&quot;,58)
+a[&quot;sex&quot;] = &quot;男&quot;
+a[&quot;sex&quot;]
+del a[&quot;sex&quot;]
+print(a.__dict__)
+</code></pre>
+<h4 id="new__-单例模式工厂模式">&lt;9&gt; __ new__ 单例模式（工厂模式）</h4>
+<p>​ 单例模式是一种常用的软件设计模式。在它的核心结构中只包含一个被称为单例类的特殊类。通过单例模式可以保证系统中一个类只有一个实例而且该实例易于外界访问，从而方便对实例个数的控制并节约系统资源。如果希望在系统中某个类的对象只能存在一个，单例模式是最好的解决方案。</p>
+<pre><code><code>class A(object):
+
+    def __init__(self,name):  # 初始化
+        self.name = name
+        print(&quot;我是__init__,先走我&quot;)
+
+    def __new__(cls, *args, **kwargs):
+        print(&quot;我是__new__,先走我&quot;)
+        return &quot;啦啦啦&quot;
+
+a = A(&quot;meet&quot;)
+print(&quot;我是谁:&quot;,a)
+</code></pre>
+<pre><code><code>class A(object):
+
+    def __init__(self,name):  # 初始化
+        self.name = name
+        print(&quot;我是__init__,先走我&quot;)
+
+    def __new__(cls, *args, **kwargs):
+        obj = object.__new__(A)
+        print(&quot;我在哪:&quot;,obj)
+        return obj                   # obj == __init__()
+
+a = A(&quot;meet&quot;)
+print(&quot;我是谁:&quot;,a)
+</code></pre>
+<pre><code><code>class A(object):
+
+    def __init__(self,name): # 初识化
+        self.name = name
+
+
+    def __new__(cls, *args, **kwargs):
+        obj = object.__new__(A)   # 调用的是object类中的__new__ ,只有object类中的__new__能够创建空间
+        return obj   #本质: obj == __init__()     return __init__()  # 触发了__init__方法
+
+
+a = A(&quot;mee&quot;)  # a是对象的内存地址
+a1 = A(&quot;天魔&quot;)  # a是对象的内存地址
+a2 = A(&quot;天阳&quot;)  # a是对象的内存地址
+print(a.name)
+print(a1.name)
+print(a2.name)
+</code></pre>
+<pre><code><code># 先执行__new__方法再执行__init__方法
+
+class A:
+    __a = None  #__a =  0x000001F346079FD0
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age = age
+
+    def __new__(cls, *args, **kwargs):
+        if cls.__a is None:
+            obj = object.__new__(cls)
+            cls.__a = obj
+        return cls.__a
+
+a = A(&quot;mee&quot;,123)  # 地址0x000001F346079FD0
+a1 = A(&quot;天魔&quot;,11)
+print(a.name)
+print(a1.name)
+</code></pre>
+<h5 id="单例模式不管创建多少次使用的都是同一个内存空间">单例模式：不管创建多少次，使用的都是同一个内存空间</h5>
+<h5 id="模块的导入手写的单例模式">模块的导入，手写的单例模式</h5>
+<h5 id="实例化对象时发生的事">实例化对象时发生的事：</h5>
+<h6 id="创建对象并开辟对象空间-__-next__">创建对象，并开辟对象空间 __ next__</h6>
+<h6 id="自动执行-__-init方法隐性的将对象地址传给self">自动执行 __ init方法，隐性的将对象地址传给self</h6>
+<h6 id="将对象属性封装到对象空间">将对象属性封装到对象空间</h6>
+<h2 id="上下文">2、上下文</h2>
+<h3 id="enter__">（1）__ enter__</h3>
+<h3 id="exit__">（2）__ exit__</h3>
+<pre><code><code>class my_open:
+
+    def __init__(self,file,mode=&quot;r&quot;,encoding=&quot;utf-8&quot;):
+        self.file = file
+        self.mode = mode
+        self.encoding = encoding
+
+    def __enter__(self):
+        self.f = open(self.file,self.mode,encoding=self.encoding)
+        return self.f
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        print(exc_type,exc_val,exc_tb) # 没有错误时就是None
+        self.f.close()
+
+
+with my_open(&quot;a.txt&quot;) as ffff:
+    for i in ffff:
+        print(i)
+print(ffff.read(1111))
+print(ffff.read())
+</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

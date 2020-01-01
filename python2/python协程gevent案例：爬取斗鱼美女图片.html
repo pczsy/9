@@ -1,0 +1,155 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python协程gevent案例：爬取斗鱼美女图片' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python协程gevent案例：爬取斗鱼美女图片</center></div><div class='banquan'>原文出处:本文由博客园博主三国小梦提供。<br/>
+原文连接:https://www.cnblogs.com/lxy0/p/11413976.html</div><br>
+    <h1 id="分析">分析</h1>
+<h2 id="分析网站寻找需要的网址">分析网站寻找需要的网址</h2>
+<p>用谷歌浏览器摁F12打开开发者工具，然后打开斗鱼颜值分类的页面，如图：<br />
+<img src="./images/python协程gevent案例：爬取斗鱼美女图片0.png" /><br />
+在里面的请求中，最后发现它是以ajax加载的数据，数据格式为json，如图：<br />
+<img src="./images/python协程gevent案例：爬取斗鱼美女图片1.png" /><br />
+圈住的部分是我们需要的数据，然后复制它的网址为https://www.douyu.com/gapi/rknc/directory/yzRec/1，出于学习目的只爬取第一页（减少服务器压力）。然后把网址放到浏览器中测试是否可以访问。如图：<br />
+<img src="./images/python协程gevent案例：爬取斗鱼美女图片2.png" /></p>
+<p>结果正常。</p>
+<h2 id="分析json数据提取图片链接">分析json数据，提取图片链接</h2>
+<p>最后分析发现json中的data里面的rl是每个房间的信息，大概有200条左右，拿出其中的一条查询里面的图片链接。</p>
+<pre><code><code>{
+                &quot;rid&quot;: 1282190,
+                &quot;rn&quot;: &quot;大家要开心啊~&quot;,
+                &quot;uid&quot;: 77538371,
+                &quot;nn&quot;: &quot;鲸鱼欧尼&quot;,
+                &quot;cid1&quot;: 8,
+                &quot;cid2&quot;: 201,
+                &quot;cid3&quot;: 581,
+                &quot;iv&quot;: 1,
+                &quot;av&quot;: &quot;avatar_v3/201908/d62c503c603945098f2c22d0d95c3b2e&quot;,
+                &quot;ol&quot;: 610574,
+                &quot;url&quot;: &quot;/1282190&quot;,
+                &quot;c2url&quot;: &quot;/directory/game/yz&quot;,
+                &quot;c2name&quot;: &quot;颜值&quot;,
+                &quot;icdata&quot;: {
+                    &quot;217&quot;: {
+                        &quot;url&quot;: &quot;https://sta-op.douyucdn.cn/dy-listicon/king-web.png-v3.png&quot;,
+                        &quot;w&quot;: 0,
+                        &quot;h&quot;: 0
+                    }
+                },
+                &quot;dot&quot;: 2103,
+                &quot;subrt&quot;: 0,
+                &quot;topid&quot;: 0,
+                &quot;bid&quot;: 0,
+                &quot;gldid&quot;: 0,
+                &quot;rs1&quot;: &quot;https://rpic.douyucdn.cn/live-cover/appCovers/2019/08/01/1282190_20190801002745_big.jpg/dy1&quot;,
+                &quot;rs16&quot;: &quot;https://rpic.douyucdn.cn/live-cover/appCovers/2019/08/01/1282190_20190801002745_small.jpg/dy1&quot;,
+                &quot;utag&quot;: [
+                    {
+                        &quot;name&quot;: &quot;呆萌鲸鱼&quot;,
+                        &quot;id&quot;: 111405
+                    },
+                    {
+                        &quot;name&quot;: &quot;美美美&quot;,
+                        &quot;id&quot;: 41
+                    },
+                    {
+                        &quot;name&quot;: &quot;萌萌哒&quot;,
+                        &quot;id&quot;: 520
+                    },
+                    {
+                        &quot;name&quot;: &quot;刀神老婆&quot;,
+                        &quot;id&quot;: 132367
+                    }
+                ],
+                &quot;rpos&quot;: 0,
+                &quot;rgrpt&quot;: 1,
+                &quot;rkic&quot;: &quot;&quot;,
+                &quot;rt&quot;: 2103,
+                &quot;ot&quot;: 0,
+                &quot;clis&quot;: 1,
+                &quot;chanid&quot;: 0,
+                &quot;icv1&quot;: [
+                    [
+                        {
+                            &quot;id&quot;: 217,
+                            &quot;url&quot;: &quot;https://sta-op.douyucdn.cn/dy-listicon/web-king-1-10-v3.png&quot;,
+                            &quot;score&quot;: 994,
+                            &quot;w&quot;: 0,
+                            &quot;h&quot;: 0
+                        }
+                    ],
+                    [
+                        
+                    ],
+                    [
+                        
+                    ],
+                    [
+                        
+                    ]
+                ],
+                &quot;ioa&quot;: 0,
+                &quot;od&quot;: &quot;&quot;
+            }</code></pre>
+<p>测试发现rs16是房间的图片，如果把链接最后的/dy1去掉的话，图片就成大图了，心里美滋滋。</p>
+<h1 id="代码实现">代码实现</h1>
+<pre class="python"><code>import gevent
+import json
+from urllib import request
+from gevent import monkey
+# 使用gevent打补丁，耗时操作自动替换成gevent提供的模块
+monkey.patch_all()
+# 图片存放的目录
+ROOT = &quot;./images/&quot;
+# 设置请求头，防止被反爬虫的第一步
+header = {
+    &quot;User-Agent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36 &quot;
+}
+
+
+def download(img_src):
+    # 把每个链接最后的/dy1去掉
+    img_src: str = img_src.replace(&quot;/dy1&quot;, &quot;&quot;)
+    # 提取图片名
+    file_name: str = img_src.split(&quot;/&quot;)[-1]
+    response = request.urlopen(request.Request(img_src, headers=header))
+    # 保存到本地
+    with open(ROOT + file_name, &quot;wb&quot;) as f:
+        f.write(response.read())
+    print(file_name, &quot;下载完成！&quot;)
+
+
+if __name__ == &#39;__main__&#39;:
+
+    req = request.Request(&quot;https://www.douyu.com/gapi/rknc/directory/yzRec/1&quot;, headers=header)
+    # 把json数据转换成python中的字典
+    json_obj = json.loads(request.urlopen(req).read().decode(&quot;utf-8&quot;))
+    tasks = []
+    for src in json_obj[&quot;data&quot;][&quot;rl&quot;]:
+        tasks.append(gevent.spawn(download, src[&quot;rs16&quot;]))
+    # 开始下载图片
+    gevent.joinall(tasks)</code></pre>
+<h1 id="结果">结果</h1>
+<p>由于使用的是协程，比线程效率更高，不到1秒就把第一页的图片全部爬取下来了。效果如图：<br />
+<img src="./images/python协程gevent案例：爬取斗鱼美女图片3.png" /></p>
+<p>此案例仅用于学习gevent的使用。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

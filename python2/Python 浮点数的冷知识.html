@@ -1,0 +1,112 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 浮点数的冷知识' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 浮点数的冷知识</center></div><div class='banquan'>原文出处:本文由博客园博主豌豆花下猫提供。<br/>
+原文连接:https://www.cnblogs.com/pythonista/p/11565135.html</div><br>
+    <p>本周的<code>PyCoder's Weekly</code> 上分享了一篇小文章，它里面提到的冷知识很有意思，我稍作补充，分享给大家。</p>
+<p>它提到的部分问题，读者们可以先思考下：</p>
+<ul>
+<li>若两个元组相等，即 a==b 且 a is b，那么相同索引的元素（如 a[0] 、b[0]）是否必然相等呢？</li>
+<li>若两个对象的 hash 结果相等，即 hash(a) == hash(b)，那么它们是否必然相等呢？</li>
+</ul>
+<p>答案当然都为否（不然就不叫冷知识了），大家可以先尝试回答一下，然后再往下看。</p>
+<p>-----思考分割线-----</p>
+<p>好了，先来看看第一个问题。两个相同的元组 a、b，它们有如下的关系：</p>
+<pre><code><code>&gt;&gt;&gt; a = (float(&#39;nan&#39;),)
+&gt;&gt;&gt; b = a
+&gt;&gt;&gt; a   # (nan,)
+&gt;&gt;&gt; b   # (nan,)
+
+&gt;&gt;&gt; type(a), type(b)
+(&lt;type &#39;tuple&#39;&gt;, &lt;type &#39;tuple&#39;&gt;)
+
+&gt;&gt;&gt; a == b
+True
+
+&gt;&gt;&gt; a is b  # 即 id(a) == id(b)
+True
+
+&gt;&gt;&gt; a[0] == b[0]
+False</code></pre>
+<p>以上代码表明：a 等于 b（类型、值与 id 都相等），但是它们的对位元素却不相等。</p>
+<p>两个元组都只有一个元素（逗号后面没有别的元素，这是单元素的元组的表示方法，即 len(a)==1 ）。float() 是个内置函数，可以将入参构造成一个浮点数。</p>
+<p>为什么会这样呢？先查阅一下文档，这个内置函数的解析规则是：</p>
+<pre><code><code>sign           ::=  &quot;+&quot; | &quot;-&quot;
+infinity       ::=  &quot;Infinity&quot; | &quot;inf&quot;
+nan            ::=  &quot;nan&quot;
+numeric_value  ::=  floatnumber | infinity | nan
+numeric_string ::=  [sign] numeric_value</code></pre>
+<p>它在解析时，可以解析前后的空格、前缀的加减号（+/-）、浮点数，除此之外，还可以解析两类字符串（不区分大小写）：&quot;Infinity&quot;或&quot;inf&quot;，表示无穷大数；“nan”，表示不是数（not-a-number），确切地说，指的是除了数以外的所有东西。</p>
+<p>前面分享的第一个冷知识就跟“nan”有关，作为整体，两个元组相等，但是它们唯一的元素却不相等。之所以会这样，因为“nan”表示除了数以外的东西，它是一个范围，所以不可比较。</p>
+<p>作为对比，我们来看看两个“无穷大的浮点数”是什么结果：</p>
+<pre><code><code>&gt;&gt;&gt; a = (float(&#39;inf&#39;),)
+&gt;&gt;&gt; b = a
+&gt;&gt;&gt; a   # (inf,)
+&gt;&gt;&gt; b   # (inf,)
+
+&gt;&gt;&gt; a == b  # True
+&gt;&gt;&gt; a is b  # True
+&gt;&gt;&gt; a[0] == b[0]  # True</code></pre>
+<p>注意最后一次比较，它跟前面的两个元组恰好相反，由此，我们可以得出结论：<strong>两个无穷大的浮点数，数值相等，而两个“不是数的东西”，数值不相等。</strong></p>
+<p>化简一下，可以这样看：</p>
+<pre><code><code>&gt;&gt;&gt; a = float(&#39;inf&#39;)
+&gt;&gt;&gt; b = float(&#39;inf&#39;)
+&gt;&gt;&gt; c = float(&#39;nan&#39;)
+&gt;&gt;&gt; d = float(&#39;nan&#39;)
+
+&gt;&gt;&gt; a == b  # True
+&gt;&gt;&gt; c == d  # False</code></pre>
+<p>以上就是第一个冷知识的揭秘。接着看第二个：</p>
+<pre><code><code>&gt;&gt;&gt; hash(float(&#39;nan&#39;)) == hash(float(&#39;nan&#39;))
+True</code></pre>
+<p>前面刚说了两个“不是数的东西”不相等，这里却显示它们的哈希结果相等，这挺违背常理的。</p>
+<p>我们可以推理出一条简单的结论：<strong>不相等的两个对象，其哈希结果可能相等。</strong></p>
+<p>原因在于，hash(float('nan')) 的结果等于 0，它是个固定值，作比较时当然就相等了。</p>
+<p>其实，关于 hash() 函数，还埋了一个彩蛋：</p>
+<pre><code><code>&gt;&gt;&gt; hash(float(&#39;inf&#39;))  # 314159
+&gt;&gt;&gt; hash(float(&#39;-inf&#39;)) # -314159</code></pre>
+<p>有没有觉得这个数值很熟悉啊？它正是圆周率的前五位 3.14159，去除小数点后的结果。在早期的 Python 版本中，负无穷大数的哈希结果其实是 -271828，正是取自于自然对数 e。这两个数都是硬编码在 Python 解释器中的，算是某种致敬吧。</p>
+<p>由于 float('nan') 的哈希值相等，这通常意味着它们不可以作为字典的不同键值，但是事实却出人意料：</p>
+<pre><code><code>&gt;&gt;&gt; a = {float(&#39;nan&#39;): 1, float(&#39;nan&#39;): 2}
+&gt;&gt;&gt; a
+{nan: 1, nan: 2}
+
+# 作为对比：
+&gt;&gt;&gt; b = {float(&#39;inf&#39;): 1, float(&#39;inf&#39;): 2}
+&gt;&gt;&gt; b
+{inf: 2}</code></pre>
+<p>如上所示，两个 nan 键值在表示上一模一样（注意，它们没有用引号括起来），它们可以共存，而 inf 却只能归并成一个，再次展示出了 nan 的神奇。</p>
+<p>好了，两个很冷的小知识分享完毕，背后的原因都在于 float() 取浮点数时，Python 允许了 nan（不是数）的存在，它表示不确切的存在，所以导致了这些奇怪的结果。</p>
+<p>最后，我们作下小结：</p>
+<ul>
+<li>包含 float('nan') 的两个元组，当做整体作比较时，结果相等；两个相等的元组，其对位的元素可能不相等</li>
+<li>float('nan') 表示一个“不是数”的东西，它本身不是确定值，两个对象作比较时不相等，但是其哈希结果是固定值，作比较时相等；可用作字典的键值，而且是不冲突的键值</li>
+<li>float('inf') 表示一个无穷大的浮点数，可看作确定的值，两个对象做比较时相等，其哈希结果也相等；可用作字典的键值，但是会产生冲突</li>
+<li>float('nan') 的哈希结果为 0，float('inf') 的哈希结果为 314159</li>
+</ul>
+<p>参考资料：</p>
+<p><a href="https://docs.python.org/3/library/functions.html#float" class="uri">https://docs.python.org/3/library/functions.html#float</a></p>
+<p><a href="https://www.pythondoeswhat.com/2019/09/welcome-to-float-zone.html" class="uri">https://www.pythondoeswhat.com/2019/09/welcome-to-float-zone.html</a></p>
+<p><img src="./images/Python 浮点数的冷知识0.png" /></p>
+<p>公众号【<strong>Python猫</strong>】， 本号连载优质的系列文章，有喵星哲学猫系列、Python进阶系列、好书推荐系列、技术写作、优质英文推荐与翻译等等，欢迎关注哦。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

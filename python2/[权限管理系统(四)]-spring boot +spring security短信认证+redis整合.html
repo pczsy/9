@@ -1,0 +1,468 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修[权限管理系统(四)]-spring boot +spring security短信认证+redis整合' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>[权限管理系统(四)]-spring boot +spring security短信认证+redis整合</center></div><div class='banquan'>原文出处:本文由博客园博主Ccww笔记提供。<br/>
+原文连接:https://www.cnblogs.com/Ccwwlx/p/12054169.html</div><br>
+    <h2 class="md-end-block md-heading"><span class="md-plain md-expand">[权限管理系统]spring boot +spring security短信认证+redis整合</span></h2>
+<p class="md-end-block md-p"><span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">现在主流的登录方式主要有 3 种：账号密码登录、短信验证码登录和第三方授权登录,前面一节<span class=" md-link"><a href="https://www.cnblogs.com/Ccwwlx/p/12033546.html"><span class="md-plain">Spring security（三）---认证过程</span></a><span class="md-plain">已分析了spring security账号密码方式登陆，现在我们来分析一下spring security短信方式认证登陆。</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">Spring security 短信方式、IP验证等类似模式登录方式验证，可以根据<span><strong>账号密码方式登录</strong><span class="md-plain">步骤仿写出来，其主要以以下步骤进行展开：</span></span></span></span></span></p>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">自定义Filter：</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">自定义Authentication</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">自定义AuthenticationProvider </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">自定义UserDetailsService</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">SecurityConfig配置</span></p>
+</li>
+</ol>
+<h2 class="md-end-block md-heading"><span class="md-plain">1. 自定义filter：</span></h2>
+<p class="md-end-block md-p"><span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">自定义filter可以根据<span><strong>UsernamePasswordAuthenticationFilter</strong><span class="md-plain">过滤器进行仿写，其实质即实现<span><strong>AbstractAuthenticationProcessingFilter</strong><span class="md-plain">抽象类，主要流程分为：</span></span></span></span></span></span></span></p>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">构建构造器，并在构造器中进行配置请求路径以及请求方式的过滤</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">自定义attemptAuthentication()认证步骤</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">在2步骤中认证过程中需要<span><strong>AuthenticationProvider</strong><span class="md-plain">进行最终的认证，在认证filter都需要将AuthenticationProvider设置进filter中，而管理AuthenticationProvider的是<span><strong>AuthenticationManager</strong><span class="md-plain">，因此我们创建过滤器filter的时候需要设置AuthenticationManager，这步具体详情在<span><strong>5.1 SecurityConfig配置步骤</strong><span class="md-plain">。</span></span></span></span></span></span></span></p>
+</li>
+</ol>
+<p class="md-end-block md-p"><span class="md-plain">在第<span><strong>2</strong><span class="md-plain">步中<span><strong>attemptAuthentication()认证方法</strong><span class="md-plain">主要进行以下步骤：<span class="md-linebreak"> <span class="md-linebreak-mark"> <span class="md-plain"> <span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;</span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain"><span><span class="md-plain"><span><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain">　　1).post请求认证；<span class="md-linebreak"> <span class="md-linebreak-mark"> <span class="md-plain"> <span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain"><span><span class="md-plain"><span><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain">　　2).request请求获取手机号码和验证码；<span class="md-linebreak"> <span class="md-linebreak-mark"> <span class="md-plain"> <span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain"><span><span class="md-plain"><span><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain">　　3).用自定义的Authentication对象封装手机号码和验证码；<span class="md-linebreak"> <span class="md-linebreak-mark"> <span class="md-plain"> <span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain"><span><span class="md-plain"><span><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain"><span class="md-linebreak"><span class="md-linebreak-mark"><span class="md-plain"><span class="md-entity" data-content="&emsp;"><span class="md-entity" data-content="&emsp;"><span class="md-plain">　　4).使用AuthenticationManager.authenticate()方法进行验证。</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">自定义filter实现代码：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> SmsAuthenticationfilter <span style="color: #0000ff;">extends</span><span style="color: #000000;"> AbstractAuthenticationProcessingFilter {
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> postOnly = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+​
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> SmsAuthenticationfilter() {
+      </span><span style="color: #0000ff;">super</span>(<span style="color: #0000ff;">new</span> AntPathRequestMatcher(SecurityConstants.APP_MOBILE_LOGIN_URL, "POST"<span style="color: #000000;">));
+   }
+    @Override
+    </span><span style="color: #0000ff;">public</span> Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> AuthenticationException, IOException, ServletException {
+        </span><span style="color: #0000ff;">if</span> (postOnly &amp;&amp; !request.getMethod().equals("POST"<span style="color: #000000;">)) {
+              </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> AuthenticationServiceException(
+                   </span>"Authentication method not supported: " +<span style="color: #000000;"> request.getMethod());
+      }
+        Assert.hasText(SecurityConstants.MOBILE_NUMBER_PARAMETER, </span>"mobile parameter must not be empty or null"<span style="color: #000000;">);
+     
+         String mobile </span>=<span style="color: #000000;"> request.getParameter(SecurityConstants.MOBILE_NUMBER_PARAMETER);
+        String smsCode </span>= request.ge+<span style="color: #000000;">tParameter(SecurityConstants.MOBILE_VERIFY_CODE_PARAMETER);
+        </span><span style="color: #0000ff;">if</span> (mobile == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            mobile</span>=""<span style="color: #000000;">;
+        }
+        </span><span style="color: #0000ff;">if</span>(smsCode == <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            smsCode</span>=""<span style="color: #000000;">;
+        }
+        mobile </span>=<span style="color: #000000;"> mobile.trim();
+        smsCode </span>=<span style="color: #000000;"> smsCode.trim();
+        SmsAuthenticationToken authRequest </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> SmsAuthenticationToken(mobile,smsCode);
+​
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> Allow subclasses to set the "details" property</span>
+<span style="color: #000000;">        setDetails(request, authRequest);
+    
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">.getAuthenticationManager().authenticate(authRequest);
+    }</span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setDetails(HttpServletRequest request,
+                              SmsAuthenticationToken authRequest) {
+        authRequest.setDetails(authenticationDetailsSource.buildDetails(request));
+    }
+​
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setPostOnly(<span style="color: #0000ff;">boolean</span><span style="color: #000000;"> postOnly) {
+        </span><span style="color: #0000ff;">this</span>.postOnly =<span style="color: #000000;"> postOnly;
+    }
+​
+}</span></pre>
+</div>
+<h2 class="md-end-block md-heading"><span class="md-plain">2. Authentication：</span></h2>
+<p class="md-end-block md-p"><span class="md-plain"> <span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">在filter以及后面的认证都需要使用到自定义的Authentication对象，自定义Authentication对象可以根据<span><strong>UsernamePasswordAuthenticationToken</strong><span class="md-plain">进行仿写，实现<span><strong>AbstractAuthenticationToken</strong><span class="md-plain">抽象类。 </span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">自定义SmsAuthenticationToken：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> SmsAuthenticationToken <span style="color: #0000ff;">extends</span><span style="color: #000000;"> AbstractAuthenticationToken {
+​
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> Object principal;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Object credentials;
+​
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> SmsAuthenticationToken(Object principal,Object credentials ) {
+        </span><span style="color: #0000ff;">super</span>(<span style="color: #0000ff;">null</span><span style="color: #000000;">);
+        </span><span style="color: #0000ff;">this</span>.principal =<span style="color: #000000;"> principal;
+        </span><span style="color: #0000ff;">this</span>.credentials=<span style="color: #000000;">credentials;
+        setAuthenticated(</span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+    }
+​
+    </span><span style="color: #0000ff;">public</span> SmsAuthenticationToken(Object principal, Object credentials,Collection&lt;? <span style="color: #0000ff;">extends</span> GrantedAuthority&gt;<span style="color: #000000;"> authorities) {
+        </span><span style="color: #0000ff;">super</span>(<span style="color: #0000ff;">null</span><span style="color: #000000;">);
+        </span><span style="color: #0000ff;">this</span>.principal =<span style="color: #000000;"> principal;
+        </span><span style="color: #0000ff;">this</span>.credentials=<span style="color: #000000;">credentials;
+        setAuthenticated(</span><span style="color: #0000ff;">true</span><span style="color: #000000;">);
+    }
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Object getCredentials() {
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span>.credentials=<span style="color: #000000;">credentials;
+    }
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Object getPrincipal() {
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">.principal;
+    }
+​
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setAuthenticated(<span style="color: #0000ff;">boolean</span> isAuthenticated) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IllegalArgumentException {
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (isAuthenticated) {
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> IllegalArgumentException(
+                    </span>"Cannot set this token to trusted - use constructor which takes a GrantedAuthority list instead"<span style="color: #000000;">);
+        }
+​
+        </span><span style="color: #0000ff;">super</span>.setAuthenticated(<span style="color: #0000ff;">false</span><span style="color: #000000;">);
+    }
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> eraseCredentials() {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">.eraseCredentials();
+​
+    }
+}</span></pre>
+</div>
+<h2 class="md-end-block md-heading"><span class="md-plain">3.AuthenticationProvider </span></h2>
+<p class="md-end-block md-p"><span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">AuthenticationProvider最终认证策略入口，短信方式验证需自定义AuthenticationProvider。可以根据<span><strong>AbstractUserDetailsAuthenticationProvider</strong><span class="md-plain">进行仿写，<span><strong>实现AuthenticationProvider以及MessageSourceAware接口</strong><span class="md-plain">。认证逻辑可以定义实现。</span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">自定义AuthenticationProvider：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> SmsAuthenticationProvide <span style="color: #0000ff;">implements</span><span style="color: #000000;"> AuthenticationProvider, MessageSourceAware {
+  </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> UserDetailsService userDetailsService;
+  </span><span style="color: #0000ff;">private</span> MessageSourceAccessor messages =<span style="color: #000000;"> SpringSecurityMessageSource.getAccessor();
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setMessageSource(MessageSource messageSource) {
+        </span><span style="color: #0000ff;">this</span>.messages = <span style="color: #0000ff;">new</span><span style="color: #000000;"> MessageSourceAccessor(messageSource);
+    }
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Authentication authenticate(Authentication authentication) {
+        Assert.isInstanceOf(SmsAuthenticationToken.</span><span style="color: #0000ff;">class</span><span style="color: #000000;">, authentication,
+                messages.getMessage(
+                        </span>"AbstractUserDetailsAuthenticationProvider.onlySupports"<span style="color: #000000;">,
+                        </span>"Only UsernamePasswordAuthenticationToken is supported"<span style="color: #000000;">));
+        SmsAuthenticationToken authenticationToken </span>=<span style="color: #000000;"> (SmsAuthenticationToken) authentication;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">将验证信息保存在SecurityContext以供UserDetailsService进行验证</span>
+        SecurityContext context =<span style="color: #000000;"> SecurityContextHolder.getContext();
+        context.setAuthentication(authenticationToken);
+        String mobile </span>=<span style="color: #000000;"> (String) authenticationToken.getPrincipal();
+        </span><span style="color: #0000ff;">if</span> (mobile == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> InternalAuthenticationServiceException("can't obtain user info "<span style="color: #000000;">);
+        }
+        mobile </span>=<span style="color: #000000;"> mobile.trim();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">进行验证以及获取用户信息</span>
+        UserDetails user =<span style="color: #000000;"> userDetailsService.loadUserByUsername(mobile);
+        </span><span style="color: #0000ff;">if</span> (user == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> InternalAuthenticationServiceException("can't obtain user info "<span style="color: #000000;">);
+        }
+        SmsAuthenticationToken smsAuthenticationToken </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> SmsAuthenticationToken(user, user.getAuthorities());
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> smsAuthenticationToken;
+    }
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span> supports(Class&lt;?&gt;<span style="color: #000000;"> authentication) {
+        </span><span style="color: #0000ff;">return</span> (SmsAuthenticationToken.<span style="color: #0000ff;">class</span><span style="color: #000000;">.isAssignableFrom(authentication));
+    }
+​
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setUserDetailsService(UserDetailsService userDetailsService) {
+        </span><span style="color: #0000ff;">this</span>.userDetailsService =<span style="color: #000000;"> userDetailsService;
+    }
+​
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> UserDetailsService getUserDetailsService() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> userDetailsService;
+    }
+}</span></pre>
+</div>
+<h2 class="md-end-block md-heading"><span class="md-plain">4. UserDetailsService</span></h2>
+<p class="md-end-block md-p"><span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">在AuthenticationProvider最终认证策略入口，<span><strong>认证方式实现逻辑是在UserDetailsService</strong><span class="md-plain">。可以根据自己项目自定义认证逻辑。 </span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">自定义UserDetailsService：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> SmsUserDetailsService <span style="color: #0000ff;">implements</span><span style="color: #000000;"> UserDetailsService {
+    @Autowired
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> RedisUtil redisUtil;
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span> UserDetails loadUserByUsername(String username) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> UsernameNotFoundException {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">从SecurityContext获取认证所需的信息（手机号码、验证码）</span>
+        SecurityContext context =<span style="color: #000000;"> SecurityContextHolder.getContext();
+        SmsAuthenticationToken authentication </span>=<span style="color: #000000;"> (SmsAuthenticationToken) context.getAuthentication();
+        </span><span style="color: #0000ff;">if</span>(!<span style="color: #000000;">additionalAuthenticationChecks(username,authentication)){
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">获取用户手机号码对应用户的信息，包括权限等</span>
+        <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span> User("admin", "123456", Arrays.asList(<span style="color: #0000ff;">new</span> SimpleGrantedAuthority("admin"<span style="color: #000000;">)));
+    }
+​
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> additionalAuthenticationChecks(String mobile, SmsAuthenticationToken smsAuthenticationToken) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">获取redis中手机键值对应的value验证码</span>
+        String smsCode =<span style="color: #000000;"> redisUtil.get(mobile).toString();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">获取用户提交的验证码</span>
+        String credentials =<span style="color: #000000;"> (String) smsAuthenticationToken.getCredentials();
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;">(StringUtils.isEmpty(credentials)){
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (credentials.equalsIgnoreCase(smsCode)) {
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+    }
+}</span></pre>
+</div>
+<h2 class="md-end-block md-heading"><span class="md-plain">5.SecurityConfig</span></h2>
+<h3 class="md-end-block md-heading"><span class="md-plain">5.1 自定义Sms短信验证组件配置SecurityConfig</span></h3>
+<p class="md-end-block md-p"><span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">将自定义组件配置SecurityConfig中，可以根据AbstractAuthenticationFilterConfigurer(子类FormLoginConfigurer)进行仿写SmsAuthenticationSecurityConfig，主要进行以下配置：</span></span></span></p>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>将默认AuthenticationManager（也可以定义的）设置到自定义的filter过滤器中</strong></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>将自定义的UserDetailsService设置到自定义的AuthenticationProvide中以供使用</strong></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>将过滤器添加到过滤链路中，实施过滤操作。（一般以加在UsernamePasswordAuthenticationFilter前）</strong></span></p>
+</li>
+</ol>
+<p class="md-end-block md-p"><span class="md-plain">配置SmsAuthenticationSecurityConfig:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;"> @Component
+ </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> SmsAuthenticationSecurityConfig <span style="color: #0000ff;">extends</span> SecurityConfigurerAdapter&lt;DefaultSecurityFilterChain, HttpSecurity&gt;<span style="color: #000000;"> {
+    @Autowired
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> UserDetailsService userDetailsService;
+​
+    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> configure(HttpSecurity http) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">创建并配置好自定义SmsAuthenticationfilter，</span>
+        SmsAuthenticationfilter smsAuthenticationfilter = <span style="color: #0000ff;">new</span><span style="color: #000000;"> SmsAuthenticationfilter();
+        smsAuthenticationfilter.setAuthenticationManager(http.getSharedObject(AuthenticationManager.</span><span style="color: #0000ff;">class</span><span style="color: #000000;">));
+        smsAuthenticationfilter.setAuthenticationSuccessHandler(customAuthenticationSuccessHandler());
+        smsAuthenticationfilter.setAuthenticationFailureHandler(customAuthenticationFailureHandler());
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">创建并配置好自定义SmsAuthenticationProvide</span>
+        SmsAuthenticationProvide smsAuthenticationProvide=<span style="color: #0000ff;">new</span><span style="color: #000000;"> SmsAuthenticationProvide();
+        smsAuthenticationProvide.setUserDetailsService(userDetailsService);
+        http.authenticationProvider(smsAuthenticationProvide);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">将过滤器添加到过滤链路中</span>
+        http.addFilterAfter(smsAuthenticationfilter, UsernamePasswordAuthenticationFilter.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+    }
+​
+    @Bean
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler() {
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> CustomAuthenticationSuccessHandler();
+    }
+    
+    @Bean
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> CustomAuthenticationFailureHandler customAuthenticationFailureHandler() {
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> CustomAuthenticationFailureHandler();
+    }
+}</span></pre>
+</div>
+<h3 class="md-end-block md-heading"><span class="md-plain">5.2 SecurityConfig主配置</span></h3>
+<p class="md-end-block md-p"><span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">SecurityConfig主配置可以参照第二节<span class=" md-link"><a href="https://www.cnblogs.com/Ccwwlx/p/11978429.html"><span class="md-plain">Spring Security（二）--WebSecurityConfigurer配置以及filter顺序</span></a><span class="md-plain">进行配置。 </span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">SecurityConfig主配置：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Configuration
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> WebSecurityConfig <span style="color: #0000ff;">extends</span><span style="color: #000000;"> WebSecurityConfigurerAdapter {
+    @Autowired
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> SmsAuthenticationSecurityConfig smsAuthenticationSecurityConfig;
+    @Autowired
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> CustomAuthenticationSuccessHandler authenticationSuccessHandler;
+    @Autowired
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> CustomAuthenticationFailureHandler authenticationFailureHandler;
+​
+    @Override
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">void</span> configure(HttpSecurity http) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        http.headers().frameOptions().disable().and()
+                .formLogin()
+                .loginPage(SecurityConstants.APP_FORM_LOGIN_PAGE)
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">配置form登陆的自定义URL</span>
+<span style="color: #000000;">                .loginProcessingUrl(SecurityConstants.APP_FORM_LOGIN_URL)
+                .successHandler(authenticationSuccessHandler)
+                .failureHandler(authenticationFailureHandler)
+                .and()
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">配置smsAuthenticationSecurityConfig</span>
+<span style="color: #000000;">                .apply(smsAuthenticationSecurityConfig)
+                .and()
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">运行通过URL</span>
+<span style="color: #000000;">                .authorizeRequests()
+                .antMatchers(SecurityConstants.APP_MOBILE_VERIFY_CODE_URL,
+                             SecurityConstants.APP_USER_REGISTER_URL)
+                .permitAll()
+                .and()
+                .csrf().disable();
+    }
+    @Bean
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> ObjectMapper objectMapper(){
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> ObjectMapper();
+    }
+} </span></pre>
+</div>
+<h2 class="md-end-block md-heading"><span class="md-plain">6.其他</span></h2>
+<h3 class="md-end-block md-heading"><span class="md-plain">6.1 redis</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">RedisUtil工具类： </span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Component
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> RedisUtil {
+    @Autowired
+    </span><span style="color: #0000ff;">private</span> RedisTemplate&lt;String, Object&gt;<span style="color: #000000;"> redisTemplate;
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 普通缓存获取
+     *
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> key 键
+     * </span><span style="color: #808080;">@return</span><span style="color: #008000;"> 值
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span><span style="color: #000000;"> Object get(String key) {
+        </span><span style="color: #0000ff;">return</span> key == <span style="color: #0000ff;">null</span> ? <span style="color: #0000ff;">null</span><span style="color: #000000;"> : redisTemplate.opsForValue().get(key);
+    }
+​
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 普通缓存放入
+     *
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> key   键
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> value 值
+     * </span><span style="color: #808080;">@return</span><span style="color: #008000;"> true成功 false失败
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> set(String key, Object value) {
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            redisTemplate.opsForValue().set(key, value);
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Exception e) {
+            e.printStackTrace();
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+    }
+​
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 普通缓存放入并设置时间
+     *
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> key   键
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> value 值
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> time  时间(秒) time要大于0 如果time小于等于0 将设置无限期
+     * </span><span style="color: #808080;">@return</span><span style="color: #008000;"> true成功 false 失败
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span> set(String key, Object value, <span style="color: #0000ff;">long</span><span style="color: #000000;"> time) {
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            </span><span style="color: #0000ff;">if</span> (time &gt; 0<span style="color: #000000;">) {
+                redisTemplate.opsForValue().set(key, value, time, TimeUnit.SECONDS);
+            } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                set(key, value);
+            }
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Exception e) {
+            e.printStackTrace();
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+    }
+ }</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">redisConfig配置类： </span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Configuration
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> RedisConfig {
+@Autowired
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> RedisProperties properties;
+@Bean
+@SuppressWarnings(</span>"all"<span style="color: #000000;">)
+@ConditionalOnClass(RedisConnectionFactory.</span><span style="color: #0000ff;">class</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">public</span> RedisTemplate&lt;String, Object&gt;<span style="color: #000000;"> redisTemplate(RedisConnectionFactory factory) {
+        RedisTemplate</span>&lt;String, Object&gt; template = <span style="color: #0000ff;">new</span> RedisTemplate&lt;String, Object&gt;<span style="color: #000000;">();
+        template.setConnectionFactory(factory);
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer </span>= <span style="color: #0000ff;">new</span> Jackson2JsonRedisSerializer(Object.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+        ObjectMapper om </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> ObjectMapper();
+        om.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
+        om.enableDefaultTyping(ObjectMapper.DefaultTyping.NON_FINAL);
+        jackson2JsonRedisSerializer.setObjectMapper(om);
+        StringRedisSerializer stringRedisSerializer </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> StringRedisSerializer();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> key采用String的序列化方式</span>
+<span style="color: #000000;">        template.setKeySerializer(stringRedisSerializer);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> hash的key也采用String的序列化方式</span>
+<span style="color: #000000;">        template.setHashKeySerializer(stringRedisSerializer);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> value序列化方式采用jackson</span>
+<span style="color: #000000;">        template.setValueSerializer(jackson2JsonRedisSerializer);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> hash的value序列化方式采用jackson</span>
+<span style="color: #000000;">        template.setHashValueSerializer(jackson2JsonRedisSerializer);
+        template.afterPropertiesSet();
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> template;
+    }
+    @Bean
+    @Qualifier(</span>"redisConnectionFactory"<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> RedisConnectionFactory redisConnectionFactory(){
+        RedisStandaloneConfiguration redisConfig </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> RedisStandaloneConfiguration();
+        redisConfig.setHostName(properties.getHost());
+        redisConfig.setPort(properties.getPort());
+        redisConfig.setPassword(RedisPassword.of(properties.getPassword()));
+        redisConfig.setDatabase(properties.getDatabase());
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">redis连接池数据设置</span>
+        JedisClientConfiguration.JedisClientConfigurationBuilder builder =<span style="color: #000000;"> JedisClientConfiguration.builder();
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">this</span>.properties.getTimeout() != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            Duration timeout </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.properties.getTimeout();
+            builder.readTimeout(timeout).connectTimeout(timeout);
+        }
+        RedisProperties.Pool pool </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.properties.getJedis().getPool();
+        </span><span style="color: #0000ff;">if</span> (pool != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            builder.usePooling().poolConfig(</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.jedisPoolConfig(pool));
+        }
+        JedisClientConfiguration jedisClientConfiguration </span>=<span style="color: #000000;"> builder.build();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">根据两个配置类生成JedisConnectionFactory</span>
+        <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> JedisConnectionFactory(redisConfig,jedisClientConfiguration);
+​
+    }
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> JedisPoolConfig jedisPoolConfig(RedisProperties.Pool pool) {
+        JedisPoolConfig config </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> JedisPoolConfig();
+        config.setMaxTotal(pool.getMaxActive());
+        config.setMaxIdle(pool.getMaxIdle());
+        config.setMinIdle(pool.getMinIdle());
+        </span><span style="color: #0000ff;">if</span> (pool.getMaxWait() != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            config.setMaxWaitMillis(pool.getMaxWait().toMillis());
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> config;
+    }
+} </span></pre>
+</div>
+<h2 class="md-end-block md-heading"><span class="md-plain">7.总结</span></h2>
+<p class="md-end-block md-p"><span class="md-plain"> <span class="md-entity" data-content="&emsp;">&emsp;<span class="md-entity" data-content="&emsp;">&emsp;<span class="md-plain">可以根据短信验证登陆模式去实现类似的验证方式，可以结合本节的例子进行跟项目结合起来，减少开发时间。后续还有第三方登陆方式分析以案例。最后错误请评论指出！ </span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">往期文章:</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-link"><a href="https://www.cnblogs.com/Ccwwlx/p/11970392.html"><span class="md-plain">Spring security （一）架构框架-Component、Service、Filter分析</span></a></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-link"><span class="md-plain"><a href="https://www.cnblogs.com/Ccwwlx/p/11978429.html">Spring Security（二）--WebSecurityConfigurer配置以及filter顺序</a></span></span></p>
+</li>
+<li class="md-list-item"><a href="https://www.cnblogs.com/Ccwwlx/p/12033546.html" target="_blank"><span class="md-link"><span class="md-plain">【权限管理系统】Spring security（三）---认证过程（原理解析，demo）</span></span></a></li>
+</ul>
+<blockquote>
+<p class="md-end-block md-p"><span class="md-plain">各位看官还可以吗？喜欢的话，动动手指点个赞💗，点个关注呗！！谢谢支持！</span></p>
+<p class="md-end-block md-p"><span class="md-plain">也欢迎关注公众号【<strong>Ccww笔记</strong><span class="md-plain">】，原创技术文章第一时间推出</span></span></p>
+<p class="md-end-block md-p">&nbsp;<img src="./images/[权限管理系统(四)]-spring boot +spring security短信认证+redis整合0.png" alt="" /></p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

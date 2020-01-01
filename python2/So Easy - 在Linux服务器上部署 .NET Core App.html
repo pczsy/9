@@ -1,0 +1,140 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修So Easy - 在Linux服务器上部署 .NET Core App' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>So Easy - 在Linux服务器上部署 .NET Core App</center></div><div class='banquan'>原文出处:本文由博客园博主张子浩提供。<br/>
+原文连接:https://www.cnblogs.com/ZaraNet/p/12064008.html</div><br>
+    <div><strong>　　.NET Core</strong>&nbsp;是微软提供的免费、跨平台和开源的开发框架，可以构建桌面应用程序、移动端应用程序、网络应用程序、物联网应用程序和游戏应用程序等。如果你是 Windows 平台下的 dotnet 开发人员的话，使用 .NET core 可以很轻松就设置好任何 Linux 和类 Unix 操作系统下的开发环境。本文将会逐步带着大家在Linux上部署.NET Core应用程序。</div>
+<h2>一.环境准备</h2>
+<ul>
+<li>服务器:阿里云64位CentOS 7.4.1708版本;</li>
+<li>客户端:Windows 10;</li>
+<li>SFTP客户端:FileZilla;用来进行文件传输;</li>
+<li>SSH工具:Xshell 6;用来在Windows 上远程访问CentOS;</li>
+</ul>
+<h2>二.在Linux上安装.NET 环境</h2>
+<p>使用如下命令注册Microsoft需要的依赖环境,该命令类似于Window上的环境变量，它指向了微软的环境源，地址中的对每个系统是不一样，所以我们要斟酌一下的Linux系统是什么，再去拉取。</p>
+<div class="cnblogs_code">
+<pre><code>wget -q https:<span style="color: #008000;">//</span><span style="color: #008000;">packages.microsoft.com/config/ubuntu/18.04/packages-microsoft-prod.deb</span></pre>
+</div>
+<p>比如你当时装了.NET Core3.0，但是呢！微软过了几天又出了.NET Core 3.1 ，这个时候就需要更新你这个配给的配置，通过以下命令。</p>
+<div class="cnblogs_code">
+<pre><code>yum update</pre>
+</div>
+<p>yum update命令会重新拉取下，随后重新做配置，但你的dotnet sdk不会受任何影响，随后安装dotnet sdk。</p>
+<div class="cnblogs_code">
+<pre><code>yum install dotnet-sdk-<span style="color: #800080;">3.1</span></pre>
+</div>
+<p>安装完会出现以下截图，随后我们可以通过dotnet--info来判断是否安装成功。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App0.png" alt="" /></p>
+<p>此时环境就运行环境就搭建完璧了~</p>
+<h2>二.使用FileZilla工具向服务器推送应用程序</h2>
+<p>值得一提的是任何服务器的ftp端口都是22，这个是必须要注意的，否则会一直连接失败。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App1.png" alt="" /></p>
+<p>此时我们向服务器传送了发布文件，如果不出意外我们可以直接在Liunx上看到。通过Ls 、Cd /完成查看。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App2.png" alt="" /></p>
+<p>随后我们找到了以dll结尾并且是你解决方案的名称，随后我们直接dotnet 命令来进行启动项目。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App3.png" alt="" /></p>
+<h2>三.启动应用程序</h2>
+<p>　　&nbsp;此时我们可以看到我们的内网是以5000端口启动的，这得益于我们直接将.NET Core直接设置原因，当然我们如果要在阿里云上公网IP的安全映射进行设置，在此之前我们要测试一下内网是否正常，常用的命令是curl，不够这个命令需要安装，在Centos和ubuntu安装命令是不一样的。具体命令如下：</p>
+<blockquote>
+<p>apt-get install curl&nbsp; //ubuntu的命令</p>
+<p>yum&nbsp; install curl&nbsp; &nbsp;//Centos的命令</p>
+</blockquote>
+<p>关于Curl这个命令很强大，这个就不这里详谈了，安装完成之后就可以使用这个命令了，最后我们测试内网看看是否正常。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App4.png" alt="" /></p>
+<p>此时发现内网已经打通，现在我们通过阿里云公网IP对内网进行映射。在阿里云中的安全组中，找到安全组规则，添加一条映射。放开所有IP，这样就ok了，具体如下。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App5.png" alt="" /></p>
+<p>　　此时，试着激动的双手打开手机试着去访问....OK，Nice..</p>
+<p>.<img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App6.png" alt="" width="436" height="349" /></p>
+<h2>四.进程守护　　</h2>
+<p>　　不过一个尴尬的事情出现了，我们只是通过dotnet命令启动了项目，但是我们的XShell关闭你的应用程序就会关闭，此时我们就需要进程守护了。这样就可以让你的应用程序每时每刻都可以为你服务。<a href="http://supervisord.org/introduction.html#overview" rel="nofollow" target="_blank">Supervisor</a>是Python做一个client/server服务，是Linux/Unix双系统下的一个进程管理工具。它可以很方便的监听、启动、停止、重启一个或多个进程。用Supervisor管理的进程，当一个进程意外被杀死，supervisort监听到进程死后，会自动将它重新拉起，很方便的做到进程自动恢复的功能，不再需要自己写shell脚本来控制。通过这里你应该就会明白我们会干什么，我们会尝试着关闭Xshell，看看它会不会帮我们去重启应用程序，如果可以正常访问，那么你的进程守护配置成功！好吧废话不多说。</p>
+<p>　　我们首先需要在Linux系统上安装&nbsp;<span class="cnblogs_code">Supervisor</span>&nbsp;，在安装它之前，我们需要安装Python 包。</p>
+<div class="cnblogs_code">
+<pre><code>yum install python-setuptools</pre>
+</div>
+<p>　　随后我们在安装Supervisor，执行结果如下图。</p>
+<div class="cnblogs_code">
+<pre><code>easy_install supervisor</pre>
+</div>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App7.png" alt="" /></p>
+<p>　　随后创建几个文件夹，包括supervisor，在这个文件夹中包含了supervisor的一切配置。包含了进程配置文件（也就是大概你想让这个进程去干什么？去执行什么命令？在什么目录下？下面我们会逐一说明下配置文件的各个节点）以及supervisor本身监听服务的配置。</p>
+<h3>4.1 在etc文件夹下新建文件夹supervisor<strong><br /></strong></h3>
+<div class="cnblogs_code">
+<pre><code>mkdir /etc/supervisor</pre>
+</div>
+<h3>4.2 在supervisor文件夹下新建文件夹conf.d</h3>
+<div class="cnblogs_code">
+<pre><code>mkdir /etc/supervisor/conf.d</pre>
+</div>
+<h3>4.3 生成supervisord.conf 配置文件</h3>
+<div class="cnblogs_code">
+<pre><code>echo_supervisord_conf &gt; /etc/supervisor/supervisord.conf</pre>
+</div>
+<h3>4.4 定位到文件夹下修改配置文件：</h3>
+<div class="cnblogs_code">
+<pre><code>cd /etc/supervisor
+vim  supervisord.conf</pre>
+</div>
+<p>　　改变这个路径只是为了能够找到我们的conf.d文件夹中我们自定义的配置文件。conf.d中是我们自己创建的。所以要进行改变。我们在这个文件内容的最下面，可以看到有一个included标签，这个就是我刚才所说的。它默认是这个样子，从内容可以看出是让我们进行修改的。</p>
+<p>　　修改前的内容如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">;[include]
+;files </span>= relative/directory<span style="color: #008000;">/*</span><span style="color: #008000;">ini</span></pre>
+</div>
+<p>　　修改后的内容如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">[include]
+files </span>= conf.d<span style="color: #008000;">/*</span><span style="color: #008000;">.conf</span></pre>
+</div>
+<p>这个时候supervisord的配置已经结束了，那么就剩你的应用程序级别的配置文件了。上述的步骤其实都可以通过FileZilla工具实现，这样更好的去编辑。</p>
+<h3>4.5 创建应用程序级别配置文件</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">[program:AspNetCore_Cookie]
+command</span>=<span style="color: #000000;">dotnet AspNetCore_Cookie.dll
+directory</span>=/home/<span style="color: #000000;">publish
+environment</span>=ASPNETCORE__ENVIRONMENT=<span style="color: #000000;">Production
+user</span>=<span style="color: #000000;">root
+stopsignal</span>=<span style="color: #000000;">INT
+autostart</span>=<span style="color: #0000ff;">true</span><span style="color: #000000;">
+autorestart</span>=<span style="color: #0000ff;">true</span><span style="color: #000000;">
+startsecs</span>=<span style="color: #800080;">1</span><span style="color: #000000;">
+stderr_logfile</span>=/<span style="color: #0000ff;">var</span>/log/<span style="color: #000000;">HelloWebApp.err.log
+stdout_logfile</span>=/<span style="color: #0000ff;">var</span>/log/HelloWebApp.<span style="color: #0000ff;">out</span>.log</pre>
+</div>
+<p>对于上述的配置文件我做了如下解释，当然有错误的话可以纠正，毕竟是根据我对鸟语的理解不是很...emmm</p>
+<blockquote>
+<p>command= 要执行的命令，在.NET Core 应用程序中 我们都是使用dotnet 命令来启动应用程序的<br />directory= 命令执行的目录 比如你的publish 在某个文件夹&nbsp; 那你就写哪里<br />environment= 环境变量&nbsp; &nbsp;ASP.NET Core的环境变量 可能是有的时候需要linux管理员去访问，不过我是root，这个我是不太懂<br />user= 进程执行的用户身份 这里写的root<br />stopsignal=INT 这个都没人动&nbsp; 我也不动 emmm<br />autostart= 是否自动启动&nbsp;<br />autorestart= 是否自动重启<br />startsecs= 自动重启间隔<br />stderr_logfile= 标准错误日志<br />stdout_logfile= 标准输出日志</p>
+
+
+
+</blockquote>
+<p>就现在，我们的配置已完毕，如果你是按照上方进行配置的，那么你肯定是没有问题的。</p>
+<h3>4.6 启动进程守护服务</h3>
+<p>运行&nbsp;<span class="cnblogs_code">supervisord -c /etc/supervisor/supervisord.conf</span>&nbsp;看看是否包报错信息，如果没有则配置成功。随后我们直接启动Supervisord服务。</p>
+<div class="cnblogs_code">
+<pre><code>sudo supervisorctl shutdown &amp;&amp; sudo supervisord -c /etc/supervisor/supervisord.conf</pre>
+</div>
+<p>并且我们查看进程看看我们刚才的应用程序级别配置是否有效。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App8.png" alt="" /></p>
+<p>现在配置一切成功，去打开你的网站吧！，关闭你的XShell 或者 云端在线远程，这个时候再去试着访问你的网站。ok没问题。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/So Easy - 在Linux服务器上部署 .NET Core App9.png" alt="" width="325" height="263" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

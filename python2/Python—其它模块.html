@@ -1,0 +1,107 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python—其它模块' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python—其它模块</center></div><div class='banquan'>原文出处:本文由博客园博主刘_love_田提供。<br/>
+原文连接:https://www.cnblogs.com/liuhaidon/p/11725338.html</div><br>
+    <p><span style="background-color: #ffff00; color: #ff00ff;"><strong>系统监控模块psutil（第三方模块）</strong></span></p>
+<p>psutil是一个跨平台的库，用于在Python中检索系统运行的进程和系统利用率（CPU，内存，磁盘，网络，传感器）的信息。<br />它主要用于系统监控，性能分析，进程管理。分析和限制流程资源以及运行流程的管理。它实现了UNIX命令行工具提供的许多功能，例如：ps，top，lsof，netstat，ifconfig，who，df，kill，free，nice，ionice，iostat，iotop，uptime，pidof，tty，taskset，pmap等。<br />psutil目前支持32位和64位的Linux、Windows、OS X、FreeBSD和Sun Solaris等操作系统。Python版本从2.6到3.6。</p>
+<p><span style="background-color: #ffffff; color: #000000;"><strong>获取CPU信息</strong></span></p>
+<div class="cnblogs_Highlighter">
+<pre><code>import psutil
+
+print psutil.cpu_times()                # 获取cpu的完整信息
+print psutil.cpu_times().user           # 获取单项cpu的数据信息，如用户user的cpu时间比
+print psutil.cpu_times().iowait         # 获取io等待时间
+
+print psutil.cpu_count()                # 获取cpu逻辑个数
+print psutil.cpu_count(logical=False)   # 获取cpu物理个数
+
+print psutil.cpu_percent()              
+print psutil.cpu_percent(1)             # 获取cpu的使用率</pre>
+</div>
+<p><span style="background-color: #ffffff; color: #000000;"><strong>获取内存信息</strong></span></p>
+<div class="cnblogs_Highlighter">
+<pre><code>import psutil
+
+# 内存信息的获取主要使用virtual_memory方法。swap使用就用swap_memory方法。
+mem = psutil.virtual_memory()   #使用pstuil.virtual_memory方法获取内存的完整信息
+
+print mem.total/1024/1024  # 获取内存总数
+print mem.used/1024/1024   # 获取内存已经使用的
+print mem.free/1024/1024   # 获取内存剩余</pre>
+</div>
+<p><span style="background-color: #ffffff; color: #000000;"><strong>获取磁盘信息</strong></span></p>
+<div class="cnblogs_Highlighter">
+<pre><code>import psutil
+
+# 磁盘信息主要有两部分，一个是磁盘的利用率，一个是io，他们分别可以通过disk_usage和disk_io_counters方法获取。
+print psutil.disk_partitions()               # 获取磁盘完整信息
+print psutil.disk_usage('/')                 # 获取整个硬盘的信息
+print psutil.disk_usage('C://')              # 获取分区c的硬盘信息
+print psutil.disk_io_counters()              # 获取硬盘的总io个数、读写信息
+print psutil.disk_io_counters(perdisk=True)  # 获取单个分区IO个数、读写信息</pre>
+</div>
+<p><span style="background-color: #ffffff; color: #000000;"><strong>获取网络信息</strong></span></p>
+<div class="cnblogs_Highlighter">
+<pre><code>import psutil
+
+# 网络io和磁盘io使用方法差不多，主要使用net_io_counters方法，如果需要获取单个网卡的io信息，加上pernic=True参数。
+print psutil.net_io_counters()            # 获取网络总的IO信息、默认pernic=False
+print psutil.net_io_counters(pernic=True) # 获取每个网卡的io信息
+print psutil.net_connections()            # 获取所有的连接信息</pre>
+</div>
+<p><span style="background-color: #ffffff; color: #000000;"><strong>其他系统信息</strong></span></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;collapse:true;;gutter:true;">import psutil,datetime
+
+print psutil.boot_time()    # 获取开机时间,为linux格式,可以使用时间戳转换
+print datetime.datetime.fromtimestamp(psutil.boot_time()).strftime('%Y-%m-%d %H:%M:%S') # 转换为自然时间格式
+
+print psutil.users()        # 获取当前登录系统的用户信息
+
+print psutil.pids()         # 获取系统所有进程的pid号  
+p = psutil.Process(1205)    # 查看单个进程,实例化其中的一个pid号
+print p.name()              # 进程名
+print p.exe()               # 进程的bin路径,工作路径
+print p.cwd()               # 进程的工作目录绝对路径
+print p.status()            # 进程的状态
+print p.create_time()       # 进程创建时间、时间戳格式
+print p.gids()           # 进程的gid信息，p.uids():进程的uid信息
+print p.cpu_times        # 进程所占cpu的时间，包括user,system两个cpu时间
+print p.cpu_affinity()   # 进程和cpu的亲和度
+print p.memory_percent() # 进程内存利用率
+print p.memory_info      # 进程内存rss，vms信息
+print p.io_counters()    # 进程io信息，包括读写IO数及字节数
+print p.connections()    # 返回打开进程socket的namedutples列表、包括fs,family,laddr等信息
+print p.num_threads()    # 进程开启的线程数
+
+#通过psutil的popen方法启动的应用程序，可以跟踪该程序的所有相关信息
+from subprocess import PIPE
+# p = psutil.Popen(["/usr/bin/python", "-c", "print('hello')"], stdout=PIPE)
+p = psutil.Popen(["/etc/init.d/mysqld","-c","start"], stdout=PIPE)
+print p.name(),p.username()
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>　　</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

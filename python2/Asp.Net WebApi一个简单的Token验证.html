@@ -1,0 +1,432 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Asp.Net WebApi一个简单的Token验证' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Asp.Net WebApi一个简单的Token验证</center></div><div class='banquan'>原文出处:本文由博客园博主魏杨杨提供。<br/>
+原文连接:https://www.cnblogs.com/w5942066/p/12055542.html</div><br>
+    <h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">1、前言</span></h2>
+<p><span style="font-size: 14px;"><strong>WebAPI主要开放数据给手机APP，Pad，其他需要得知数据的系统，或者软件应用。Web 用户的身份验证，及页面操作权限验证是B/S系统的基础功能。我上次写的《</strong></span><strong><em><span style="font-size: 14px;"><a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/w5942066/p/9960659.html" target="_blank">Asp.Net MVC WebAPI的创建与前台Jquery ajax后台HttpClient调用详解</a></span></em>》这种跟明显安全性不是那么好，于是乎这个就来了 ，用户需要访问的API都必须带有票据过来，说白了就是登陆之后含有用户信息的Token。开始撸...</strong></p>
+<h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">2、新建一个WebApi项目</span></h2>
+<p><span style="font-size: 14px;"><strong>在App_Start文件夹下面新建一个BaseApiController控制器，这是基础的Api控制器，后面有要验证的接口都继承这个控制器：</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">using</span><span style="color: #000000;"> LoginReqToken.Models;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Collections.Generic;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Linq;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web.Http;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web.Mvc;
+
+</span><span style="color: #0000ff;">namespace</span><span style="color: #000000;"> LoginReqToken.App_Start
+{
+    </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+    <span style="color: #808080;">///</span><span style="color: #008000;"> 基础Api控制器  所有的都继承他
+    </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> BaseApiController : ApiController
+    {
+       
+       </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+       <span style="color: #808080;">///</span><span style="color: #008000;"> 构造函数赋值
+       </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #0000ff;">public</span><span style="color: #000000;"> BaseApiController()
+        {
+            TokenValue </span>= HttpContext.Current.Session[LoginID] ?? <span style="color: #800000;">""</span><span style="color: #000000;">;
+            HttpContext.Current.Request.Headers.Add(</span><span style="color: #800000;">"</span><span style="color: #800000;">TokenValue</span><span style="color: #800000;">"</span><span style="color: #000000;">, TokenValue.ToString());
+        }
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 数据库上下文
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #0000ff;">public</span> WYDBContext db =<span style="color: #000000;"> WYDBContextFactory.GetDbContext();
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> token值 登录后赋值请求api的时候添加到header中
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">object</span> TokenValue { <span style="color: #0000ff;">get</span>; <span style="color: #0000ff;">set</span>; } = <span style="color: #800000;">""</span><span style="color: #000000;">;
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 登录者账号
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">string</span> LoginID { <span style="color: #0000ff;">get</span>; <span style="color: #0000ff;">set</span>; } = <span style="color: #800000;">""</span><span style="color: #000000;">;
+    }
+}</span></pre>
+</div>
+<p><span style="font-size: 14px;"><strong>这个构造函数里主动加一个header头信息 ，因为每次访问的时候都要执行构造函数，在那边验证的时候都要从Header中取出来，计算出用户名 是否跟Session缓存的一致这样判断的</strong></span></p>
+<h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">3、在建一个TokenCheckFilter.cs</span></h2>
+<p><span style="font-size: 14px;"><strong>继承AuthorizeAttribute重写基类的验证方式，重写HandleUnauthorizedRequest</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Linq;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Net;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Net.Http;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Text;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web.Helpers;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web.Http;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web.Http.Controllers;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web.Security;
+</span><span style="color: #0000ff;">namespace</span><span style="color: #000000;"> LoginReqToken.App_Start
+{
+    </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+    <span style="color: #808080;">///</span><span style="color: #008000;"> token验证
+    </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> TokenCheckFilter: AuthorizeAttribute
+    {
+
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 重写基类的验证方式，加入自定义的Ticket验证
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;param name="actionContext"&gt;&lt;/param&gt;</span>
+        <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">override</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> OnAuthorization(HttpActionContext actionContext)
+        {
+            </span><span style="color: #0000ff;">var</span> content = actionContext.Request.Properties[<span style="color: #800000;">"</span><span style="color: #800000;">MS_HttpContext</span><span style="color: #800000;">"</span>] <span style="color: #0000ff;">as</span><span style="color: #000000;"> HttpContextBase;
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取token（请求头里面的值）</span>
+            <span style="color: #0000ff;">var</span> token = HttpContext.Current.Request.Headers[<span style="color: #800000;">"</span><span style="color: #800000;">TokenValue</span><span style="color: #800000;">"</span>] ?? <span style="color: #800000;">""</span><span style="color: #000000;">;
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">是否为空</span>
+            <span style="color: #0000ff;">if</span> (!<span style="color: #0000ff;">string</span><span style="color: #000000;">.IsNullOrEmpty(token.ToString()))
+            {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">解密用户ticket,并校验用户名密码是否匹配</span>
+                <span style="color: #0000ff;">if</span><span style="color: #000000;"> (ValidateTicket(token.ToString()))
+                    </span><span style="color: #0000ff;">base</span><span style="color: #000000;">.IsAuthorized(actionContext);
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                    HandleUnauthorizedRequest(actionContext);
+            }
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果取不到身份验证信息，并且不允许匿名访问，则返回未验证403</span>
+            <span style="color: #0000ff;">else</span><span style="color: #000000;">
+            {
+                </span><span style="color: #0000ff;">var</span> attributes = actionContext.ActionDescriptor.GetCustomAttributes&lt;AllowAnonymousAttribute&gt;().OfType&lt;AllowAnonymousAttribute&gt;<span style="color: #000000;">();
+                </span><span style="color: #0000ff;">bool</span> isAnonymous = attributes.Any(a =&gt; a <span style="color: #0000ff;">is</span><span style="color: #000000;"> AllowAnonymousAttribute);
+                </span><span style="color: #0000ff;">if</span> (isAnonymous) <span style="color: #0000ff;">base</span><span style="color: #000000;">.OnAuthorization(actionContext);
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> HandleUnauthorizedRequest(actionContext);
+            }
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">校验用户名密码（对Session匹配，或数据库数据匹配）</span>
+        <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">bool</span> ValidateTicket(<span style="color: #0000ff;">string</span><span style="color: #000000;"> encryptToken)
+        {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">解密Ticket</span>
+            <span style="color: #0000ff;">var</span> strTicket =<span style="color: #000000;"> FormsAuthentication.Decrypt(encryptToken).UserData;
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">从Ticket里面获取用户名和密码</span>
+            <span style="color: #0000ff;">var</span> index = strTicket.IndexOf(<span style="color: #800000;">"</span><span style="color: #800000;">&amp;</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+            </span><span style="color: #0000ff;">string</span> userName = strTicket.Substring(<span style="color: #800080;">0</span><span style="color: #000000;">, index);
+            </span><span style="color: #0000ff;">string</span> password = strTicket.Substring(index + <span style="color: #800080;">1</span><span style="color: #000000;">);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">取得session，不通过说明用户退出，或者session已经过期</span>
+            <span style="color: #0000ff;">var</span> token =<span style="color: #000000;"> HttpContext.Current.Session[userName];
+            </span><span style="color: #0000ff;">if</span> (token == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">对比session中的令牌</span>
+            <span style="color: #0000ff;">if</span> (token.ToString() ==<span style="color: #000000;"> encryptToken)
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 重写HandleUnauthorizedRequest
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;param name="filterContext"&gt;&lt;/param&gt;</span>
+        <span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">override</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> HandleUnauthorizedRequest(HttpActionContext filterContext)
+        {
+            </span><span style="color: #0000ff;">base</span><span style="color: #000000;">.HandleUnauthorizedRequest(filterContext);
+
+            </span><span style="color: #0000ff;">var</span> response = filterContext.Response = filterContext.Response ?? <span style="color: #0000ff;">new</span><span style="color: #000000;"> HttpResponseMessage();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">状态码401改为其他状态码来避免被重定向。最合理的是改为403，表示服务器拒绝。</span>
+            response.StatusCode =<span style="color: #000000;"> HttpStatusCode.Forbidden;
+            </span><span style="color: #0000ff;">var</span> content = <span style="color: #0000ff;">new</span><span style="color: #000000;"> 
+            {
+                success </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+                errs </span>= <span style="color: #0000ff;">new</span>[] { <span style="color: #800000;">"</span><span style="color: #800000;">服务端拒绝访问：你没有权限?，或者掉线了?</span><span style="color: #800000;">"</span><span style="color: #000000;"> }
+            };
+            response.Content </span>= <span style="color: #0000ff;">new</span> StringContent(Json.Encode(content), Encoding.UTF8, <span style="color: #800000;">"</span><span style="color: #800000;">application/json</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+        }
+
+    }
+}</span></pre>
+</div>
+<h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">4、在WebApiConfig.cs配置文件里面修改一下路由加上/{action}，这样就能调用到具体的哪一个了</span></h2>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Asp.Net WebApi一个简单的Token验证0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;"><strong>Webapi默认是不支持Session的，所以我们需要在Global加载时候添加对Session的支持，在Global.asax里面重写Application_PostAuthorizeRequest，不然运行调用会直接异常</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> WebApiApplication : System.Web.HttpApplication
+    {
+        </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> Application_Start()
+        {
+            AreaRegistration.RegisterAllAreas();
+            GlobalConfiguration.Configure(WebApiConfig.Register);
+            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+            RouteConfig.RegisterRoutes(RouteTable.Routes);
+            BundleConfig.RegisterBundles(BundleTable.Bundles);
+        }
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 重写Application_PostAuthorizeRequest
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> Application_PostAuthorizeRequest()
+        {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">对Session的支持，不然运行调用会直接异常</span>
+<span style="color: #000000;">            HttpContext.Current.SetSessionStateBehavior(System.Web.SessionState.SessionStateBehavior.Required);
+        }
+    }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">5、现在来写一个登陆</span></h2>
+<p><span style="font-size: 14px;"><strong>新建一个控制器LoginController继承BaseApiController 里面写一个登陆的方法Login 登陆页面就直接在Home的index里面写一个简单的就行了这个控制器访问就不受限制了加上注解</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">[AllowAnonymous]
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> LoginController : BaseApiController
+    {
+        [HttpGet]
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">object</span> Login(<span style="color: #0000ff;">string</span> uName, <span style="color: #0000ff;">string</span><span style="color: #000000;"> uPassword)
+        {
+            </span><span style="color: #0000ff;">var</span> user = db.Users.Where(x =&gt; x.LoginID == uName &amp;&amp; x.Password ==<span style="color: #000000;"> uPassword).FirstOrDefault();
+            </span><span style="color: #0000ff;">if</span> (user==<span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">return</span> Json(<span style="color: #0000ff;">new</span> { ret = <span style="color: #800080;">0</span>, data = <span style="color: #800000;">""</span>, msg = <span style="color: #800000;">"</span><span style="color: #800000;">用户名密码错误</span><span style="color: #800000;">"</span><span style="color: #000000;"> });
+            }
+            FormsAuthenticationTicket token </span>= <span style="color: #0000ff;">new</span> FormsAuthenticationTicket(<span style="color: #800080;">0</span>, uName, DateTime.Now, DateTime.Now.AddHours(<span style="color: #800080;">12</span>), <span style="color: #0000ff;">true</span>, $<span style="color: #800000;">"</span><span style="color: #800000;">{uName}&amp;{uPassword}</span><span style="color: #800000;">"</span><span style="color: #000000;">, FormsAuthentication.FormsCookiePath);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">返回登录结果、用户信息、用户验证票据信息</span>
+            <span style="color: #0000ff;">var</span> _token =<span style="color: #000000;"> FormsAuthentication.Encrypt(token);
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">将身份信息保存在session中，验证当前请求是否是有效请求</span>
+            LoginID =<span style="color: #000000;"> uName;
+            TokenValue </span>=<span style="color: #000000;"> _token;
+            HttpContext.Current.Session[LoginID] </span>=<span style="color: #000000;"> _token;
+            </span><span style="color: #0000ff;">return</span> Json(<span style="color: #0000ff;">new</span> { ret = <span style="color: #800080;">1</span>, data = _token, msg = <span style="color: #800000;">"</span><span style="color: #800000;">登录成功！</span><span style="color: #800000;">"</span><span style="color: #000000;"> });
+        }
+    }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong><span style="font-size: 14px;">登陆页面 简单而粗暴</span></strong></p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="txtLoginID"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="txtLoginID"</span>  <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="txtPassword"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="txtPassword"</span>  <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="button"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="btnSave"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="登录验证"</span> <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">script </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text/javascript"</span><span style="color: #ff0000;"> src</span><span style="color: #0000ff;">="~/Scripts/jquery-3.3.1.js"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">script</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">script </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text/javascript"</span><span style="color: #0000ff;">&gt;</span><span style="background-color: #f5f5f5; color: #000000;">
+    $(document).ready(</span><span style="background-color: #f5f5f5; color: #0000ff;">function</span><span style="background-color: #f5f5f5; color: #000000;"> () {
+        $(</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">#btnSave</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">).click(</span><span style="background-color: #f5f5f5; color: #0000ff;">function</span><span style="background-color: #f5f5f5; color: #000000;"> () {
+            $.ajax({
+                type: </span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">GET</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">,
+                url: </span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">/Api/Login/Login</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">,
+                dataType: </span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">json</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">,
+                data: { </span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">uName</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">: $(</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">#txtLoginID</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">).val(), </span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">uPassword</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">: $(</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">#txtPassword</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">).val()},
+                success: </span><span style="background-color: #f5f5f5; color: #0000ff;">function</span><span style="background-color: #f5f5f5; color: #000000;"> (data) {
+                    </span><span style="background-color: #f5f5f5; color: #0000ff;">if</span><span style="background-color: #f5f5f5; color: #000000;"> (data.ret </span><span style="background-color: #f5f5f5; color: #000000;">&gt;</span> <span style="background-color: #f5f5f5; color: #000000;">0</span><span style="background-color: #f5f5f5; color: #000000;">) {
+                        alert(data.msg</span><span style="background-color: #f5f5f5; color: #000000;">+</span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">Token:  </span><span style="background-color: #f5f5f5; color: #000000;">"</span><span style="background-color: #f5f5f5; color: #000000;">+</span><span style="background-color: #f5f5f5; color: #000000;">data.data);
+                    }
+                    </span><span style="background-color: #f5f5f5; color: #0000ff;">else</span><span style="background-color: #f5f5f5; color: #000000;"> {
+                        alert(data.msg);
+                    }
+                },
+                error: </span><span style="background-color: #f5f5f5; color: #0000ff;">function</span><span style="background-color: #f5f5f5; color: #000000;"> (ret) {
+                    console.log(ret);
+                }
+            });
+        });
+    });
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">script</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;<strong><span style="font-size: 14px;">登陆这个我是写了链接数据库的自己练习可以最易更改一个固定的值 现在应该可以看到返回的Token数据了</span></strong></p>
+<p><strong><span style="font-size: 14px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Asp.Net WebApi一个简单的Token验证1.png" alt="" /></span></strong></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">6、现在就可以写Api</span></h2>
+<p>都继承BaseApiController这个控制器的方法上面需要验证的都要加上验证的注解，我是整个控制都要就直接写在类上面了，随便写一个举举例子，就比如全国省市县的查询</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">using</span><span style="color: #000000;"> LoginReqToken.App_Start;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> LoginReqToken.Models;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> LoginReqToken.Models.DTO;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> Newtonsoft.Json;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Collections.Generic;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Linq;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Net;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Net.Http;
+</span><span style="color: #0000ff;">using</span><span style="color: #000000;"> System.Web.Http;
+
+</span><span style="color: #0000ff;">namespace</span><span style="color: #000000;"> LoginReqToken.Controllers
+{
+
+    </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+    <span style="color: #808080;">///</span><span style="color: #008000;"> 区域查询
+    </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+<span style="color: #000000;">    [TokenCheckFilter]
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> AreaOpController : BaseApiController
+    {
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 获取全部区域
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;returns&gt;&lt;/returns&gt;</span>
+        <span style="color: #0000ff;">public</span><span style="color: #000000;"> Result GetAllAreas()
+        {
+            </span><span style="color: #0000ff;">var</span> data = db.AddressAll.OrderBy(x =&gt;<span style="color: #000000;"> x.ID);
+            </span><span style="color: #0000ff;">if</span>(data.Count()&gt;<span style="color: #800080;">0</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">var</span> ret = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Result()
+                {
+                    Ret </span>= <span style="color: #800080;">1</span><span style="color: #000000;">,
+                    Code </span>= <span style="color: #800000;">"</span><span style="color: #800000;">200</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Msg </span>= <span style="color: #800000;">"</span><span style="color: #800000;">获取数据成功</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Data </span>=<span style="color: #000000;"> JsonConvert.SerializeObject(data)
+
+                };
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret;
+            }
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+            {
+                </span><span style="color: #0000ff;">var</span> ret = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Result()
+                {
+                    Ret </span>= <span style="color: #800080;">0</span><span style="color: #000000;">,
+                    Code </span>= <span style="color: #800000;">"</span><span style="color: #800000;">400</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Msg </span>= <span style="color: #800000;">"</span><span style="color: #800000;">接口失败异常</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Data </span>= <span style="color: #800000;">""</span><span style="color: #000000;">
+
+                };
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret;
+            }
+        }
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 查询某个省市直辖市自治区下所有的信息
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;param name="name"&gt;</span><span style="color: #008000;">省名称（全名）</span><span style="color: #808080;">&lt;/param&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;returns&gt;&lt;/returns&gt;</span>
+        <span style="color: #0000ff;">public</span> Result GetProvinceByName(<span style="color: #0000ff;">string</span><span style="color: #000000;"> name)
+        {
+            </span><span style="color: #0000ff;">var</span> codeID = db.AddressAll.FirstOrDefault(x =&gt; x.Name == name)?<span style="color: #000000;">.ID;
+            </span><span style="color: #0000ff;">if</span>(codeID&lt;=<span style="color: #800080;">0</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">var</span> ret = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Result()
+                {
+                    Ret </span>= <span style="color: #800080;">1</span><span style="color: #000000;">,
+                    Code </span>= <span style="color: #800000;">"</span><span style="color: #800000;">F</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Msg </span>= <span style="color: #800000;">"</span><span style="color: #800000;">没有查到相关数据</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Data </span>= <span style="color: #800000;">""</span><span style="color: #000000;">
+
+                };
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret;
+            }
+            </span><span style="color: #0000ff;">var</span> bb = db.AddressAll.Where(x=&gt;x.ID&gt;<span style="color: #800080;">0</span><span style="color: #000000;">).AsEnumerable();
+            </span><span style="color: #0000ff;">var</span> data =<span style="color: #000000;"> GetProvinceCity(bb,codeID).ToList();
+            </span><span style="color: #0000ff;">if</span> (data.Count() &gt; <span style="color: #800080;">0</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">var</span> ret = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Result()
+                {
+                    Ret </span>= <span style="color: #800080;">1</span><span style="color: #000000;">,
+                    Code </span>= <span style="color: #800000;">"</span><span style="color: #800000;">200</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Msg </span>= <span style="color: #800000;">"</span><span style="color: #800000;">获取数据成功</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Data </span>=<span style="color: #000000;"> JsonConvert.SerializeObject(data)
+
+                };
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret;
+            }
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+            {
+                </span><span style="color: #0000ff;">var</span> ret = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Result()
+                {
+                    Ret </span>= <span style="color: #800080;">0</span><span style="color: #000000;">,
+                    Code </span>= <span style="color: #800000;">"</span><span style="color: #800000;">500</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Msg </span>= <span style="color: #800000;">"</span><span style="color: #800000;">查询不到数据或者接口调用出错</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                    Data </span>= <span style="color: #800000;">""</span><span style="color: #000000;">
+
+                };
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret;
+            }
+
+        }
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> 递归获取树形数据
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;param name="areasDTOs"&gt;&lt;/param&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;param name="parentID"&gt;&lt;/param&gt;</span>
+        <span style="color: #808080;">///</span> <span style="color: #808080;">&lt;returns&gt;&lt;/returns&gt;</span>
+        <span style="color: #0000ff;">public</span> IEnumerable&lt;<span style="color: #0000ff;">object</span>&gt; GetProvinceCity(IEnumerable&lt;AddressAll&gt; areasDTOs,<span style="color: #0000ff;">int</span>?<span style="color: #000000;"> parentID)
+        {
+            </span><span style="color: #0000ff;">var</span> data = areasDTOs <span style="color: #0000ff;">as</span> AddressAll[] ??<span style="color: #000000;"> areasDTOs.ToArray();
+            </span><span style="color: #0000ff;">var</span> ret = data.Where(n =&gt; n.ParentID == parentID).Select(n =&gt; <span style="color: #0000ff;">new</span><span style="color: #000000;">
+            {
+                n.ID,
+                n.Code,
+                n.ParentID,
+                n.Name,
+                n.LevelNum,
+                n.OrderNum,
+                children </span>=<span style="color: #000000;"> GetProvinceCity(data, n.ID)
+            });
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret;
+        }
+    }
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong><span style="font-size: 14px;">记录一个EF随意取数据库条数信息是这么写的 var data = db.CnblogsList.OrderBy(p =&gt; Guid.NewGuid()).Take(100);</span></strong></p>
+<p><strong><span style="font-size: 14px;">现在看效果图</span></strong></p>
+<p><strong><span style="font-size: 14px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Asp.Net WebApi一个简单的Token验证2.png" alt="" /></span></strong></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p style="text-align: left;"><span style="font-size: 14px;"><strong>&nbsp;没有登陆的时候是进不去的 postman上面的效果也看一下</strong></span></p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Asp.Net WebApi一个简单的Token验证3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;"><strong>效果都是一样的，如果登录了就可以直接访问 了 不用加参数 ，只有方法需要参数的就可以加&nbsp;</strong></span></p>
+<p><span style="font-size: 14px;"><strong><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Asp.Net WebApi一个简单的Token验证4.png" alt="" /></strong></span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Asp.Net WebApi一个简单的Token验证5.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;"><strong>&nbsp;这里贴一个调用的代码：</strong></span></p>
+<div class="cnblogs_code">
+<pre><code> HttpClient bb = <span style="color: #0000ff;">new</span><span style="color: #000000;"> HttpClient();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取端口</span>
+            HttpContent httpContent = <span style="color: #0000ff;">new</span> StringContent(<span style="color: #800000;">""</span><span style="color: #000000;">);
+            httpContent.Headers.ContentType </span>= <span style="color: #0000ff;">new</span> System.Net.Http.Headers.MediaTypeHeaderValue(<span style="color: #800000;">"</span><span style="color: #800000;">application/json</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+            
+             </span><span style="color: #0000ff;">var</span> dl = bb.GetAsync(<span style="color: #800000;">"</span><span style="color: #800000;">http://localhost:63828/api/Login/login?uName=admin&amp;uPassword=admin888</span><span style="color: #800000;">"</span><span style="color: #000000;">).Result.Content.ReadAsStringAsync().Result;
+            </span><span style="color: #0000ff;">var</span> token = JsonConvert.DeserializeObject&lt;Result&gt;<span style="color: #000000;">(dl);
+           
+            </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">var</span> i=<span style="color: #800080;">0</span>;i&lt;<span style="color: #800080;">100</span>;i++<span style="color: #000000;">)
+            {
+                
+                </span><span style="color: #0000ff;">var</span> ret = bb.GetAsync(<span style="color: #800000;">"</span><span style="color: #800000;">http://localhost:63828/api/Cnblog/GetAllArtic</span><span style="color: #800000;">"</span><span style="color: #000000;">).Result.Content.ReadAsStringAsync().Result;
+            }</span></pre>
+</div>
+<p>&nbsp;</p>
+<h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">7、总结</span></h2>
+<p><span style="font-size: 14px;"><strong>1）、总体思路，如果是合法的Http请求，在Http请求头中会有用户身份的票据信息，服务端会读取票据信息，并校验票据信息是否完整有效，如果满足校验要求，则进行业务数据的处理，并返回给请求发起方；</strong></span></p>
+<p><span style="font-size: 14px;"><strong>2) 如果没有票据信息，或者票据信息不是合法的，则返回&ldquo;未授权的访问&rdquo;异常消息给前端，由前端处理此异常。</strong></span></p>
+<p><span style="font-size: 14px;"><strong>3）、登录的时候判断用户名跟密码对不对，对了就生成用户信息的Token，Session保存一个Token，BaseApiController里面的登录名跟Token也赋值了。保存这些票据信息。</strong></span></p>
+<p><span style="font-size: 14px;"><strong>4）、当用户有权限操作页面或页面元素时，跳转到页面，并由页面Controller提交业务数据处理请求到api服务器； 如果用户没有权限访问该页面或页面元素时，则显示&ldquo;未授权的访问操作&rdquo;，跳转到系统异常处理页面。</strong></span></p>
+<p><span style="font-size: 14px;"><strong>5）、&nbsp;api业务服务处理业务逻辑，并将结果以Json 数据返回，返回渲染后的页面给浏览器前端，并呈现业务数据到页面；</strong></span></p>
+<h2 id="pTitle" style="margin-left: 30px;"><span style="font-size: 14pt;">8、测试地址</span></h2>
+<h2><span style="font-size: 14px;"><strong><em><a href="http://www.yijianlan.com:8001/" target="_blank">http://www.yijianlan.com:8001/</a>&nbsp; &nbsp;----------------------&gt;先登录，用户名 test密码 123456 </em>可以调用调试的接口 然后访问看看，其他的js 调用， 其他平台的我没有试过，还不知道问题，欢迎指教！</strong></span></h2>
+<p><span style="font-size: 14px;"><strong><em><a href="http://www.yijianlan.com:8001/api/AreaOp/GetProvinceByName?name=%E4%BA%91%E5%8D%97%E7%9C%81" target="_blank">http://www.yijianlan.com:8001/api/AreaOp/GetProvinceByName?name=</a>省全称&nbsp; &nbsp;----</em></strong><strong><em>----&gt;&nbsp; &nbsp;&nbsp;</em>查看某个省市的所有子集</strong></span></p>
+<p><span style="font-size: 14px;"><strong><em><a href="http://www.yijianlan.com:8001/api/AreaOp/GetAllAreas" target="_blank">http://www.yijianlan.com:8001/api/AreaOp/GetAllAreas</a>&nbsp;--------------------------------------------&gt;&nbsp;&nbsp;</em>获取全部区域（全国首位省市县）</strong></span></p>
+<p><span style="font-size: 14px;"><strong><em><a href="http://www.yijianlan.com:8001/api/Cnblog/GetAllArtic" target="_blank">http://www.yijianlan.com:8001/api/Cnblog/GetAllArtic</a>&nbsp;-----------------------------------------------&gt;</em>&nbsp;获取博客园数据（这是以前爬虫抓的有2年了吧），随机一百条</strong></span></p>
+<p><span style="font-size: 14px;"><strong><em><a href="http://www.yijianlan.com:8001/api/Cnblog/GetArticByName?name=标题" target="_blank">http://www.yijianlan.com:8001/api/Cnblog/GetArticByName?name=标题&nbsp;</a>---------------------&gt;&nbsp;&nbsp;</em></strong><strong>查询数据按标题</strong></span></p>
+<p><span style="font-size: 16px;">&nbsp;</span></p>
+<h2><strong><em>&nbsp;</em></strong></h2>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

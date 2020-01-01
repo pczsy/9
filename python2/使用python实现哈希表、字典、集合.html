@@ -1,0 +1,644 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修使用python实现哈希表、字典、集合' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>使用python实现哈希表、字典、集合</center></div><div class='banquan'>原文出处:本文由博客园博主Nolinked提供。<br/>
+原文连接:https://www.cnblogs.com/pungchur/p/12079853.html</div><br>
+    <h2>哈希表</h2>
+<p>哈希表（<strong>Hash Table</strong>, 又称为散列表），是一种线性表的存储结构。哈希表由一个<strong>直接寻址表</strong>和一个<strong>哈希函数</strong>组成。哈希函数<strong>h(k)</strong>将元素关键字<strong>k</strong>作为自变量，返回元素的存储下标。</p>
+<p>简单哈希函数：</p>
+<ol>
+<li>除法哈希：<strong>h(k) = k mod m</strong></li>
+<li>乘法哈希：<strong>h(k) = floor(m(kA mod 1)) 0&lt;A&lt;1</strong></li>
+</ol>
+<p>假设有一个长度为7的数组，哈希函数<strong>h(k) = k mod 7</strong>,元素集合<strong>{14, 22, 3, 5}</strong>的存储方式如下图：</p>
+<p><img src="./images/使用python实现哈希表、字典、集合0.png" alt="" /></p>
+<h3>哈希冲突</h3>
+<p>由于哈希表的大小是有限的，而要存储的值的总数量是无限的，因此对于任何哈希函数，都会出现两个不同的元素映射到同一个位置上的情况，这种情况叫做哈希冲突。</p>
+<p>比如：<strong>h(k) = k mod 7, h(0) = h(7) = h(14) = ...</strong></p>
+<p>&nbsp;</p>
+<p><strong>解决哈希冲突--开放寻址法</strong></p>
+<p>开放寻址法：如果哈希函数返回的位置已经有值，则可以向后探查新的位置来存储这个值</p>
+<ol>
+<li>线性探查：如果位置<strong>i</strong>被占用，则探查<strong>i+1, i+2,...</strong></li>
+<li>二次探查：如果位置<strong>i</strong>被占用，则探查<strong>i+1<sup>2</sup>, i-1<sup>2</sup>, i+2<sup>2</sup>, i-2<sup>2</sup>,...</strong></li>
+<li>二度哈希：有<strong>n</strong>个哈希函数，当使用第一个哈希函数<strong>h1</strong>发生冲突时，则尝试使用<strong>h2, h3,...</strong></li>
+</ol>
+<p>&nbsp;</p>
+<p><strong>解决哈希冲突--拉链法</strong></p>
+<p>拉链法：哈希表每一个位置都连接一个链表，当冲突发生时，冲突的元素将被加到该位置链表的最后。</p>
+<p><img src="./images/使用python实现哈希表、字典、集合1.png" alt="" /></p>
+<h3>哈希表的实现</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Array(object):
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self, size=32, init=<span style="color: #000000;">None):
+        self._size </span>=<span style="color: #000000;"> size
+        self._items </span>= [init] *<span style="color: #000000;"> size
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__getitem__</span><span style="color: #000000;">(self, index):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._items[index]
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__setitem__</span><span style="color: #000000;">(self, index, value):
+        self._items[index] </span>=<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__len__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._size
+
+    </span><span style="color: #0000ff;">def</span> clear(self, value=<span style="color: #000000;">None):
+        </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(len(self._items)):
+            self._items[i] </span>=<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._items:
+            </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> item
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Slot(object):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    定义一个 hash 表数组的槽(slot 这里指的就是数组的一个位置)
+    hash table 就是一个数组，每个数组的元素（也叫slot槽）是一个对象，对象包含两个属性 key 和 value。
+
+    注意，一个槽有三种状态，看你能否想明白。相比链接法解决冲突，探查法删除一个 key 的操作稍微复杂。
+    1.从未使用 HashMap.UNUSED。此槽没有被使用和冲突过，查找时只要找到 UNUSED 就不用再继续探查了
+    2.使用过但是 remove 了，此时是 HashMap.EMPTY，该探查点后边的元素仍然可能是有key的，需要继续查找
+    3.槽正在使用 Slot 节点
+    </span><span style="color: #800000;">"""</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, key, value):
+        self.key, self.value </span>=<span style="color: #000000;"> key, value
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> HashTable(object):
+    UNUSED </span>= None  <span style="color: #008000;">#</span><span style="color: #008000;"> 没被使用过</span>
+    EMPTY = Slot(None, None)  <span style="color: #008000;">#</span><span style="color: #008000;"> 使用却被删除过</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self._table </span>= Array(8, init=HashTable.UNUSED)  <span style="color: #008000;">#</span><span style="color: #008000;"> 保持 2*i 次方</span>
+        self.length =<span style="color: #000000;"> 0
+
+    @property
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> _load_factor(self):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> load_factor 超过 0.8 重新分配</span>
+        <span style="color: #0000ff;">return</span> self.length /<span style="color: #000000;"> float(len(self._table))
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__len__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.length
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 进行哈希</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _hash(self, key):
+        </span><span style="color: #0000ff;">return</span> abs(hash(key)) %<span style="color: #000000;"> len(self._table)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 查找key</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _find_key(self, key):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        解释一个 slot 为 UNUSED 和 EMPTY 的区别
+        因为使用的是二次探查的方式，假如有两个元素 A，B 冲突了，
+        首先A hash 得到是 slot 下标5，A 放到了第5个槽，之后插入 B 因为冲突了，所以继续根据二次探查方式放到了 slot下标8。
+        然后删除 A，槽 5 被置为 EMPTY。然后我去查找 B，
+        第一次 hash 得到的是 槽5，但是这个时候我还是需要第二次计算 hash 才能找到 B。
+        但是如果槽是 UNUSED 我就不用继续找了，我认为 B 就是不存在的元素。这个就是 UNUSED 和 EMPTY 的区别。
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        origin_index </span>= index = self._hash(key)  <span style="color: #008000;">#</span><span style="color: #008000;"> origin_index 判断是否又走到了起点，如果查找一圈了都找不到则无此元素</span>
+        _len =<span style="color: #000000;"> len(self._table)
+        </span><span style="color: #0000ff;">while</span> self._table[index] <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> HashTable.UNUSED:
+            </span><span style="color: #0000ff;">if</span> self._table[index] <span style="color: #0000ff;">is</span> HashTable.EMPTY:  <span style="color: #008000;">#</span><span style="color: #008000;"> 注意如果是 EMPTY，继续寻找下一个槽</span>
+                index = (index * 5 + 1) %<span style="color: #000000;"> _len
+                </span><span style="color: #0000ff;">if</span> index ==<span style="color: #000000;"> origin_index:
+                    </span><span style="color: #0000ff;">break</span>
+                <span style="color: #0000ff;">continue</span>
+            <span style="color: #0000ff;">if</span> self._table[index].key == key:  <span style="color: #008000;">#</span><span style="color: #008000;"> 找到了key</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> index
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                index </span>= (index * 5 + 1) % _len  <span style="color: #008000;">#</span><span style="color: #008000;"> 没有找到继续找下一个位置</span>
+                <span style="color: #0000ff;">if</span> index ==<span style="color: #000000;"> origin_index:
+                    </span><span style="color: #0000ff;">break</span>
+
+        <span style="color: #0000ff;">return</span><span style="color: #000000;"> None
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 找能插入的槽</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _find_slot_for_insert(self, key):
+        index </span>=<span style="color: #000000;"> self._hash(key)
+        _len </span>=<span style="color: #000000;"> len(self._table)
+        </span><span style="color: #0000ff;">while</span> <span style="color: #0000ff;">not</span> self._slot_can_insert(index):  <span style="color: #008000;">#</span><span style="color: #008000;"> 直到找到一个可以用的槽</span>
+            index = (index * 5 + 1) %<span style="color: #000000;"> _len
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> index
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 槽是否能插入</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _slot_can_insert(self, index):
+        </span><span style="color: #0000ff;">return</span> self._table[index] <span style="color: #0000ff;">is</span> HashTable.EMPTY <span style="color: #0000ff;">or</span> self._table[index] <span style="color: #0000ff;">is</span><span style="color: #000000;"> HashTable.UNUSED
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> in operator，实现之后可以使用 in 操作符判断</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__contains__</span><span style="color: #000000;">(self, key):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">return</span> index <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 添加元素</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, key, value):
+        </span><span style="color: #0000ff;">if</span> key <span style="color: #0000ff;">in</span> self:  <span style="color: #008000;">#</span><span style="color: #008000;"> update</span>
+            index =<span style="color: #000000;"> self._find_key(key)
+            self._table[index].value </span>=<span style="color: #000000;"> value
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            index </span>=<span style="color: #000000;"> self._find_slot_for_insert(key)
+            self._table[index] </span>=<span style="color: #000000;"> Slot(key, value)
+            self.length </span>+= 1
+            <span style="color: #0000ff;">if</span> self._load_factor &gt;= 0.8<span style="color: #000000;">:
+                self._rehash()
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 槽不够时，重哈希</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _rehash(self):
+        old_table </span>=<span style="color: #000000;"> self._table
+        newsize </span>= len(self._table) * 2<span style="color: #000000;">
+        self._table </span>=<span style="color: #000000;"> Array(newsize, HashTable.UNUSED)
+
+        self.length </span>=<span style="color: #000000;"> 0
+
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> old_table:
+            </span><span style="color: #0000ff;">if</span> slot <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> HashTable.UNUSED <span style="color: #0000ff;">and</span> slot <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> HashTable.EMPTY:
+                index </span>=<span style="color: #000000;"> self._find_slot_for_insert(slot.key)
+                self._table[index] </span>=<span style="color: #000000;"> slot
+                self.length </span>+= 1
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 获取值</span>
+    <span style="color: #0000ff;">def</span> get(self, key, default=<span style="color: #000000;">None):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">if</span> index <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> default
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._table[index].value
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 移除</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> remove(self, key):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">if</span> index <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">raise</span><span style="color: #000000;"> KeyError()
+        value </span>=<span style="color: #000000;"> self._table[index].value
+        self.length </span>-= 1<span style="color: #000000;">
+        self._table[index] </span>=<span style="color: #000000;"> HashTable.EMPTY
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> value
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 遍历</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._table:
+            </span><span style="color: #0000ff;">if</span> slot <span style="color: #0000ff;">not</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> (HashTable.EMPTY, HashTable.UNUSED):
+                </span><span style="color: #0000ff;">yield</span> slot.key</pre>
+</div>
+<h3>哈希表的使用</h3>
+<div class="cnblogs_code">
+<pre><code>h =<span style="color: #000000;"> HashTable()
+h.add(</span><span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span><span style="color: #000000;">, 0)
+h.add(</span><span style="color: #800000;">'</span><span style="color: #800000;">b</span><span style="color: #800000;">'</span>, 1<span style="color: #000000;">)
+h.add(</span><span style="color: #800000;">'</span><span style="color: #800000;">c</span><span style="color: #800000;">'</span>, 2<span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(len(h)) <span style="color: #008000;">#</span><span style="color: #008000;"> 3</span>
+<span style="color: #0000ff;">print</span>(h.get(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>)) <span style="color: #008000;">#</span><span style="color: #008000;"> 0</span>
+<span style="color: #0000ff;">print</span>(h.get(<span style="color: #800000;">'</span><span style="color: #800000;">b</span><span style="color: #800000;">'</span>)) <span style="color: #008000;">#</span><span style="color: #008000;"> 1</span>
+<span style="color: #0000ff;">print</span>(h.get(<span style="color: #800000;">'</span><span style="color: #800000;">hehe</span><span style="color: #800000;">'</span>)) <span style="color: #008000;">#</span><span style="color: #008000;"> None</span>
+h.remove(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(h.get(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>)) <span style="color: #008000;">#</span><span style="color: #008000;"> None</span>
+<span style="color: #0000ff;">print</span>(sorted(list(h))) <span style="color: #008000;">#</span><span style="color: #008000;"> ['b', 'c']</span></pre>
+</div>
+<h2>字典</h2>
+<p>字典是另一种可变容器模型，且可存储任意类型对象。</p>
+<p>字典的每个键值&nbsp;<span class="marked"><strong>key=&gt;value</strong>&nbsp;对用冒号&nbsp;<span class="marked">:&nbsp;分割，每个键值对之间用逗号&nbsp;<span class="marked">,&nbsp;分割，整个字典包括在花括号&nbsp;<span class="marked">{}&nbsp;中 ,格式如下所示：</span></span></span></span></p>
+<div class="cnblogs_code">
+<pre><code>d = {key1 : value1, key2 : value2 }</pre>
+</div>
+<p><img src="./images/使用python实现哈希表、字典、集合2.png" alt="" /></p>
+<h3>基于哈希表实现字典</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Array(object):
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self, size=32, init=<span style="color: #000000;">None):
+        self._size </span>=<span style="color: #000000;"> size
+        self._items </span>= [init] *<span style="color: #000000;"> size
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__getitem__</span><span style="color: #000000;">(self, index):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._items[index]
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__setitem__</span><span style="color: #000000;">(self, index, value):
+        self._items[index] </span>=<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__len__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._size
+
+    </span><span style="color: #0000ff;">def</span> clear(self, value=<span style="color: #000000;">None):
+        </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(len(self._items)):
+            self._items[i] </span>=<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._items:
+            </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> item
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Slot(object):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    定义一个 hash 表数组的槽(slot 这里指的就是数组的一个位置)
+    hash table 就是一个数组，每个数组的元素（也叫slot槽）是一个对象，对象包含两个属性 key 和 value。
+
+    注意，一个槽有三种状态，看你能否想明白。相比链接法解决冲突，探查法删除一个 key 的操作稍微复杂。
+    1.从未使用 HashMap.UNUSED。此槽没有被使用和冲突过，查找时只要找到 UNUSED 就不用再继续探查了
+    2.使用过但是 remove 了，此时是 HashMap.EMPTY，该探查点后边的元素仍然可能是有key的，需要继续查找
+    3.槽正在使用 Slot 节点
+    </span><span style="color: #800000;">"""</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, key, value):
+        self.key, self.value </span>=<span style="color: #000000;"> key, value
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> HashTable(object):
+    UNUSED </span>= None  <span style="color: #008000;">#</span><span style="color: #008000;"> 没被使用过</span>
+    EMPTY = Slot(None, None)  <span style="color: #008000;">#</span><span style="color: #008000;"> 使用却被删除过</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self._table </span>= Array(8, init=HashTable.UNUSED)  <span style="color: #008000;">#</span><span style="color: #008000;"> 保持 2*i 次方</span>
+        self.length =<span style="color: #000000;"> 0
+
+    @property
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> _load_factor(self):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> load_factor 超过 0.8 重新分配</span>
+        <span style="color: #0000ff;">return</span> self.length /<span style="color: #000000;"> float(len(self._table))
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__len__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.length
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 进行哈希</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _hash(self, key):
+        </span><span style="color: #0000ff;">return</span> abs(hash(key)) %<span style="color: #000000;"> len(self._table)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 查找key</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _find_key(self, key):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        解释一个 slot 为 UNUSED 和 EMPTY 的区别
+        因为使用的是二次探查的方式，假如有两个元素 A，B 冲突了，
+        首先A hash 得到是 slot 下标5，A 放到了第5个槽，之后插入 B 因为冲突了，所以继续根据二次探查方式放到了 slot下标8。
+        然后删除 A，槽 5 被置为 EMPTY。然后我去查找 B，
+        第一次 hash 得到的是 槽5，但是这个时候我还是需要第二次计算 hash 才能找到 B。
+        但是如果槽是 UNUSED 我就不用继续找了，我认为 B 就是不存在的元素。这个就是 UNUSED 和 EMPTY 的区别。
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        origin_index </span>= index = self._hash(key)  <span style="color: #008000;">#</span><span style="color: #008000;"> origin_index 判断是否又走到了起点，如果查找一圈了都找不到则无此元素</span>
+        _len =<span style="color: #000000;"> len(self._table)
+        </span><span style="color: #0000ff;">while</span> self._table[index] <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> HashTable.UNUSED:
+            </span><span style="color: #0000ff;">if</span> self._table[index] <span style="color: #0000ff;">is</span> HashTable.EMPTY:  <span style="color: #008000;">#</span><span style="color: #008000;"> 注意如果是 EMPTY，继续寻找下一个槽</span>
+                index = (index * 5 + 1) %<span style="color: #000000;"> _len
+                </span><span style="color: #0000ff;">if</span> index ==<span style="color: #000000;"> origin_index:
+                    </span><span style="color: #0000ff;">break</span>
+                <span style="color: #0000ff;">continue</span>
+            <span style="color: #0000ff;">if</span> self._table[index].key == key:  <span style="color: #008000;">#</span><span style="color: #008000;"> 找到了key</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> index
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                index </span>= (index * 5 + 1) % _len  <span style="color: #008000;">#</span><span style="color: #008000;"> 没有找到继续找下一个位置</span>
+                <span style="color: #0000ff;">if</span> index ==<span style="color: #000000;"> origin_index:
+                    </span><span style="color: #0000ff;">break</span>
+
+        <span style="color: #0000ff;">return</span><span style="color: #000000;"> None
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 找能插入的槽</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _find_slot_for_insert(self, key):
+        index </span>=<span style="color: #000000;"> self._hash(key)
+        _len </span>=<span style="color: #000000;"> len(self._table)
+        </span><span style="color: #0000ff;">while</span> <span style="color: #0000ff;">not</span> self._slot_can_insert(index):  <span style="color: #008000;">#</span><span style="color: #008000;"> 直到找到一个可以用的槽</span>
+            index = (index * 5 + 1) %<span style="color: #000000;"> _len
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> index
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 槽是否能插入</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _slot_can_insert(self, index):
+        </span><span style="color: #0000ff;">return</span> self._table[index] <span style="color: #0000ff;">is</span> HashTable.EMPTY <span style="color: #0000ff;">or</span> self._table[index] <span style="color: #0000ff;">is</span><span style="color: #000000;"> HashTable.UNUSED
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> in operator，实现之后可以使用 in 操作符判断</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__contains__</span><span style="color: #000000;">(self, key):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">return</span> index <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 添加元素</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, key, value):
+        </span><span style="color: #0000ff;">if</span> key <span style="color: #0000ff;">in</span> self:  <span style="color: #008000;">#</span><span style="color: #008000;"> update</span>
+            index =<span style="color: #000000;"> self._find_key(key)
+            self._table[index].value </span>=<span style="color: #000000;"> value
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            index </span>=<span style="color: #000000;"> self._find_slot_for_insert(key)
+            self._table[index] </span>=<span style="color: #000000;"> Slot(key, value)
+            self.length </span>+= 1
+            <span style="color: #0000ff;">if</span> self._load_factor &gt;= 0.8<span style="color: #000000;">:
+                self._rehash()
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 槽不够时，重哈希</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _rehash(self):
+        old_table </span>=<span style="color: #000000;"> self._table
+        newsize </span>= len(self._table) * 2<span style="color: #000000;">
+        self._table </span>=<span style="color: #000000;"> Array(newsize, HashTable.UNUSED)
+
+        self.length </span>=<span style="color: #000000;"> 0
+
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> old_table:
+            </span><span style="color: #0000ff;">if</span> slot <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> HashTable.UNUSED <span style="color: #0000ff;">and</span> slot <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> HashTable.EMPTY:
+                index </span>=<span style="color: #000000;"> self._find_slot_for_insert(slot.key)
+                self._table[index] </span>=<span style="color: #000000;"> slot
+                self.length </span>+= 1
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 获取值</span>
+    <span style="color: #0000ff;">def</span> get(self, key, default=<span style="color: #000000;">None):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">if</span> index <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> default
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._table[index].value
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 移除</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> remove(self, key):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">if</span> index <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">raise</span><span style="color: #000000;"> KeyError()
+        value </span>=<span style="color: #000000;"> self._table[index].value
+        self.length </span>-= 1<span style="color: #000000;">
+        self._table[index] </span>=<span style="color: #000000;"> HashTable.EMPTY
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> value
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 遍历</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._table:
+            </span><span style="color: #0000ff;">if</span> slot <span style="color: #0000ff;">not</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> (HashTable.EMPTY, HashTable.UNUSED):
+                </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> slot.key
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> DictADT(HashTable):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 执行dict[key]=value时执行</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__setitem__</span><span style="color: #000000;">(self, key, value):
+        self.add(key, value)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 执行dict[key]时执行</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__getitem__</span>(self, key, default=<span style="color: #000000;">None):
+        </span><span style="color: #0000ff;">if</span> key <span style="color: #0000ff;">not</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> self:
+            </span><span style="color: #0000ff;">raise</span><span style="color: #000000;"> KeyError()
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.get(key, default)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 遍历时执行</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _iter_slot(self):
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._table:
+            </span><span style="color: #0000ff;">if</span> slot <span style="color: #0000ff;">not</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> (self.UNUSED, self.EMPTY):
+                </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> slot
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 实现items方法</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> items(self):
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._iter_slot():
+            </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> (slot.key, slot.value)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 实现keys方法</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> keys(self):
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._iter_slot():
+            </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> slot.key
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 实现values方法</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> values(self):
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._iter_slot():
+            </span><span style="color: #0000ff;">yield</span> slot.value</pre>
+</div>
+<h3>字典的使用</h3>
+<div class="cnblogs_code">
+<pre><code>d =<span style="color: #000000;"> DictADT()
+d[</span><span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>] = 1
+<span style="color: #0000ff;">print</span>(d[<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>]) <span style="color: #008000;">#</span><span style="color: #008000;"> 1<br /></span></pre>
+</div>
+<h2>集合</h2>
+<p>集合是一种不包含重复元素的数据结构，经常用来判断是否重复这种操作，或者集合中是否存在一个元素。</p>
+<p class="md-end-block md-p"><span class="md-plain md-expand">集合可能最常用的就是去重，判断是否存在一个元素等，但是 set 相比 dict 有更丰富的操作，主要是数学概念上的。</span></p>
+<p class="md-end-block md-p"><span class="md-plain md-expand"><span class="md-softbreak"> <span class="md-plain">如果你学过《离散数学》中集合相关的概念，基本上是一致的。 python 的 set 提供了如下基本的集合操作，<span class="md-softbreak"> <span class="md-plain">假设有两个集合 A，B，有以下操作：</span></span></span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">交集: A &amp; B，表示同时在 A 和 B 中的元素。 python 中重载 <span><code>__and__</code><span class="md-plain"> 实现</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">并集: A | B，表示在 A 或者 B 中的元素，两个集合相加。python 中重载 <span><code>__or__</code><span class="md-plain"> 实现</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">差集: A - B，表示在 A 中但是不在 B 中的元素。 python 中重载 <span><code>__sub__</code><span class="md-plain"> 实现</span></span></span></p>
+</li>
+</ul>
+<h3><span class="md-plain"><span><span class="md-plain">基于哈希表实现集合</span></span></span></h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Array(object):
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self, size=32, init=<span style="color: #000000;">None):
+        self._size </span>=<span style="color: #000000;"> size
+        self._items </span>= [init] *<span style="color: #000000;"> size
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__getitem__</span><span style="color: #000000;">(self, index):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._items[index]
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__setitem__</span><span style="color: #000000;">(self, index, value):
+        self._items[index] </span>=<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__len__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._size
+
+    </span><span style="color: #0000ff;">def</span> clear(self, value=<span style="color: #000000;">None):
+        </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(len(self._items)):
+            self._items[i] </span>=<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._items:
+            </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> item
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Slot(object):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    定义一个 hash 表数组的槽(slot 这里指的就是数组的一个位置)
+    hash table 就是一个数组，每个数组的元素（也叫slot槽）是一个对象，对象包含两个属性 key 和 value。
+
+    注意，一个槽有三种状态，看你能否想明白。相比链接法解决冲突，探查法删除一个 key 的操作稍微复杂。
+    1.从未使用 HashMap.UNUSED。此槽没有被使用和冲突过，查找时只要找到 UNUSED 就不用再继续探查了
+    2.使用过但是 remove 了，此时是 HashMap.EMPTY，该探查点后边的元素仍然可能是有key的，需要继续查找
+    3.槽正在使用 Slot 节点
+    </span><span style="color: #800000;">"""</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, key, value):
+        self.key, self.value </span>=<span style="color: #000000;"> key, value
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> HashTable(object):
+    UNUSED </span>= None  <span style="color: #008000;">#</span><span style="color: #008000;"> 没被使用过</span>
+    EMPTY = Slot(None, None)  <span style="color: #008000;">#</span><span style="color: #008000;"> 使用却被删除过</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self._table </span>= Array(8, init=HashTable.UNUSED)  <span style="color: #008000;">#</span><span style="color: #008000;"> 保持 2*i 次方</span>
+        self.length =<span style="color: #000000;"> 0
+
+    @property
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> _load_factor(self):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> load_factor 超过 0.8 重新分配</span>
+        <span style="color: #0000ff;">return</span> self.length /<span style="color: #000000;"> float(len(self._table))
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__len__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.length
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 进行哈希</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _hash(self, key):
+        </span><span style="color: #0000ff;">return</span> abs(hash(key)) %<span style="color: #000000;"> len(self._table)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 查找key</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _find_key(self, key):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        解释一个 slot 为 UNUSED 和 EMPTY 的区别
+        因为使用的是二次探查的方式，假如有两个元素 A，B 冲突了，
+        首先A hash 得到是 slot 下标5，A 放到了第5个槽，之后插入 B 因为冲突了，所以继续根据二次探查方式放到了 slot下标8。
+        然后删除 A，槽 5 被置为 EMPTY。然后我去查找 B，
+        第一次 hash 得到的是 槽5，但是这个时候我还是需要第二次计算 hash 才能找到 B。
+        但是如果槽是 UNUSED 我就不用继续找了，我认为 B 就是不存在的元素。这个就是 UNUSED 和 EMPTY 的区别。
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        origin_index </span>= index = self._hash(key)  <span style="color: #008000;">#</span><span style="color: #008000;"> origin_index 判断是否又走到了起点，如果查找一圈了都找不到则无此元素</span>
+        _len =<span style="color: #000000;"> len(self._table)
+        </span><span style="color: #0000ff;">while</span> self._table[index] <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> HashTable.UNUSED:
+            </span><span style="color: #0000ff;">if</span> self._table[index] <span style="color: #0000ff;">is</span> HashTable.EMPTY:  <span style="color: #008000;">#</span><span style="color: #008000;"> 注意如果是 EMPTY，继续寻找下一个槽</span>
+                index = (index * 5 + 1) %<span style="color: #000000;"> _len
+                </span><span style="color: #0000ff;">if</span> index ==<span style="color: #000000;"> origin_index:
+                    </span><span style="color: #0000ff;">break</span>
+                <span style="color: #0000ff;">continue</span>
+            <span style="color: #0000ff;">if</span> self._table[index].key == key:  <span style="color: #008000;">#</span><span style="color: #008000;"> 找到了key</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> index
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                index </span>= (index * 5 + 1) % _len  <span style="color: #008000;">#</span><span style="color: #008000;"> 没有找到继续找下一个位置</span>
+                <span style="color: #0000ff;">if</span> index ==<span style="color: #000000;"> origin_index:
+                    </span><span style="color: #0000ff;">break</span>
+
+        <span style="color: #0000ff;">return</span><span style="color: #000000;"> None
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 找能插入的槽</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _find_slot_for_insert(self, key):
+        index </span>=<span style="color: #000000;"> self._hash(key)
+        _len </span>=<span style="color: #000000;"> len(self._table)
+        </span><span style="color: #0000ff;">while</span> <span style="color: #0000ff;">not</span> self._slot_can_insert(index):  <span style="color: #008000;">#</span><span style="color: #008000;"> 直到找到一个可以用的槽</span>
+            index = (index * 5 + 1) %<span style="color: #000000;"> _len
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> index
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 槽是否能插入</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _slot_can_insert(self, index):
+        </span><span style="color: #0000ff;">return</span> self._table[index] <span style="color: #0000ff;">is</span> HashTable.EMPTY <span style="color: #0000ff;">or</span> self._table[index] <span style="color: #0000ff;">is</span><span style="color: #000000;"> HashTable.UNUSED
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> in operator，实现之后可以使用 in 操作符判断</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__contains__</span><span style="color: #000000;">(self, key):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">return</span> index <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 添加元素</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, key, value):
+        </span><span style="color: #0000ff;">if</span> key <span style="color: #0000ff;">in</span> self:  <span style="color: #008000;">#</span><span style="color: #008000;"> update</span>
+            index =<span style="color: #000000;"> self._find_key(key)
+            self._table[index].value </span>=<span style="color: #000000;"> value
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            index </span>=<span style="color: #000000;"> self._find_slot_for_insert(key)
+            self._table[index] </span>=<span style="color: #000000;"> Slot(key, value)
+            self.length </span>+= 1
+            <span style="color: #0000ff;">if</span> self._load_factor &gt;= 0.8<span style="color: #000000;">:
+                self._rehash()
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 槽不够时，重哈希</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _rehash(self):
+        old_table </span>=<span style="color: #000000;"> self._table
+        newsize </span>= len(self._table) * 2<span style="color: #000000;">
+        self._table </span>=<span style="color: #000000;"> Array(newsize, HashTable.UNUSED)
+
+        self.length </span>=<span style="color: #000000;"> 0
+
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> old_table:
+            </span><span style="color: #0000ff;">if</span> slot <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> HashTable.UNUSED <span style="color: #0000ff;">and</span> slot <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> HashTable.EMPTY:
+                index </span>=<span style="color: #000000;"> self._find_slot_for_insert(slot.key)
+                self._table[index] </span>=<span style="color: #000000;"> slot
+                self.length </span>+= 1
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 获取值</span>
+    <span style="color: #0000ff;">def</span> get(self, key, default=<span style="color: #000000;">None):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">if</span> index <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> default
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._table[index].value
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 移除</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> remove(self, key):
+        index </span>=<span style="color: #000000;"> self._find_key(key)
+        </span><span style="color: #0000ff;">if</span> index <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">raise</span><span style="color: #000000;"> KeyError()
+        value </span>=<span style="color: #000000;"> self._table[index].value
+        self.length </span>-= 1<span style="color: #000000;">
+        self._table[index] </span>=<span style="color: #000000;"> HashTable.EMPTY
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> value
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 遍历</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">for</span> slot <span style="color: #0000ff;">in</span><span style="color: #000000;"> self._table:
+            </span><span style="color: #0000ff;">if</span> slot <span style="color: #0000ff;">not</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> (HashTable.EMPTY, HashTable.UNUSED):
+                </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> slot.key
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> SetADT(HashTable):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 添加元素</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, key):
+        super().add(key, True)
+    
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__and__</span><span style="color: #000000;">(self, other_set):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">交集 A&amp;B</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        new_set </span>=<span style="color: #000000;"> SetADT()
+        </span><span style="color: #0000ff;">for</span> element_a <span style="color: #0000ff;">in</span><span style="color: #000000;"> self:
+            </span><span style="color: #0000ff;">if</span> element_a <span style="color: #0000ff;">in</span><span style="color: #000000;"> other_set:
+                new_set.add(element_a)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> new_set
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__sub__</span><span style="color: #000000;">(self, other_set):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">差集 A-B</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        new_set </span>=<span style="color: #000000;"> SetADT()
+        </span><span style="color: #0000ff;">for</span> element_a <span style="color: #0000ff;">in</span><span style="color: #000000;"> self:
+            </span><span style="color: #0000ff;">if</span> element_a <span style="color: #0000ff;">not</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> other_set:
+                new_set.add(element_a)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> new_set
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__or__</span><span style="color: #000000;">(self, other_set):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">并集 A|B</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        new_set </span>=<span style="color: #000000;"> SetADT()
+        </span><span style="color: #0000ff;">for</span> element_a <span style="color: #0000ff;">in</span><span style="color: #000000;"> self:
+            new_set.add(element_a)
+        </span><span style="color: #0000ff;">for</span> element_b <span style="color: #0000ff;">in</span><span style="color: #000000;"> other_set:
+            new_set.add(element_b)
+        </span><span style="color: #0000ff;">return</span> new_set</pre>
+</div>
+<h3>集合的使用</h3>
+<div class="cnblogs_code">
+<pre><code>sa =<span style="color: #000000;"> SetADT()
+sa.add(</span>1<span style="color: #000000;">)
+sa.add(</span>2<span style="color: #000000;">)
+sa.add(</span>3<span style="color: #000000;">)
+
+sb </span>=<span style="color: #000000;"> SetADT()
+sb.add(</span>3<span style="color: #000000;">)
+sb.add(</span>4<span style="color: #000000;">)
+sb.add(</span>5<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">print</span>(sorted(list(sa &amp; sb))) <span style="color: #008000;">#</span><span style="color: #008000;"> [3]</span>
+<span style="color: #0000ff;">print</span>(sorted(list(sa - sb))) <span style="color: #008000;">#</span><span style="color: #008000;"> [1, 2]</span>
+<span style="color: #0000ff;">print</span>(sorted(list(sa | sb))) <span style="color: #008000;">#</span><span style="color: #008000;"> [1, 2, 3, 4, 5]</span></pre>
+</div>
+<p><span style="color: #00ffff;"><strong>~&gt;.&lt;~</strong></span></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

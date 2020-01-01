@@ -1,0 +1,401 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Vue组件应用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Vue组件应用</center></div><div class='banquan'>原文出处:本文由博客园博主任风来去匆匆提供。<br/>
+原文连接:https://www.cnblogs.com/ruhaoren/p/11990288.html</div><br>
+    <p><span style="font-size: 14px;">　　Vue的组件是可复用的 Vue 实例，且带有一个名字 。我们可以在一个通过&nbsp;<code>new Vue</code>&nbsp;创建的 Vue 根实例中，把这个组件作为自定义元素来使用。因为组件是可复用的 Vue 实例，所以它们与&nbsp;<code>new Vue</code>&nbsp;接收相同的选项，例如&nbsp;<code>data</code>、<code>computed</code>、<code>watch</code>、<code>methods</code>&nbsp;以及生命周期钩子等。仅有的例外是像&nbsp;<code>el</code>&nbsp;这样根实例特有的选项。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px;"><strong>一　　创建组件</strong></span></p>
+<p><span style="font-size: 14px;">　　Vue提供了三种不同的方式来定义组件，分别是：全局组件，私有组件，单文件组件。接下来就让我一一道来。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;">　　<strong>1，全局组件</strong></span></p>
+<p><span style="font-size: 14px;">　　注册全局组件非常简单，也是很常用的一种方式。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> Vue.component('myCom'<span style="color: #000000;">,{
+</span><span style="color: #008080;">2</span>     template:'&lt;div&gt;&lt;p&gt;我是一个全局&lt;span&gt;组件&lt;/span&gt;&lt;/p&gt;&lt;/div&gt;'
+<span style="color: #008080;">3</span> });</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　Vue.component()方法需要两个参数：</span></p>
+<p><span style="font-size: 14px;">　　　　第一个，组件名称；</span></p>
+<p><span style="font-size: 14px;">　　　　第二个，实例（初始化）对象，可以包含所有使用new方式创建Vue实例时提供的所有属性，除了el。</span></p>
+<p><span style="font-size: 14px;">　　<strong>注意：组件的实例对象必须提供一个template属性，用作该组件的HTML代码模板，且在该模板中有且只能有一个根元素。全局组件的注册必须在创建Vue实例之前。</strong></span></p>
+<p><span style="font-size: 14px;">　　<em>小技巧：由于在编写JS时，一般没有HTML代码提示，创建组件模板代码会很不方便，所有可以在HTML文件中使用&lt;template&gt;元素创建模板，然后在组件的template属性中使用id选择器引用该模板。</em></span></p>
+<p><span style="font-size: 14px;"><em>　　注意：&lt;template&gt;元素必须在new Vue实例接管的根元素外部。</em></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">template id="tem"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>我是组件内的p<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">4</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>我是组件中的span<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">5</span>     <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">6</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">template</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">7</span> <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 在HTML中 </span><span style="color: #008000;">--&gt;</span></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> Vue.component('myCom'<span style="color: #000000;">,{
+</span><span style="color: #008080;">2</span>     template:'#tem'
+<span style="color: #008080;">3</span> });</span><br /><span style="color: #008000; font-size: 14px;"><span style="color: #008080;">4</span> //在组件中</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　</span></p>
+<p><span style="font-size: 14px;">　　<strong>2，私有组件</strong></span></p>
+<p><span style="font-size: 14px;">　　全局创建的组件在所有Vue实例中均可以使用，有时候这并不符合我们的需求。你可以通过以下方式定义Vue实例的私有组件，这些组件只能在该Vue实例根元素内部使用。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;">2</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;">3</span> <span style="color: #000000;">    components:{
+</span><span style="color: #008080;">4</span> <span style="color: #000000;">        mycom:{
+</span><span style="color: #008080;">5</span>             template:'#tem'
+<span style="color: #008080;">6</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">7</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">8</span> });</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　通过Vue实例的components属性可以定义私有组件，该属性绑定一个对象，对象的属性名是组件名，属性值是组件实例对象。</span></p>
+<p><span style="font-size: 14px;">　　</span></p>
+<p><span style="font-size: 14px;">　　<strong>3，单文件组件</strong></span></p>
+<p><span style="font-size: 14px;">　　Vue的单文件组件是一个以.vue为后缀名的文件。由于HTML和JavaScrip不能识别.vue文件，所以不能直接使用这种方式的组件，必须配合webpack或vue-cli工具才能正确解析.vue文件。这里的重点是Vue单文件组件，所以有兴趣的同学请移步<a href="https://www.webpackjs.com/" target="_blank">webpack中文网</a>。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> &lt;tempalte&gt;
+<span style="color: #008080;">2</span>     <span style="color: #008000;">//</span><span style="color: #008000;">HTML模板</span>
+<span style="color: #008080;">3</span> &lt;/template&gt;
+<span style="color: #008080;">4</span> &lt;script&gt;
+<span style="color: #008080;">5</span>     <span style="color: #008000;">//</span><span style="color: #008000;">JS代码</span>
+<span style="color: #008080;">6</span> &lt;/script&gt;
+<span style="color: #008080;">7</span> &lt;style&gt;
+<span style="color: #008080;">8</span>     <span style="color: #008000;">//</span><span style="color: #008000;">CSS代码</span>
+<span style="color: #008080;">9</span> &lt;/style&gt;</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　.vue文件的名称就是组件的名称，其结构非常简单、清晰：</span></p>
+<p><span style="font-size: 14px;">　　　　&lt;template&gt;标签是组件的HTML模板；</span></p>
+<p><span style="font-size: 14px;">　　　　&lt;script&gt;标签是逻辑代码；</span></p>
+<p><span style="font-size: 14px;">　　　　&lt;style&gt;标签中是样式代码。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px;"><strong>二　　组件的使用</strong></span></p>
+<p><span style="font-size: 14px;">　　不管以哪种方式创建Vue组件，我们最终的目的是在HTML页面中展示出来。本节将详细介绍Vue组件使用方式。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;">　　<strong>1，组件标签</strong></span></p>
+<p><span style="font-size: 14px;">　　要把我们创建的Vue组件添加到页面中去，只需要把组件名当做标签来使用即可。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> Vue.component('myCom'<span style="color: #000000;">,{
+</span><span style="color: #008080;">2</span>     template:"#tem"
+<span style="color: #008080;">3</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">4</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;">5</span>     el:"#app"
+<span style="color: #008080;">6</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">7</span> <span style="color: #008000;">//</span><span style="color: #008000;">JS部分</span></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="app"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">4</span> <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> HTML部分 </span><span style="color: #008000;">--&gt;</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　<em>小技巧：注册组件时，建议使用全小写形式命名，因为HTML标签要求使用小写字母。如果你一定要遵守小驼峰命名规则，那么你应该在使用组件时用&ldquo;-&rdquo;短横线把单词分隔开。</em></span></p>
+<p><span style="font-size: 14px;"><em>　　</em></span></p>
+<p><span style="font-size: 14px;">　　<strong>2，组件复用</strong></span></p>
+<p><span style="font-size: 14px;">　　Vue的组件可以重复使用。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="app"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">4</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">my-com</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">5</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　当然，全局组件可以在任何地方使用，而私有组件只能在实例接管元素内部使用。</span></p>
+<p><span style="font-size: 14px;">　　组件不仅可以简单的重复使用，还可以嵌套。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;"> 2</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;"> 3</span> <span style="color: #000000;">    compontents:{
+</span><span style="color: #008080;"> 4</span> <span style="color: #000000;">        mycom1:{
+</span><span style="color: #008080;"> 5</span>             template:'&lt;div&gt;组件一  <strong>&lt;mycom2&gt;&lt;/mycom2&gt;</strong>&lt;/div&gt;'
+<span style="color: #008080;"> 6</span> <span style="color: #000000;">        },
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">        mycom2:{
+</span><span style="color: #008080;"> 8</span>             template:'&lt;div&gt;组件二&lt;/div&gt;'
+<span style="color: #008080;"> 9</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">10</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">11</span> });</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　</span></p>
+<p><span style="font-size: 14px;">　　<strong>3，另一种使用方式</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">var</span> mycom =<span style="color: #000000;"> {
+</span><span style="color: #008080;">2</span>     tempalte:'&lt;div id="app2"&gt;hello&lt;/div&gt;'
+<span style="color: #008080;">3</span> <span style="color: #000000;">};
+</span><span style="color: #008080;">4</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;">5</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;">6</span>     render:<span style="color: #0000ff;">function</span><span style="color: #000000;">(createEl){
+</span><span style="color: #008080;">7</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> createEl(mycom);
+</span><span style="color: #008080;">8</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">9</span> });</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　使用render方式渲染组件：给Vue实例添加render属性，该属性值是一个接收一个方法作为参数的函数。参数用于创建Vue组件，return该组件将替代Vue实例接管的#app元素。最终的表现是：页面上将不再出现#app的div，取而代之的是#app2的div。</span></p>
+<p><span style="font-size: 14px;">　　这种方式一般配合单文件组件使用，如果要渲染多个组件，只需要创建多个Vue实例即可。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px;"><strong>三　　数据传递（通信）</strong></span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;">　　<strong>1，props传递数据(父组件 --&gt; 子组件)</strong></span></p>
+<p><span style="font-size: 14px;">　　通过在子组件绑定props属性，实现父组件向子组件传递数据。props属性值是一个数组，数组元素被定义用来接收父组件传递来的数据，然后通过v-bind指令指定数组元素接收哪些数据。子组件通过访问props数组元素就可以访问到父组件传递过来的数据了，就如同访问data里面的值。</span></p>
+<p><span style="font-size: 14px;">&nbsp;</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="app"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">mycom </span><span style="color: #ff0000;">:fromFatherMsg</span><span style="color: #0000ff;">="toSonMsg"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">mycom</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">4</span> <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> HTML部分 </span><span style="color: #008000;">--&gt;</span></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;"> 1</span> <span style="color: #000000;">Vue.component({
+</span><span style="color: #008080;"> 2</span>     template:"&lt;div&gt;{{fromFatherMsg}}&lt;/div&gt;"<span style="color: #000000;">,
+</span><span style="color: #008080;"> 3</span>     props:["fromFatherMsg"<span style="color: #000000;">]
+</span><span style="color: #008080;"> 4</span> <span style="color: #000000;">});
+</span><span style="color: #008080;"> 5</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;"> 6</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">    data:{
+</span><span style="color: #008080;"> 8</span>         toSonMsg:'这是给子组件的数据'
+<span style="color: #008080;"> 9</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">10</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">11</span> <span style="color: #008000;">//</span><span style="color: #008000;">JS部分</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　通过上面的例子，我们可以将这个过程简单的分为三步：</span></p>
+<p><span style="font-size: 14px;">　　　　第一步，在子组件上添加一个数组属性props，在数组中定义用来接收数据的变量（以字符串形式存储）；</span></p>
+<p><span style="font-size: 14px;">　　　　第二步，使用子组件时通过v-bind指令，绑定预先定义的接收变量和父组件将要传递过来的值；</span></p>
+<p><span style="font-size: 14px;">　　　　第三步，在子组件中，如同访问data中的数据一样，访问props数组元素接收到的数据。</span></p>
+<p><span style="font-size: 14px;">　　</span></p>
+<p><span style="font-size: 14px;">　　<strong>2，$emit传递方法(父组件 --&gt; 子组件)</strong></span></p>
+<p><span style="font-size: 14px;">　　父组件向子组件传递方法，是通过自定义事件来实现的。</span></p>
+<p><span style="font-size: 14px;">　　监听（同时注册）自定义事件有两种方式：组件上使用v-bind、实例的$on()。这里我们将使用第一种方式来做演示。</span></p>
+<p><span style="font-size: 14px;">　　子组件通过实例的$emit()方法触发自定义事件，这里的事件名将成为$emit()方法的第一个参数。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="app"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">mycom </span><span style="color: #ff0000;">@fromFatherFun</span><span style="color: #0000ff;">="toSonFun"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">mycom</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">4</span> <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> HTML部分 </span><span style="color: #008000;">--&gt;</span></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;"> 1</span> <span style="color: #000000;">Vue.component({
+</span><span style="color: #008080;"> 2</span>     template:"&lt;div&gt;&lt;button @click="myFun"&gt;点击执行来自父组件的方法&lt;/button&gt;&lt;/div&gt;"<span style="color: #000000;">,
+</span><span style="color: #008080;"> 3</span> <span style="color: #000000;">    methods:{
+</span><span style="color: #008080;"> 4</span>         myFun:<span style="color: #0000ff;">function</span><span style="color: #000000;">(){
+</span><span style="color: #008080;"> 5</span>             <span style="color: #0000ff;">this</span>.$emit('fromFatherFun'<span style="color: #000000;">);
+</span><span style="color: #008080;"> 6</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 8</span> <span style="color: #000000;">});
+</span><span style="color: #008080;"> 9</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;">10</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">    methods:{
+</span><span style="color: #008080;">12</span> <span style="color: #000000;">        toSonFun(){
+</span><span style="color: #008080;">13</span>         console.log( "这是给子组件的方法"<span style="color: #000000;">);
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">    },
+</span><span style="color: #008080;">15</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">16</span> <span style="color: #008000;">//</span><span style="color: #008000;">JS部分</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　<strong>注意：和传递数据一样，子组件不能直接使用父组件的方法。子组件需要通过实例的$emit()方法间接执行来自父组件的方法。</strong></span></p>
+<p><span style="font-size: 14px;"><strong>　　</strong>这一过程也可以分为三步：</span></p>
+<p><span style="font-size: 14px;">　　　　第一步，使用子组件时，通过v-on指令自定义一个事件；</span></p>
+<p><span style="font-size: 14px;">　　　　第二步，绑定自定义事件和父组件需要传递的方法（指定回调函数）；</span></p>
+<p><span style="font-size: 14px;">　　　　第三步，通过子组件的$emit()方法（通过实参指定需要触发的自定义事件）触发父组件的方法执行；</span></p>
+<p><span style="font-size: 14px;">　　</span></p>
+<p><span style="font-size: 14px;">　　<strong>3，子组件抛出值（子组件 --&gt; 父组件）</strong></span></p>
+<p><span style="font-size: 14px;">　　子组件在通过$emit()触发自定义事件时，可以同时利用方法的第二个参数，向外抛出一个值。回调函数（上面父组件传递下来的方法）需要定义一个形参来接收这个子组件抛出的值。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;"> 1</span> <span style="color: #008000;">//</span><span style="color: #008000;">接上面的例子</span>
+<span style="color: #008080;"> 2</span> <span style="color: #000000;">Vue.component({
+</span><span style="color: #008080;"> 3</span>     template:"&lt;div&gt;&lt;button @click="myFun"&gt;点击执行来自父组件的方法&lt;/button&gt;&lt;/div&gt;"<span style="color: #000000;">,
+</span><span style="color: #008080;"> 4</span> <span style="color: #000000;">    data(){
+</span><span style="color: #008080;"> 5</span>         <span style="color: #0000ff;">return</span> {name:'ren'<span style="color: #000000;">};
+</span><span style="color: #008080;"> 6</span> <span style="color: #000000;">    },
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">    methods:{
+</span><span style="color: #008080;"> 8</span>         myFun:<span style="color: #0000ff;">function</span><span style="color: #000000;">(){
+</span><span style="color: #008080;"> 9</span>             <span style="color: #0000ff;">this</span>.$emit('fromFatherFun',<span style="color: #0000ff;">this</span><span style="color: #000000;">.name);
+</span><span style="color: #008080;">10</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">12</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">13</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;">14</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;">15</span> <span style="color: #000000;">    data:{
+</span><span style="color: #008080;">16</span>         nameFromSon:<span style="color: #0000ff;">null</span>
+<span style="color: #008080;">17</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">18</span> <span style="color: #000000;">    methods:{
+</span><span style="color: #008080;">19</span> <span style="color: #000000;">        toSonFun(data){
+</span><span style="color: #008080;">20</span>         <span style="color: #0000ff;">this</span>.nameFromSon =<span style="color: #000000;"> data;
+</span><span style="color: #008080;">21</span> <span style="color: #000000;">    },
+</span><span style="color: #008080;">22</span> });</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　子组件抛出一个值的原理和父组件给子组件传递方法原理是一样的，只不过是不同的用法而已。虽然有点绕，但有用哦。</span></p>
+<p><span style="font-size: 14px;">　　</span></p>
+<p><span style="font-size: 14px;">　　<strong>4，获取子组件的引用</strong></span></p>
+<p><span style="font-size: 14px;">　　在使用子组件时，通过绑定ref属性，父组件可以通过Vue实例的$refs属性拿到子组件的引用，然后就可以直接访问子组件的属性或方法了。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="app"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span> 　<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">mycom </span><span style="color: #ff0000;">ref</span><span style="color: #0000ff;">="sonCom"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">mycom</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span>   <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">button </span><span style="color: #ff0000;">@click</span><span style="color: #0000ff;">="printMsgFromSon"</span><span style="color: #0000ff;">&gt;</span>点击打印子组件的信息<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">button</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">4</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">5</span> <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> HTML部分 </span><span style="color: #008000;">--&gt;</span></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;"> 1</span> <span style="color: #000000;">Vue.component('mycom',{
+</span><span style="color: #008080;"> 2</span>     data:<span style="color: #0000ff;">function</span>(){<span style="color: #0000ff;">return</span> {name:'ren'<span style="color: #000000;">}}
+</span><span style="color: #008080;"> 3</span> <span style="color: #000000;">});
+</span><span style="color: #008080;"> 4</span> 
+<span style="color: #008080;"> 5</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;"> 6</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">    methods:{
+</span><span style="color: #008080;"> 8</span>         printMsgFromSon:<span style="color: #0000ff;">function</span><span style="color: #000000;">(){
+</span><span style="color: #008080;"> 9</span>             console.log(<span style="color: #0000ff;">this</span><span style="color: #000000;">.$refs.sonCom.name);
+</span><span style="color: #008080;">10</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">12</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">13</span> <span style="color: #008000;">//</span><span style="color: #008000;">JS部分</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　<em>小技巧：ref属性不仅可以用在组件上，也可以用在其他标准HTML标签上，这样Vue实例就可以获取到原生的DOM对象了。</em></span></p>
+<p><span style="font-size: 14px;">　　<strong>注意：即使子组件是Vue实例的私有组件，实例也不能直接使用组件的相关数据，还是需要通过$refs等属性来间接访问。</strong></span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;"><strong>　　5，兄弟组件间传值</strong></span></p>
+<p><span style="font-size: 14px;">&nbsp;　　兄弟组件间实现通信也是采用自定义事件的形式。不过，这一般需要一个空的Vue实例作为中介，配合使用$on()和$emit()实现兄弟组件间的传值。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="app"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">com1</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">com1</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">com2</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">com2</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 4</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 5</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">template </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="com1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 6</span>   <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 7</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>com1组件：{{name}}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 8</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">button </span><span style="color: #ff0000;">@click</span><span style="color: #0000ff;">="send"</span><span style="color: #0000ff;">&gt;</span>将数据发送给com2<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">button</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 9</span>   <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">10</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">template</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">11</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">template </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="com2"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">12</span>   <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">13</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>com2组件：{{name}}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">14</span>   <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">15</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">template</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">16</span> <span style="color: #008000;">&lt;!-- HTML部分 --&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">var</span> event = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue();
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;"> 3</span>     el:'#app'<span style="color: #000000;">,
+</span><span style="color: #008080;"> 4</span> <span style="color: #000000;">    components:{
+</span><span style="color: #008080;"> 5</span> <span style="color: #000000;">        com1:{
+</span><span style="color: #008080;"> 6</span>             template:'#com1'<span style="color: #000000;">,
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">            data(){
+</span><span style="color: #008080;"> 8</span>                 <span style="color: #0000ff;">return</span>{name:'ren'<span style="color: #000000;">};
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">            },
+</span><span style="color: #008080;">10</span> <span style="color: #000000;">            methods:{
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">                send(){
+</span><span style="color: #008080;">12</span>                     event.$emit('sendMsg',<span style="color: #0000ff;">this</span><span style="color: #000000;">.name);
+</span><span style="color: #008080;">13</span> <span style="color: #000000;">                }
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">15</span> <span style="color: #000000;">        },
+</span><span style="color: #008080;">16</span> <span style="color: #000000;">        com2:{
+</span><span style="color: #008080;">17</span>             template:'#com2'<span style="color: #000000;">,
+</span><span style="color: #008080;">18</span> <span style="color: #000000;">            data(){
+</span><span style="color: #008080;">19</span>                 <span style="color: #0000ff;">return</span> {name:<span style="color: #0000ff;">null</span><span style="color: #000000;">};
+</span><span style="color: #008080;">20</span> <span style="color: #000000;">            },
+</span><span style="color: #008080;">21</span> <span style="color: #000000;">            created(){<span style="color: #008000;">//因为不知道什么时候会被触发，所以一般选择在生命周期钩子中监听
+</span></span><span style="color: #008080;">22</span>                 event.$on('sendMsg',name =&gt; {<span style="color: #0000ff;">this</span>.name =<span style="color: #000000;"> name;})
+</span><span style="color: #008080;">23</span>                 <span style="color: #008000;">//</span><span style="color: #008000;">这里需要使用箭头函数，使其内部的this指向com2</span>
+<span style="color: #008080;">24</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">25</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">26</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">27</span> });<span style="color: #008000;"><br /></span><span style="color: #008080;">28</span><span style="color: #008000;"> //JS部分</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px;"><strong>四　　其他事项</strong></span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;"><strong>　　1，单独的data</strong></span></p>
+<p><span style="font-size: 14px;"><strong>　　</strong>经过上面的学习，你可能已经发现了一个问题：组件中的data属性是一个函数返回的对象。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> Vue.component("mycom"<span style="color: #000000;">,{
+</span><span style="color: #008080;">2</span>     template:""<span style="color: #000000;">,
+</span><span style="color: #008080;">3</span> <span style="color: #000000;">    data(){
+</span><span style="color: #008080;">4</span>         <span style="color: #0000ff;">return</span> { <span style="color: #008000;">//</span><span style="color: #008000;">some code };</span>
+<span style="color: #008080;">5</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">6</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">7</span> <span style="color: #008000;">//</span><span style="color: #008000;">这是ES6的写法，等同于data:function(){return {some code};}</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　由于data属性绑定的是一个对象，而对象是一个引用类型，为了保证为每个组件维护一份独立的数据，组件的data属性必须是一个函数。</span></p>
+<p><span style="font-size: 14px;"><strong>　　</strong></span></p>
+<p><span style="font-size: 14px;"><strong>　　2，插槽&lt;slot&gt;</strong></span></p>
+<p><span style="font-size: 14px;"><strong>　　</strong></span><span style="font-size: 14px;">当你读到这里时，你可能会有一个疑问：</span><span style="font-size: 14px;">既然我们可以用标签形式使用Vue组件，那么是否可以在开始标签和结束标签之间填些内容呢？如果可以的话，该如何做呢？</span><span style="font-size: 14px;">Vue的答案是肯定的。</span></p>
+<p><span style="font-size: 14px;">　　首先请看下面的例子：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="app"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">com</span><span style="color: #0000ff;">&gt;</span>我是插槽内容<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">com</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">4</span> <span style="color: #008000;">&lt;!-- HTML部分 --&gt;</span></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> Vue.compenent('com'<span style="color: #000000;">,{
+</span><span style="color: #008080;">2</span>     template:'&lt;div&gt;&lt;p&gt;我是组件&lt;/p&gt;&lt;slot&gt;我是默认值&lt;slot&gt;&lt;/div&gt;'
+<span style="color: #008080;">3</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">4</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;">5</span>     el:'#app'
+<span style="color: #008080;">6</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">7</span> <span style="color: #008000;">//</span><span style="color: #008000;">JS部分</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　"我是插槽内容"将替换com组件中&lt;slot&gt;元素。</span></p>
+<p><span style="font-size: 14px;">　　<strong>注意：如果在使用子组件时没有提供插槽值，那么&lt;slot&gt;元素中的默认值将会生效，前提是你已经定义了这些值。</strong></span></p>
+<p><span style="font-size: 14px;">　　上面的例子中，组件最终渲染的HTML结构如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>我是组件<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span> <span style="color: #000000;">    我是插槽内容
+</span><span style="color: #008080;">4</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　注意：插槽的内容不仅可以是文本内容，还可以是HTML代码，甚至另一个组件。</span></p>
+<p><span style="font-size: 14px;">　　如果你需要在一个组件中定义多个插槽，那么你应该需要用到&lt;slot&gt;元素的name属性，来指定每个插槽应该拥有怎么样的模板。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">com</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 3</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">template </span><span style="color: #ff0000;">v-slot:"header"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 4</span>             <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 单独的HTML模板 </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #008080;"> 5</span>         <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">template</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 6</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>我是默认的模板<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;&lt;/<span style="color: #800000;">div</span>&gt;</span>
+<span style="color: #008080;"> 7</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">template </span><span style="color: #ff0000;">v-slot:"footer"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 8</span>             <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 单独的HTML模板 </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #008080;"> 9</span>         <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">template</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">10</span>     <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">com</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">11</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">12</span> <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> HTML部分 </span><span style="color: #008000;">--&gt;</span></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> Vue.component('com'<span style="color: #000000;">,{
+</span><span style="color: #008080;">2</span>     tempalte:'&lt;div&gt;&lt;slot name="header"&gt;&lt;/slot&gt;&lt;slot&gt;&lt;/slot&gt;&lt;slot name="footer"&gt;&lt;/slot&gt;&lt;/div&gt;'
+<span style="color: #008080;">3</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">4</span> <span style="color: #0000ff;">var</span> vm = <span style="color: #0000ff;">new</span><span style="color: #000000;"> Vue({
+</span><span style="color: #008080;">5</span>     el:'#app'
+<span style="color: #008080;">6</span> });</span></pre>
+</div>
+<p><span style="font-size: 14px;">　　具名的插槽需要在使用组件时，用&lt;template&gt;元素单独定义模板，并通过v-slot指令以参数的形式指定：&ldquo;我是xxx插槽的模板&rdquo;。</span></p>
+<p><span style="font-size: 14px;">　　其他所有没有包裹在&lt;template&gt;元素内的模板，将自动归为匿名的&lt;slot&gt;元素下面。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 14px;"><strong>　　</strong></span></p>
+<p><span style="font-size: 14px;"><strong>　　3，特殊的嵌套元素</strong></span></p>
+<p><span style="font-size: 14px;"><strong>　　</strong>有些 HTML 元素，诸如&nbsp;<code>&lt;ul&gt;</code>、<code>&lt;ol&gt;</code>、<code>&lt;table&gt;</code>&nbsp;和&nbsp;<code>&lt;select&gt;</code>，对于哪些元素可以出现在其内部是有严格限制的。而有些元素，诸如&nbsp;<code>&lt;li&gt;</code>、<code>&lt;tr&gt;</code>&nbsp;和&nbsp;<code>&lt;option&gt;</code>，只能出现在其它某些特定的元素内部。要怎样才能在这些元素中正确的渲染组件呢？幸好，Vue提供了is特性：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 14px;"><span style="color: #008080;">1</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">table</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">2</span>   <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">tr </span><span style="color: #ff0000;">is</span><span style="color: #0000ff;">="mycom"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">tr</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">3</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">table</span><span style="color: #0000ff;">&gt;</span></span></pre>
+</div>
+<p><span style="font-size: 14px;">　　注意：如果你使用字符串定义组件模板（例如：<code>template: '...'</code>）、或者单文件组件（.vue）、或者&lt;script&gt;标签（<code>&lt;script type="text/x-template"&gt;），那么你完全可以忽略掉这个限制。</code></span></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

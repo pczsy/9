@@ -1,0 +1,246 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修SpringBoot 发送邮件功能实现' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>SpringBoot 发送邮件功能实现</center></div><div class='banquan'>原文出处:本文由博客园博主经典鸡翅提供。<br/>
+原文连接:https://www.cnblogs.com/jichi/p/12015254.html</div><br>
+    <h3 id="背景">背景</h3>
+<p>有个小伙伴问我你以前发邮件功能怎么弄的。然后我就给他找了个demo，正好在此也写一下，分享给大家。</p>
+<h3 id="理清痛点">理清痛点</h3>
+<p>发送邮件，大家可以想一下，坑的地方在哪？<br />
+我觉得是三个吧。<br />
+第一：邮件白名单问题。<br />
+第二：邮件超时问题。<br />
+第三：邮件带附件问题。<br />
+我下面的demo都会介绍这些问题及解决。</p>
+<h3 id="实现方案">实现方案</h3>
+<h4 id="准备工作">准备工作</h4>
+<p>我们先要准备一个可以发送的邮箱，我这里以我的163邮箱为例，现在发送邮件的规则，要求你输入一种叫做授权码的东西，注意这个东西不是密码。<br />
+获取授权码的步骤：<br />
+<img src="./images/SpringBoot 发送邮件功能实现0.png" /><br />
+<img src="./images/SpringBoot 发送邮件功能实现1.png" /><br />
+<img src="./images/SpringBoot 发送邮件功能实现2.png" /><br />
+当选择开启，通过验证之后就可以获取到验证码。选择重置验证码也可以获取。以前17年的时候就写过一个demo，现在19年又开了一个，因为以前的忘了。</p>
+<h4 id="springboot项目引入邮件包">SpringBoot项目引入邮件包</h4>
+<pre><code><code>&lt;dependency&gt;
+    &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+    &lt;artifactId&gt;spring-boot-starter-mail&lt;/artifactId&gt;
+&lt;/dependency&gt;</code></pre>
+<h4 id="yml配置邮件相关">yml配置邮件相关</h4>
+<pre><code><code>spring:
+  mail:
+    # 邮件服务地址
+    host: smtp.163.com
+    # 端口,可不写默认
+    port: 25
+    # 编码格式
+    default-encoding: utf-8
+    # 用户名
+    username: xxx@163.com
+    # 授权码，就是我们刚才准备工作获取的代码
+    password: xxx
+    # 其它参数
+    properties:
+      mail:
+        smtp:
+          # 如果是用 SSL 方式，需要配置如下属性,使用qq邮箱的话需要开启
+          ssl:
+            enable: true
+            required: true
+          # 邮件接收时间的限制，单位毫秒
+          timeout: 10000
+          # 连接时间的限制，单位毫秒
+          connectiontimeout: 10000
+          # 邮件发送时间的限制，单位毫秒
+          writetimeout: 10000</code></pre>
+<p>针对于上面提的超时问题，捕获超时异常就可解决。</p>
+<h4 id="邮件发送工具类">邮件发送工具类</h4>
+<p>主要通过以下工具类就可以满足发送java邮件的需要。当我们进行好 yml 配置后，SpringBoot会帮助我们自动配置 JavaMailSender 我们通过这个java类就可以实现操作java来发送邮件。以下列举了几种常用的邮件。</p>
+<pre><code><code>@Service
+public class MailService {
+    private static final Logger logger = LoggerFactory.getLogger(MailServiceImpl.class);
+
+    @Autowired
+    private JavaMailSender mailSender;
+
+    private static final String SENDER = &quot;xxx@163.com&quot;;
+
+    /**
+     * 发送普通邮件
+     *
+     * @param to      收件人
+     * @param subject 主题
+     * @param content 内容
+     */
+    @Override
+    public void sendSimpleMailMessge(String to, String subject, String content) {
+        SimpleMailMessage message = new SimpleMailMessage();
+        message.setFrom(SENDER);
+        message.setTo(to);
+        message.setSubject(subject);
+        message.setText(content);
+        try {
+            mailSender.send(message);
+        } catch (Exception e) {
+            logger.error(&quot;发送简单邮件时发生异常!&quot;, e);
+        }
+    }
+
+    /**
+     * 发送 HTML 邮件
+     *
+     * @param to      收件人
+     * @param subject 主题
+     * @param content 内容
+     */
+    @Override
+    public void sendMimeMessge(String to, String subject, String content) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            //true表示需要创建一个multipart message
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(SENDER);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, true);
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            logger.error(&quot;发送MimeMessge时发生异常！&quot;, e);
+        }
+    }
+
+    /**
+     * 发送带附件的邮件
+     *
+     * @param to       收件人
+     * @param subject  主题
+     * @param content  内容
+     * @param filePath 附件路径
+     */
+    @Override
+    public void sendMimeMessge(String to, String subject, String content, String filePath) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            //true表示需要创建一个multipart message
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(SENDER);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, true);
+
+            FileSystemResource file = new FileSystemResource(new File(filePath));
+            String fileName = file.getFilename();
+            helper.addAttachment(fileName, file);
+
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            logger.error(&quot;发送带附件的MimeMessge时发生异常！&quot;, e);
+        }
+    }
+
+    /**
+     * 发送带静态文件的邮件
+     *
+     * @param to       收件人
+     * @param subject  主题
+     * @param content  内容
+     * @param rscIdMap 需要替换的静态文件
+     */
+    @Override
+    public void sendMimeMessge(String to, String subject, String content, Map&lt;String, String&gt; rscIdMap) {
+        MimeMessage message = mailSender.createMimeMessage();
+        try {
+            //true表示需要创建一个multipart message
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+            helper.setFrom(SENDER);
+            helper.setTo(to);
+            helper.setSubject(subject);
+            helper.setText(content, true);
+
+            for (Map.Entry&lt;String, String&gt; entry : rscIdMap.entrySet()) {
+                FileSystemResource file = new FileSystemResource(new File(entry.getValue()));
+                helper.addInline(entry.getKey(), file);
+            }
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            logger.error(&quot;发送带静态文件的MimeMessge时发生异常！&quot;, e);
+        }
+    }
+}</code></pre>
+<h4 id="发送邮件的demo">发送邮件的demo</h4>
+<pre><code><code>@RunWith(SpringRunner.class)
+@SpringBootTest
+public class SpringbooEmailDemoApplicationTests {
+
+    @Autowired
+    private MailService mailService;
+
+    private static final String TO = &quot;xxx@qq.com&quot;;
+    private static final String SUBJECT = &quot;测试邮件&quot;;
+    private static final String CONTENT = &quot;test content&quot;;
+
+    /**
+     * 测试发送普通邮件
+     */
+    @Test
+    public void sendSimpleMailMessage() {
+        mailService.sendSimpleMailMessge(TO, SUBJECT, CONTENT);
+    }
+
+    /**
+     * 测试发送html邮件
+     */
+    @Test
+    public void sendHtmlMessage() {
+        String htmlStr = &quot;&lt;h1&gt;Test&lt;/h1&gt;&quot;;
+        mailService.sendMimeMessge(TO, SUBJECT, htmlStr);
+    }
+
+    /**
+     * 测试发送带附件的邮件
+     * @throws FileNotFoundException
+     */
+    @Test
+    public void sendAttachmentMessage() throws FileNotFoundException {
+        File file = ResourceUtils.getFile(&quot;classpath:test.txt&quot;);
+        String filePath = file.getAbsolutePath();
+        mailService.sendMimeMessge(TO, SUBJECT, CONTENT, filePath);
+    }
+
+    /**
+     * 测试发送带附件的邮件
+     * @throws FileNotFoundException
+     */
+    @Test
+    public void sendPicMessage() throws FileNotFoundException {
+        String htmlStr = &quot;&lt;html&gt;&lt;body&gt;测试：图片1 &lt;br&gt; &lt;img src=\&#39;cid:pic1\&#39;/&gt; &lt;br&gt;图片2 &lt;br&gt; &lt;img src=\&#39;cid:pic2\&#39;/&gt;&lt;/body&gt;&lt;/html&gt;&quot;;
+        Map&lt;String, String&gt; rscIdMap = new HashMap&lt;&gt;(2);
+        rscIdMap.put(&quot;pic1&quot;, ResourceUtils.getFile(&quot;classpath:pic01.jpg&quot;).getAbsolutePath());
+        rscIdMap.put(&quot;pic2&quot;, ResourceUtils.getFile(&quot;classpath:pic02.jpg&quot;).getAbsolutePath());
+        mailService.sendMimeMessge(TO, SUBJECT, htmlStr, rscIdMap);
+    }
+}</code></pre>
+<h4 id="白名单问题">白名单问题</h4>
+<p>如果是发送给固定邮箱，可以直接在固定邮箱里面设置白名单，如果频繁的发送给多个邮箱，最好设置以下发送时间间隔，不要不断的给某一个邮箱发送。</p>
+<h4 id="总结">总结</h4>
+<p>至此SpringBoot发送邮件介绍完毕，大家可以直接使用代码来进行发送。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,423 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python Web（三）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python Web（三）</center></div><div class='banquan'>原文出处:本文由博客园博主Infi_chu提供。<br/>
+原文连接:https://www.cnblogs.com/Infi-chu/p/11388930.html</div><br>
+    <p>&nbsp;Infi-chu:</p>
+<p><a href="http://www.cnblogs.com/Infi-chu/" target="_blank">http://www.cnblogs.com/Infi-chu/</a></p>
+<p>&nbsp;</p>
+<p>一、Django母版渲染</p>
+<p>1.创建母版文件</p>
+<p>base.html</p>
+<div class="cnblogs_Highlighter">
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;{% block title %}{% endtitle %}&lt;/title&gt;
+    &lt;style&gt;
+        {% block css %}
+        {% endblock %} #写css
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    {% block data %}
+    {% endblock %}    #存放内容
+&lt;/body&gt;
+    {% block js %}  #写js
+    {% endblock %}
+&lt;/html&gt;
+</pre>
+</div>
+<p>2.导入模板</p>
+<div class="cnblogs_Highlighter">
+<pre><code>{% extends base.html %} #母版名称
+{% block title %}
+title名
+{%endblock%}
+{% block css %}
+放在原母版的基础上进行渲染
+{% endblock %} #写css
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;二、部分文件渲染</p>
+<p>1.组件</p>
+<p>test.html</p>
+<div class="cnblogs_Highlighter">
+<pre><code>&lt;form action=""&gt;
+    &lt;input type="text" class="word-input"&gt;
+    &lt;button class="word-button"&gt; 提交&lt;/button&gt;
+&lt;/form&gt;
+</pre>
+</div>
+<p>2.导入模块</p>
+<div class="cnblogs_Highlighter">
+<pre><code>{% include test %}
+</pre>
+</div>
+<p>&nbsp;【注】</p>
+<p>这里导入多个相同的内容会出现多个内容</p>
+<p>&nbsp;</p>
+<p>三、函数渲染（会降低模板渲染效率，在函数视图直接处理会稍微好一些）</p>
+<p>1.内置函数渲染</p>
+<div class="cnblogs_Highlighter">
+<pre><code>{{后台传输的内容|内置函数}}
+</pre>
+</div>
+<p>2.自定义函数渲染</p>
+<ul>
+<li>在APP中创建templatetags目录</li>
+<li>在上述目录中创建test_tags.py
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">from django import template
+
+register = template.Library()
+
+@register.filter
+def my_filter(val, args):
+    return val + args
+
+@register.simple_tag
+def my_upper(val, args, args1):
+    return val + args + args1
+</pre>
+</div>
+</li>
+<li>在HTML中显示
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">{%load xxx %}
+
+- simple_filter
+{{name | my_filter:'xxxxx'}}
+
+- simple_tag
+{%my_upper "zekai" "sss" 'dsadsadsa'%}</pre>
+</div>
+</li>
+</ul>
+<p>&nbsp;</p>
+<p>四、Django 自关联</p>
+<p>1.一对多关联</p>
+<ul>
+<li><strong>表内自关联是指表内数据相关联的对象和表是相同字段，这样我们就直接用表内关联将外键关联设置成自身表的字段</strong></li>
+<li><strong>例如，对于微博评论，每条评论都可能有子评论，但每条评论的字段内容应该都是相同的，并且每条评论都只有一个父评论，这就满足了一对多的情形，父评论id为关联字段，可以对应多个子评论</strong></li>
+<li><strong>外键关联是在子评论中，有关联字段的是子评论，子评论查父评论是正向，父评论查子评论是反向</strong></li>
+<li><strong>一对多的自关联可以应用在BBS论坛的留言功能中</strong></li>
+</ul>
+<p>models.py</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># models.py中
+
+# 文章表 
+"""
+id     title         content
+1       'hello'      'nihao....'
+2       'world'      'shijie....'
+"""
+class Article(models.Model):
+    title = models.CharField(max_length=32)
+    content = models.CharField(max_length=500)
+
+# 评论表
+"""
+id  article_id  content   reply_id(自关联，作为外键关联自身表的主键id)     uid
+1   1           'cool'    0  (不是任何评论的回复)                      
+2   1           'hehe'    0
+3   1           'wtf'     1  (表示的是这条评论是回复id为1的评论)
+4   1           'how'     0
+5   2           'haha'    0
+6   1           'wow'     1  (也是回复的第一条评论)
+7   2           'Um'      5  (回复第五条评论)
+8   1           'aha'     3  (回复第三条评论)
+"""
+class Comment(models.Model):
+    article = models.ForeignKey("Article")
+    content = models.CharField(max_length=255)<br />    <code>reply = models.ForeignKey(<span class="hljs-string">"Comment", default=<span class="hljs-number">0)</span></span></code>
+</pre>
+</div>
+<p>2.多对多关联</p>
+<p><strong>1.例如，建立一张相亲对象表，里面有男有女，我们就可以通过自关联来建立多对多的关系</strong></p>
+<p><strong>2.通过ManyToManyField将外键关联自身的主键id</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># models.py中
+
+class User(models.Model):
+    name = models.CharField(max_length=32)
+    gender_list = [
+        (1, "男"),
+        (2, "女")，
+    ]
+    gender = models.IntegerField(choices=gender_list,default=1)
+    r = models.ManyToManyField("User")
+</pre>
+</div>
+<p>&nbsp;<strong>3.通过<code>python3 manage.py makemigrations</code>和<code>python3 manage.py migrate</code>提交建表模型之后，会生成两个表，一个是主表，另一个是从表</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">app_user表 和 app_user_r表
+</pre>
+</div>
+<p><strong>4.从表中的的两个字段，一个是 from_主表名_id，一个是 to_主表名_id</strong></p>
+<p><strong>5.当我们通过 from_主表名_id 相关联的对象查与 to_主表名_id相关联的对象时，可以直接通过 '主表对象.关系表（从表）' 查询</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># views.py中
+
+# 查询和jojo的女生
+res = models.User.objects.filter(name='jojo', gender=1).first()
+#print(res)  # object
+objs = res.m.all()  
+for obj in objs:
+    print(obj.name)
+'''
+对应的SQL语句：
+1. select * from app01_user_m where from_user_id = 1;  
+得到的结果就是对应到app_user_r表中的数据时：to_user_id=[3,4] 所对应的对象
+
+2. select * from app01_user where id in (3,4);
+'''
+</pre>
+</div>
+<p>&nbsp;<strong>6.当我们 通过 to_主表名_id相关联的对象查 from_主表名_id 相关联的对象时，则需要通过 '主表对象.关系表_set' 进行查询</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># views.py中
+
+# 查询和 fanbingbing 约会的男生
+res = models.User.objects.filter(name='fanbingbing', gender=2).first()
+objs = res.user_set.all()
+for obj in objs:
+    print(obj.name)
+'''
+对应的SQL语句：
+1. select * from app01_user_m where to_user_id = 3; 
+得到的结果就是对应到app_user_r表中的数据时：from_user_id=[1,2] 所对应的对象
+
+2. select * from app01_user where id in (1,2); 
+'''     
+</pre>
+</div>
+<p>&nbsp;</p>
+<p>五、auth模块</p>
+<p><strong>1.执行数据库迁移的那两条命令时，即使我们没有建表，django是不是也会创建好多张表？我们创建之后去看一下里面的一个叫auth_user表，既然是表，那肯定应该有对应的操作改表的方法</strong></p>
+<p><strong>2.auth_user表的记录的添加：创建超级用户，不可以手动插入，因为密码是加密的，手动添加的明文密码没有意义</strong></p>
+<p><strong>3.我们可以在pycharm中使用导航栏中的Tools里的run manage.py Task 中输入<code>createsuperuser</code></strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># views.py 中
+
+# 就可以使用auth认证了，做一个简单的登陆
+
+from django.contrib import auth
+
+def test(request):
+
+    if request.method == "GET":
+        return render(request,"test.html")
+    else:
+        name = request.POST.get("user")
+        psw = request.POST.get("psw")
+
+        myuser = auth.authenticate(request,username=name,password=psw)  # 如果auth_user表中有这条记录，则返回一个user对象（一般就是用户名）
+
+        if myuser: 
+
+            auth.login(request,myuser)  # 会产生一个user对象，可以在任何视图函数中调用
+            """
+            给当前成功登陆的用户保存登陆状态，之前是通过cookie或者session，现在通过auth；
+            request.session["name"] = name等价于：auth.login(request,myuser)
+            """
+            
+            return HttpResponse("success")
+        else:
+            return redirect("/test/")
+
+# 在其他视图函数中演示
+def other(request):
+    
+    print(request.user)
+    print(request.user.is_authenticated)
+    
+    return HttpResponse("ok")
+</pre>
+</div>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># 总结：
+# 1.只要登陆成功执行了auth.login(request,user)
+# 之后在其他任意的视图函数中都可以通过request.user获取当前登陆用户对象
+
+# 2.当没有执行auth.login，request.user打印出来的是匿名用户。将session表数据删除即可演示该效果
+
+# 3.如何判断request.user用户是否通过auth.login登陆呢？request.user.is_authenticated，打印：print(request.user.is_authenticated)
+
+# 为何执行auth.login之后，其他视图函数中就可以通过request.user拿到当前登陆对象呢？
+# django的中间件中有没有一个叫 'django.contrib.auth.middleware.AuthenticationMiddleware'的中间件，它干了件什么事，能不能推导一下？
+# 在web端取出session去django_session表里面查相应的数据
+</pre>
+</div>
+<p>&nbsp;<strong>4.注销</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">auth.logout(request)
+# 等价于删除session数据request.session.flush()
+</pre>
+</div>
+<p>装饰器：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># 装饰器校验是否登陆及跳转
+
+from django.contrib.auth.decorators import login_required
+
+@login_required(login_url='/login/',redirect_field_name='old')  # 没登陆会跳转到login页面，并且后面会拼接上你上一次想访问的页面路径/login/?old=/my_view/,可以通过redirect_field_name参数修改next键名(如果不写这个参数，则为127.0.0.1:8090/login/?old=/my_view/，再无啥用了)
+def my_view(request):
+  return HttpResponse("ok")
+</pre>
+</div>
+<p>&nbsp;<strong>如果我所有的视图函数都需要装饰并跳转到login页面，那么会很繁琐，我们可以在项目下的settings.py文件中进行配置</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># settings.py
+
+# 可以在配置文件中指定auth校验登陆不合法统一跳转到某个路径
+LOGIN_URL = '/login/'  # 既可以全局配置，也可以局部配置
+</pre>
+</div>
+<p>&nbsp;通过auth实现注册功能</p>
+<p><strong>我们除了通过命令行输入，还可以通过auth提供的其他方法，对auth_user表进行数据的添加</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># app的views.py文件中
+
+from django.contrib.auth.models import User
+
+def register(request):
+    if request.method == "GET":
+        return render(request, "register.html")
+    else:
+        user_name = request.POST.get("username")
+        psw = request.POST.get("psw")
+        
+        # User.objects.create()  # 不能用这个，因为密码是明文
+
+        User.objects.create_user(username=user_name,password=psw)  # 创建普通用户
+        # User.objects.create_superuser(username=user_name,password=psw,email=233@qq.com)  # 创建超级用户
+</pre>
+</div>
+<p>&nbsp;修改密码：</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">def modify(request):
+    if request.method=='GET':
+        return render(request, 'modify.html')
+    else:
+        oldpsw = request.POST.get('oldpsw')
+        newpsw = request.POST.get('newpsw')
+
+        res = request.user.check_password(oldpsw) # 获取密码
+        print(res)
+        if res:
+            request.user.set_password(newpsw)
+            request.user.save()
+            return HttpResponse('ok')
+        else:
+            return render(request, 'modify.html')
+</pre>
+</div>
+<p>自定义模型表应用auth功能：</p>
+<p><strong>1.扩张auth_user表</strong></p>
+<p><strong>2.一对一关联（不推荐）</strong></p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">from django.contrib.auth.model s import User
+
+class UserDetail(models.Models):
+    phone_number = models.CharField(max_length=11)
+    user = models.OnoToOneField(to=User)
+</pre>
+</div>
+<p><strong>3.面向对象的继承</strong></p>
+<ul>
+<li><strong><strong>需要在项目下的settings.py文件中进行配置</strong></strong>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># settings.py中
+
+"""
+1.指定我不再使用默认的auth_user表而是使用我自己创建的Userinfo表
+2.自定义认证系统默认使用的数据表之后，我们就可以像使用默认的auth_user表那样使用我们的UserInfo表了
+3.库里面也没有auth_user表了，原来auth表的操作方法，现在全部用自定义的表均可实现
+"""
+
+# AUTH_USER_MODEL = "app名.models里面对应的模型表名"
+AUTH_USER_MODEL = "app01.User" </pre>
+</div>
+</li>
+<li><strong><strong>就可以在app下的models.py文件中创建我们自己的用户信息表了</strong></strong>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;"># models.py中
+
+from django.contrib.auth.models import User,AbstractUser
+
+# 继承了auth中的user表
+class UserInfo(AbstractUser):
+    phone_number = models.CharField(max_length=32) </pre>
+</div>
+</li>
+</ul>
+<p>【***】</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">1.auth登录
+            
+            obj = auth.authenticate(username, password)
+            
+            if obj:
+                auth.login(request, obj)
+                
+2.业务逻辑函数验证：
+            
+            - request.user.is_authenticated()
+            
+            - from django.contrib.auth.decorators import login_required
+                @login_required()
+            
+3.auth注册：
+            本质就是向auth_user表添加数据
+            
+            - createsuperuser
+            
+            - models.User.objects.create_user()   
+            - models.User.objects.create_superuser()   
+            
+4.auth的密码更该：
+            
+            auth.checkpassword()  : 验证原来的密码是否正确
+            
+            auth.setpassword() : 设置新的密码
+            
+            auth.save()
+            
+5.注销（登出）
+            
+            auth.logout(request)
+            
+            本质上就是删除django_session中所对应的的记录
+            
+6.auth_user表的扩展：
+            
+            - onetoonefield
+            
+            - 继承子 AbstractUser 类
+</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,243 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django之使用内置函数和celery发邮件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django之使用内置函数和celery发邮件</center></div><div class='banquan'>原文出处:本文由博客园博主YifChan提供。<br/>
+原文连接:https://www.cnblogs.com/yifchan/p/python-1-34.html</div><br>
+    <h2>邮箱配置</h2>
+<p><strong>开启stmp服务</strong></p>
+<p>以163邮箱为例，点击设置里面的stmp</p>
+<p><img src="./images/Django之使用内置函数和celery发邮件0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><strong>开启客户端授权密码</strong></p>
+<p><img src="./images/Django之使用内置函数和celery发邮件1.png" alt="" /></p>
+<p>&nbsp;如上所示，因为我已经开启了，所以出现的是以上页面。</p>
+<p>这样，邮箱的准备就已经完成了。</p>
+<p>&nbsp;</p>
+<h2>使用Django内置函数发邮件</h2>
+<p>1.在settings文件中加入以下配置</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 邮件设置</span>
+EMAIL_BACKEND = <span style="color: #800000;">'</span><span style="color: #800000;">django.core.mail.backends.smtp.EmailBackend</span><span style="color: #800000;">'</span><span style="color: #000000;">
+EMAIL_HOST </span>= <span style="color: #800000;">'</span><span style="color: #800000;">smtp.163.com</span><span style="color: #800000;">'</span><span style="color: #000000;">
+EMAIL_PORT </span>= 25
+<span style="color: #008000;">#</span><span style="color: #008000;"> 发送邮件的邮箱</span>
+EMAIL_HOST_USER = <span style="color: #800000;">'</span><span style="color: #800000;">发送邮件的邮箱</span><span style="color: #800000;">'</span>
+<span style="color: #008000;">#</span><span style="color: #008000;"> 在邮箱中设置的客户端授权密码</span>
+EMAIL_HOST_PASSWORD = <span style="color: #800000;">'</span><span style="color: #800000;">授权密码</span><span style="color: #800000;">'</span>
+<span style="color: #008000;">#</span><span style="color: #008000;"> 收件人看到的发件人</span>
+EMAIL_FROM = <span style="color: #800000;">'</span><span style="color: #800000;">绿色果园&lt;发送邮件的邮箱&gt;</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>2.编写发送邮件代码</p>
+<div class="cnblogs_code">
+<pre><code></pre>
+<pre><code>from django.shortcuts import render, redirect, HttpResponse<br />from django.core.mail import send_mail<br />from itsdangerous import TimedJSONWebSignatureSerializer as Serializer<br />from django.conf import settings</pre>
+<pre><code><span style="color: #0000ff;"><br />def</span><span style="color: #000000;"> emailtest(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 发送激活邮件，包括激活链接：http://127.0.0.1:8000/user/active/3</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 激活链接中需要包含用户的身份信息，并且要把身份信息进行加密</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 加密用户的身份信息，生成激活token</span>
+    userid = 3<span style="color: #000000;">
+    email </span>= <span style="color: #800000;">"</span><span style="color: #800000;">接收邮件的邮箱账号</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    serializer </span>= Serializer(settings.SECRET_KEY, 1800<span style="color: #000000;">)
+    info </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">confirm</span><span style="color: #800000;">'</span><span style="color: #000000;">: userid}
+    token </span>=<span style="color: #000000;"> serializer.dumps(info)
+    token </span>=<span style="color: #000000;"> token.decode()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 发邮件</span>
+    subject = <span style="color: #800000;">"</span><span style="color: #800000;">绿色果园欢迎信息</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    message </span>= <span style="color: #800000;">""</span><span style="color: #000000;">
+    sender </span>=<span style="color: #000000;"> settings.EMAIL_FROM
+    receiver </span>=<span style="color: #000000;"> [email]
+    html_message </span>= <span style="color: #800000;">"</span><span style="color: #800000;">&lt;h2&gt;欢迎你成为绿色果园注册会员&lt;/h2&gt;&lt;/br&gt;请点击以下链接激活账号&lt;a href='http:127.0.0.1:8000/</span><span style="color: #800000;">"</span><span style="color: #000000;"> \
+                   </span><span style="color: #800000;">"</span><span style="color: #800000;">user/active/%s'&gt;http:127.0.0.1:8000/user/active/%s&lt;/a&gt;</span><span style="color: #800000;">"</span> %<span style="color: #000000;"> (token, token)
+    send_mail(subject, message, sender, receiver, html_message</span>=<span style="color: #000000;">html_message)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 返回应答，跳转到首页</span>
+    <span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">"</span><span style="color: #800000;">邮件发送成功，请注意接收</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p>配套url</p>
+<div class="cnblogs_code">
+<pre><code>urlpatterns =<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^emailtest/$</span><span style="color: #800000;">'</span>, views.emailtest, name=<span style="color: #800000;">"</span><span style="color: #800000;">emailtest</span><span style="color: #800000;">"</span>),  <span style="color: #008000;">#</span><span style="color: #008000;"> 发邮件测试</span>
+]</pre>
+</div>
+<p>&nbsp;</p>
+<p>3.在浏览器中输入如下地址，即可看到&ldquo;邮件已发送&rdquo;的提示信息</p>
+<div class="cnblogs_code">
+<pre><code>http://127.0.0.1:8000/user/emailtest/</pre>
+</div>
+<p>接收邮件如下图所示</p>
+<p>收到邮件</p>
+<p><img src="./images/Django之使用内置函数和celery发邮件2.png" alt="" /></p>
+<p>邮件内容详情</p>
+<p><img src="./images/Django之使用内置函数和celery发邮件3.png" alt="" /></p>
+<p>&nbsp;</p>
+<h2>使用celery发邮件</h2>
+<p>使用django内置的函数发送邮件时，django给stmp服务器发送邮件需要时间，stmp服务器发送邮件给用户也需要时间，而在发送邮件这段时间内，用户是在等服务端返回应答的，如果等待时间过长，那么无疑会大大的降低用户的体验。</p>
+<p>这个时候，我们可以使用celery来异步发送邮件，即Django服务端在celery发送邮件的同时，返回应答给用户。这里，我们使用sleep来模拟发送邮件的时常。</p>
+<p>&nbsp;</p>
+<p>1.<strong>安装celery</strong></p>
+<div class="cnblogs_code">
+<pre><code>pip install celery</pre>
+</div>
+<p>&nbsp;</p>
+<p>2.<strong>配置settings文件</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 邮件设置</span>
+EMAIL_BACKEND = <span style="color: #800000;">'</span><span style="color: #800000;">django.core.mail.backends.smtp.EmailBackend</span><span style="color: #800000;">'</span><span style="color: #000000;">
+EMAIL_HOST </span>= <span style="color: #800000;">'</span><span style="color: #800000;">smtp.163.com</span><span style="color: #800000;">'</span><span style="color: #000000;">
+EMAIL_PORT </span>= 25
+<span style="color: #008000;">#</span><span style="color: #008000;"> 发送邮件的邮箱</span>
+EMAIL_HOST_USER = <span style="color: #800000;">'</span><span style="color: #800000;">发送邮件的邮箱</span><span style="color: #800000;">'</span>
+<span style="color: #008000;">#</span><span style="color: #008000;"> 在邮箱中设置的客户端授权密码</span>
+EMAIL_HOST_PASSWORD = <span style="color: #800000;">'</span><span style="color: #800000;">客户端授权密码</span><span style="color: #800000;">'</span>
+<span style="color: #008000;">#</span><span style="color: #008000;"> 收件人看到的发件人</span>
+EMAIL_FROM = <span style="color: #800000;">'</span><span style="color: #800000;">绿色果园&lt;发送邮件的邮箱&gt;</span><span style="color: #800000;">'</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> diango的缓存配置</span>
+CACHES =<span style="color: #000000;"> {
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">default</span><span style="color: #800000;">"</span><span style="color: #000000;">: {
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">BACKEND</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">django_redis.cache.RedisCache</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">LOCATION</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">redis://127.0.0.1:6379/9</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">OPTIONS</span><span style="color: #800000;">"</span><span style="color: #000000;">: {
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">CLIENT_CLASS</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">django_redis.client.DefaultClient</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        }
+    }
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>3.在项目下新建celery_tasks文件夹，在文件夹中新建tasks文件，<strong>编写tasks文件</strong>；</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.core.mail <span style="color: #0000ff;">import</span><span style="color: #000000;"> send_mail
+</span><span style="color: #0000ff;">from</span> django.conf <span style="color: #0000ff;">import</span><span style="color: #000000;"> settings
+</span><span style="color: #0000ff;">from</span> celery <span style="color: #0000ff;">import</span><span style="color: #000000;"> Celery
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在任务处理者一端时需要加这几句</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> import os</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> import django</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> os.environ.setdefault("DJANGO_SETTINGS_MODULE", "项目名.settings")</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> django.setup()</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个Celery类的实例对象</span>
+app = Celery(<span style="color: #800000;">'</span><span style="color: #800000;">celery_tasks.tasks</span><span style="color: #800000;">'</span>, broker=<span style="color: #800000;">'</span><span style="color: #800000;">redis://127.0.0.1:6379/8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义任务函数</span>
+<span style="color: #000000;">@app.task
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> send_register_active_email(to_email, username, token):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">发送激活邮件</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    subject </span>= <span style="color: #800000;">"</span><span style="color: #800000;">绿色果园欢迎信息</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    message </span>= <span style="color: #800000;">""</span><span style="color: #000000;">
+    sender </span>=<span style="color: #000000;"> settings.EMAIL_FROM
+    receiver </span>=<span style="color: #000000;"> [to_email]
+    html_message </span>= <span style="color: #800000;">"</span><span style="color: #800000;">&lt;h2&gt;%s， 欢迎你成为绿色果园注册会员&lt;/h2&gt;&lt;/br&gt;请点击以下链接激活账号&lt;a href='http:127.0.0.1:8000/</span><span style="color: #800000;">"</span><span style="color: #000000;"> \
+                   </span><span style="color: #800000;">"</span><span style="color: #800000;">user/active/%s'&gt;http:127.0.0.1:8000/user/active/%s&lt;/a&gt;</span><span style="color: #800000;">"</span> %<span style="color: #000000;"> (username, token, token)
+    send_mail(subject, message, sender, receiver, html_message</span>=<span style="color: #000000;">html_message)
+    time.sleep(</span>5)</pre>
+</div>
+<p>&nbsp;</p>
+<p>4.在发送邮件的地方<strong>调用</strong>celery_tasks下的tasks下的<strong>发送邮件函数</strong>；</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> render, redirect, HttpResponse
+</span><span style="color: #0000ff;">from</span> django.core.mail <span style="color: #0000ff;">import</span><span style="color: #000000;"> send_mail
+</span><span style="color: #0000ff;">from</span> itsdangerous <span style="color: #0000ff;">import</span><span style="color: #000000;"> TimedJSONWebSignatureSerializer as Serializer
+</span><span style="color: #0000ff;">from</span> django.conf <span style="color: #0000ff;">import</span><span style="color: #000000;"> settings
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> emailtest(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 发送激活邮件，包括激活链接：http://127.0.0.1:8000/user/active/3</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 激活链接中需要包含用户的身份信息，并且要把身份信息进行加密</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 加密用户的身份信息，生成激活token</span>
+    userid = 3<span style="color: #000000;">
+    username </span>= <span style="color: #800000;">"</span><span style="color: #800000;">mumun</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    email </span>= <span style="color: #800000;">"</span><span style="color: #800000;">收邮件的邮箱</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    serializer </span>= Serializer(settings.SECRET_KEY, 1800<span style="color: #000000;">)
+    info </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">confirm</span><span style="color: #800000;">'</span><span style="color: #000000;">: userid}
+    token </span>=<span style="color: #000000;"> serializer.dumps(info)
+    token </span>=<span style="color: #000000;"> token.decode()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用celery发送邮件</span>
+<span style="color: #000000;">    send_register_active_email.delay(email, username, token)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 返回应答，跳转到首页</span>
+    <span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">"</span><span style="color: #800000;">邮件发送成功，请注意接收</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p>配套url</p>
+<div class="cnblogs_code">
+<pre><code>urlpatterns =<span> [
+    url(r'^emailtest/$', views.emailtest, name="emailtest"),  # 发邮件测试
+]</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>5.<strong>开启redis服务</strong>；</p>
+<div class="cnblogs_code">
+<pre><code>E:\&gt;cd E:\YifChanSoft\Database\Redis\RedisSoft\Redis-x64-3.2.100<span style="color: #000000;">
+
+E:\YifChanSoft\Database\Redis\RedisSoft\Redis</span>-x64-3.2.100&gt;redis-server --service-install redis.windows-service.conf --<span style="color: #000000;">loglevel verbose</span><span style="color: #000000;">
+
+E:\YifChanSoft\Database\Redis\RedisSoft\Redis</span>-x64-3.2.100&gt;redis-<span style="color: #000000;">cli
+</span>127.0.0.1:6379&gt; select 8<span style="color: #000000;">
+OK
+</span>127.0.0.1:6379[8]&gt; keys *<span style="color: #000000;">
+(empty list </span><span style="color: #0000ff;">or</span><span style="color: #000000;"> set)
+</span>127.0.0.1:6379[8]&gt; keys *
+1) <span style="color: #800000;">"</span><span style="color: #800000;">_kombu.binding.celery</span><span style="color: #800000;">"</span>
+2) <span style="color: #800000;">"</span><span style="color: #800000;">_kombu.binding.celery.pidbox</span><span style="color: #800000;">"</span>
+3) <span style="color: #800000;">"</span><span style="color: #800000;">_kombu.binding.celeryev</span><span style="color: #800000;">"</span></pre>
+</div>
+<p>开启redis服务截图</p>
+<p><img src="./images/Django之使用内置函数和celery发邮件4.png" alt="" width="1011" height="278" /></p>
+<p>&nbsp;</p>
+<p>6.将项目代码拷贝一份放在某处，进入该处，<strong>启动tasks的worker模式</strong>，<br />注意，用作worker的代码的tasks文件中应该有提前启动django的初始化的代码，不然worker没法调用conf信息；</p>
+<p>即应该有以下内容</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 在任务处理者一端时需要加这几句</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> django
+os.environ.setdefault(</span><span style="color: #800000;">"</span><span style="color: #800000;">DJANGO_SETTINGS_MODULE</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">项目名.settings</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+django.setup()</span></pre>
+</div>
+<p><strong>开启worker模式</strong>：</p>
+<div class="cnblogs_code">
+<pre><code>celery -A celery_tasks.tasks worker -l info</pre>
+</div>
+<p><strong>出现问题</strong>，报错如下</p>
+<div class="cnblogs_code">
+<pre><code>ValueError: <span style="color: #0000ff;">not</span> enough values to unpack (expected 3, got 0)</pre>
+</div>
+<p><strong>原因</strong><br />win10上运行celery4.x就会出现这个问题<br /><strong>解决</strong></p>
+<div class="cnblogs_code">
+<pre><code>pip install eventlet</pre>
+</div>
+<p>并在开启worker模式时加入参数</p>
+<div class="cnblogs_code">
+<pre><code>celery -A celery_tasks.tasks worker -l info -P eventlet</pre>
+</div>
+<p>开启worker模式截图，后面还有内容，但因为太多了，就只截一半</p>
+<p>&nbsp;<img src="./images/Django之使用内置函数和celery发邮件5.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>7.在浏览器中输入如下地址，即可看到&ldquo;邮件已发送&rdquo;的提示信息</p>
+<div class="cnblogs_code">
+<pre><code>http://127.0.0.1:8000/user/emailtest/</pre>
+</div>
+<p>接收邮件如下</p>
+<p><img src="./images/Django之使用内置函数和celery发邮件6.png" alt="" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

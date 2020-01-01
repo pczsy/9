@@ -1,0 +1,317 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修JWT攻击手册：如何入侵你的Token' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>JWT攻击手册：如何入侵你的Token</center></div><div class='banquan'>原文出处:本文由博客园博主Bypass提供。<br/>
+原文连接:https://www.cnblogs.com/xiaozi/p/12031111.html</div><br>
+    <div class="markdown-here-wrapper" style="font-size: 15px; line-height: 1.8em; letter-spacing: 0.1em;" data-md-url="https://i-beta.cnblogs.com/posts/edit">
+<p style="margin: 1.5em 5px !important;">JSON Web Token（JWT）对于渗透测试人员而言，可能是一个非常吸引人的攻击途径。因为它不仅可以让你伪造任意用户获得无限的访问权限，而且还可能进一步发现更多的安全漏洞，如信息泄露，越权访问，SQLi，XSS，SSRF，RCE，LFI等。<br />首先我们需要识别应用程序正在使用JWT，最简单的方法是在代理工具的历史记录中搜索JWT正则表达式：</p>
+<pre><code><code>[= ]ey[A-Za-z0-<span class="hljs-number" style="color: #008080;">9</span>_-]*\.[A-Za-z0-<span class="hljs-number" style="color: #008080;">9.</span>_-]*         -网址安全的JWT版本
+[= ]ey[A-Za-z0-<span class="hljs-number" style="color: #008080;">9</span>_\/+-]*\.[A-Za-z0-<span class="hljs-number" style="color: #008080;">9.</span>_\/+-]*   -所有JWT版本（可能误报）
+</code></pre>
+<p style="margin: 1.5em 5px !important;">确保选中&ldquo;区分大小写&rdquo;和&ldquo;正则表达式&rdquo;选项:</p>
+<p style="margin: 1.5em 5px !important;"><img src="./images/JWT攻击手册：如何入侵你的Token0.png" alt="" /><br /><img src=".\image\3-5-4.png" alt="" /></p>
+<p style="margin: 1.5em 5px !important;">当你获得一个JSON web token，如何利用它们绕过访问控制并入侵系统？</p>
+<h4 id="1-" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">1、敏感信息泄露</h4>
+<p style="margin: 1.5em 5px !important;">由于Header和Payload部分是使用可逆base64方法编码的，因此任何能够看到令牌的人都可以读取数据。<br />要读取内容，您只需要将每个部分传递给base64解码函数，以下是一些示例：<br /><strong style="color: #8e6a27;">Linux base64工具（带有-d标志用于解码）：</strong></p>
+<pre><code><code>$ echo eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9 | base64 -d
+ {<span class="hljs-string" style="color: #dd1144;">"typ"</span>:<span class="hljs-string" style="color: #dd1144;">"JWT"</span>,<span class="hljs-string" style="color: #dd1144;">"alg"</span>:<span class="hljs-string" style="color: #dd1144;">"HS256"</span>}
+</code></pre>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">浏览器JavaScript控制台：</strong></p>
+<pre><code><code>&gt;&gt; atob(<span class="hljs-string" style="color: #dd1144;">"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"</span>)
+ <span class="hljs-string" style="color: #dd1144;">"{"</span>typ<span class="hljs-string" style="color: #dd1144;">":"</span>JWT<span class="hljs-string" style="color: #dd1144;">","</span>alg<span class="hljs-string" style="color: #dd1144;">":"</span>HS256<span class="hljs-string" style="color: #dd1144;">"}"</span>
+</code></pre>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">Powershell:</strong></p>
+<pre><code><code>PS C:\&gt; [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64Strin
+g(<span class="hljs-string" style="color: #dd1144;">"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9"</span>))
+{<span class="hljs-string" style="color: #dd1144;">"typ"</span>:<span class="hljs-string" style="color: #dd1144;">"JWT"</span>,<span class="hljs-string" style="color: #dd1144;">"alg"</span>:<span class="hljs-string" style="color: #dd1144;">"HS256"</span>}
+</code></pre>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">Pyhton:</strong></p>
+<pre><code><code><span class="hljs-prompt" style="color: #990073;">&gt;&gt;&gt; </span><span class="hljs-keyword" style="color: #333333; font-weight: bold;">import</span> base64
+<span class="hljs-prompt" style="color: #990073;">&gt;&gt;&gt; </span>print(base64.b64decode(<span class="hljs-string" style="color: #dd1144;">'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9'</span>))
+{<span class="hljs-string" style="color: #dd1144;">"typ"</span>:<span class="hljs-string" style="color: #dd1144;">"JWT"</span>,<span class="hljs-string" style="color: #dd1144;">"alg"</span>:<span class="hljs-string" style="color: #dd1144;">"HS256"</span>}
+</code></pre>
+<p style="margin: 1.5em 5px !important;">我曾在一篇博文中，不小心公布了有漏洞指向站点的Token，分分钟被找到了漏洞站点。因此，Token不能随意公布，发送的数据不得包含任何敏感数据（例如密码）。</p>
+<h4 id="2-none" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">2、将算法修改为none</h4>
+<p style="margin: 1.5em 5px !important;">JWT支持将算法设定为&ldquo;None&rdquo;。如果&ldquo;alg&rdquo;字段设为&ldquo; None&rdquo;，那么签名会被置空，这样任何token都是有效的。<br />设定该功能的最初目的是为了方便调试。但是，若不在生产环境中关闭该功能，攻击者可以通过将alg字段设置为&ldquo;None&rdquo;来伪造他们想要的任何token，接着便可以使用伪造的token冒充任意用户登陆网站。<br />示例：</p>
+<pre><code><code>eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjoiYWRtaW4iLCJhY3Rpb24iOiJ1cGxvYWQifQ.y2k9SJDRU81ybXm-anxpD2p1N-rKekDJtJGKGJlemjY
+</code></pre>
+<p style="margin: 1.5em 5px !important;">设置 &ldquo;alg&rdquo;: &ldquo;none&rdquo;不带签名，生成Token:</p>
+<pre><code><code class="hljs language-PYTHON" style="font-size: 14px; font-family: Roboto, 'Courier New', Consolas, Inconsolata, Courier, monospace; margin: auto 5px; white-space: pre; border-radius: 3px; display: block; overflow: auto; padding: 0.5em; overflow-x: auto; color: #333333; background: #f8f8f8; text-size-adjust: none;">eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJ1c2VyIjoiYWRtaW4iLCJhY3Rpb24iOiJ1cGxvYWQifQ.
+</code></pre>
+<p style="margin: 1.5em 5px !important;">解构：</p>
+<pre><code><code>{<span class="hljs-string" style="color: #dd1144;">"typ"</span>:<span class="hljs-string" style="color: #dd1144;">"JWT"</span>,<span class="hljs-string" style="color: #dd1144;">"alg"</span>:<span class="hljs-string" style="color: #dd1144;">"none"</span>}.
+{<span class="hljs-string" style="color: #dd1144;">"user"</span>:<span class="hljs-string" style="color: #dd1144;">"admin"</span>,<span class="hljs-string" style="color: #dd1144;">"action"</span>:<span class="hljs-string" style="color: #dd1144;">"upload"</span>}.
+[No signature!]
+</code></pre>
+<p style="margin: 1.5em 5px !important;">页面是否仍然返回有效？如果页面返回有效，那么说明存在漏洞。<br />如何抵御这种攻击？  JWT配置应该指定所需的签名算法，不要指定&rdquo;none&rdquo;。</p>
+<h4 id="3-" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">3、密钥混淆攻击</h4>
+<p style="margin: 1.5em 5px !important;">JWT最常用的两种算法是HMAC和RSA。HMAC（对称加密算法）用同一个密钥对token进行签名和认证。而RSA（非对称加密算法）需要两个密钥，先用私钥加密生成JWT，然后使用其对应的公钥来解密验证。<br />如果将算法RS256修改为HS256（非对称密码算法=&gt;对称密码算法）？<br />那么，后端代码会使用公钥作为秘密密钥，然后使用HS256算法验证签名。由于公钥有时可以被攻击者获取到，所以攻击者可以修改header中算法为HS256，然后使用RSA公钥对数据进行签名。<br />示例：</p>
+<pre><code><code>eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJsb2dpbiI6InRpY2FycGkifQ.I3G9aRHfunXlZV2lyJvWkZO0I_A_OiaAAQakU_kjkJM
+</code></pre>
+<p style="margin: 1.5em 5px !important;">解构：</p>
+<pre><code><code>{<span class="hljs-string" style="color: #dd1144;">"typ"</span>:<span class="hljs-string" style="color: #dd1144;">"JWT"</span>,<span class="hljs-string" style="color: #dd1144;">"alg"</span>:<span class="hljs-string" style="color: #dd1144;">"HS256"</span>}.
+{<span class="hljs-string" style="color: #dd1144;">"login"</span>:<span class="hljs-string" style="color: #dd1144;">"ticarpi"</span>}.
+[使用HS256签名，使用RSA公钥文件作为密钥验证。]
+</code></pre>
+<p style="margin: 1.5em 5px !important;">后端代码会使用RSA公钥+HS256算法进行签名验证。<br />如何抵御这种攻击？JWT配置应该只允许使用HMAC算法或公钥算法，决不能同时使用这两种算法。</p>
+<h4 id="4-" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">4、无效签名</h4>
+<p style="margin: 1.5em 5px !important;">当用户端提交请求给应用程序，服务端可能没有对token签名进行校验，这样，攻击者便可以通过提供无效签名简单地绕过安全机制。<br />示例：<br />一个很好的例子是网站上的&ldquo;个人资料&rdquo;页面，因为我们只有在被授权通过有效的JWT进行访问时才能访问此页面，我们将重放请求并寻找响应的变化以发现问题。</p>
+<pre><code><code>eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoidGVzdCIsImFjdGlvbiI6InByb2ZpbGUifQ.FjnAvQxzRKcahlw2EPd9o7teqX-fQSt7MZhT84hj7mU
+</code></pre>
+<p style="margin: 1.5em 5px !important;">user 字段改为 admin，重新生成新 token：</p>
+<pre><code><code>eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJhY3Rpb24iOiJwcm9maWxlIn0._LRRXAfXtnagdyB1uRk-<span class="hljs-number" style="color: #008080;">7</span>CfkK1RESGwxqQCdwCNSPaI
+</code></pre>
+<p style="margin: 1.5em 5px !important;">结构：</p>
+<pre><code><code>{<span class="hljs-string" style="color: #dd1144;">"typ"</span>: <span class="hljs-string" style="color: #dd1144;">"JWT"</span>, <span class="hljs-string" style="color: #dd1144;">"alg"</span>: <span class="hljs-string" style="color: #dd1144;">"HS256"</span>}.
+{<span class="hljs-string" style="color: #dd1144;">"user"</span>: <span class="hljs-string" style="color: #dd1144;">"admin"</span>,<span class="hljs-string" style="color: #dd1144;">"action"</span>: <span class="hljs-string" style="color: #dd1144;">"profile"</span>}.
+[新的签名]
+</code></pre>
+<p style="margin: 1.5em 5px !important;">将重新生成的Token发给服务端效验，如访问页面正常，则说明漏洞存在。</p>
+<h4 id="5-" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">5、暴力破解密钥</h4>
+<p style="margin: 1.5em 5px !important;">HMAC签名密钥（例如HS256 / HS384 / HS512）使用对称加密，这意味着对令牌进行签名的密钥也用于对其进行验证。由于签名验证是一个自包含的过程，因此可以测试令牌本身的有效密钥，而不必将其发送回应用程序进行验证。<br />因此，HMAC JWT破解是离线的，通过JWT破解工具，可以快速检查已知的泄漏密码列表或默认密码。 </p>
+<pre><code><code>python jwt_tool.py eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJ1c2VyIjoiYWRtaW4iLCJhY3Rpb24iOiJ1cGxvYWQifQ<span class="hljs-number" style="color: #008080;">.7</span>ZbwdZXwfjm575fHGukkE09O8-eFY4bx-fEEBUK3XUE -C -d <span class="hljs-number" style="color: #008080;">1.</span>txt
+</code></pre>
+<p style="margin: 1.5em 5px !important;"><img src=".\image\3-5-1.png" alt="" /></p>
+<p style="margin: 1.5em 5px !important;"><img src="./images/JWT攻击手册：如何入侵你的Token3.png" alt="" /></p>
+<p style="margin: 1.5em 5px !important;">获得密钥，伪造任意用户的Token：</p>
+<p style="margin: 1.5em 5px !important;"><img src="./images/JWT攻击手册：如何入侵你的Token4.png" alt="" /><br /><img src=".\image\3-5-2.png" alt="" /><br />如果可以破解HMAC密钥，则可以伪造令牌中的任何内容，这个漏洞将会给系统带来非常严重的后果。</p>
+<h4 id="6-" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">6、密钥泄露</h4>
+<p style="margin: 1.5em 5px !important;">假设攻击者无法暴力破解密钥，那么他可能通过其他途径获取密码，如git信息泄露、目录遍历，任意文件读取、XXE漏洞等，从而伪造任意token签名。</p>
+<h4 id="7-kid" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">7、操纵KID</h4>
+<p style="margin: 1.5em 5px !important;">KID代表&ldquo;密钥序号&rdquo;（Key ID）。它是JWT头部的一个可选字段，开发人员可以用它标识认证token的某一密钥。KID参数的正确用法如下所示：</p>
+<pre><code><code style="font-size: 14px; font-family: Roboto, 'Courier New', Consolas, Inconsolata, Courier, monospace; margin: auto 5px; white-space: pre; border-radius: 3px; display: block !important; overflow: auto; padding: 1px;">{
+    "alg": "HS256",
+    "typ": "JWT",
+    "kid": "1"        //使用密钥1验证token
+}
+</code></pre>
+<p style="margin: 1.5em 5px !important;">由于此字段是由用户控制的，因此攻击者可能会操纵它并导致危险的后果。</p>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">目录遍历</strong><br />由于KID通常用于从文件系统中检索密钥文件，因此，如果在使用前不清理KID，文件系统可能会遭到目录遍历攻击。这样，攻击者便能够在文件系统中指定任意文件作为认证的密钥。</p>
+<pre><code><code><span class="hljs-string" style="color: #dd1144;">"kid"</span>: <span class="hljs-string" style="color: #dd1144;">"../../public/css/main.css"</span>   //使用公共文件main.css验证token
+</code></pre>
+<p style="margin: 1.5em 5px !important;">例如，攻击者可以强行设定应用程序使用公开可用文件作为密钥，并用该文件给HMAC加密的token签名。</p>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">SQL注入</strong><br />KID也可以用于在数据库中检索密钥。在该情况下，攻击者很可能会利用SQL注入来绕过JWT安全机制。<br />如果可以在KID参数上进行SQL注入，攻击者便能使用该注入返回任意值。</p>
+<pre><code><code><span class="hljs-string" style="color: #dd1144;">"kid"</span>:<span class="hljs-string" style="color: #dd1144;">"aaaaaaa' UNION SELECT 'key';--"</span>  //使用字符串<span class="hljs-string" style="color: #dd1144;">"key"</span>验证token
+</code></pre>
+<p style="margin: 1.5em 5px !important;">上面这个注入会导致应用程序返回字符串&ldquo; key&rdquo;（因为数据库中不存在名为&ldquo; aaaaaaa&rdquo;的密钥）。然后使用字符串&ldquo; key&rdquo;作为密钥来认证token。</p>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">命令注入</strong><br />有时，将KID参数直接传到不安全的文件读取操作可能会让一些命令注入代码流中。<br />一些函数就能给此类型攻击可乘之机，比如Ruby open（）。攻击者只需在输入的KID文件名后面添加命令，即可执行系统命令：</p>
+<pre><code><code><span class="hljs-string" style="color: #dd1144;">"key_file"</span> | whoami;
+</code></pre>
+<p style="margin: 1.5em 5px !important;">类似情况还有很多，这只是其中一个例子。理论上，每当应用程序将未审查的头部文件参数传递给类似system（），exec（）的函数时，都会产生此种漏洞。</p>
+<h4 id="8-" style="color: #29b6f6 !important; text-align: left !important; margin: 1.5em 5px !important; padding: 0.5em 1em !important; font-size: 16px;">8、操纵头部参数</h4>
+<p style="margin: 1.5em 5px !important;">除KID外，JWT标准还能让开发人员通过URL指定密钥。</p>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">JKU头部参数</strong><br />JKU全称是&ldquo;JWKSet URL&rdquo;，它是头部的一个可选字段，用于指定链接到一组加密token密钥的URL。若允许使用该字段且不设置限定条件，攻击者就能托管自己的密钥文件，并指定应用程序，用它来认证token。</p>
+<pre><code><code>jku URL-&gt;包含JWK集的文件-&gt;用于验证令牌的JWK
+</code></pre>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">JWK头部参数</strong><br />头部可选参数JWK（JSON Web Key）使得攻击者能将认证的密钥直接嵌入token中。</p>
+<p style="margin: 1.5em 5px !important;"><strong style="color: #8e6a27;">操纵X5U，X5C URL</strong></p>
+<p>同JKU或JWK头部类似，x5u和x5c头部参数允许攻击者用于验证Token的公钥证书或证书链。x5u以URI形式指定信息，而x5c允许将证书值嵌入token中。</p>
+<p style="margin: 1.5em 5px !important;">攻击Token的过程显然取决于你所测试的JWT配置和实现的情况，但是在测试JWT时，通过对目标服务的Web请求中使用的Token进行读取、篡改和签名，可能遇到已知的攻击方式以及潜在的安全漏洞和配置错误，希望本文可以帮助你发现安全威胁！</p>
+<blockquote style="margin: 10px 5px; border-left: 2px solid #29b6f6; padding: 0px 10px; color: #777777; quotes: none; margin-left: 1em;">
+<p style="margin: 1.5em 5px !important;">参考资料：</p>
+<p style="margin: 1.5em 5px !important;"><a href="https://github.com/ticarpi/jwt_tool/wiki">https://github.com/ticarpi/jwt_tool/wiki</a> </p>
+<p style="margin: 1.5em 5px !important;"><a href="https://medium.com/swlh/hacking-json-web-tokens-jwts-9122efe91e4a">https://medium.com/swlh/hacking-json-web-tokens-jwts-9122efe91e4a</a></p>
+</blockquote>
+<div style="height: 0; width: 0; max-height: 0; max-width: 0; overflow: hidden; font-size: 0em; padding: 0; margin: 0;" title="MDH:PHA+SlNPTiBXZWIgVG9rZW7vvIhKV1TvvInlr7nkuo7muJfpgI/mtYvor5XkurrlkZjogIzoqIDv
+vIzlj6/og73mmK/kuIDkuKrpnZ7luLjlkLjlvJXkurrnmoTmlLvlh7vpgJTlvoTjgILlm6DkuLrl
+roPkuI3ku4Xlj6/ku6XorqnkvaDkvKrpgKDku7vmhI/nlKjmiLfojrflvpfml6DpmZDnmoTorr/p
+l67mnYPpmZDvvIzogIzkuJTov5jlj6/og73ov5vkuIDmraXlj5HnjrDmm7TlpJrnmoTlronlhajm
+vI/mtJ7vvIzlpoLkv6Hmga/ms4TpnLLvvIzotormnYPorr/pl67vvIxTUUxp77yMWFNT77yMU1NS
+Ru+8jFJDRe+8jExGSeetieOAgjwvcD48cD7pppblhYjmiJHku6zpnIDopoHor4bliKvlupTnlKjn
+qIvluo/mraPlnKjkvb/nlKhKV1TvvIzmnIDnroDljZXnmoTmlrnms5XmmK/lnKjku6PnkIblt6Xl
+hbfnmoTljoblj7LorrDlvZXkuK3mkJzntKJKV1TmraPliJnooajovr7lvI/vvJo8L3A+PHA+YGBg
+cHl0aG9uPGJyPls9IF1leVtBLVphLXowLTlfLV0qXC5bQS1aYS16MC05Ll8tXSogICAgICAgICAt
+572R5Z2A5a6J5YWo55qESldU54mI5pysPGJyPls9IF1leVtBLVphLXowLTlfXC8rLV0qXC5bQS1a
+YS16MC05Ll9cLystXSogICAt5omA5pyJSldU54mI5pys77yI5Y+v6IO96K+v5oql77yJPGJyPmBg
+YDwvcD48cD7noa7kv53pgInkuK3igJzljLrliIblpKflsI/lhpnigJ3lkozigJzmraPliJnooajo
+vr7lvI/igJ3pgInpobk6PC9wPjxwPiFbXSguXGltYWdlXDMtNS00LnBuZyk8L3A+PHA+5b2T5L2g
+6I635b6X5LiA5LiqSlNPTiB3ZWIgdG9rZW7vvIzlpoLkvZXliKnnlKjlroPku6znu5Xov4forr/p
+l67mjqfliLblubblhaXkvrXns7vnu5/vvJ88L3A+PHA+LS0tLS0tPC9wPjxwPiMjIyMgMeOAgeaV
+j+aEn+S/oeaBr+azhOmcsjwvcD48cD7nlLHkuo5IZWFkZXLlkoxQYXlsb2Fk6YOo5YiG5piv5L2/
+55So5Y+v6YCGYmFzZTY05pa55rOV57yW56CB55qE77yM5Zug5q2k5Lu75L2V6IO95aSf55yL5Yiw
+5Luk54mM55qE5Lq66YO95Y+v5Lul6K+75Y+W5pWw5o2u44CCPC9wPjxwPuimgeivu+WPluWGheWu
+ue+8jOaCqOWPqumcgOimgeWwhuavj+S4qumDqOWIhuS8oOmAkue7mWJhc2U2NOino+eggeWHveaV
+sO+8jOS7peS4i+aYr+S4gOS6m+ekuuS+i++8mjwvcD48cD4qKkxpbnV4IGJhc2U2NOW3peWFt++8
+iOW4puaciS1k5qCH5b+X55So5LqO6Kej56CB77yJ77yaKio8L3A+PHA+YGBgcHl0aG9uPGJyPiQg
+ZWNobyBleUowZVhBaU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkgfCBiYXNlNjQgLWQ8YnI+
+IHsidHlwIjoiSldUIiwiYWxnIjoiSFMyNTYifTxicj5gYGA8L3A+PHA+KirmtY/op4jlmahKYXZh
+U2NyaXB05o6n5Yi25Y+w77yaKio8L3A+PHA+YGBgcHl0aG9uPGJyPiZndDsmZ3Q7IGF0b2IoImV5
+SjBlWEFpT2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOSIpPGJyPiAieyJ0eXAiOiJKV1QiLCJh
+bGciOiJIUzI1NiJ9Ijxicj5gYGA8L3A+PHA+KipQb3dlcnNoZWxsOioqPC9wPjxwPmBgYHB5dGhv
+bjxicj5QUyBDOlwmZ3Q7IFtTeXN0ZW0uVGV4dC5FbmNvZGluZ106OlVURjguR2V0U3RyaW5nKFtT
+eXN0ZW0uQ29udmVydF06OkZyb21CYXNlNjRTdHJpbjxicj5nKCJleUowZVhBaU9pSktWMVFpTENK
+aGJHY2lPaUpJVXpJMU5pSjkiKSk8YnI+eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9PGJyPmBg
+YDwvcD48cD4qKlB5aHRvbjoqKjwvcD48cD5gYGBweXRob248YnI+Jmd0OyZndDsmZ3Q7IGltcG9y
+dCBiYXNlNjQ8YnI+Jmd0OyZndDsmZ3Q7IHByaW50KGJhc2U2NC5iNjRkZWNvZGUoJ2V5SjBlWEFp
+T2lKS1YxUWlMQ0poYkdjaU9pSklVekkxTmlKOScpKTxicj57InR5cCI6IkpXVCIsImFsZyI6IkhT
+MjU2In08YnI+YGBgPC9wPjxwPuaIkeabvuWcqOS4gOevh+WNmuaWh+S4re+8jOS4jeWwj+W/g+WF
+rOW4g+S6huaciea8j+a0nuaMh+WQkeermeeCueeahFRva2Vu77yM5YiG5YiG6ZKf6KKr5om+5Yiw
+5LqG5ryP5rSe56uZ54K544CC5Zug5q2k77yMVG9rZW7kuI3og73pmo/mhI/lhazluIPvvIzlj5Hp
+gIHnmoTmlbDmja7kuI3lvpfljIXlkKvku7vkvZXmlY/mhJ/mlbDmja7vvIjkvovlpoLlr4bnoIHv
+vInjgII8L3A+PHA+IyMjIyAy44CB5bCG566X5rOV5L+u5pS55Li6bm9uZTwvcD48cD5KV1TmlK/m
+jIHlsIbnrpfms5Xorr7lrprkuLrigJxOb25l4oCd44CC5aaC5p6c4oCcYWxn4oCd5a2X5q616K6+
+5Li64oCcIE5vbmXigJ3vvIzpgqPkuYjnrb7lkI3kvJrooqvnva7nqbrvvIzov5nmoLfku7vkvZV0
+b2tlbumDveaYr+acieaViOeahOOAgjwvcD48cD7orr7lrpror6Xlip/og73nmoTmnIDliJ3nm67n
+moTmmK/kuLrkuobmlrnkvr/osIPor5XjgILkvYbmmK/vvIzoi6XkuI3lnKjnlJ/kuqfnjq/looPk
+uK3lhbPpl63or6Xlip/og73vvIzmlLvlh7vogIXlj6/ku6XpgJrov4flsIZhbGflrZfmrrXorr7n
+va7kuLrigJxOb25l4oCd5p2l5Lyq6YCg5LuW5Lus5oOz6KaB55qE5Lu75L2VdG9rZW7vvIzmjqXn
+nYDkvr/lj6/ku6Xkvb/nlKjkvKrpgKDnmoR0b2tlbuWGkuWFheS7u+aEj+eUqOaIt+eZu+mZhue9
+keermeOAgjwvcD48cD7npLrkvovvvJo8L3A+PHA+YGBgcHl0aG9uPGJyPmV5SmhiR2NpT2lKSVV6
+STFOaUlzSW5SNWNDSTZJa3BYVkNKOS5leUoxYzJWeUlqb2lZV1J0YVc0aUxDSmhZM1JwYjI0aU9p
+SjFjR3h2WVdRaWZRLnkyazlTSkRSVTgxeWJYbS1hbnhwRDJwMU4tcktla0RKdEpHS0dKbGVtalk8
+YnI+YGBgPC9wPjxwPuiuvue9riAiYWxnIjogIm5vbmUi5LiN5bim562+5ZCN77yM55Sf5oiQVG9r
+ZW46PC9wPjxwPmBgYFBZVEhPTjxicj5leUpoYkdjaU9pSnViMjVsSWl3aWRIbHdJam9pU2xkVUlu
+MC5leUoxYzJWeUlqb2lZV1J0YVc0aUxDSmhZM1JwYjI0aU9pSjFjR3h2WVdRaWZRLjxicj5gYGA8
+L3A+PHA+6Kej5p6E77yaPC9wPjxwPmBgYHB5dGhvbjxicj57InR5cCI6IkpXVCIsImFsZyI6Im5v
+bmUifS48YnI+eyJ1c2VyIjoiYWRtaW4iLCJhY3Rpb24iOiJ1cGxvYWQifS48YnI+W05vIHNpZ25h
+dHVyZSFdPGJyPmBgYDwvcD48cD7pobXpnaLmmK/lkKbku43nhLbov5Tlm57mnInmlYjvvJ/lpoLm
+npzpobXpnaLov5Tlm57mnInmlYjvvIzpgqPkuYjor7TmmI7lrZjlnKjmvI/mtJ7jgII8L3A+PHA+
+5aaC5L2V5oq15b6h6L+Z56eN5pS75Ye777yfICBKV1TphY3nva7lupTor6XmjIflrprmiYDpnIDn
+moTnrb7lkI3nrpfms5XvvIzkuI3opoHmjIflrpoibm9uZSLjgII8L3A+PHA+IyMjIyAz44CB5a+G
+6ZKl5re35reG5pS75Ye7PC9wPjxwPkpXVOacgOW4uOeUqOeahOS4pOenjeeul+azleaYr0hNQUPl
+koxSU0HjgIJITUFD77yI5a+556ew5Yqg5a+G566X5rOV77yJ55So5ZCM5LiA5Liq5a+G6ZKl5a+5
+dG9rZW7ov5vooYznrb7lkI3lkozorqTor4HjgILogIxSU0HvvIjpnZ7lr7nnp7DliqDlr4bnrpfm
+s5XvvInpnIDopoHkuKTkuKrlr4bpkqXvvIzlhYjnlKjnp4HpkqXliqDlr4bnlJ/miJBKV1TvvIzn
+hLblkI7kvb/nlKjlhbblr7nlupTnmoTlhazpkqXmnaXop6Plr4bpqozor4HjgII8L3A+PHA+5aaC
+5p6c5bCG566X5rOVUlMyNTbkv67mlLnkuLpIUzI1Nu+8iOmdnuWvueensOWvhueggeeul+azlT0m
+Z3Q75a+556ew5a+G56CB566X5rOV77yJ77yfPC9wPjxwPumCo+S5iO+8jOWQjuerr+S7o+eggeS8
+muS9v+eUqOWFrOmSpeS9nOS4uuenmOWvhuWvhumSpe+8jOeEtuWQjuS9v+eUqEhTMjU2566X5rOV
+6aqM6K+B562+5ZCN44CC55Sx5LqO5YWs6ZKl5pyJ5pe25Y+v5Lul6KKr5pS75Ye76ICF6I635Y+W
+5Yiw77yM5omA5Lul5pS75Ye76ICF5Y+v5Lul5L+u5pS5aGVhZGVy5Lit566X5rOV5Li6SFMyNTbv
+vIznhLblkI7kvb/nlKhSU0HlhazpkqXlr7nmlbDmja7ov5vooYznrb7lkI3jgII8L3A+PHA+56S6
+5L6L77yaPC9wPjxwPmBgYHB5dGhvbjxicj5leUowZVhBaU9pSktWMVFpTENKaGJHY2lPaUpJVXpJ
+MU5pSjkuZXlKc2IyZHBiaUk2SW5ScFkyRnljR2tpZlEuSTNHOWFSSGZ1blhsWlYybHlKdldrWk8w
+SV9BX09pYUFBUWFrVV9ramtKTTxicj5gYGA8L3A+PHA+6Kej5p6E77yaPC9wPjxwPmBgYHB5dGhv
+bjxicj57InR5cCI6IkpXVCIsImFsZyI6IkhTMjU2In0uPGJyPnsibG9naW4iOiJ0aWNhcnBpIn0u
+PGJyPlvkvb/nlKhIUzI1NuetvuWQje+8jOS9v+eUqFJTQeWFrOmSpeaWh+S7tuS9nOS4uuWvhumS
+pemqjOivgeOAgl08YnI+YGBgPC9wPjxwPuWQjuerr+S7o+eggeS8muS9v+eUqFJTQeWFrOmSpStI
+UzI1Nueul+azlei/m+ihjOetvuWQjemqjOivgeOAgjwvcD48cD7lpoLkvZXmirXlvqHov5nnp43m
+lLvlh7vvvJ9KV1TphY3nva7lupTor6Xlj6rlhYHorrjkvb/nlKhITUFD566X5rOV5oiW5YWs6ZKl
+566X5rOV77yM5Yaz5LiN6IO95ZCM5pe25L2/55So6L+Z5Lik56eN566X5rOV44CCPC9wPjxwPiMj
+IyMgNOOAgeaXoOaViOetvuWQjTwvcD48cD7lvZPnlKjmiLfnq6/mj5DkuqTor7fmsYLnu5nlupTn
+lKjnqIvluo/vvIzmnI3liqHnq6/lj6/og73msqHmnInlr7l0b2tlbuetvuWQjei/m+ihjOagoemq
+jO+8jOi/meagt++8jOaUu+WHu+iAheS+v+WPr+S7pemAmui/h+aPkOS+m+aXoOaViOetvuWQjeeu
+gOWNleWcsOe7lei/h+WuieWFqOacuuWItuOAgjwvcD48cD7npLrkvovvvJo8L3A+PHA+5LiA5Liq
+5b6I5aW955qE5L6L5a2Q5piv572R56uZ5LiK55qE4oCc5Liq5Lq66LWE5paZ4oCd6aG16Z2i77yM
+5Zug5Li65oiR5Lus5Y+q5pyJ5Zyo6KKr5o6I5p2D6YCa6L+H5pyJ5pWI55qESldU6L+b6KGM6K6/
+6Zeu5pe25omN6IO96K6/6Zeu5q2k6aG16Z2i77yM5oiR5Lus5bCG6YeN5pS+6K+35rGC5bm25a+7
+5om+5ZON5bqU55qE5Y+Y5YyW5Lul5Y+R546w6Zeu6aKY44CCPC9wPjxwPmBgYHB5dGhvbjxicj5l
+eUowZVhBaU9pSktWMVFpTENKaGJHY2lPaUpJVXpJMU5pSjkuZXlKMWMyVnlJam9pZEdWemRDSXNJ
+bUZqZEdsdmJpSTZJbkJ5YjJacGJHVWlmUS5Gam5BdlF4elJLY2FobHcyRVBkOW83dGVxWC1mUVN0
+N01aaFQ4NGhqN21VPGJyPmBgYDwvcD48cD51c2VyIOWtl+auteaUueS4uiBhZG1pbu+8jOmHjeaW
+sOeUn+aIkOaWsCB0b2tlbu+8mjwvcD48cD5gYGBweXRob248YnI+ZXlKMGVYQWlPaUpLVjFRaUxD
+SmhiR2NpT2lKSVV6STFOaUo5LmV5SjFjMlZ5SWpvaVlXUnRhVzRpTENKaFkzUnBiMjRpT2lKd2Nt
+OW1hV3hsSW4wLl9MUlJYQWZYdG5hZ2R5QjF1UmstN0Nma0sxUkVTR3d4cVFDZHdDTlNQYUk8YnI+
+YGBgPC9wPjxwPue7k+aehO+8mjwvcD48cD5gYGBweXRob248YnI+eyJ0eXAiOiAiSldUIiwgImFs
+ZyI6ICJIUzI1NiJ9Ljxicj57InVzZXIiOiAiYWRtaW4iLCJhY3Rpb24iOiAicHJvZmlsZSJ9Ljxi
+cj5b5paw55qE562+5ZCNXTxicj5gYGA8L3A+PHA+5bCG6YeN5paw55Sf5oiQ55qEVG9rZW7lj5Hn
+u5nmnI3liqHnq6/mlYjpqozvvIzlpoLorr/pl67pobXpnaLmraPluLjvvIzliJnor7TmmI7mvI/m
+tJ7lrZjlnKjjgII8L3A+PHA+IyMjIyA144CB5pq05Yqb56C06Kej5a+G6ZKlPC9wPjxwPkhNQUPn
+rb7lkI3lr4bpkqXvvIjkvovlpoJIUzI1NiAvIEhTMzg0IC8gSFM1MTLvvInkvb/nlKjlr7nnp7Dl
+iqDlr4bvvIzov5nmhI/lkbPnnYDlr7nku6TniYzov5vooYznrb7lkI3nmoTlr4bpkqXkuZ/nlKjk
+uo7lr7nlhbbov5vooYzpqozor4HjgILnlLHkuo7nrb7lkI3pqozor4HmmK/kuIDkuKroh6rljIXl
+kKvnmoTov4fnqIvvvIzlm6DmraTlj6/ku6XmtYvor5Xku6TniYzmnKzouqvnmoTmnInmlYjlr4bp
+kqXvvIzogIzkuI3lv4XlsIblhbblj5HpgIHlm57lupTnlKjnqIvluo/ov5vooYzpqozor4HjgII8
+L3A+PHA+5Zug5q2k77yMSE1BQyBKV1TnoLTop6PmmK/nprvnur/nmoTvvIzpgJrov4dKV1TnoLTo
+p6Plt6XlhbfvvIzlj6/ku6Xlv6vpgJ/mo4Dmn6Xlt7Lnn6XnmoTms4TmvI/lr4bnoIHliJfooajm
+iJbpu5jorqTlr4bnoIHjgIIgPC9wPjxwPmBgYHB5dGhvbjxicj5weXRob24gand0X3Rvb2wucHkg
+ZXlKMGVYQWlPaUpLVjFRaUxDSmhiR2NpT2lKSVV6STFOaUo5LmV5SjFjMlZ5SWpvaVlXUnRhVzRp
+TENKaFkzUnBiMjRpT2lKMWNHeHZZV1FpZlEuN1pid2RaWHdmam01NzVmSEd1a2tFMDlPOC1lRlk0
+YngtZkVFQlVLM1hVRSAtQyAtZCAxLnR4dDxicj5gYGA8L3A+PHA+IVtdKC5caW1hZ2VcMy01LTEu
+cG5nKTwvcD48cD7ojrflvpflr4bpkqXvvIzkvKrpgKDku7vmhI/nlKjmiLfnmoRUb2tlbu+8mjwv
+cD48cD4hW10oLlxpbWFnZVwzLTUtMi5wbmcpPC9wPjxwPuWmguaenOWPr+S7peegtOino0hNQUPl
+r4bpkqXvvIzliJnlj6/ku6XkvKrpgKDku6TniYzkuK3nmoTku7vkvZXlhoXlrrnvvIzov5nkuKrm
+vI/mtJ7lsIbkvJrnu5nns7vnu5/luKbmnaXpnZ7luLjkuKXph43nmoTlkI7mnpzjgII8L3A+PHA+
+IyMjIyA244CB5a+G6ZKl5rOE6ZyyPC9wPjxwPuWBh+iuvuaUu+WHu+iAheaXoOazleaatOWKm+eg
+tOino+WvhumSpe+8jOmCo+S5iOS7luWPr+iDvemAmui/h+WFtuS7lumAlOW+hOiOt+WPluWvhueg
+ge+8jOWmgmdpdOS/oeaBr+azhOmcsuOAgeebruW9lemBjeWOhu+8jOS7u+aEj+aWh+S7tuivu+WP
+luOAgVhYRea8j+a0nuetie+8jOS7juiAjOS8qumAoOS7u+aEj3Rva2Vu562+5ZCN44CCPC9wPjxw
+PiMjIyMgN+OAgeaTjee6tUtJRDwvcD48cD5LSUTku6PooajigJzlr4bpkqXluo/lj7figJ3vvIhL
+ZXkgSUTvvInjgILlroPmmK9KV1TlpLTpg6jnmoTkuIDkuKrlj6/pgInlrZfmrrXvvIzlvIDlj5Hk
+urrlkZjlj6/ku6XnlKjlroPmoIfor4borqTor4F0b2tlbueahOafkOS4gOWvhumSpeOAgktJROWP
+guaVsOeahOato+ehrueUqOazleWmguS4i+aJgOekuu+8mjwvcD48cD5gYGA8YnI+ezxicj4JImFs
+ZyI6ICJIUzI1NiIsPGJyPgkidHlwIjogIkpXVCIsPGJyPgkia2lkIjogIjEiICAgICAgICAvL+S9
+v+eUqOWvhumSpTHpqozor4F0b2tlbjxicj59PGJyPmBgYDwvcD48cD7nlLHkuo7mraTlrZfmrrXm
+mK/nlLHnlKjmiLfmjqfliLbnmoTvvIzlm6DmraTmlLvlh7vogIXlj6/og73kvJrmk43nurXlroPl
+ubblr7zoh7TljbHpmannmoTlkI7mnpzjgII8L3A+PHA+Jm5ic3A7PC9wPjxwPioq55uu5b2V6YGN
+5Y6GKio8L3A+PHA+55Sx5LqOS0lE6YCa5bi455So5LqO5LuO5paH5Lu257O757uf5Lit5qOA57Si
+5a+G6ZKl5paH5Lu277yM5Zug5q2k77yM5aaC5p6c5Zyo5L2/55So5YmN5LiN5riF55CGS0lE77yM
+5paH5Lu257O757uf5Y+v6IO95Lya6YGt5Yiw55uu5b2V6YGN5Y6G5pS75Ye744CC6L+Z5qC377yM
+5pS75Ye76ICF5L6/6IO95aSf5Zyo5paH5Lu257O757uf5Lit5oyH5a6a5Lu75oSP5paH5Lu25L2c
+5Li66K6k6K+B55qE5a+G6ZKl44CCPC9wPjxwPmBgYHB5dGhvbjxicj4ia2lkIjogIi4uLy4uL3B1
+YmxpYy9jc3MvbWFpbi5jc3MiICAgLy/kvb/nlKjlhazlhbHmlofku7ZtYWluLmNzc+mqjOivgXRv
+a2VuPGJyPmBgYDwvcD48cD7kvovlpoLvvIzmlLvlh7vogIXlj6/ku6XlvLrooYzorr7lrprlupTn
+lKjnqIvluo/kvb/nlKjlhazlvIDlj6/nlKjmlofku7bkvZzkuLrlr4bpkqXvvIzlubbnlKjor6Xm
+lofku7bnu5lITUFD5Yqg5a+G55qEdG9rZW7nrb7lkI3jgII8L3A+PHA+Jm5ic3A7PC9wPjxwPioq
+U1FM5rOo5YWlKio8L3A+PHA+S0lE5Lmf5Y+v5Lul55So5LqO5Zyo5pWw5o2u5bqT5Lit5qOA57Si
+5a+G6ZKl44CC5Zyo6K+l5oOF5Ya15LiL77yM5pS75Ye76ICF5b6I5Y+v6IO95Lya5Yip55SoU1FM
+5rOo5YWl5p2l57uV6L+HSldU5a6J5YWo5py65Yi244CCPC9wPjxwPuWmguaenOWPr+S7peWcqEtJ
+ROWPguaVsOS4iui/m+ihjFNRTOazqOWFpe+8jOaUu+WHu+iAheS+v+iDveS9v+eUqOivpeazqOWF
+pei/lOWbnuS7u+aEj+WAvOOAgjwvcD48cD5gYGBweXRob248YnI+ImtpZCI6ImFhYWFhYWEnIFVO
+SU9OIFNFTEVDVCAna2V5JzstLSIgIC8v5L2/55So5a2X56ym5LiyImtleSLpqozor4F0b2tlbjxi
+cj5gYGA8L3A+PHA+5LiK6Z2i6L+Z5Liq5rOo5YWl5Lya5a+86Ie05bqU55So56iL5bqP6L+U5Zue
+5a2X56ym5Liy4oCcIGtleeKAne+8iOWboOS4uuaVsOaNruW6k+S4reS4jeWtmOWcqOWQjeS4uuKA
+nCBhYWFhYWFh4oCd55qE5a+G6ZKl77yJ44CC54S25ZCO5L2/55So5a2X56ym5Liy4oCcIGtleeKA
+neS9nOS4uuWvhumSpeadpeiupOivgXRva2Vu44CCPC9wPjxwPiZuYnNwOzwvcD48cD4qKuWRveS7
+pOazqOWFpSoqPC9wPjxwPuacieaXtu+8jOWwhktJROWPguaVsOebtOaOpeS8oOWIsOS4jeWuieWF
+qOeahOaWh+S7tuivu+WPluaTjeS9nOWPr+iDveS8muiuqeS4gOS6m+WRveS7pOazqOWFpeS7o+eg
+gea1geS4reOAgjwvcD48cD7kuIDkupvlh73mlbDlsLHog73nu5nmraTnsbvlnovmlLvlh7vlj6/k
+uZjkuYvmnLrvvIzmr5TlpoJSdWJ5IG9wZW7vvIjvvInjgILmlLvlh7vogIXlj6rpnIDlnKjovpPl
+haXnmoRLSUTmlofku7blkI3lkI7pnaLmt7vliqDlkb3ku6TvvIzljbPlj6/miafooYzns7vnu5/l
+kb3ku6TvvJo8L3A+PHA+YGBgcHl0aG9uPGJyPiJrZXlfZmlsZSIgfCB3aG9hbWk7PGJyPmBgYDwv
+cD48cD7nsbvkvLzmg4XlhrXov5jmnInlvojlpJrvvIzov5nlj6rmmK/lhbbkuK3kuIDkuKrkvovl
+rZDjgILnkIborrrkuIrvvIzmr4/lvZPlupTnlKjnqIvluo/lsIbmnKrlrqHmn6XnmoTlpLTpg6jm
+lofku7blj4LmlbDkvKDpgJLnu5nnsbvkvLxzeXN0ZW3vvIjvvInvvIxleGVj77yI77yJ55qE5Ye9
+5pWw5pe277yM6YO95Lya5Lqn55Sf5q2k56eN5ryP5rSe44CCPC9wPjxwPiMjIyMgOOOAgeaTjee6
+teWktOmDqOWPguaVsDwvcD48cD7pmaRLSUTlpJbvvIxKV1TmoIflh4bov5jog73orqnlvIDlj5Hk
+urrlkZjpgJrov4dVUkzmjIflrprlr4bpkqXjgII8L3A+PHA+Jm5ic3A7PC9wPjxwPioqSktV5aS0
+6YOo5Y+C5pWwKio8L3A+PHA+SktV5YWo56ew5piv4oCcSldLU2V0IFVSTOKAne+8jOWug+aYr+Wk
+tOmDqOeahOS4gOS4quWPr+mAieWtl+aute+8jOeUqOS6juaMh+WumumTvuaOpeWIsOS4gOe7hOWK
+oOWvhnRva2Vu5a+G6ZKl55qEVVJM44CC6Iul5YWB6K645L2/55So6K+l5a2X5q615LiU5LiN6K6+
+572u6ZmQ5a6a5p2h5Lu277yM5pS75Ye76ICF5bCx6IO95omY566h6Ieq5bex55qE5a+G6ZKl5paH
+5Lu277yM5bm25oyH5a6a5bqU55So56iL5bqP77yM55So5a6D5p2l6K6k6K+BdG9rZW7jgII8L3A+
+PHA+YGBgcHl0aG9uPGJyPmprdSBVUkwtJmd0O+WMheWQq0pXS+mbhueahOaWh+S7ti0mZ3Q755So
+5LqO6aqM6K+B5Luk54mM55qESldLPGJyPmBgYDwvcD48cD4mbmJzcDs8L3A+PHA+KipKV0vlpLTp
+g6jlj4LmlbAqKjwvcD48cD7lpLTpg6jlj6/pgInlj4LmlbBKV0vvvIhKU09OIFdlYiBLZXnvvInk
+vb/lvpfmlLvlh7vogIXog73lsIborqTor4HnmoTlr4bpkqXnm7TmjqXltYzlhaV0b2tlbuS4reOA
+gjwvcD48cD4mbmJzcDs8L3A+PHA+Kirmk43nurVYNVXvvIxYNUMgVVJMKio8L3A+PHA+5ZCMSktV
+5oiWSldL5aS06YOo57G75Ly877yMKip4NXXlkox4NWMqKuWktOmDqOWPguaVsOWFgeiuuOaUu+WH
+u+iAheeUqOS6jumqjOivgVRva2Vu55qE5YWs6ZKl6K+B5Lmm5oiW6K+B5Lmm6ZO+44CCeDV15Lul
+VVJJ5b2i5byP5oyH5a6a5L+h5oGv77yM6ICMeDVj5YWB6K645bCG6K+B5Lmm5YC85bWM5YWldG9r
+ZW7kuK3jgII8L3A+PHA+LS0tLS0tPC9wPjxwPuaUu+WHu1Rva2Vu55qE6L+H56iL5pi+54S25Y+W
+5Yaz5LqO5L2g5omA5rWL6K+V55qESldU6YWN572u5ZKM5a6e546w55qE5oOF5Ya177yM5L2G5piv
+5Zyo5rWL6K+VSldU5pe277yM6YCa6L+H5a+555uu5qCH5pyN5Yqh55qEV2Vi6K+35rGC5Lit5L2/
+55So55qEVG9rZW7ov5vooYzor7vlj5bjgIHnr6HmlLnlkoznrb7lkI3vvIzlj6/og73pgYfliLDl
+t7Lnn6XnmoTmlLvlh7vmlrnlvI/ku6Xlj4rmvZzlnKjnmoTlronlhajmvI/mtJ7lkozphY3nva7p
+lJnor6/vvIzluIzmnJvmnKzmloflj6/ku6XluK7liqnkvaDlj5HnjrDlronlhajlqIHog4HvvIE8
+L3A+PHA+Jmd0OyDlj4LogIPotYTmlpnvvJo8YnI+Jmd0Ozxicj4mZ3Q7IGh0dHBzOi8vZ2l0aHVi
+LmNvbS90aWNhcnBpL2p3dF90b29sL3dpa2kgPGJyPiZndDs8YnI+Jmd0OyBodHRwczovL21lZGl1
+bS5jb20vc3dsaC9oYWNraW5nLWpzb24td2ViLXRva2Vucy1qd3RzLTkxMjJlZmU5MWU0YTwvcD48
+cD4mbmJzcDs8L3A+PHA+5Y+C6ICD5paH56ug77yaPC9wPjxwPiZsdDtodHRwczovL2dpdGh1Yi5j
+b20vdGljYXJwaS9qd3RfdG9vbC93aWtpJmd0OzwvcD48cD4mbHQ7aHR0cHM6Ly9tZWRpdW0uY29t
+L3N3bGgvaGFja2luZy1qc29uLXdlYi10b2tlbnMtand0cy05MTIyZWZlOTFlNGEmZ3Q7PC9wPjxw
+PiZuYnNwOzwvcD48cD5odHRwczovL3d3dy5jbmJsb2dzLmNvbS9kbGl2My9wLzc0NTAwNTcuaHRt
+bDwvcD48cD5odHRwczovL21wLndlaXhpbi5xcS5jb20vcy9pUm85N1ZkZU5Od1dzZFVzbnZjd0FB
+PC9wPjxwPumdnuWvueensOi9rOWvueensO+8miZsdDtodHRwczovL3d3dy5hbnF1YW5rZS5jb20v
+cG9zdC9pZC8xNDU1NDAmZ3Q7PC9wPg==">​</div>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,497 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修面向对象之：元类,反射, 双下方法' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>面向对象之：元类,反射, 双下方法</center></div><div class='banquan'>原文出处:本文由博客园博主626提供。<br/>
+原文连接:https://www.cnblogs.com/fengqiang626/p/11331292.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#元类">1.元类</a></li>
+        <li><a href="#反射">2.反射</a><ul>
+        <li><a href="#实例对象">2.1实例对象:</a></li>
+        <li><a href="#从类的角度">2.2从类的角度:</a></li>
+        <li><a href="#从其他模块">2.3从其他模块:</a></li>
+        </ul></li>
+        <li><a href="#函数与方法的区别">3.函数与方法的区别</a></li>
+        <li><a href="#特殊双下方法">4.特殊双下方法</a><ul>
+        <li><a href="#len__">4.1__len__</a></li>
+        <li><a href="#len__-1">4.2__len__</a></li>
+        <li><a href="#str__">4.3__str__</a></li>
+        <li><a href="#repr__">4.4__repr__</a></li>
+        <li><a href="#call__">4.5__call__</a></li>
+        <li><a href="#eq__">4.6__eq__</a></li>
+        <li><a href="#del__">4.7__del__</a></li>
+        <li><a href="#new__">4.8__new__</a></li>
+        <li><a href="#item__">4.9__item__</a></li>
+        <li><a href="#enter__-__exit__">4.10__enter__ __exit__</a></li>
+        <li><a href="#iter__">4.11__iter__</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h2 id="元类">1.元类</h2>
+<pre><code><code>class A:
+    pass
+obj = A()
+
+print(type(&#39;abc&#39;))      # &lt;class &#39;str&#39;&gt;
+print(type([1,2,3]))    # &lt;class &#39;list&#39;&gt;
+print(type((22,33)))    # &lt;class &#39;tuple&#39;&gt;
+
+# type 获取对象从属于的类
+print(type(A))      # &lt;class &#39;type&#39;&gt;
+print(type(str))    # &lt;class &#39;type&#39;&gt;
+print(type(dict))   # &lt;class &#39;type&#39;&gt;</code></pre>
+<p><strong>python 中一切皆对象, 类在某种意义上也是一个对象,python中自己定义的类,以及大部分内置类,都是由type元类(构建类)实例化得来的</strong></p>
+<pre><code><code># type 与 object 的关系.
+# print(type(object)) object类是type类的一个实例.
+# object类是type类的父类.
+
+print(issubclass(type,object))</code></pre>
+<h2 id="反射">2.反射</h2>
+<p><strong>实例对象 类 本模块 其他模块</strong></p>
+<p><strong>hasattr getattr setattr delattr</strong></p>
+<h3 id="实例对象">2.1实例对象:</h3>
+<pre><code><code>class A:
+
+    country = &#39;中国&#39;
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age = age
+
+    def func(self):
+        print(&#39;in A func&#39;)
+
+obj = A(&#39;赵海狗&#39;,47)
+
+# hasattr
+print(hasattr(obj,&#39;name&#39;))
+print(hasattr(obj,&#39;country&#39;))
+print(hasattr(obj,&#39;func&#39;))
+# getattr
+print(getattr(obj,&#39;name&#39;))
+print(getattr(obj,&#39;func&#39;))
+f = getattr(obj,&#39;func&#39;)
+f()
+print(getattr(obj,&#39;sex&#39;,None))
+if hasattr(obj,&#39;name&#39;):
+    getattr(obj,&#39;name&#39;)
+
+# setattr,delattr # 用的很少
+obj.sex = &#39;公&#39;
+print(obj.sex)
+setattr(obj,&#39;sex&#39;,&#39;公&#39;)
+print(obj.__dict__)
+delattr(obj,&#39;name&#39;)
+print(obj.__dict__)</code></pre>
+<h3 id="从类的角度">2.2从类的角度:</h3>
+<pre><code><code>class A:
+
+    country = &#39;中国&#39;
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age = age
+
+    def func(self):
+        print(self)
+        print(&#39;in A func&#39;)
+
+# if hasattr(A,&#39;country&#39;):
+#     print(getattr(A,&#39;country&#39;))
+
+
+if hasattr(A,&#39;func&#39;):
+    obj = A(&#39;赵海狗&#39;, 26)
+    getattr(obj,&#39;func&#39;)()
+    getattr(A,&#39;func&#39;)(obj)</code></pre>
+<h3 id="从其他模块">2.3从其他模块:</h3>
+<pre><code><code>import tbjx
+print(getattr(tbjx,&#39;name&#39;))
+getattr(tbjx,&#39;func&#39;)()
+
+# 1. 找到tbjx对象 的C类,实例化一个对象.
+print(getattr(tbjx,&#39;C&#39;))
+obj = getattr(tbjx,&#39;C&#39;)(&#39;123&#39;)
+# 2. 找到tbjx对象 的C类,通过对C类这个对象使用反射取到area.
+print(getattr(tbjx.C,&#39;area&#39;))
+# 3. 找到tbjx对象 的C类,实例化一个对象,对对象进行反射取值.
+obj = getattr(tbjx,&#39;C&#39;)(&#39;赵海狗&#39;)
+print(obj.name)
+print(getattr(obj,&#39;name&#39;))
+# 从当前模块研究反射:
+a = 666
+
+def func1():
+    print(&#39;in 本模块这个对象&#39;)
+
+def func1():
+    print(&#39;in func1&#39;)
+
+def func2():
+    print(&#39;in func2&#39;)
+
+def func3():
+    print(&#39;in func3&#39;)
+
+def func4():
+    print(&#39;in func4&#39;)
+
+import sys
+# print(sys.modules[__name__])
+# print(getattr(sys.modules[__name__],&#39;a&#39;))
+# getattr(sys.modules[__name__],&#39;func1&#39;)()
+# getattr(sys.modules[__name__],&#39;func2&#39;)()
+# getattr(sys.modules[__name__],&#39;func3&#39;)()
+
+func_lst = [f&#39;func{i}&#39; for i in range(1,5)]
+print(func_lst)
+for func in func_lst:
+    getattr(sys.modules[__name__],func)()</code></pre>
+<pre><code><code>class User:
+
+    user_list = [(&#39;login&#39;,&#39;登录&#39;),(&#39;register&#39;,&#39;注册&#39;),(&#39;save&#39;, &#39;存储&#39;)]
+
+    def login(self):
+        print(&#39;欢迎来到登录页面&#39;)
+
+    def register(self):
+        print(&#39;欢迎来到注册页面&#39;)
+
+    def save(self):
+        print(&#39;欢迎来到存储页面&#39;)
+
+
+while 1:
+    choose = input(&#39;请输入序号: \n1: 登录\n2: 注册\n3: 存储\n&#39;).strip()  # 1
+    obj = User()
+    getattr(obj, obj.user_list[int(choose)-1][0])()  # getattr(obj,&#39;login&#39;)
+</code></pre>
+<h2 id="函数与方法的区别">3.函数与方法的区别</h2>
+<pre><code><code>def func1():
+    pass
+
+class A:
+    def func(self):
+        pass
+
+# 1. 通过打印函数名的方式区别什么是方法,什么是函数. (了解)
+print(func1)
+print(A.func)  # 通过类名调用的类中的实例方法叫做函数.
+obj = A()
+print(obj.func) # 通过对象调用的类中的实例方法叫方法.
+
+# 2. 可以借助模块判断是方法还是函数.
+
+from types import FunctionType
+from types import MethodType
+
+def func():
+    pass
+
+class A:
+    def func(self):
+        pass
+
+obj = A()
+
+
+print(isinstance(func,FunctionType))  # True
+print(isinstance(A.func,FunctionType))  # True
+print(isinstance(obj.func,FunctionType))  # False
+print(isinstance(obj.func,MethodType))  # True
+
+# 总结:
+# python 中一切皆对象, 类在某种意义上也是一个对象,python中自己定义的类,
+# 以及大部分内置类,都是由type元类(构建类)实例化得来的.
+# python 中一切皆对象, 函数在某种意义上也是一个对象,函数这个对象是从FunctionType这个类实例化出来的.
+# python 中一切皆对象, 方法在某种意义上也是一个对象,方法这个对象是从MethodType这个类实例化出来的.</code></pre>
+<pre><code><code>class A:
+    @classmethod
+    def func(cls,a):
+        pass
+
+    @staticmethod
+    def func1():
+        pass
+
+# A.func(222)
+# A.func()
+# obj = A()
+# obj.func()
+
+# 总结: 如何判断类中的是方法还是函数.
+# 函数都是显性传参,方法都是隐性传参.</code></pre>
+<h2 id="特殊双下方法">4.特殊双下方法</h2>
+<p><strong>特殊的双下方法: 原本是开发python这个语言的程序员用的.源码中使用的.<br />
+str : 我们不能轻易使用.慎用.<br />
+双下方法: 你不知道你干了什么就触发某个双下方法.</strong></p>
+<h3 id="len__">4.1__len__</h3>
+<pre><code><code>class B:
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age =age
+
+    def __len__(self):
+        print(self.__dict__)
+
+        return len(self.__dict__)  # 2
+
+b = B(&#39;leye&#39;,28)
+
+print(len(b))
+# dict
+print(len({&#39;name&#39;: &#39;leye&#39;, &#39;age&#39;: 28}))</code></pre>
+<h3 id="len__-1">4.2__len__</h3>
+<pre><code><code>class A(object):
+
+    pass
+
+obj = A()
+
+print(hash(obj))
+print(hash(&#39;fdsaf&#39;))</code></pre>
+<h3 id="str__">4.3__str__</h3>
+<pre><code><code>class A:
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age =age
+
+    def __str__(self):
+        print(666)
+        return f&#39;姓名: {self.name} 年龄: {self.age}&#39;
+
+a = A(&#39;赵海狗&#39;,35)
+b = A(&#39;李业&#39;,56)
+c = A(&#39;华丽&#39;,18)
+# 打印对象触发__str__方法
+print(f&#39;{a.name}  {a.age}&#39;)
+print(f&#39;{b.name}  {b.age}&#39;)
+print(f&#39;{c.name}  {c.age}&#39;)
+print(a)
+print(b)
+print(c)
+# 直接str转化也可以触发.
+print(str(a))</code></pre>
+<h3 id="repr__">4.4__repr__</h3>
+<pre><code><code>print(&#39;我叫%s&#39; % (&#39;alex&#39;))
+print(&#39;我叫%r&#39; % (&#39;alex&#39;))
+print(repr(&#39;fdsaf&#39;))
+
+class A:
+
+    def __init__(self,name,age):
+        self.name = name
+        self.age =age
+
+    def __repr__(self):
+        print(666)
+        return f&#39;姓名: {self.name} 年龄: {self.age}&#39;
+
+a = A(&#39;赵海狗&#39;,35)
+b = A(&#39;李业&#39;,56)
+c = A(&#39;华丽&#39;,18)
+# print(a)
+print(repr(a))</code></pre>
+<h3 id="call__">4.5__call__</h3>
+<pre><code><code>__call__方法  ***
+对象() 自动触发对象从属于类(父类)的__call__方法
+class Foo:
+
+    def __init__(self):
+        pass
+
+    def __call__(self, *args, **kwargs):
+        print(&#39;__call__&#39;)
+
+obj = Foo()
+obj()</code></pre>
+<h3 id="eq__">4.6__eq__</h3>
+<pre><code><code>class A(object):
+    def __init__(self):
+        self.a = 1
+        self.b = 2
+
+    def __eq__(self,obj):
+        if  self.a == obj.a and self.b == obj.b:
+            return True
+        return True
+x = A()
+y = A()
+print(x == y)
+x = 1
+y = 2
+print(x+y)</code></pre>
+<h3 id="del__">4.7__del__</h3>
+<pre><code><code>__del__析构方法
+
+class A:
+
+    def __del__(self):
+        print(666)
+
+obj = A()
+del obj</code></pre>
+<h3 id="new__">4.8__new__</h3>
+<pre><code><code># __new__ *** new一个对象  构造方法
+
+class A(object):
+
+    def __init__(self):
+
+        self.x = 1
+        print(&#39;in init function&#39;)
+
+    def __new__(cls, *args, **kwargs):
+        print(&#39;in new function&#39;)
+        return object.__new__(A)  # object 342534
+
+# 对象是object类的__new__方法 产生了一个对象.
+a = A()
+
+# 类名()
+# 1. 先触发 object的__new__方法,此方法在内存中开辟一个对象空间.
+# 2. 执行__init__方法,给对象封装属性.
+
+print(a)
+
+# python中的设计模式: 单例模式
+
+# 一个类只允许实例化一个对象.
+class A:
+    pass
+
+obj = A()
+print(obj)
+obj1 = A()
+print(obj1)
+obj2 = A()
+print(obj2)
+
+# 手写单例模式
+class A:
+    __instance = None
+
+    def __init__(self,name):
+        self.name = name
+
+    def __new__(cls,*args,**kwargs):
+        if not cls.__instance:
+            cls.__instance = object.__new__(cls)
+        return cls.__instance
+
+
+obj = A(&#39;alex&#39;)
+print(obj)
+obj1 = A(&#39;李业&#39;)
+print(obj1.name)
+print(obj.name)</code></pre>
+<h3 id="item__">4.9__item__</h3>
+<p>**<strong>getitem</strong> <strong>setitem</strong> <strong>delitem</strong> 对对象做类似于字典(增删改查)触发__item__系类**</p>
+<p><strong><strong>delattr</strong> del obj.属性 就会出发此方法</strong></p>
+<pre><code><code>class Foo:
+    def __init__(self,name):
+        self.name = name
+
+    def __getitem__(self,key):
+        print(key)
+        print(666)
+        return self.__dict__[key]
+
+    def __setitem__(self,key,val):
+        self.__dict__[key] = val
+        print(key)
+        print(val)
+
+    def __delitem__(self,key):
+        self.__dict__.pop(key)
+        print(&#39;delitem&#39;)
+
+
+    def delattr(self,key):
+        print(&#39;执行delattr函数&#39;)
+        # super().__delattr__(key)    # 调用父类的方法 会直接删除
+
+p = Foo(&#39;la&#39;)
+print(p[&#39;name&#39;])
+p[1] = 2
+# p[&#39;age&#39;]        # 没有此属性 报错
+del p[1]
+
+del p[&#39;name&#39;]
+print(p.name)   # 报错
+
+p[&#39;age&#39;] = 18
+p[&#39;la&#39;] = 19
+del p.age
+del p[&#39;la&#39;]</code></pre>
+<h3 id="enter__-__exit__">4.10__enter__ __exit__</h3>
+<pre><code><code>class A:
+
+    def __init__(self, text):
+        self.text = text
+        print(&#39;__init__&#39;)  # 第一步
+
+    def __enter__(self):  # 开启上下文管理器对象时触发此方法
+        self.text = self.text + &#39;您来啦&#39;  # 第二步
+        print(11111)
+        return self  # 必须!!!将实例化的对象返回f1
+
+    def __exit__(self, exc_type, exc_val, exc_tb):  # 执行完上下文管理器对象f1时触发此方法
+        print(333)  # 第四步
+        self.text = self.text + &#39;,这就走啦&#39;
+
+
+with A(&#39;海狗&#39;) as p:
+    print(2222)
+    print(p.text)  # 第三步
+print(p.text)  # 第五步</code></pre>
+<h3 id="iter__">4.11__iter__</h3>
+<pre><code><code>class A:
+
+    def __init__(self,name):
+        self.name = name
+
+    def __iter__(self):
+        for i in range(10):
+            yield i
+object
+    # def __next__(self):
+    #     pass
+obj = A(&#39;李业&#39;)  # obj 一个可迭代对象
+# print(&#39;__iter__&#39; in dir(obj))
+# for i in obj:
+#     print(i)
+
+# print(obj.name)
+o = iter(obj)
+print(next(o))
+print(next(o))
+print(next(o))
+print(next(o))
+print(next(o))
+print(next(o))</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

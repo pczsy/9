@@ -1,0 +1,156 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修函数名的第一类对象及使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>函数名的第一类对象及使用</center></div><div class='banquan'>原文出处:本文由博客园博主被放弃的程序员提供。<br/>
+原文连接:https://www.cnblogs.com/liwenhu/p/11401439.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#第一类对象的特点">1. 第一类对象的特点</a></li>
+        <li><a href="#格式化">2. 格式化</a></li>
+        <li><a href="#迭代器">3. 迭代器</a><ul>
+        <li><a href="#可迭代对象">3.1 可迭代对象</a></li>
+        <li><a href="#迭代器-1">3.2 迭代器</a></li>
+        </ul></li>
+        <li><a href="#递归">4. 递归</a></li>
+        </ul>
+    </div>
+</div>
+<h2 id="第一类对象的特点">1. 第一类对象的特点</h2>
+<pre><code><code>#1. 函数名可以当作值被赋值给变量
+def func():
+    print(1)
+ret = func
+print(ret)  #输出func函数的地址
+
+#2. 函数名当作元素存放在容器中
+def func():
+    a=1
+    print(a)
+lst = [func,func,func]   #放入lst中
+for i in lst:
+    i()      # 1 1 1
+    
+#3. 函数名可以当作函数的参数
+def func(f):
+    print(1)
+    f()
+def foo():
+    print(2)
+func(foo)    #foo地址给f   1  2
+
+#4. 函数名可以当作函数的返回值
+def func():
+    print(2)       
+    def foo():
+        print(5)     
+    return foo
+ret = func()  #foo 地址   2 5
+ret()  #调用 foo函数    </code></pre>
+<h2 id="格式化">2. 格式化</h2>
+<pre><code><code>f&quot;你好{&#39;a&#39;}&quot;  #填充字符串
+F&quot;你好{&#39;a&#39;}&quot;  # F
+s = f&quot;你好{s1}&quot;  #填充变量
+s = f&quot;{35+15}&quot;  #填充计算公式
+s = f&quot;{a if a &gt; b else b}&quot;  #填充表达式
+s = f&quot;{lst[0:2]}&quot;  #填充列表和字典</code></pre>
+<h2 id="迭代器">3. 迭代器</h2>
+<h3 id="可迭代对象">3.1 可迭代对象</h3>
+<pre><code><code>list、dic、str、set、tuple都是可迭代对象，使用灵活
+#方法：
+1. list__iter__()
+2. ctrl 查看源码
+3. print(dir(list))
+
+官方声明：只要对象具有__iter__()方法的就是迭代对象</code></pre>
+<pre><code><code>可迭代对象的优点:
+    1.使用灵活
+    2.直接查看值
+可迭代对象的缺点:消耗内存
+
+取值方式：
+list,tuple,str -- 索引
+dict -- 键
+set  -- 直接取值</code></pre>
+<h3 id="迭代器-1">3.2 迭代器</h3>
+<pre><code><code>#官方声明只要具有__iter__()方法__next__()方法就是迭代器</code></pre>
+<pre><code><code>lst = [1,2,3,4,6]
+new_lst = lst.__iter__()  #将可迭代对象转换成迭代器
+print(new_lst.__next__()) #从上一个位置开始向下打印一个元素
+#迭代器取值超出范围时，会报错
+
+#迭代器特性：
+    #1.一次性的(用完就没有了)
+    #2.不能逆行(不能后退)
+    #3.惰性机制(节省内存)
+#迭代器什么时候用：当容器数据量较大时，使用迭代器</code></pre>
+<pre><code><code>s = [1,2,3,4,5,7]    # 更改版 for循环
+count = len(s)
+new_s = s.__iter__()
+while count:
+    print(new_s.__next__())
+    count -= 1
+
+# while循环实现for循环的本质
+s = &quot;12345&quot;
+new_s = s.__iter__()
+while True:
+    try:                        #会处理错误
+        print(new_s.__next__()) # for真实本质
+    except StopIteration: #当出StopIteration错误时，关闭
+        break
+#或
+    except Exception:   #万能异常捕获错误
+        break</code></pre>
+<h2 id="递归">4. 递归</h2>
+<pre><code><code>1. 不断调用自己本身(自己调用自己)——死循环
+   最大层次1000，实际测试997/998
+2. 有明确的终止条件
+满足以上两个才是有效递归。
+递：一直执行直到碰到结束条件
+归：从结束条件开始往回退</code></pre>
+<pre><code><code>def age(n):
+    if n == 3:
+        return 30
+    else:
+        return age(n+1)-5
+print(age(1))     # 20
+
+#上面解开：
+def age3(n):
+    if n == 3:
+        return 30
+    # else:
+    #     return age2(n+1)-5
+def age2(n):
+    if n == 3:
+        return 30
+    else:
+        return age3(n+1)-5
+def age1(n):
+    if n == 3:
+        return 30
+    else:
+        return age2(n+1)-5
+print(age1(1))</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

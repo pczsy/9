@@ -1,0 +1,388 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python 之   Django框架(orm单表查询、orm多表查询、聚合查询、分组查询、F查询、 Q查询、事务、Django ORM执行原生SQL)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python 之   Django框架(orm单表查询、orm多表查询、聚合查询、分组查询、F查询、 Q查询、事务、Django ORM执行原生SQL)</center></div><div class='banquan'>原文出处:本文由博客园博主small_white-提供。<br/>
+原文连接:https://www.cnblogs.com/mylu/p/11432307.html</div><br>
+    <h5 class="md-end-block md-heading md-focus"><span class="md-plain">12.329 orm单表查询</span></h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 指定当前py脚本需要加载的Django项目配置信息</span>
+    os.environ.setdefault(<span style="color: #800000;">"</span><span style="color: #800000;">DJANGO_SETTINGS_MODULE</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">orm_demo.settings</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">import</span><span style="color: #000000;"> django
+    django.setup()          </span><span style="color: #008000;">#</span><span style="color: #008000;"> 启动Django项目</span>
+    <span style="color: #0000ff;">from</span> app01 <span style="color: #0000ff;">import</span><span style="color: #000000;"> models
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;">返回QuerySet对象的方法:</span>
+    ret =<span style="color: #000000;"> models.Book.objects.all()  
+    </span><span style="color: #0000ff;">print</span>(ret)                      <span style="color: #008000;">#</span><span style="color: #008000;"> QuerySet类型:书籍对象的列表</span>
+<span style="color: #000000;">​
+    ret </span>= models.Book.objects.filter(title=<span style="color: #800000;">"</span><span style="color: #800000;">围城</span><span style="color: #800000;">"</span>)  <span style="color: #008000;">#</span><span style="color: #008000;"> QuerySet类型  --&gt; 书籍对象的列表</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> id值大于1</span>
+    ret = models.Book.objects.filter(id__gt=1<span style="color: #000000;">)  
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> id值小于3</span>
+    ret = models.Book.objects.filter(id__lt=3<span style="color: #000000;">) 
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 出版日期是2017年的书</span>
+    ret = models.Book.objects.filter(publisher_date__year=2017<span style="color: #000000;">)  
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 出版日期大于2017年</span>
+    ret = models.Book.objects.filter(publisher_date__year__gt=2017<span style="color: #000000;">)  
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 书名中包含'曌'的书</span>
+    ret = models.Book.objects.filter(title__contains=<span style="color: #800000;">"</span><span style="color: #800000;">曌</span><span style="color: #800000;">"</span><span style="color: #000000;">) 
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 书名中包含'曌'的书并且出版年份是2018年</span>
+    ret = models.Book.objects.filter(title__contains=<span style="color: #800000;">"</span><span style="color: #800000;">曌</span><span style="color: #800000;">"</span>, publisher_date__year=2018<span style="color: #000000;">)  
+​
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> get方法如果符合筛选条件的对象超过一个或者没有都会抛出错误。</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">符合筛选条件的对象只有一个，则返回具体的类对象实例：书籍对象，而不是列表</span>
+    ret = models.Book.objects.get(id=10<span style="color: #000000;">)  
+    </span><span style="color: #0000ff;">print</span>(ret)                          <span style="color: #008000;">#</span><span style="color: #008000;">报错</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 使用filter检索的时候没有满足条件的数据就返回一个空 QuerySet</span>
+    ret = models.Book.objects.filter(id=10<span style="color: #000000;">)  
+    </span><span style="color: #0000ff;">print</span>(ret)                          <span style="color: #008000;">#</span><span style="color: #008000;">[]</span>
+<span style="color: #000000;">​
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将满足条件的去掉，留下不满足条件的</span>
+    ret = models.Book.objects.exclude(id__in=[1,3,4<span style="color: #000000;">])
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(ret)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 按字段排序</span>
+    ret = models.Book.objects.all().order_by(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span>)  <span style="color: #008000;">#</span><span style="color: #008000;"> QuerySet类型：根据price字段对所有数据排序</span>
+    ret = models.Book.objects.all().order_by(<span style="color: #800000;">"</span><span style="color: #800000;">-price</span><span style="color: #800000;">"</span><span style="color: #000000;">)  
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">反转</span>
+    ret = models.Book.objects.all().order_by(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span><span style="color: #000000;">).reverse()  
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 按照出版时间排序后反转再去字段值  # QuerySet类型：字段及字段值的字典的列表</span>
+    ret = models.Book.objects.all().order_by(<span style="color: #800000;">"</span><span style="color: #800000;">publisher_date</span><span style="color: #800000;">"</span>).reverse().values(<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span><span style="color: #000000;">)  
+      
+</span><span style="color: #008000;">#</span><span style="color: #008000;">特殊的QuerySet:</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">values() 取字段的值，以字典返回</span>
+    ret = models.Book.objects.filter(publisher_date__year=2018).values(<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">publisher_date</span><span style="color: #800000;">"</span><span style="color: #000000;">) 
+    </span><span style="color: #0000ff;">print</span>(ret)          <span style="color: #008000;">#</span><span style="color: #008000;"> QuerySet类型：字段及字段值的字典的列表</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">values_list() 取字段的值，以元组返回</span>
+    ret = models.Book.objects.filter(publisher_date__year=2018).values_list(<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">publisher_date</span><span style="color: #800000;">"</span>)        <span style="color: #008000;">#</span><span style="color: #008000;"> QuerySet类型：字段值的元祖的列表</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 连表查询</span>
+    ret = models.Book.objects.all().values(<span style="color: #800000;">"</span><span style="color: #800000;">publisher__name</span><span style="color: #800000;">"</span><span style="color: #000000;">).distinct()  
+    </span><span style="color: #0000ff;">print</span>(ret)           <span style="color: #008000;">#</span><span style="color: #008000;"> QuerySet类型：字段及字段值的字典的列表，并去重</span>
+<span style="color: #000000;">​
+</span><span style="color: #008000;">#</span><span style="color: #008000;">返回数字的方法</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> count 计数</span>
+    ret = models.Book.objects.all().count()  <span style="color: #008000;">#</span><span style="color: #008000;"> 数字：结果集中数据的个数   </span><span style="color: #008000;">
+#</span><span style="color: #008000;">返回具体对象</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">first()和last()</span>
+    ret = models.Book.objects.all().first()  <span style="color: #008000;">#</span><span style="color: #008000;">结果集中的第一个对象</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">get()</span>
+    ret = models.Book.objects.get(id=1)      <span style="color: #008000;">#</span><span style="color: #008000;">返回匹配到的对象，有且仅有一个</span><span style="color: #008000;">
+#</span><span style="color: #008000;">返回布尔值的方法</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 判断结果集中是否有数据</span>
+    ret = models.Book.objects.all().exists()  <span style="color: #008000;">#</span><span style="color: #008000;"> 布尔值：结果集中是否有数据</span></pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.3210 orm多表查询(方式二)</span></h5>
+<p class="md-end-block md-p"><span><strong>ForeignKey操作:</strong><span class="md-plain">书籍表(Book表)外键关联出版社表(Publisher表)</span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">正向查找:</span></p>
+<div class="cnblogs_code">
+<pre><code>1<span style="color: #000000;">.基于对象(子查询)
+book_obj </span>= models.Book.objects.first()    <span style="color: #008000;">#</span><span style="color: #008000;"> 第一本书对象</span>
+<span style="color: #0000ff;">print</span>(book_obj.publisher)                <span style="color: #008000;">#</span><span style="color: #008000;"> 得到这本书关联的出版社对象</span>
+<span style="color: #0000ff;">print</span>(book_obj.publisher.name)            <span style="color: #008000;">#</span><span style="color: #008000;"> 得到出版社对象的名称</span>
+2<span style="color: #000000;">.基于双下划线字段方法(联表查询)
+</span><span style="color: #0000ff;">print</span>(models.Book.objects.values_list(<span style="color: #800000;">"</span><span style="color: #800000;">publisher__name</span><span style="color: #800000;">"</span>))</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">反向查找：</span></p>
+<div class="cnblogs_code">
+<pre><code>1<span style="color: #000000;">.基于对象(子查询)
+publisher_obj </span>= models.Publisher.objects.first()   <span style="color: #008000;">#</span><span style="color: #008000;"> 找到第一个出版社对象</span>
+books = publisher_obj.book_set.all()              <span style="color: #008000;">#</span><span style="color: #008000;"> 找到第一个出版社出版的所有书籍对象</span>
+titles = books.values_list(<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>)               <span style="color: #008000;">#</span><span style="color: #008000;"> 找到第一个出版社出版的所有书籍的书名</span><span style="color: #008000;">
+#</span><span style="color: #008000;">如果设置了 related_name="books"</span><span style="color: #008000;">
+#</span><span style="color: #008000;">publisher= models.ForeignKey(to="Publisher", related_name="books")</span>
+publisher_obj =<span style="color: #000000;"> models.Publisher.objects.first()
+ret </span>=<span style="color: #000000;"> publisher_obj.books.all()
+</span><span style="color: #0000ff;">print</span>(ret)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Book: 西瓜物语&gt;, &lt;Book: 香蕉物语&gt;]&gt;</span>
+<span style="color: #000000;">​
+</span>2<span style="color: #000000;">.基于双下划线的字段方法(联表查询)
+ret </span>= models.Publisher.objects.filter(id=1).values_list(<span style="color: #800000;">"</span><span style="color: #800000;">book__title</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(ret)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [('西瓜物语',), ('香蕉物语',)]&gt;</span>
+titles = models.Publisher.objects.values_list(<span style="color: #800000;">"</span><span style="color: #800000;">book__title</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(titles)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [('西瓜物语',), ('香蕉物语',), ('番茄物语',), (None,)]&gt;</span>
+<span style="color: #000000;">​
+</span><span style="color: #008000;">#</span><span style="color: #008000;">如果related_query_name="books"或者 related_name="books"(如果两个同时出现，则以related_query_name为准)</span>
+titles = models.Publisher.objects.filter(id=1).values_list(<span style="color: #800000;">"</span><span style="color: #800000;">books__title</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [('西瓜物语',), ('香蕉物语',)]&gt;</span>
+titles = models.Publisher.objects.filter(id=1).values(<span style="color: #800000;">"</span><span style="color: #800000;">books__title</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'books__title': '西瓜物语'}, {'books__title': '香蕉物语'}]&gt;</span></pre>
+</div>
+<p class="md-end-block md-p"><span><strong>ManyToManyField：</strong><span class="md-plain">(使用方式二：通过ManyToManyField自动创建第三张表)</span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">models:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Book(models.Model):
+    title </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    publish_date </span>= models.DateField(auto_now_add=<span style="color: #000000;">True)
+    price </span>= models.DecimalField(max_digits=5, decimal_places=2<span style="color: #000000;">)
+    memo </span>= models.TextField(null=<span style="color: #000000;">True)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建外键，关联publish</span>
+    publisher = models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Publisher</span><span style="color: #800000;">"</span><span style="color: #000000;">, )
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建多对多关联author</span>
+    author = models.ManyToManyField(to=<span style="color: #800000;">"</span><span style="color: #800000;">Author</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+​
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Author(models.Model):
+    name </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    age </span>=<span style="color: #000000;"> models.IntegerField()
+    phone </span>= models.CharField(max_length=11<span style="color: #000000;">)
+    detail </span>= models.OneToOneField(to=<span style="color: #800000;">"</span><span style="color: #800000;">AuthorDetail</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">class RelatedManager:"关联管理器"是在<span><strong>一对多</strong><span class="md-plain">或者<span><strong>多对多</strong><span class="md-plain">的关联上下文中使用的管理器。</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">它存在于下面两种情况：<span><strong>外键关系的反向查询</strong><span class="md-plain">、<span><strong>多对多关联关系</strong><span class="md-plain">，简单来说就是当 "."后面的对象 可能存在多个的时候就可以使用以下的方法</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span><strong>create()：</strong><span class="md-plain">创建一个新的对象，保存对象，并将它添加到关联对象集之中，返回新创建的对象。</span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">models.Book.objects.first().author得到是一个class RelatedManager对象，使用.create操作author表和第三张表</span>
+1<span style="color: #000000;">.正向创建author表数据
+ret </span>= models.Book.objects.first().author.create(name=<span style="color: #800000;">"</span><span style="color: #800000;">张三</span><span style="color: #800000;">"</span>,age=16,phone=<span style="color: #800000;">"</span><span style="color: #800000;">18012xxxx</span><span style="color: #800000;">"</span>,detail_id=4<span style="color: #000000;">) 
+</span><span style="color: #008000;">#</span><span style="color: #008000;">做了两件事情：1. 创建了一个新的作者，2. 将新创建的作者和第一本书做关联</span>
+ret = models.Book.objects.first().author.all().values(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(ret)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'id': 1}, {'id': 3}, {'id': 15}]&gt;</span>
+2<span style="color: #000000;">.反向创建book表数据
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> datetime
+models.Author.objects.first().book_set.create(title</span>=<span style="color: #800000;">"</span><span style="color: #800000;">番茄物语</span><span style="color: #800000;">"</span>, publish_date=datetime.date.today())</pre>
+</div>
+<p class="md-end-block md-p"><span><strong>add()：</strong><span class="md-plain">把指定的model对象或对象id添加到关联对象集中</span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">添加对象</span>
+author_objs = models.Author.objects.filter(id__lt=3<span style="color: #000000;">)
+models.Book.objects.first().author.add(</span>*<span style="color: #000000;">author_objs)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">添加id</span>
+models.Book.objects.first().author.add(*[1, 2<span style="color: #000000;">])
+models.Book.objects.first().author.add(</span>1<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">第一本书关联的作者id</span>
+ret = models.Book.objects.first().author.all().values(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(ret)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'id': 1}, {'id': 3}, {'id': 15}]&gt;</span></pre>
+</div>
+<p class="md-end-block md-p"><span><strong>set()：</strong><span class="md-plain">更新model对象的关联对象。</span></span></p>
+<div class="cnblogs_code">
+<pre><code>ret=models.Book.objects.first().author.set([2, 3])<span style="color: #008000;">#</span><span style="color: #008000;">设置第三张表的关联关系，给第一个book对象加上id=2和3</span>
+ret =<span style="color: #000000;"> models.Book.objects.first().author.all()
+</span><span style="color: #0000ff;">print</span>(ret)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Author: 小仙女&gt;, &lt;Author: 大乌龟&gt;, &lt;Author: 张曌&gt;]&gt;</span>
+ret = models.Book.objects.first().author.all().values(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(ret)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'id': 1}, {'id': 3}, {'id': 15}]&gt;</span></pre>
+</div>
+<p class="md-end-block md-p"><span><strong>remove()：</strong><span class="md-plain">从关联对象集中移除执行的model对象</span></span></p>
+<div class="cnblogs_code">
+<pre><code>models.Book.objects.first().author.remove(3)<span style="color: #008000;">#</span><span style="color: #008000;">找到第一个图书对象所对应的所有作者，到第三张表中删除它与id=3的作者的关联关系#&lt;QuerySet [{'id': 1}, {'id': 15}，{'id'=3}]&gt;</span>
+ret = models.Book.objects.first().author.all().values(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(ret)        <span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'id': 1}, {'id': 15}]&gt;</span></pre>
+</div>
+<p class="md-end-block md-p"><span><strong>clear():</strong><span class="md-plain">从关联对象集中移除一切对象。</span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'id': 1}, {'id': 15}]&gt;</span>
+<span style="color: #000000;">models.Book.objects.first().author.clear()
+ret </span>= models.Book.objects.first().author.all().values(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(ret)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet []&gt;</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">注意：对于ForeignKey对象，clear()和remove()方法仅在null=True时存在</span></p>
+<p class="md-end-block md-p"><span><strong>all()：</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>ret = models.Book.objects.first().author.all()<span style="color: #008000;">#</span><span style="color: #008000;">得到第一本书对象对应的作者对象集</span>
+<span style="color: #0000ff;">print</span>(ret)                                <span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [Author object,Author object,Author object]&gt;</span></pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.3211 聚合查询</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">aggregate()是QuerySet 的一个终止子句，它返回一个包含一些键值对的字典。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">键的名称是聚合值的标识符，值是计算出来的聚合值。键的名称是按照字段和聚合函数的名称自动生成出来的。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Avg, Sum, Max, Min, Count
+models.Book.objects.all().aggregate(Avg(</span><span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">{'price__avg': 13.233333}</span>
+ret = models.Book.objects.aggregate(Sum(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">{'price__sum': Decimal('13.10')</span>
+ret = models.Book.objects.aggregate(total_price=Sum(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">{'total_price': Decimal('13.10')}</span>
+ret = models.Book.objects.aggregate(avg_price=Avg(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span>), max_price=Max(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span>), min_price=Min(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">{'avg_price': 4.366667, 'max_price': Decimal('12.00'), 'min_price': Decimal('0.10')}</span></pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.3212 分组查询</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">单表查询分组：按照部门分组求平均工资</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> dept,<span style="color: #ff00ff;">AVG</span>(salary) <span style="color: #0000ff;">from</span> employee <span style="color: #0000ff;">group</span> <span style="color: #0000ff;">by</span> dept;</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">orm查询：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Avg
+models.Employee.objects.values(</span><span style="color: #800000;">"</span><span style="color: #800000;">dept</span><span style="color: #800000;">"</span>).annotate(avg=Avg(<span style="color: #800000;">"</span><span style="color: #800000;">salary</span><span style="color: #800000;">"</span><span style="color: #000000;">)                                   
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'dept': '教学部', 'avg': 221.0}, {'dept': '销售部', 'avg': 21.0}, {'dept': '人事部', 'avg': 999.0}]&gt;  </span>
+models.Employee.objects.values(<span style="color: #800000;">"</span><span style="color: #800000;">dept</span><span style="color: #800000;">"</span>).annotate(avg=Avg(<span style="color: #800000;">"</span><span style="color: #800000;">salary</span><span style="color: #800000;">"</span>).values(<span style="color: #800000;">'</span><span style="color: #800000;">dept</span><span style="color: #800000;">'</span>, <span style="color: #800000;">"</span><span style="color: #800000;">avg</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'dept': '教学部', 'avg': 221.0}, {'dept': '销售部', 'avg': 21.0}, {'dept': '人事部', 'avg': 999.0}]&gt; </span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">连表查询的分组：按照部门分组求平均工资</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> dept.name,<span style="color: #ff00ff;">AVG</span>(salary) <span style="color: #0000ff;">from</span> employee <span style="color: #0000ff;">inner</span> <span style="color: #808080;">join</span> dept <span style="color: #0000ff;">on</span> (employee.dept_id<span style="color: #808080;">=</span>dept.id) <span style="color: #0000ff;">group</span> <span style="color: #0000ff;">by</span> dept_id;</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">ORM查询：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Avg
+models.Dept.objects.annotate(avg</span>=Avg(<span style="color: #800000;">"</span><span style="color: #800000;">employee__salary</span><span style="color: #800000;">"</span>)).values(<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">avg</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+​
+models.Employee.objects.values(</span><span style="color: #800000;">"</span><span style="color: #800000;">dept__name</span><span style="color: #800000;">"</span>).annotate(avg=Avg(<span style="color: #800000;">"</span><span style="color: #800000;">salary</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'dept__name': '垃圾部', 'avg': 221.0}, {'dept__name': '保安部', 'avg': 21.0}, {'dept__name': '教学部', 'avg': 999.0}]&gt;                                                </span>
+<span style="color: #000000;">​
+models.Employee.objects.values(</span><span style="color: #800000;">"</span><span style="color: #800000;">dept__name</span><span style="color: #800000;">"</span>).annotate(avg=Avg(<span style="color: #800000;">"</span><span style="color: #800000;">salary</span><span style="color: #800000;">"</span>)).values(<span style="color: #800000;">'</span><span style="color: #800000;">dept</span><span style="color: #800000;">'</span>, <span style="color: #800000;">"</span><span style="color: #800000;">avg</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'dept__name': '垃圾部', 'avg': 221.0}, {'dept__name': '保安部', 'avg': 21.0}, {'dept__name': '教学部', 'avg': 999.0}]&gt;  </span>
+<span style="color: #000000;">​
+models.Employee.objects.values(</span><span style="color: #800000;">"</span><span style="color: #800000;">dept__name</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'dept__name': '垃圾部'}, {'dept__name': '保安部'}, {'dept__name': '教学部'}]&gt;   </span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">作者、图书、出版社表关系：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db <span style="color: #0000ff;">import</span><span style="color: #000000;"> models
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 出版社</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Publisher(models.Model):
+    name </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    city </span>= models.CharField(max_length=32<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 书</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Book(models.Model):
+    title </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    publish_date </span>= models.DateField(auto_now_add=<span style="color: #000000;">True)
+    price </span>= models.DecimalField(max_digits=5, decimal_places=2<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建外键，关联publish</span>
+    publisher = models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Publisher</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建多对多关联author</span>
+    author = models.ManyToManyField(to=<span style="color: #800000;">"</span><span style="color: #800000;">Author</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 作者</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Author(models.Model):
+    name </span>= models.CharField(max_length=32)</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">示例：</span></p>
+<div class="cnblogs_code">
+<pre><code>1<span style="color: #000000;">.统计每一本书的作者个数
+(</span>1):ret = models.Book.objects.annotate(autor_num=Count(<span style="color: #800000;">"</span><span style="color: #800000;">author</span><span style="color: #800000;">"</span>)).values(<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">autor_num</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'title': '西瓜物语', 'autor_num': 0}, {'title': '香蕉物语', 'autor_num': 1}, {'title': '番茄物语', 'autor_num': 1}]&gt;</span>
+<span style="color: #000000;">​
+(</span>2):book_list = models.Book.objects.all().annotate(author_num=Count(<span style="color: #800000;">"</span><span style="color: #800000;">author</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">print</span>(book_list)        <span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Book: 西瓜物语&gt;, &lt;Book: 香蕉物语&gt;, &lt;Book: 番茄物语&gt;]&gt;</span>
+<span style="color: #0000ff;">for</span> obj <span style="color: #0000ff;">in</span><span style="color: #000000;"> book_list:
+    </span><span style="color: #0000ff;">print</span>(obj.author_num)<span style="color: #008000;">#</span><span style="color: #008000;">0  1  1</span>
+2<span style="color: #000000;">.统计出每个出版社出版的最便宜的书的价格
+(</span>1):ret = models.Publisher.objects.annotate(min_price=Min(<span style="color: #800000;">"</span><span style="color: #800000;">book__price</span><span style="color: #800000;">"</span>)).values(<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">min_price</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'name': '清华出版社', 'min_price': Decimal('0.10')}, {'name': '香江出版社', 'min_price': Decimal('12.00')}, </span>
+{<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">北大青鸟出版社</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">min_price</span><span style="color: #800000;">'</span>: None}]&gt;<span style="color: #000000;">
+(</span>2):ret=models.Book.objects.values(<span style="color: #800000;">"</span><span style="color: #800000;">publisher__name</span><span style="color: #800000;">"</span>).annotate(min_price=Min(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'publisher__name': '清华出版社', 'min_price': Decimal('0.10')}, #{'publisher__name': '香江出版社', 'min_price': Decimal('12.00')}]&gt;</span>
+<span style="color: #000000;">​
+(</span>3):publisher_list = models.Publisher.objects.annotate(min_price=Min(<span style="color: #800000;">"</span><span style="color: #800000;">book__price</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(publisher_list)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Publisher: 清华出版社&gt;, &lt;Publisher: 香江出版社&gt;, &lt;Publisher: 北大青鸟出版社&gt;]&gt;</span>
+<span style="color: #0000ff;">for</span> obj <span style="color: #0000ff;">in</span><span style="color: #000000;"> publisher_list:
+    </span><span style="color: #0000ff;">print</span>(obj.min_price)<span style="color: #008000;">#</span><span style="color: #008000;">0.10 12.00 None</span>
+3<span style="color: #000000;">.统计不止一个作者的图书   
+models.Book.objects.annotate(author_num</span>=Count(<span style="color: #800000;">"</span><span style="color: #800000;">author</span><span style="color: #800000;">"</span>)).filter(author_num__gt=1)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet []&gt;</span>
+4<span style="color: #000000;">.根据一本图书作者数量的多少对查询集 QuerySet进行排序
+models.Book.objects.annotate(author_num</span>=Count(<span style="color: #800000;">"</span><span style="color: #800000;">author</span><span style="color: #800000;">"</span>)).order_by(<span style="color: #800000;">"</span><span style="color: #800000;">author_num</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Book: 西瓜物语&gt;, &lt;Book: 香蕉物语&gt;, &lt;Book: 番茄物语&gt;]&gt;</span>
+5<span style="color: #000000;">.查询各个作者出的书的总价格
+models.Author.objects.annotate(sum_price</span>=Sum(<span style="color: #800000;">"</span><span style="color: #800000;">book__price</span><span style="color: #800000;">"</span>)).values(<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">sum_price</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'name': '小仙女', 'sum_price': Decimal('1.00')}, {'name': '小魔女', 'sum_price': Decimal('12.00')}, </span><span style="color: #008000;">
+#</span><span style="color: #008000;">{'name': '大乌龟', 'sum_price': None}, {'name': '张san', 'sum_price': None}]&gt;</span></pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.3213 F查询</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">F() 的实例可以在查询中引用字段，来比较同一个 model 实例中两个不同字段的值。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">商品表结构：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db <span style="color: #0000ff;">import</span><span style="color: #000000;"> models
+​
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Product(models.Model):
+    name </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    price </span>= models.DecimalField(max_digits=6, decimal_places=2<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 库存数</span>
+    keep =<span style="color: #000000;"> models.IntegerField()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 卖出数</span>
+    sale =<span style="color: #000000;"> models.IntegerField()
+​
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__str__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span>  <span style="color: #800000;">"</span><span style="color: #800000;">{}:{}:{}:{}</span><span style="color: #800000;">"</span>.format(self.name, self.price, self.keep, self.sale)</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">示例：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> F
+</span>1<span style="color: #000000;">.查询出卖出数大于库存数的商品
+models.Product.objects.filter(sale__gt</span>=F(<span style="color: #800000;">"</span><span style="color: #800000;">keep</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Product: 跟哪吒学诗歌:59.00:50:10000&gt;, &lt;Product: 跟苑局学三不:55.00:100:200&gt;]&gt;</span>
+2<span style="color: #000000;">.Django支持F()对象之间以及F()对象和常数之间的加减乘除和取模的操作
+models.Product.objects.filter(sale__gt</span>=F(<span style="color: #800000;">'</span><span style="color: #800000;">keep</span><span style="color: #800000;">'</span>)*2<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Product: 跟哪吒学诗歌:59.00:50:10000&gt;]&gt;</span>
+3<span style="color: #000000;">.修改操作也可以使用F函数:比如将每个产品的价格提高50元
+models.Product.objects.all().update(price</span>=F(<span style="color: #800000;">"</span><span style="color: #800000;">price</span><span style="color: #800000;">"</span>)+50<span style="color: #000000;">)
+</span>4.把所有商品名后面加上<span style="color: #800000;">"</span><span style="color: #800000;">新款</span><span style="color: #800000;">"</span>
+<span style="color: #0000ff;">from</span> django.db.models.functions <span style="color: #0000ff;">import</span><span style="color: #000000;"> Concat
+</span><span style="color: #0000ff;">from</span> django.db.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Value
+models.Product.objects.all().update(name</span>=Concat(F(<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>),  Value(<span style="color: #800000;">"</span><span style="color: #800000;">新款</span><span style="color: #800000;">"</span>)))</pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.3214 Q查询</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">filter() 等方法中的关键字参数查询都是一起进行&ldquo;AND&rdquo; 的。 如果需要执行更复杂的查询（例如OR语句），可以使用Q对象</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">卖出数大于100 并且 价格大于100块的</span>
+models.Product.objects.filter(sale__gt=100, price__gt=100<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Product: 跟哪吒学诗歌新款:259.00:50:10000&gt;, &lt;Product: 跟苑局学三不新款:255.00:100:200&gt;]&gt;</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">示例：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Q
+</span>1<span style="color: #000000;">.查询卖出数大于100或者价格小于100的
+models.Product.objects.filter(Q(sale__gt</span>=100)|Q(price__lt=100))  <span style="color: #008000;">#</span><span style="color: #008000;">|:或</span><span style="color: #008000;">
+#</span><span style="color: #008000;">&lt;QuerySet [&lt;Product: 跟哪吒学诗歌新款:259.00:50:10000&gt;, &lt;Product: 跟苑局学三不新款:255.00:100:200&gt;]&gt;</span>
+2<span style="color: #000000;">.查询库存数是100并且卖出数不是0的产品
+models.Product.objects.filter(Q(keep</span>=100)&amp;~Q(sale=0))           <span style="color: #008000;">#</span><span style="color: #008000;">&amp;：与，~：非</span>
+models.Product.objects.filter(Q(kucun=100),~Q(maichu=<span style="color: #000000;">0))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Product: 跟苑局学三不新款:255.00:100:200&gt;]&gt;</span>
+models.Product.objects.filter(Q(kucun=100)&amp;~Q(maichu=0)).values(<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [{'name': '跟苑局学三不新款'}]&gt;</span>
+models.Product.objects.filter(Q(kucun=100)&amp;~Q(maichu=0)).values_list(<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [('跟苑局学三不新款',)]&gt;</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">查询函数可以混合使用Q 对象和关键字参数。所有提供给查询函数的参数（关键字参数或Q 对象）都将"AND&rdquo;在一起。但是，如果出现Q 对象，它必须位于所有关键字参数的前面</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">查询产品名包含新款， 并且库存数大于60或者价格小于100的产品</span>
+models.Product.objects.filter(Q(keep__gt=60)|Q(price__lt=100), name__contains=<span style="color: #800000;">"</span><span style="color: #800000;">新款</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">&lt;QuerySet [&lt;Product: 跟苑局学三不新款:255.00:100:200&gt;]&gt;</span></pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.3215 事务</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">开启一个事务可以包含一些sql语句，这些sql语句要么同时成功，要么都不成功，称之为事务的原子性<span class="md-softbreak"> <span class="md-plain">作用：事务用于将某些操作的多个SQL作为原子性操作，一旦有某一个出现错误，即可回滚到原来的状态，从而保证数据库数据完整性。</span></span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    os.environ.setdefault(</span><span style="color: #800000;">"</span><span style="color: #800000;">DJANGO_SETTINGS_MODULE</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">BMS.settings</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">import</span><span style="color: #000000;"> django
+    django.setup()
+
+    </span><span style="color: #0000ff;">import</span><span style="color: #000000;"> datetime
+    </span><span style="color: #0000ff;">from</span> app01 <span style="color: #0000ff;">import</span><span style="color: #000000;"> models
+
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">from</span> django.db <span style="color: #0000ff;">import</span><span style="color: #000000;"> transaction
+        with transaction.atomic():                                </span><span style="color: #008000;">#</span><span style="color: #008000;">开启事务</span>
+            new_publisher = models.Publisher.objects.create(name=<span style="color: #800000;">"</span><span style="color: #800000;">火星出版社</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            models.Book.objects.create(title</span>=<span style="color: #800000;">"</span><span style="color: #800000;">橘子物语</span><span style="color: #800000;">"</span>, publish_date=datetime.date.today(), publisher_id=10<span style="color: #000000;">)  
+           </span><span style="color: #008000;">#</span><span style="color: #008000;"> 指定一个不存在的出版社id，上一行创建一条出版社数据被回滚，数据库并未创建新数据</span>
+    <span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+        </span><span style="color: #0000ff;">print</span>(str(e))     </pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.3216 Django ORM执行原生SQL</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">很多情况下我们不需要将查询结果映射成模型，或者我们需要执行DELETE、 INSERT以及UPDATE操作，在这些情况下，我们可以直接访问数据库，完全避开模型层。我们可以直接从django提供的接口中获取数据库连接，然后像使用pymysql模块一样操作数据库</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db <span style="color: #0000ff;">import</span><span style="color: #000000;"> connection, connections
+cursor </span>= connection.cursor()  <span style="color: #008000;">#</span><span style="color: #008000;"> cursor = connections['default'].cursor()</span>
+cursor.execute(<span style="color: #800000;">"""</span><span style="color: #800000;">SELECT * from auth_user where id = %s</span><span style="color: #800000;">"""</span>, [1<span style="color: #000000;">])
+ret </span>= cursor.fetchone()</pre>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

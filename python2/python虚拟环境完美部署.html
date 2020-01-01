@@ -1,0 +1,164 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python虚拟环境完美部署' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python虚拟环境完美部署</center></div><div class='banquan'>原文出处:本文由博客园博主一木浮生提供。<br/>
+原文连接:https://www.cnblogs.com/sky-k/p/11308008.html</div><br>
+    <h2><span style="font-family: 楷体; font-size: 16px;">一、前言</span></h2>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　预处理</span></h3>
+<p><span style="font-family: 楷体; font-size: 16px;">　　　　建议仔细看完本文章之后在进行操作，避免失误，本环境可以用于生产环境，有利于生产环境python之间的环境隔离，互相不会产生环境冲突；pyenv和pyenv-virtualenv可以完美结合使用，具体使用情况看项目具体要求；</span></p>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　依赖环境要求</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">yum install readline readline-devel readline-static -y
+yum install openssl openssl-devel openssl-static -y
+yum install sqlite-devel -y
+yum install bzip2-devel bzip2-libs -y
+yum install libffi-devel -y
+</span></pre>
+</div>
+<p><span style="font-family: 楷体; font-size: 16px;">　　</span></p>
+<h2><span style="font-family: 楷体; font-size: 16px;">二、pyenv安装</span></h2>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　pyenv获取</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# git clone https://github.com/yyuu/pyenv.git ~/.pyenv
+Cloning into '/root/.pyenv'...
+remote: Enumerating objects: 17352, done.
+remote: Total 17352 (delta 0), reused 0 (delta 0), pack-reused 17352
+Receiving objects: 100% (17352/17352), 3.37 MiB | 24.00 KiB/s, done.
+Resolving deltas: 100% (11818/11818), done.
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　配置pyenv系统环境</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# vim ~/.bashrc
+## add by liuchao at 20190806         //添加以下内容
+export PYENV_ROOT="$HOME/.pyenv"
+export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init -)"
+    
+//保存退出
+[root@tset ~]# source ~/.bashrc        //执行配置生效
+</span></pre>
+</div>
+<p><span style="font-family: 楷体; font-size: 16px;">　　</span></p>
+<h2><span style="font-family: 楷体; font-size: 16px;">三、pyenv使用</span></h2>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　pyenv 安装python版本</span></h3>
+<p><span style="font-family: 楷体; font-size: 16px;">　　　　个人建议：自己在python官网下载想要安装的版本；首先要在pyenv目录下创建cache文件夹，用来存放python安装包。（可以解决下载安装慢的问题）</span></p>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# mkdir ~/.pyenv/cache                //创建cache文件夹，将下载的python安装包存放，
+[root@tset ~]# cd ~/.pyenv/cache/
+[root@tset cache]# ls                              //python安装包后缀名必须是.tar.xz
+Python-2.7.16.tar.xz  Python-3.7.3.tar.xz
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　pyenv install&nbsp;</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset cache]# cd
+[root@tset ~]# pyenv install 3.7.3 -v
+/tmp/python-build.20190806095432.10104 ~
+/tmp/python-build.20190806095432.10104/Python-3.7.3 /tmp/python-build.20190806095432.10104 ~
+Installing Python-3.7.3...
+checking build system type... x86_64-pc-linux-gnu
+checking host system type... x86_64-pc-linux-gnu
+checking for python3.7... no
+checking for python3... no
+checking for python... python
+checking for --enable-universalsdk... no
+checking for --with-universal-archs... no
+checking MACHDEP... checking for --without-gcc... no
+checking for --with-icc... no
+checking for gcc... gcc
+checking whether the C compiler works... yes
+checking for C compiler default output file name... a.out
+checking for suffix of executables...
+checking whether we are cross compiling... no
+checking for suffix of object files... o
+checking whether we are using the GNU C compiler... yes
+checking whether gcc accepts -g... yes
+checking for gcc option to accept ISO C89... none needed
+checking how to run the C preprocessor... gcc -E
+checking for grep that handles long lines and -e... /usr/bin/grep
+checking for a sed that does not truncate output... /usr/bin/sed
+checking for --with-cxx-main=&lt;compiler&gt;... no
+checking for g++... no
+configure:
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　检查是否安装成功</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# pyenv versions
+* system (set by /root/.pyenv/version)
+  3.7.3
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　更新数据库</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# pyenv rehash
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　pyenv切换python版本</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# pyenv global 2.7.8  // 全局
+[root@tset ~]# pyenv local 2.7.8   // 当前目录下
+[root@tset ~]# pyenv shell 2.7.8   // shell版本
+[root@tset ~]# pyenv shell --unset // 取消当前的shell设定的版本
+#创建垫片路径（为所有已安装的可执行文件创建 shims，如：~/.pyenv/versions/*/bin/*，因此，每当你增删了 Python 版本或带有可执行文件的包（如 pip）以后，都应该执行一次本命令）
+[root@tset ~]# pyenv rehash  
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　安装与卸载</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# pyenv install -l # 查看可安装的版本
+[root@tset ~]# pyenv install 2.7.8  # 安装python2.7.8的版本
+[root@tset ~]# pyenv rehash # 安装模块后
+[root@tset ~]# pyenv pyenv uninstall 2.7.8 # 卸载
+</span></pre>
+</div>
+<p><span style="font-family: 楷体; font-size: 16px;">　　</span></p>
+<h2><span style="font-family: 楷体; font-size: 16px;">四、pyenv-virtualenv</span></h2>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　安装pyenv-virtualenv</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# git clone https://github.com/yyuu/pyenv-virtualenv.git ~/.pyenv/plugins/pyenv-virtualenv
+Cloning into '/root/.pyenv/plugins/pyenv-virtualenv'...
+remote: Enumerating objects: 2064, done.
+remote: Total 2064 (delta 0), reused 0 (delta 0), pack-reused 2064
+Receiving objects: 100% (2064/2064), 580.31 KiB | 17.00 KiB/s, done.
+Resolving deltas: 100% (1413/1413), done.
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　环境配置</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# echo 'eval "$(pyenv virtualenv-init -)"' &gt;&gt; ~/.bash_profile
+[root@tset ~]# source ~/.bash_profile
+</span></pre>
+</div>
+<h3><span style="font-family: 楷体; font-size: 16px;">　　使用方法</span></h3>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-family: 楷体; font-size: 16px;">[root@tset ~]# pyenv virtualenv 2.7.10 env-2.7.10			//创建虚拟环境
+[root@tset ~]# pyenv activate env-2.7.10			//激活虚拟环境
+[root@tset ~]# pyenv deactivate				//退出虚拟环境
+[root@tset ~]# pyenv uninstall env-2.7.10			//删除虚拟环境
+[root@tset ~]# rm -rf ~/.pyenv/versions/env-2.7.10				//删除真实目录
+</span></pre>
+</div>
+<p><span style="font-family: 楷体; font-size: 16px;">　　</span></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

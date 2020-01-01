@@ -1,0 +1,73 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修人工智能技术导论——博弈树搜索' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>人工智能技术导论——博弈树搜索</center></div><div class='banquan'>原文出处:本文由博客园博主王陸提供。<br/>
+原文连接:https://www.cnblogs.com/wkfvawl/p/12066647.html</div><br>
+    <p>我在之前整理过一篇博客关于博弈论和纳什均衡的几个例子<a href="https://www.cnblogs.com/wkfvawl/p/11725263.html" target="_blank">https://www.cnblogs.com/wkfvawl/p/11725263.html</a></p>
+<p>这里来介绍博弈树搜索。</p>
+<h2>一、博弈树的概念</h2>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在博弈过程中, 任何一方都希望自己取得胜利。因此,当某一方当前有多个行动方案可供选择时, 他总是挑选对自己最为有利而对对方最为不利的那个行动方案。 此时,如果我们<strong>站在A方的立场上,则可供A方选择的若干行动方案之间是&ldquo;或&rdquo;关系</strong>, 因为主动权操在A方手里,他或者选择这个行动方案, 或者选择另一个行动方案, 完全由A方自己决定。当A方选取任一方案走了一步后,<strong>B方也有若干个可供选择的行动方案, 此时这些行动方案对A方来说它们之间则是&ldquo;与&rdquo;关系</strong>,因为这时主动权操在B方手里,这些可供选择的行动方案中的任何一个都可能被B方选中, A方必须应付每一种情况的发生。 <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 这样,如果站在某一方(如A方,即在A要取胜的意义下), 把上述博弈过程用图表示出来, 则得到的是一棵&ldquo;与或树&rdquo;。 描述博弈过程的与或树称为博弈树,它有如下特点： &nbsp;<br />&nbsp;&nbsp; 　 (1) 博弈的初始格局是初始节点。 &nbsp;<br />&nbsp;&nbsp; 　 (2) 在博弈树中, &ldquo;或&rdquo;节点和&ldquo;与&rdquo;节点是逐层交替出现的。<strong><span style="color: #3366ff;">自己一方扩展的节点之间是&ldquo;或&rdquo;关系, 对方扩展的节点之间是&ldquo;与&rdquo;关系。双方轮流地扩展节点。</span></strong> &nbsp;<br />&nbsp;&nbsp; 　 (3) 所有自己一方获胜的终局都是本原问题, 相应的节点是可解节点；所有使对方获胜的终局都是不可解节点。</p>
+<h2>二、极小极大值分析法</h2>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在二人博弈问题中,为了从众多可供选择的行动方案中选出一个对自己最为有利的行动方案, 就需要对当前的情况以及将要发生的情况进行分析,从中选出最优的走步。最常使用的分析方法是极小极大分析法。 其基本思想是： &nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (1) 设博弈的双方中一方为A,另一方为B。然后为其中的一方(例如A)寻找一个最优行动方案。 <br />　　(2) 为了找到当前的最优行动方案, 需要对各个可能的方案所产生的后果进行比较。具体地说, 就是要考虑每一方案实施后对方可能采取的所有行动, 并计算可能的得分。 <br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (3) 为计算得分,需要根据问题的特性信息定义一个估价函数, 用来估算当前博弈树端节点的得分。此时估算出来的得分称为静态估值。 &nbsp;<br />&nbsp;&nbsp; &nbsp; &nbsp; (4) 当端节点的估值计算出来后, 再推算出父节点的得分, 推算的方法是：<strong><span style="color: #3366ff;">对&ldquo;或&rdquo;节点, 选其子节点中一个最大的得分作为父节点的得分,这是为了使自己在可供选择的方案中选一个对自己最有利的方案；对&ldquo;与&rdquo;节点, 选其子节点中一个最小的得分作为父节点的得分,这是为了立足于最坏的情况</span></strong>。<strong><span style="color: #000000;">这样计算出的父节点的得分称为倒推值。 &nbsp;</span></strong><br />&nbsp;&nbsp; &nbsp;&nbsp; (5) 如果一个行动方案能获得较大的倒推值, 则它就是当前最好的行动方案。 <br /><img src="./images/人工智能技术导论——博弈树搜索0.png" alt="" /></p>
+<p>倒推值的计算 </p>
+<p><br />&nbsp;&nbsp;&nbsp;&nbsp; 在博弈问题中,每一个格局可供选择的行动方案都有很多, 因此会生成十分庞大的博弈树。据统计,西洋跳棋完整的博弈树约有10<sup>40</sup>个节点。试图利用完整的博弈树来进行极小极大分析是困难的。<strong>可行的办法是只生成一定深度的博弈树, 然后进行极小极大分析,找出当前最好的行动方案</strong>。在此之后, 再在已选定的分支上扩展一定深度, 再选最好的行动方案。如此进行下去, 直到取得胜败的结果为止。至于每次生成博弈树的深度, 当然是越大越好, 但由于受到计算机存储空间的限制, 只好根据实际情况而定。 <br /><br />例 一字棋游戏。设有如图(a)所示的九个空格, 由A, B二人对弈, 轮到谁走棋谁就往空格上放一只自己的棋子, 谁先使自己的棋子构成&ldquo;三子成一线&rdquo;谁就取得了胜利。 <br />&nbsp;<img src="./images/人工智能技术导论——博弈树搜索1.png" alt="" /></p>
+<p style="text-align: center;">一字棋 </p>
+<p>&nbsp;设A的棋子用&ldquo;a&rdquo;表示, B的棋子用&ldquo;b&rdquo;表示。为了不致于生成太大的博弈树,假设每次仅扩展两层。估价函数定义如下：&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;<br />&nbsp;&nbsp;&nbsp; 　设棋局为P,估价函数为e(P)。&nbsp;&nbsp; 　<br />&nbsp;&nbsp;&nbsp; 　(1) 若P是A必胜的棋局, 则e(P)=+&infin;。 &nbsp;<br />&nbsp;&nbsp; 　 (2) 若P是B必胜的棋局, 则e(P)=-&infin;。 &nbsp;<br />&nbsp;&nbsp;&nbsp; 　(3) 若P是胜负未定的棋局, 则 e(P)=e(+P)-e(-P) <br />其中<strong><span style="color: #3366ff;">e(+P)表示棋局P上有可能使a成为三子成一线的数目</span></strong>；&nbsp;&nbsp; </p>
+<p><strong><span style="color: #3366ff;">e(-P)表示棋局P上有可能使b成为三子成一线的数目</span></strong>。</p>
+<p>例如, 对于图(b)所示的棋局, 则 &nbsp;</p>
+<p><img src="./images/人工智能技术导论——博弈树搜索2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>按照棋盘上红色连线安放棋子a使得三子成一线，共6条连线。</p>
+<p>按照棋盘上蓝色连线安放棋子b使得三子成一线，共4条连线。<br />e(P)=6-4=2</p>
+<p>&nbsp;</p>
+<p>另外,我们假定具有对称性的两个棋局算作一个棋局。还假定A先走棋, 我们站在A的立场上。 &nbsp;<br />下图给出了A的第一着走棋生成的博弈树。图中节点旁的数字分别表示相应节点的静态估值或倒推值。由图可以看出, 对于A来说最好的一着棋是S3,因为S3比S1和S2有较大的倒推值。 </p>
+<p><img src="./images/人工智能技术导论——博弈树搜索3.png" alt="" /></p>
+<p style="text-align: center;">&nbsp;一字棋极小极大搜索 </p>
+<p>在A走S3这一着棋后,B的最优选择是S4, 因为这一着棋的静态估值较小,对A不利。不管B选择S4或S5,A都要再次运用极小极大分析法产生深度为2的博弈树,以决定下一步应该如何走棋, 其过程与上面类似, 不再重复。 </p>
+<h2>三、&alpha;-&beta;剪枝技术</h2>
+<p>&nbsp;<img src="./images/人工智能技术导论——博弈树搜索4.png" alt="" /></p>
+<p>&nbsp;上述的极小极大分析法, 实际是先生成一棵博弈树,然后再计算其倒推值。这样做的缺点是效率较低。于是,人们又在极小极大分析法的基础上,提出了&alpha;-&beta;剪枝技术。 <br />&nbsp;&nbsp; 　 这一技术的基本思想是,边生成博弈树边计算评估各节点的倒推值, 并且根据评估出的倒推值范围,及时停止扩展那些已无必要再扩展的子节点, 即相当于剪去了博弈树上的一些分枝, 从而节约了机器开销, 提高了搜索效率。具体的剪枝方法如下: &nbsp;<br />&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+ (1) 对于一个与节点MIN, 
+若能估计出其倒推值的上确界&beta;,并且这个&beta;值不大于MIN的父节点(一定是或节点)的估计倒推值的下确界&alpha;,即&alpha;&ge;&beta;, 
+则就不必再扩展该MIN节点的其余子节点了(因为这些节点的估值对MIN父节点的倒推值已无任何影响了)。这一过程称为&alpha;剪枝。 <br />　　(2) 
+对于一个或节点MAX, 若能估计出其倒推值的下确界&alpha;, 并且这个&alpha;值不小于MAX的父节点(一定是与节点)的估计倒推值的上确界&beta;,&nbsp; 
+即&alpha;&ge;&beta;,则就不必再扩展该MAX节点的其余子节点了(因为这些节点的估值对MAX父节点的倒推值已无任何影响了)。 这一过程称为&beta;剪枝。 <br /><br />认真品味上面的两句规则，下面给出一个具体的 &alpha;-&beta;剪枝的实例。<br /><img src="./images/人工智能技术导论——博弈树搜索5.png" alt="" /></p>
+<p>使用ScreenToGif 截的PPT图，关于ScreenToGif的使用说明参见<a href="https://www.cnblogs.com/wkfvawl/p/11625823.html" target="_blank">https://www.cnblogs.com/wkfvawl/p/11625823.html</a></p>
+<p>这里来说一下剪枝过程，F下的第一个节点是K，其值为4，这时作为MIN节点的F上确界&beta;为4，F下的第二个节点L和第三个节点M的值都拿来比较，但都大于4，所以F节点MIN值还是4。这时MAX节点C的下确界&alpha;为4，并将&alpha;传递给MIN节点G。</p>
+<p>G下的第一个节点为1，此时作为MIN节点G的上确界&beta;为1，留意到此时 G的 &alpha;=4 ＞ &beta;，所以无需再探索 G的剩余子节点，把未探索的子节点通过&alpha;剪枝剪掉。</p>
+<p>这里C的父节点A是一个MIN节点，A的估计上确界&beta;便是4。接着我们对A的右子树进行查找，并将&beta;传递下去。</p>
+<p>对于MIN节点H，其下的第一个子节点P值为5，大于4，因而接着比较第二个子节点Q值为8，也大于4，因而H节点MIN值的上确界&beta;便是5，P的父节点D是一个MAX节点，因而此时D的下确界&alpha;值为5。</p>
+<p>由于D的父节点A是一个MIN节点，A的估计倒推值的上确界&beta;为4，小于D的下确界5，因而就不必去扩展MAX节点D的其他子节点了，进行了&beta;剪枝。</p>
+<p>这是就可以确定节点A的父亲节点S0，其为MAX节点的下确界&alpha;为4，这就对S0右子树进行查找。并直接将下确解&alpha;沿着S0-&gt;B-&gt;E-&gt;I传递，深入到I。</p>
+<p>对于MIN节点I，其下的第一个子节点R值为0，这时作为MIN节点I的上确界&beta;为0，留意到此时 I 的 &alpha;=4 ＞ &beta;，所以无需再探索 I 的剩余子节点，把未探索的子节点通过&alpha;剪枝剪掉。</p>
+<p>I的父节点是一个MAX节点，更新其父节点E的下确界&alpha;为0。将E的&alpha;传递给J。</p>
+<p>这时对于MIN节点J，其下的第一个子节点S值为-6，这时作为MIN节点I的上确界&beta;为-6，留意到此时 J 的 &alpha;=0 ＞ &beta;，所以无需再探索 J的剩余子节点，把未探索的子节点通过&alpha;剪枝剪掉。</p>
+<p>这时确定了E，E的父亲节点B是一个MIN节点，通过E其上确界&beta;更新为0，但E的父亲节点的&alpha;为4，&alpha;=4 ＞ &beta;，所以无需再探索 B 的剩余子节点，把未探索的子节点通过&alpha;剪枝剪掉。</p>
+<p>最终确定S0，搜索完成。</p>
+<p><img src="./images/人工智能技术导论——博弈树搜索6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>关于&alpha;-&beta;剪枝的过程，还想要了解一个，可以参考这篇博客</p>
+<p><a href="https://www.7forz.com/3211/" target="_blank">https://www.7forz.com/3211/</a></p>
+<p><a href="http://web.cs.ucla.edu/~rosen/161/notes/alphabeta.html" target="_blank">http://web.cs.ucla.edu/~rosen/161/notes/alphabeta.html</a></p>
+<p>一些碎碎念，今天给同学讲&alpha;-&beta;剪枝，把他弄迷糊了，后来我想可能还是太官方了，这种剪枝策略其本质思想是朴素的，就是在确定父亲节点的一个上确界或下确界之后，如果子节点不在该外围内就不去探索了，这就是剪枝。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

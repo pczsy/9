@@ -1,0 +1,100 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修opencv实现人脸识别（一）opencv的相关知识了解' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>opencv实现人脸识别（一）opencv的相关知识了解</center></div><div class='banquan'>原文出处:本文由博客园博主向大海走去提供。<br/>
+原文连接:https://www.cnblogs.com/blsx/p/11252949.html</div><br>
+    <p><span style="font-family: 'Microsoft YaHei'; font-size: 18px;">这回进行了人脸识别的项目，对学习过程进行记录。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 18px;">首先进行的就是一系列环境的配置，如 python3.7的安装， python的IDE&nbsp; pycharm的安装，然后进行opencv库的安装，可以通过pycharm中的settings-&gt;project-&gt;Project Interpreter 页面进行添加， 也可以通过pip命令在命令行界面上安装。 环境的搭建过程略过。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 18px;">然后就是对opencv库进行运用</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 18px;">先贴出opencv的概念：</span></p>
+<p><strong>OpenCV是一个基于BSD许可（开源）发行的跨平台计算机视觉库，可以运行在Linux、Windows、Android和Mac OS操作系统上。它轻量级而且高效&mdash;&mdash;由一系列 C 函数和少量 C++ 类构成，同时提供了Python、Ruby、MATLAB等语言的接口，实现了图像处理和计算机视觉方面的很多通用算法。</strong></p>
+<p><strong>OpenCV用C++语言编写，它的主要接口也是C++语言，但是依然保留了大量的C语言接口。该库也有大量的Python、Java and MATLAB/OCTAVE（版本2.5）的接口。这些语言的API接口函数可以通过在线文档获得。如今也提供对于C#、Ch、Ruby,GO的支持</strong></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 18px;">我们着重了解一下：&nbsp;OpenCV 自带了三个人脸识别算法：Eigenfaces，Fisherfaces 和局部二值模式直方图 (LBPH)。</span></p>
+<p><span style="font-family: 'Microsoft YaHei';"><span style="font-size: 18px;">这一次我们使用LBPH算法，理由是这个算法会根据用户的新输入而自动更新，假如在有新的人脸数据录入或者纠正某次出错的识别判断时， 我们不必重新进行一次彻底的训练。</span></span></p>
+<h1><span style="background-color: #99ccff; font-size: 18pt;"><span style="font-family: 'Microsoft YaHei';">人脸识别所需部分API：</span></span></h1>
+<p><span style="background-color: #99ccff; font-size: 18pt;"><span style="font-family: 'Microsoft YaHei';"><span style="background-color: #ffffff; font-size: 18px;">1.人脸识别分类器，采用opencv自带的人脸分类器</span></span></span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">faceCascade=cv2.CascadeClassifier(r'C:\python3.7\Lib\site-packages\cv2\data\haarcascade_frontalface_default.xml')</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">2.摄像头操作</span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;"># 开启摄像头&nbsp;&nbsp; 默认笔记本的摄像头是第0号摄像头，如果有外置摄像头，并向启动就是1</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">cap = cv2.VideoCapture(0)</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;"># 读取摄像头中的图像，ok为是否读取成功的判断参数</span></p>
+<p><span style="font-size: 18px;">ok, img = cap.read()</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">#关闭摄像头</span></p>
+<p><span style="font-size: 18px;">cap.release()</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">3.人脸检测</span></p>
+<p><span style="font-size: 18px;">#检测函数</span></p>
+<p><span style="font-size: 18px;">faces = faceCascade.detectMultiScale(</span></p>
+<p><span style="font-size: 18px;">&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;gray,&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+<p><span style="font-size: 18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; scaleFactor=1.05,</span></p>
+<p><span style="font-size: 18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; minNeighbors=5,&nbsp;&nbsp;&nbsp;&nbsp;</span></p>
+<p><span style="font-size: 18px;">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; minSize=(32, 32)</span></p>
+<p><span style="font-size: 18px;">&nbsp;&nbsp;&nbsp; )</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;"># 画矩形&nbsp;</span></p>
+<p><span style="font-size: 18px;">cv2.rectangle(img, (ex, ey), (ex+ew, ey+eh), (0, 255, 0), 2)</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;"># 转为灰度图片</span></p>
+<p><span style="font-size: 18px;">&nbsp;gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)</span></p>
+<p><span style="font-size: 18px;">&nbsp;</span></p>
+<p><span style="font-size: 18px;"># 保存图像&nbsp;&nbsp;&nbsp;</span></p>
+<p><span style="font-size: 18px;">cv2.imwrite(path, src)</span></p>
+<p><span style="font-size: 18px;">#打开图片，并转化为灰度</span></p>
+<p><span style="font-size: 18px;">PIL_img = Image.open(imagePath).convert('L')</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">4.视频窗口操作</span></p>
+<p><span style="font-size: 18px;">#显示视频窗口&nbsp;</span></p>
+<p><span style="font-size: 18px;">cv2.imshow('video', img)</span></p>
+<p><span style="font-size: 18px;">&nbsp;</span></p>
+<p><span style="font-size: 18px;">#获取按键指令</span></p>
+<p><span style="font-size: 18px;">k = cv2.waitKey(1)</span></p>
+<p><span style="font-size: 18px;">&nbsp;</span></p>
+<p><span style="font-size: 18px;">#销毁全部窗体</span></p>
+<p><span style="font-size: 18px;">cv2.destroyAllWindows()</span></p>
+<p>&nbsp;</p>
+<h5><span style="font-size: 18pt; background-color: #ccffff;">人脸识别的技术特征（仅了解）：</span></h5>
+<p>人脸识别系统主要包括四个组成部分，分别为：人脸图像采集及检测、人脸图像预处理、人脸图像特征提取以及匹配与识别。</p>
+<p>&nbsp;</p>
+<p>&nbsp;<strong>人脸图像采集及检测</strong></p>
+<p>人脸图像采集：不同的人脸图像都能通过摄像镜头采集下来，比如静态图像、动态图像、不同的位置、不同表情等方面都可以得到很好的采集。当用户在采集设备的拍摄范围内时，采集设备会自动搜索并拍摄用户的人脸图像。</p>
+<p>人脸检测：人脸检测在实际中主要用于人脸识别的预处理，即在图像中准确标定出人脸的位置和大小。人脸图像中包含的模式特征十分丰富，如直方图特征、颜色特征、模板特征、结构特征及Haar特征等。人脸检测就是把这其中有用的信息挑出来，并利用这些特征实现人脸检测。</p>
+<p>主流的人脸检测方法基于以上特征采用Adaboost学习算法，Adaboost算法是一种用来分类的方法，它把一些比较弱的分类方法合在一起，组合出新的很强的分类方法。</p>
+<p>人脸检测过程中使用Adaboost算法挑选出一些最能代表人脸的矩形特征(弱分类器)，按照加权投票的方式将弱分类器构造为一个强分类器，再将训练得到的若干强分类器串联组成一个级联结构的层叠分类器，有效地提高分类器的检测速度。</p>
+<p>&nbsp;</p>
+<p><strong>&nbsp;人脸图像预处理</strong></p>
+<p>人脸图像预处理：对于人脸的图像预处理是基于人脸检测结果，对图像进行处理并最终服务于特征提取的过程。系统获取的原始图像由于受到各种条件的限制和随机干扰，往往不能直接使用，必须在图像处理的早期阶段对它进行灰度校正、噪声过滤等图像预处理。对于人脸图像而言，其预处理过程主要包括人脸图像的光线补偿、灰度变换、直方图均衡化、归一化、几何校正、滤波以及锐化等。</p>
+<p>&nbsp;</p>
+<p>&nbsp;<strong>人脸图像特征提取</strong></p>
+<p>人脸图像特征提取：人脸识别系统可使用的特征通常分为视觉特征、像素统计特征、人脸图像变换系数特征、人脸图像代数特征等。人脸特征提取就是针对人脸的某些特征进行的。人脸特征提取，也称人脸表征，它是对人脸进行特征建模的过程。人脸特征提取的方法归纳起来分为两大类：一种是基于知识的表征方法；另外一种是基于代数特征或统计学习的表征方法。</p>
+<p>基于知识的表征方法主要是根据人脸器官的形状描述以及他们之间的距离特性来获得有助于人脸分类的特征数据，其特征分量通常包括特征点间的欧氏距离、曲率和角度等。人脸由眼睛、鼻子、嘴、下巴等局部构成，对这些局部和它们之间结构关系的几何描述，可作为识别人脸的重要特征，这些特征被称为几何特征。基于知识的人脸表征主要包括基于几何特征的方法和模板匹配法。</p>
+<p>&nbsp;</p>
+<p>&nbsp;<strong>人脸图像匹配与识别</strong></p>
+<p>人脸图像匹配与识别：提取的人脸图像的特征数据与数据库中存储的特征模板进行搜索匹配，通过设定一个阈值，当相似度超过这一阈值，则把匹配得到的结果输出。人脸识别就是将待识别的人脸特征与已得到的人脸特征模板进行比较，根据相似程度对人脸的身份信息进行判断。这一过程又分为两类：一类是确认，是一对一进行图像比较的过程，另一类是辨认，是一对多进行图像匹配对比的过程。</p>
+<p><span style="font-size: 18px;">&nbsp;</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

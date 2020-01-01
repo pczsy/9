@@ -1,0 +1,144 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修分页功能 封装代码' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>分页功能 封装代码</center></div><div class='banquan'>原文出处:本文由博客园博主郭楷丰提供。<br/>
+原文连接:https://www.cnblogs.com/guokaifeng/p/11379667.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#分页功能-封装代码">分页功能 封装代码</a></li>
+        <li><a href="#分页代码-逻辑和样式">分页代码 逻辑和样式</a></li>
+        <li><a href="#view-使用示列">View 使用示列</a></li>
+        <li><a href="#html-页面引用-bootstrap样式">html 页面引用 bootstrap样式</a></li>
+        </ul>
+    </div>
+</div>
+<h3 id="分页功能-封装代码">分页功能 封装代码</h3>
+<h3 id="分页代码-逻辑和样式">分页代码 逻辑和样式</h3>
+<pre><code><code>from django.utils.safestring import mark_safe
+from django.http.request import QueryDict
+
+class Pagination:
+    &quot;&quot;&quot;
+    需要参数
+    page: 当前的页码数(必填)
+    all_count： 总的数据量(可填)
+    per_num ：  每页显示的数据量(选填)
+    max_show：  最多显示的页码数(选填)
+    &quot;&quot;&quot;
+
+    def __init__(self, page, all_count, per_num=10, max_show=11): 
+        try:
+            self.page = int(page)
+            if self.page &lt;= 0:
+                self.page = 1
+        except Exception:
+            self.page = 1
+
+        # 总的数据量
+        all_count = all_count
+        # 每页显示的数据量  10
+
+        # 总的页码数
+        total_num, more = divmod(all_count, per_num)
+        if more:
+            total_num += 1
+        # 最大显示的页码数
+        half_show = max_show // 2
+
+        if total_num &lt;= max_show:
+            page_start = 1
+            page_end = total_num
+        else:
+            if self.page - half_show &lt;= 0:
+                # 页码的起始值
+                page_start = 1
+                # 页码的终止值
+                page_end = max_show
+            elif self.page + half_show &gt; total_num:
+                page_end = total_num
+                page_start = total_num - max_show + 1
+
+            else:
+                # 页码的起始值
+                page_start = self.page - half_show
+                # 页码的终止值
+                page_end = self.page + half_show
+
+        self.page_start = page_start
+        self.page_end = page_end
+        self.total_num = total_num
+        self.start = (self.page - 1) * per_num
+        self.end = self.page * per_num
+
+    @property
+    def page_html(self):
+        li_list = []
+
+        if self.page == 1:
+            li_list.append(
+                &#39;&lt;li class=&quot;disabled&quot;&gt;&lt;a aria-label=&quot;Previous&quot;&gt; &lt;span aria-hidden=&quot;true&quot;&gt;&amp;laquo;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&#39;)
+        else:
+            li_list.append(
+                &#39;&lt;li&gt;&lt;a href=&quot;?page={}&quot; aria-label=&quot;Previous&quot;&gt; &lt;span aria-hidden=&quot;true&quot;&gt;&amp;laquo;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&#39;.format(
+                    self.page - 1))
+
+        for i in range(self.page_start, self.page_end + 1):
+            if i == self.page:
+                li_list.append(&#39;&lt;li class=&quot;active&quot;&gt;&lt;a href=&quot;?page={}&quot;&gt;{}&lt;/a&gt;&lt;/li&gt;&#39;.format(i, i))
+            else:
+                li_list.append(&#39;&lt;li&gt;&lt;a href=&quot;?page={}&quot;&gt;{}&lt;/a&gt;&lt;/li&gt;&#39;.format(i, i))
+
+        if self.page == self.total_num:
+            li_list.append(
+                &#39;&lt;li class=&quot;disabled&quot;&gt;&lt;a aria-label=&quot;Next&quot;&gt; &lt;span aria-hidden=&quot;true&quot;&gt;&amp;raquo;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&#39;)
+        else:
+            li_list.append(
+                &#39;&lt;li&gt;&lt;a href=&quot;?page={}&quot; aria-label=&quot;Next&quot;&gt; &lt;span aria-hidden=&quot;true&quot;&gt;&amp;raquo;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;&#39;.format(
+                    self.page + 1))
+
+        return &#39;&#39;.join(li_list)
+</code></pre>
+<h3 id="view-使用示列">View 使用示列</h3>
+<pre><code><code># 公私户,批量操作
+class CustomerList(View):
+    def get(self, request, *args, **kwargs):
+        q = self.search([&quot;qq&quot;, &quot;name&quot;, &quot;phone&quot;])
+        if request.path_info == reverse(&#39;customer_list&#39;):
+            title = &#39;公共客户&#39;
+            all_customer = models.Customer.objects.filter(q, consultant__isnull=True)
+        else:
+            title = &#39;我的客户&#39;
+            all_customer = models.Customer.objects.filter(q, consultant=request.user_obj)
+        page = Pagination(request.GET.get(&#39;page&#39;, 1), all_customer.count(), request.GET.copy(), 3)
+        return render(request, &#39;consultant/customer_list.html&#39;,
+                      {&quot;all_customer&quot;: all_customer[page.start:page.end], &#39;page_html&#39;: page.page_html, &quot;title&quot;: title}) #传入参数</code></pre>
+<h3 id="html-页面引用-bootstrap样式">html 页面引用 bootstrap样式</h3>
+<pre><code><code>&lt;script src=&quot;bootstrap-3.3.7/css/bootstrap.css&quot;&gt;&lt;/script&gt;
+&lt;nav aria-label=&quot;Page navigation&quot;&gt;
+    &lt;ul class=&quot;pagination&quot;&gt;
+       {{ page_html }}
+    &lt;/ul&gt;
+&lt;/nav&gt;</code></pre>
+<p><img src="./images/分页功能 封装代码0.png" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,839 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python多任务之协程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python多任务之协程</center></div><div class='banquan'>原文出处:本文由博客园博主YifChan提供。<br/>
+原文连接:https://www.cnblogs.com/yifchan/p/python-1-43.html</div><br>
+    <p><strong>前言</strong></p>
+<p>协程的核心点在于协程的使用，即只需要了解怎么使用协程即可；但如果你想了解协程是怎么实现的，就需要了解依次了解可迭代，迭代器，生成器了；</p>
+<p>如果你只想看协程的使用，那么只需要看第一部分内容就行了；如果如果想理解协程，可以按照顺序依次阅读本博文，或者按照 迭代器-生成器-协程的顺序阅读。</p>
+<p>&nbsp;</p>
+<h2>协程</h2>
+<ul>
+<li>yield生成器是特殊的迭代器；</li>
+<li>greenlet 对 yield 进行了封装；</li>
+<li>而 gevent 对 greenlet 进行了封装；</li>
+<li>gevent 遇见延时操作就换任务执行，这里的延时操作可以是等待服务器资源或者sleep等等；</li>
+</ul>
+<p>上面的概念会在后面的知识点进行讲解；</p>
+<p>&nbsp;</p>
+<h3>greenlet实现多任务</h3>
+<p>要使用greenlet，首先要安装greenlet</p>
+<div class="cnblogs_code">
+<pre><code>pip3 install greenlet</pre>
+</div>
+<p>greenlet实现多任务代码</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('b1a14fe0-919d-49ba-abd3-fd0a1404b7e5')"><img id="code_img_closed_b1a14fe0-919d-49ba-abd3-fd0a1404b7e5" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_b1a14fe0-919d-49ba-abd3-fd0a1404b7e5" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('b1a14fe0-919d-49ba-abd3-fd0a1404b7e5',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_b1a14fe0-919d-49ba-abd3-fd0a1404b7e5" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> greenlet <span style="color: #0000ff;">import</span><span style="color: #000000;"> greenlet
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> task1():
+    </span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---1---</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        gr2.switch()
+        time.sleep(</span>1<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> task2():
+    </span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---2---</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        gr1.switch()
+        time.sleep(</span>1<span style="color: #000000;">)
+
+
+gr1 </span>=<span style="color: #000000;"> greenlet(task1)
+gr2 </span>=<span style="color: #000000;"> greenlet(task2)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 切换到gr1中执行</span>
+gr1.switch()</pre>
+</div>
+<span class="cnblogs_code_collapse">greenlet实现多任务</span></div>
+<p>但注意，这里其实是一个单线程；并且经过测试，这里最后几句不能使用 __main__ ，否则会报错；</p>
+<p>&nbsp;</p>
+<h3>gevent实现多任务</h3>
+<p>可以看到，greenlet已经可以实现协程了，但需要我们手动进行任务切换，这样会很麻烦，因此我们要学习gevent，在greenlet的基础上进行了封装，可以帮助我们实现自动切换任务；</p>
+<p>要使用gevent，使用要进行安装</p>
+<div class="cnblogs_code">
+<pre><code>pip3 install gevent</pre>
+</div>
+<p>gevent实现多任务代码</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('95a982ed-145f-48e0-868e-7d26f8935dcf')"><img id="code_img_closed_95a982ed-145f-48e0-868e-7d26f8935dcf" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_95a982ed-145f-48e0-868e-7d26f8935dcf" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('95a982ed-145f-48e0-868e-7d26f8935dcf',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_95a982ed-145f-48e0-868e-7d26f8935dcf" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> gevent
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test1(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test1---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> time.sleep(0.5)  # 这里使用time的sleep并不会因为耗时导致切换任务</span>
+        gevent.sleep(0.5<span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test2(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test2---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> time.sleep(0.5)  # 这里使用time的sleep并不会因为耗时导致切换任务</span>
+        gevent.sleep(0.5<span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test3(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test3---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> time.sleep(0.5)  # 这里使用time的sleep并不会因为耗时导致切换任务</span>
+        gevent.sleep(0.5<span style="color: #000000;">)
+
+
+g1 </span>= gevent.spawn(test1, 5<span style="color: #000000;">)
+g2 </span>= gevent.spawn(test2, 5<span style="color: #000000;">)
+g3 </span>= gevent.spawn(test3, 5<span style="color: #000000;">)
+
+g1.join()
+g2.join()
+g3.join()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">gevent实现多任务.py</span></div>
+<p>运行结果：</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('f51f1054-d726-4cd8-aafc-dcddc3051de6')"><img id="code_img_closed_f51f1054-d726-4cd8-aafc-dcddc3051de6" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_f51f1054-d726-4cd8-aafc-dcddc3051de6" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('f51f1054-d726-4cd8-aafc-dcddc3051de6',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_f51f1054-d726-4cd8-aafc-dcddc3051de6" class="cnblogs_code_hide">
+<pre><code>---test1--- &lt;Greenlet at 0x1e9e64c2598: test1(5)&gt;<span style="color: #000000;"> 0
+</span>---test2--- &lt;Greenlet at 0x1e9e64c26a8: test2(5)&gt;<span style="color: #000000;"> 0
+</span>---test3--- &lt;Greenlet at 0x1e9e64c27b8: test3(5)&gt;<span style="color: #000000;"> 0
+</span>---test1--- &lt;Greenlet at 0x1e9e64c2598: test1(5)&gt; 1
+---test2--- &lt;Greenlet at 0x1e9e64c26a8: test2(5)&gt; 1
+---test3--- &lt;Greenlet at 0x1e9e64c27b8: test3(5)&gt; 1
+---test1--- &lt;Greenlet at 0x1e9e64c2598: test1(5)&gt; 2
+---test2--- &lt;Greenlet at 0x1e9e64c26a8: test2(5)&gt; 2
+---test3--- &lt;Greenlet at 0x1e9e64c27b8: test3(5)&gt; 2
+---test1--- &lt;Greenlet at 0x1e9e64c2598: test1(5)&gt; 3
+---test2--- &lt;Greenlet at 0x1e9e64c26a8: test2(5)&gt; 3
+---test3--- &lt;Greenlet at 0x1e9e64c27b8: test3(5)&gt; 3
+---test1--- &lt;Greenlet at 0x1e9e64c2598: test1(5)&gt; 4
+---test2--- &lt;Greenlet at 0x1e9e64c26a8: test2(5)&gt; 4
+---test3--- &lt;Greenlet at 0x1e9e64c27b8: test3(5)&gt; 4</pre>
+</div>
+<span class="cnblogs_code_collapse">运行结果</span></div>
+<p>g1.join()表示等待g1执行完成；当我们使用spawn创建一个对象时，并不会去执行该协程，而是当主线程走到等待g1完成时，这里需要等待时间，我们就去执行协程。</p>
+<p>注意，<strong>在gevent中如果要使用sleep()，必须要使用 gevent.sleep()</strong>；</p>
+<p>存在一个问题当我们创建g1，g2，g3时，如果不小心全部创建了g1，结果和没写错几乎是一样的；</p>
+<p>问题版运行结果</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('69c11ac9-64f6-4199-82a4-23e14958bee9')"><img id="code_img_closed_69c11ac9-64f6-4199-82a4-23e14958bee9" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_69c11ac9-64f6-4199-82a4-23e14958bee9" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('69c11ac9-64f6-4199-82a4-23e14958bee9',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_69c11ac9-64f6-4199-82a4-23e14958bee9" class="cnblogs_code_hide">
+<pre><code>g1 = gevent.spawn(test1, 5<span style="color: #000000;">)
+g2 </span>= gevent.spawn(test2, 5<span style="color: #000000;">)
+g3 </span>= gevent.spawn(test3, 5<span style="color: #000000;">)
+
+g1.join()
+g1.join()
+g1.join()
+
+</span>---test1--- &lt;Greenlet at 0x17d8ef12598: test1(5)&gt;<span style="color: #000000;"> 0
+</span>---test2--- &lt;Greenlet at 0x17d8ef126a8: test2(5)&gt;<span style="color: #000000;"> 0
+</span>---test3--- &lt;Greenlet at 0x17d8ef127b8: test3(5)&gt;<span style="color: #000000;"> 0
+</span>---test1--- &lt;Greenlet at 0x17d8ef12598: test1(5)&gt; 1
+---test2--- &lt;Greenlet at 0x17d8ef126a8: test2(5)&gt; 1
+---test3--- &lt;Greenlet at 0x17d8ef127b8: test3(5)&gt; 1
+---test1--- &lt;Greenlet at 0x17d8ef12598: test1(5)&gt; 2
+---test2--- &lt;Greenlet at 0x17d8ef126a8: test2(5)&gt; 2
+---test3--- &lt;Greenlet at 0x17d8ef127b8: test3(5)&gt; 2
+---test1--- &lt;Greenlet at 0x17d8ef12598: test1(5)&gt; 3
+---test2--- &lt;Greenlet at 0x17d8ef126a8: test2(5)&gt; 3
+---test3--- &lt;Greenlet at 0x17d8ef127b8: test3(5)&gt; 3
+---test1--- &lt;Greenlet at 0x17d8ef12598: test1(5)&gt; 4
+---test2--- &lt;Greenlet at 0x17d8ef126a8: test2(5)&gt; 4
+---test3--- &lt;Greenlet at 0x17d8ef127b8: test3(5)&gt; 4</pre>
+</div>
+<span class="cnblogs_code_collapse">问题版运行结果</span></div>
+<p>协程的核心在于利用延时操作去做其他的任务；</p>
+<p>&nbsp;</p>
+<p><strong>给gevent打补丁</strong></p>
+<p>当我们使用gevent的时候，如果要延时操作，比如等待网络资源或者time.sleep()，必须要使用 gevent.sleep()，即每处延时操作都需要改成gevent的延时；如果我们想，还是按照原来的写法，并且使用gevent，怎么实现呢？这个实收，我们解疑使用打补丁的方法。只需要给使用gevent的代码添加如下一行代码即可完成打补丁</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> gevent <span style="color: #0000ff;">import</span><span style="color: #000000;"> monkey
+
+monkey.patch_all()</span></pre>
+</div>
+<p>使用打补丁的方式完成协程的使用</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('4ef42385-04d3-4f5b-bdfc-9a76e429efc6')"><img id="code_img_closed_4ef42385-04d3-4f5b-bdfc-9a76e429efc6" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_4ef42385-04d3-4f5b-bdfc-9a76e429efc6" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('4ef42385-04d3-4f5b-bdfc-9a76e429efc6',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_4ef42385-04d3-4f5b-bdfc-9a76e429efc6" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> gevent
+</span><span style="color: #0000ff;">from</span> gevent <span style="color: #0000ff;">import</span><span style="color: #000000;"> monkey
+
+monkey.patch_all()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test1(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test1---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        time.sleep(</span>0.5)  <span style="color: #008000;">#</span><span style="color: #008000;"> 在打补丁的情况下等效于 gevent.sleep(0.5)</span>
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> test2(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test2---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        time.sleep(</span>0.5<span style="color: #000000;">)  
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test3(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test3---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        time.sleep(</span>0.5<span style="color: #000000;">) 
+
+g1 </span>= gevent.spawn(test1, 5<span style="color: #000000;">)
+g2 </span>= gevent.spawn(test2, 5<span style="color: #000000;">)
+g3 </span>= gevent.spawn(test3, 5<span style="color: #000000;">)
+
+g1.join()
+g2.join()
+g3.join()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">给gevent打补丁.py</span></div>
+<p>给gevent打补丁，使time.sleep(1)之类的耗时操作等效于gevent.sleep(1);</p>
+<p>&nbsp;</p>
+<h4>gevent.joinall()的使用</h4>
+<p>如果我们有很多函数要调用，那么岂不是得每次都先创建，在join()，gevent提供了一种简便方式；</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('1bfe491b-1624-4be8-8ec2-185abde45ccf')"><img id="code_img_closed_1bfe491b-1624-4be8-8ec2-185abde45ccf" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_1bfe491b-1624-4be8-8ec2-185abde45ccf" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('1bfe491b-1624-4be8-8ec2-185abde45ccf',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_1bfe491b-1624-4be8-8ec2-185abde45ccf" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> gevent
+</span><span style="color: #0000ff;">from</span> gevent <span style="color: #0000ff;">import</span><span style="color: #000000;"> monkey
+
+monkey.patch_all()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test1(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test1---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        time.sleep(</span>0.5)  <span style="color: #008000;">#</span><span style="color: #008000;"> 在打补丁的情况下等效于 gevent.sleep(0.5)</span>
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> test2(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test2---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        time.sleep(</span>0.5<span style="color: #000000;">)  
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test3(n):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(n):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---test3---</span><span style="color: #800000;">"</span><span style="color: #000000;">, gevent.getcurrent(), i)
+        time.sleep(</span>0.5<span style="color: #000000;">) 
+
+gevent.joinall([
+    gevent.spawn(test1, </span>5),  <span style="color: #008000;">#</span><span style="color: #008000;"> 括号内前面的是函数名，后面的是传参</span>
+    gevent.spawn(test2, 5<span style="color: #000000;">),
+    gevent.spawn(test3, </span>5<span style="color: #000000;">),
+    ])</span></pre>
+</div>
+<span class="cnblogs_code_collapse">gevent.joinall()的使用.py</span></div>
+<p>&nbsp;</p>
+<p>协程使用小案例-图片下载器</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('e1d4e3c1-a6d2-4adb-97ad-15d4abe280ee')"><img id="code_img_closed_e1d4e3c1-a6d2-4adb-97ad-15d4abe280ee" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_e1d4e3c1-a6d2-4adb-97ad-15d4abe280ee" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('e1d4e3c1-a6d2-4adb-97ad-15d4abe280ee',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_e1d4e3c1-a6d2-4adb-97ad-15d4abe280ee" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> urllib.request
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> gevent
+</span><span style="color: #0000ff;">from</span> gevent <span style="color: #0000ff;">import</span><span style="color: #000000;"> monkey
+
+monkey.patch_all()
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> img_download(img_name, img_url):
+    req </span>=<span style="color: #000000;"> urllib.request.urlopen(img_url)
+    data </span>=<span style="color: #000000;"> req.read()
+    with open(</span><span style="color: #800000;">"</span><span style="color: #800000;">images/</span><span style="color: #800000;">"</span>+img_name, <span style="color: #800000;">"</span><span style="color: #800000;">wb</span><span style="color: #800000;">"</span><span style="color: #000000;">) as f:
+        f.write(data)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    gevent.joinall([
+        gevent.spawn(img_download, </span><span style="color: #800000;">"</span><span style="color: #800000;">1.jpg</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">https://rpic.douyucdn.cn/live-cover/appCovers/2019/05/13/6940298_20190513113912_small.jpg</span><span style="color: #800000;">"</span><span style="color: #000000;">),
+        gevent.spawn(img_download, </span><span style="color: #800000;">"</span><span style="color: #800000;">2.jpg</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">https://rpic.douyucdn.cn/asrpic/190513/2077143_6233919_0d516_2_1818.jpg</span><span style="color: #800000;">"</span><span style="color: #000000;">),
+        gevent.spawn(img_download, </span><span style="color: #800000;">"</span><span style="color: #800000;">3.jpg</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">https://rpic.douyucdn.cn/live-cover/appCovers/2018/11/24/1771605_20181124143723_small.jpg</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    ])
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    main()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">协程的使用-图片下载器.py</span></div>
+<p>&nbsp;</p>
+<h3>进程，线程，线程对比</h3>
+<p>区别</p>
+<ul>
+<li>进程是资源分配的单位</li>
+<li>线程是操作系统调度的单位</li>
+<li>进程切换需要的资源很最大，效率很低</li>
+<li>线程切换需要的资源一般，效率一般（当然了在不考虑GIL的情况下）</li>
+<li>协程切换任务资源很小，效率高</li>
+<li>多进程、多线程根据cpu核数不一样可能是并行的，但是协程是在一个线程中 所以是并发。</li>
+<li>多进程耗费的资源最多；</li>
+<li>当我们python3运行一个py文件时，就是运行一个进程，进程中有一个默认的线程就是主线程，主线程拿着代码去执行；即进程是资源分配的单位，而线程才是真正拿着资源去执行，操作系统真正调度的就是线程；</li>
+<li>一个进程里面有两个线程就是我们说的多线程的多任务方式，第二种多任务方式是多进程中有多线程；</li>
+<li>线程的一大特点是可以利用某个线程在等待某个资源到来的时间去执行其他的任务；</li>
+<li>在不考虑GIL的情况下，优先考虑协程，再考虑线程，再考虑进程；</li>
+<li>进程是最稳定的，一个进程出问题了不会影响其他的进程，但耗费的资源较大；线程在切换任务时耗费的资源较线程少；协程可以利用线程在等待的时间做其他的事；</li>
+</ul>
+<p>&nbsp;</p>
+<h2>迭代器</h2>
+<blockquote>
+<p>迭代是访问集合元素的一种方式。迭代器是一个可以记住遍历的位置的对象。迭代器对象从集合的第一个元素开始访问，直到所有的元素被访问完结束。迭代器只能往前不会后退。</p>
+</blockquote>
+<ul>
+<li>要理解协程的使用，首先要了解生成器；</li>
+<li>要了解生成器，首先要理解迭代器；</li>
+</ul>
+<p>推荐原来看过的一篇博客：<a href="https://juejin.im/post/5ccafbf5e51d453a3a0acb42" target="_blank">一文彻底搞懂Python可迭代(Iterable)、迭代器(Iterator)和生成器(Generator)的概念</a>&nbsp;，不过和本文关系不大，哈哈~</p>
+<p>&nbsp;</p>
+<p>在了解迭代器之前，我们来认识两个单词</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">Iterable 可迭代的/可迭代/可迭代对象
+Iterator 迭代器</span></pre>
+</div>
+<p>&nbsp;</p>
+<h3>可迭代</h3>
+<p>迭代器引入-for循环</p>
+<div class="cnblogs_code">
+<pre><code>In [1]: <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> [11,22,33<span style="color: #000000;">]:
+   ...:     </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(i)   
+</span>11
+22
+33<span style="color: #000000;">
+
+In [</span>2]: <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> <span style="color: #800000;">"</span><span style="color: #800000;">hhh</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+   ...:     </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(i)    
+h
+h
+h
+
+In [</span>3]: <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> 10<span style="color: #000000;">:
+   ...:     </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(i)
+   ...:     
+</span>---------------------------------------------------------------------------<span style="color: #000000;">
+TypeError                                 Traceback (most recent call last)
+</span>&lt;ipython-input-3-309758a01ba4&gt; <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">()
+</span>----&gt; 1 <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> 10<span style="color: #000000;">:
+      </span>2     <span style="color: #0000ff;">print</span><span style="color: #000000;">(i)
+      </span>3<span style="color: #000000;"> 
+TypeError: </span><span style="color: #800000;">'</span><span style="color: #800000;">int</span><span style="color: #800000;">'</span> object <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> iterable  <span style="color: #008000;">#</span><span style="color: #008000;"> &ldquo;int&rdquo;对象不可迭代</span></pre>
+</div>
+<p>使用for循环时，in后面的数据类型是可迭代的 才可以使用for循环，例如元组，列表，字符串等；不可迭代的，例如数字，小数点的；</p>
+<p>&nbsp;</p>
+<h4><strong>判断是否可迭代</strong></h4>
+<ul>
+<li>判断某个东西是否可迭代的，可以通过判断该数据类型是否为 Iterable 的子类，如果是则为可迭代；</li>
+<li>isinstance 可以用来判断某对象是否是某类创建出来的；</li>
+<li>比如我们要判断 a是否为A类创建出来的，可以使用 isinstance(a, A)进行判断；返回值为True，代表可迭代；</li>
+</ul>
+<p>判断列表是否是可迭代的：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> collections <span style="color: #0000ff;">import</span><span style="color: #000000;"> Iterable
+isinstance([</span>11,22,33<span style="color: #000000;">], Iterable)
+True</span></pre>
+</div>
+<p>isinstance判断数据类型是否可迭代</p>
+<div class="cnblogs_code">
+<pre><code>In [6]: <span style="color: #0000ff;">from</span> collections <span style="color: #0000ff;">import</span><span style="color: #000000;"> Iterable
+
+In [</span>7]: isinstance([11,22<span style="color: #000000;">], Iterable)
+Out[</span>7<span style="color: #000000;">]: True
+
+In [</span>8]: isinstance((11,22<span style="color: #000000;">), Iterable)
+Out[</span>8<span style="color: #000000;">]: True
+
+In [</span>9]: isinstance(10<span style="color: #000000;">, Iterable)
+Out[</span>9]: False</pre>
+</div>
+<p>元组，列表，字符串都是可迭代的；数字，小数不可迭代；</p>
+<blockquote>
+<p>我们把可以通过for...in...这类语句迭代读取一条数据供我们使用的对象称之为<strong>可迭代对象（Iterable）</strong>。</p>
+</blockquote>
+<p>&nbsp;</p>
+<p>自己定义的一个类，判断能不能用for？</p>
+<p>自己创建一个类，满足能用for循环遍历的需求</p>
+<p>不可迭代</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Classmate(object):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">docstring for Classmate</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self.names </span>=<span style="color: #000000;"> list()
+        
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, name):
+        self.names.append(name)
+
+
+classmate </span>=<span style="color: #000000;"> Classmate()
+
+classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">张三</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">李四</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">王五</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">for</span> name <span style="color: #0000ff;">in</span><span style="color: #000000;"> classmate:
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(name)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> TypeError: 'Classmate' object is not iterable</span></pre>
+</div>
+<p>&nbsp;</p>
+<h3>可迭代对象本质</h3>
+<p>我们分析对可迭代对象进行迭代使用的过程，发现每迭代一次（即在for...in...中每循环一次）都会返回对象中的下一条数据，一直向后读取数据直到迭代了所有数据后结束。那么，在这个过程中就应该有一个&ldquo;人&rdquo;去记录每次访问到了第几条数据，以便每次迭代都可以返回下一条数据。我们把这个能帮助我们进行数据迭代的&ldquo;人&rdquo;称为<strong>迭代器(Iterator)</strong>。</p>
+<p><strong><span style="text-decoration: underline;">可迭代对象的本质就是可以向我们提供一个这样的中间&ldquo;人&rdquo;即迭代器帮助我们对其进行迭代遍历使用。</span></strong></p>
+<p><strong><span style="text-decoration: underline;">可迭代对象通过__iter__方法向我们提供一个迭代器</span></strong>，我们在迭代一个可迭代对象的时候，实际上就是<span style="text-decoration: underline;"><strong>先获取该对象提供的一个迭代器，然后通过这个迭代器来依次获取对象中的每一个数据.</strong></span></p>
+<p>那么也就是说，一个具备了__iter__方法的对象，就是一个可迭代对象。</p>
+<p>&nbsp;</p>
+<p>如果你不理解上面的话，没关系，你只需要知道 &ldquo;如果想要将自己定义的一个类变为可迭代的，那么只需要在这个类中定义一个 __iter__ 方法即可&rdquo;。</p>
+<p><strong>添加__iter__方法</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Classmate(object):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">docstring for Classmate</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self.names </span>=<span style="color: #000000;"> list()
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, name):
+        self.names.append(name)
+    
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">pass</span><span style="color: #000000;">
+
+classmate </span>=<span style="color: #000000;"> Classmate()
+
+classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">张三</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">李四</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">王五</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">for</span> name <span style="color: #0000ff;">in</span><span style="color: #000000;"> classmate:
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(name)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> TypeError: iter() returned non-iterator of type 'NoneType'  </span><span style="color: #008000;">
+#</span><span style="color: #008000;"> iter()返回&ldquo;NoneType&rdquo;类型的非迭代器</span></pre>
+</div>
+<p>注意，这个时候的classmate已经是可迭代对象了，可以用isinstance(classmate, Iterable)验证;</p>
+<p>但如果将__iter__()方法注释掉，就不是可迭代对象了，所以可以验证，要成为可迭代对象的第一步是添加__iter__()方法；</p>
+<p>&nbsp;</p>
+<h3><strong>可迭代与迭代器</strong></h3>
+<p><strong>可迭代与迭代器</strong></p>
+<ul>
+<li>一个对象中有 __iter__ 方法，叫做 可以迭代；</li>
+<li>如果一个对象中有 __iter__ 方法，并且 __iter__ 方法返回一个另一个对象的引用，而返回的对象中又包含 __iter__ 和 __next__ 方法，那么这个返回的对象叫做 迭代器；</li>
+<li>只要有了迭代器，那么for方法就会通过迭代器中的 __next__ 方法来取值，每 for 循环一次，就调用一次 __next__ 方法；</li>
+<li>使用 iter(xxxobj) 会自动调用 xxxobj 中的 __iter__ 方法，__iter__ 方法返回一个迭代器；</li>
+<li>next(可迭代实例对象即 __iter__ 方法返回一个迭代器)，会自动去迭代器中调用 __next__ 方法；</li>
+</ul>
+<ul>
+<li>一个可迭代的不一定是个迭代器；</li>
+<li>一个迭代器一定可迭代；</li>
+<li>(可迭代--里面有__iter__方法，迭代器--里面有__iter__和__next__方法)；</li>
+</ul>
+<p>&nbsp;</p>
+<p><strong>判断是否可迭代</strong></p>
+<p>以下列代码为例</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> classmate</pre>
+</div>
+<p>流程：</p>
+<ul>
+<li>1.判断 classmate是否为可迭代的，即是否包含 __iter__ 方法；</li>
+<li>2.如果第一步是可迭代的，那么就调用 iter(classmate) 即去调用 classmate 类中的 __iter__ 方法，返回一个迭代器，取返回值；</li>
+<li>3.每 for 循环一次就去调用返回值中的 __next__ 方法一次，__next__ 返回什么，就给i什么；</li>
+</ul>
+<p>&nbsp;</p>
+<p><strong>自定义使用for循环步骤</strong></p>
+<ul>
+<li>1.在类中添加 __iter__ 方法；</li>
+<li>2.__iter__ 方法返回一个对象的引用，这个对象必须包含 __iter__ 和 __next__ 方法；</li>
+<li>3.在包含 __iter__ 和 __next__ 方法的类中，编写 __next__ 方法返回值；</li>
+</ul>
+<p>&nbsp;</p>
+<p><strong>for...in...循环的本质</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span> Iterable </pre>
+</div>
+<p>循环的本质就是先通过iter()函数获取可迭代对象Iterable的迭代器，然后对获取到的迭代器不断调用next()方法来获取下一个值并将其赋值给item，当遇到StopIteration的异常后循环结束。</p>
+<p>&nbsp;</p>
+<h3>完善自定义迭代器</h3>
+<p><strong>一个实现了__iter__方法和__next__方法的对象，就是迭代器。</strong></p>
+<p>让迭代器可以完整返回所有的数据；</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('af348d9d-9fa7-44c1-a0b3-47932465b7e8')"><img id="code_img_closed_af348d9d-9fa7-44c1-a0b3-47932465b7e8" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_af348d9d-9fa7-44c1-a0b3-47932465b7e8" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('af348d9d-9fa7-44c1-a0b3-47932465b7e8',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_af348d9d-9fa7-44c1-a0b3-47932465b7e8" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> collections.abc <span style="color: #0000ff;">import</span><span style="color: #000000;"> Iterable, Iterator
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Classmate(object):
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self.names </span>=<span style="color: #000000;"> list()
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, name):
+        self.names.append(name)
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ClassmateIterable(self)
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> ClassmateIterable(object):
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, obj):
+        self.obj </span>=<span style="color: #000000;"> obj
+        self.num </span>=<span style="color: #000000;"> 0
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">pass</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__next__</span><span style="color: #000000;">(self):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> return self.obj.names[0]</span>
+        <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            ret </span>=<span style="color: #000000;"> self.obj.names[self.num]
+            self.num </span>+= 1
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> ret
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> IndexError as e:
+            </span><span style="color: #0000ff;">raise</span><span style="color: #000000;"> StopIteration
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    classmate </span>=<span style="color: #000000;"> Classmate()
+    classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">张三</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">李四</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">王五</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">判断classmate是否为可迭代的：</span><span style="color: #800000;">"</span><span style="color: #000000;">, isinstance(classmate, Iterable))
+    classmate_iterator </span>=<span style="color: #000000;"> iter(classmate)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">判断classmate_iterator是否为迭代器：</span><span style="color: #800000;">"</span><span style="color: #000000;">, isinstance(classmate_iterator, Iterator))
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 调用一次 __next__</span>
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">classmate_iterator's next:</span><span style="color: #800000;">"</span><span style="color: #000000;">, next(classmate_iterator))
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> classmate:
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(i)
+        time.sleep(</span>1<span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    main()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">自己实现一个可迭代的对象</span></div>
+<p>可以看到，现在已经可以实现for循环使用自定义的类了；但在这个代码里我们看到为了实现返回迭代器我们要再定义一个额外的类，这样是比较麻烦的。在这里我们可以进行简化一下，不返回另一个类，而是返回自己这个类，并且在自己类中定义一个 __next__ 方法。简化如下</p>
+<p>改进简化迭代器</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('7f94b8bb-9d2b-4a18-92ed-d7dcdba4c9f8')"><img id="code_img_closed_7f94b8bb-9d2b-4a18-92ed-d7dcdba4c9f8" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_7f94b8bb-9d2b-4a18-92ed-d7dcdba4c9f8" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('7f94b8bb-9d2b-4a18-92ed-d7dcdba4c9f8',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_7f94b8bb-9d2b-4a18-92ed-d7dcdba4c9f8" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> collections.abc <span style="color: #0000ff;">import</span><span style="color: #000000;"> Iterable, Iterator
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Classmate(object):
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self.names </span>=<span style="color: #000000;"> list()
+        self.num </span>=<span style="color: #000000;"> 0
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> add(self, name):
+        self.names.append(name)
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__next__</span><span style="color: #000000;">(self):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> return self.obj.names[0]</span>
+        <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            ret </span>=<span style="color: #000000;"> self.names[self.num]
+            self.num </span>+= 1
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> ret
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> IndexError as e:
+            </span><span style="color: #0000ff;">raise</span><span style="color: #000000;"> StopIteration
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    classmate </span>=<span style="color: #000000;"> Classmate()
+    classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">张三</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">李四</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    classmate.add(</span><span style="color: #800000;">"</span><span style="color: #800000;">王五</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> classmate:
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(i)
+        time.sleep(</span>1<span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    main()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">改进简化迭代器.py</span></div>
+<p>&nbsp;</p>
+<h3>迭代器的应用</h3>
+<p><strong>迭代器的作用</strong></p>
+<ul>
+<li>不用迭代器，是当要做某事之前，就生成并存储数据，存储数据时可能会占用大量的空间；</li>
+<li>用迭代器，是掌握数据的生成方法，什么时候使用，什么时候生成；</li>
+<li>比如range(10)，即时生成10个数据，那么range(1000000000)呢？</li>
+<li>range：生成10个值的列表；xrange：存储生成10个值的方式；</li>
+<li>python2 中 range(10) 存储的是一个列表，xrange(10) 存储的是生成10个值的方式，是一个迭代器；</li>
+<li>python3 中 range() 已经相当于python2中的 xrange()了，并且py3中已经没有xrange()了；</li>
+<li>迭代器是存储生成数据的方式，而不是存储数据结果；</li>
+</ul>
+<p>python3中使用range：</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; range(10<span style="color: #000000;">)
+range(0, </span>10<span style="color: #000000;">)
+</span>&gt;&gt;&gt; ret = range(10<span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> next(ret)
+Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">&lt;pyshell#3&gt;</span><span style="color: #800000;">"</span>, line 1, <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">
+    next(ret)
+TypeError: </span><span style="color: #800000;">'</span><span style="color: #800000;">range</span><span style="color: #800000;">'</span> object <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> an iterator
+</span>&gt;&gt;&gt; <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(10):
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(i)
+0
+</span>1
+2
+3
+...</pre>
+</div>
+<p>&nbsp;</p>
+<p>正常实现斐波那契数列</p>
+<div class="cnblogs_code">
+<pre><code>nums =<span style="color: #000000;"> []
+
+a </span>=<span style="color: #000000;"> 0
+b </span>= 1<span style="color: #000000;">
+i </span>=<span style="color: #000000;"> 0
+</span><span style="color: #0000ff;">while</span> i &lt; 10<span style="color: #000000;">:
+    nums.append(a)
+    a, b </span>= b, a+<span style="color: #000000;">b
+    i </span>+= 1
+
+<span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> nums:
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<p>使用迭代器实现斐波那契数列</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('23d303ca-0ce6-4752-902f-f98661ee71fe')"><img id="code_img_closed_23d303ca-0ce6-4752-902f-f98661ee71fe" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_23d303ca-0ce6-4752-902f-f98661ee71fe" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('23d303ca-0ce6-4752-902f-f98661ee71fe',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_23d303ca-0ce6-4752-902f-f98661ee71fe" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Fibonacci(object):
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, times):
+        self.times </span>=<span style="color: #000000;"> times
+        self.a </span>=<span style="color: #000000;"> 0
+        self.b </span>= 1<span style="color: #000000;">
+        self.current_num </span>=<span style="color: #000000;"> 0
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__next__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">if</span> self.current_num &lt;<span style="color: #000000;"> self.times:
+            ret </span>=<span style="color: #000000;"> self.a
+            self.a, self.b </span>= self.b, self.a+<span style="color: #000000;">self.b
+            self.current_num </span>+= 1
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> ret
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">raise</span><span style="color: #000000;"> StopIteration
+
+
+fibo </span>= Fibonacci(10<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> fibo:
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<span class="cnblogs_code_collapse">使用迭代器实现斐波那契数列</span></div>
+<p>什么时候调，什么时候生成。</p>
+<p>&nbsp;</p>
+<h4>迭代器使用的其他方式-列表元组等类型转换</h4>
+<p>当我们使用 list() 或者 tuple() 进行类型转换时，使用的其实也是迭代器；</p>
+<div class="cnblogs_code">
+<pre><code>a = (11,22,33<span style="color: #000000;">)
+b </span>= list(a)</pre>
+</div>
+<p>当我们使用list()将元组转换成列表时，是使用了迭代器的原理，先定义一个空列表，用迭代器 通过 __next__ 从元组中取第一个值，添加到空列表中，再依次从元组取值，添加入列表，直到元组中没有值了，主动抛出迭代停止异常；<br />同理，将列表转换成元组也是如此；</p>
+<p>&nbsp;</p>
+<h2>生成器</h2>
+<p>迭代器：用来节省内存空间而且还知道将来怎么生成数据的方式；<br />生成器：一种特殊的迭代器；</p>
+<p>&nbsp;</p>
+<p>生成器方式：</p>
+<ul>
+<li>1.将列表推导式的小括号换成中括号；</li>
+<li>2.函数中使用yield</li>
+
+
+
+
+
+
+</ul>
+<p><strong>实现生成器方式1</strong></p>
+<div class="cnblogs_code">
+<pre><code>In [15]: L = [ x*2 <span style="color: #0000ff;">for</span> x <span style="color: #0000ff;">in</span> range(5<span style="color: #000000;">)]
+
+In [</span>16<span style="color: #000000;">]: L
+Out[</span>16]: [0, 2, 4, 6, 8<span style="color: #000000;">]
+
+In [</span>17]: G = ( x*2 <span style="color: #0000ff;">for</span> x <span style="color: #0000ff;">in</span> range(5<span style="color: #000000;">))
+
+In [</span>18<span style="color: #000000;">]: G
+Out[</span>18]: &lt;generator object &lt;genexpr&gt; at 0x7f626c132db0&gt;<span style="color: #000000;">
+
+In [</span>19<span style="color: #000000;">]: next(G)
+Out[</span>19<span style="color: #000000;">]: 0
+
+In [</span>20<span style="color: #000000;">]: next(G)
+Out[</span>20]: 2</pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>实现生成器方式2</strong></p>
+<p>使用yield的生成器</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('9bef7c6a-af96-48a1-8b6c-edb002b60f39')"><img id="code_img_closed_9bef7c6a-af96-48a1-8b6c-edb002b60f39" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_9bef7c6a-af96-48a1-8b6c-edb002b60f39" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('9bef7c6a-af96-48a1-8b6c-edb002b60f39',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_9bef7c6a-af96-48a1-8b6c-edb002b60f39" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> Fibonacci(n):
+    a, b </span>= 0, 1<span style="color: #000000;">
+    count_num </span>=<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">while</span> count_num &lt;<span style="color: #000000;"> n:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果函数中有一个yield语句，那么这个就不再是函数，而是一个生成器的模板</span>
+        <span style="color: #0000ff;">yield</span><span style="color: #000000;"> a
+        a, b </span>= b, a+<span style="color: #000000;">b
+        count_num </span>+= 1
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 如果在调用时发现这个函数中有yield，那么此时，不是调用函数，而是创建一个生成器对象</span>
+fb = Fibonacci(5<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">使用for循环遍历生成器中的所有数字</span><span style="color: #800000;">"</span>.center(40, <span style="color: #800000;">"</span><span style="color: #800000;">-</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> fb:
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<span class="cnblogs_code_collapse">使用yield完成斐波那契数列</span></div>
+<p>生成器执行流程：当第一次调用for/next执行时，会从生成器的第一行开始依次向下执行，直到在循环中碰见yield，就会返回yield后面的变量/字符；然后第二次调用for/next时，就会从上次的yield后面的代码继续执行，直到在循环中再次碰到yield，返回；依次往下，直到没有了数据。</p>
+<p>可以使用 for i in 生成器对象 来遍历生成器中的数据，也可以用 next(生成器对象) 来一个一个获取生成器中的值；</p>
+<p>使用next获取生成器中的值</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('45f76f18-29b2-4b24-916d-9e21969ffdd8')"><img id="code_img_closed_45f76f18-29b2-4b24-916d-9e21969ffdd8" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_45f76f18-29b2-4b24-916d-9e21969ffdd8" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('45f76f18-29b2-4b24-916d-9e21969ffdd8',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_45f76f18-29b2-4b24-916d-9e21969ffdd8" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> Fibonacci(n):
+    a, b </span>= 0, 1<span style="color: #000000;">
+    count_num </span>=<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">while</span> count_num &lt;<span style="color: #000000;"> n:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果函数中有一个yield语句，那么这个就不再是函数，而是一个生成器的模板</span>
+        <span style="color: #0000ff;">yield</span><span style="color: #000000;"> a
+        a, b </span>= b, a+<span style="color: #000000;">b
+        count_num </span>+= 1
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 如果在调用时发现这个函数中有yield，那么此时，不是调用函数，而是创建一个生成器对象</span>
+fb = Fibonacci(5<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">使用next依次生成三次数字</span><span style="color: #800000;">"</span>.center(40, <span style="color: #800000;">"</span><span style="color: #800000;">-</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(next(fb))
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(next(fb))
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(next(fb))
+
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">使用for循环遍历剩余的数字</span><span style="color: #800000;">"</span>.center(40, <span style="color: #800000;">"</span><span style="color: #800000;">-</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> fb:
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<span class="cnblogs_code_collapse">使用next获取生成器中的值</span></div>
+<p>&nbsp;</p>
+<h4>生成器-send方式</h4>
+<p>可以重复创建多个生成器，多个生成器之间互不干扰；<br />如果在生成器中有return值，可以在生成器结束后用 出错的结果.value 来进行接收；</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('8f3bc226-75fb-4b0c-81cc-680953bc7ce8')"><img id="code_img_closed_8f3bc226-75fb-4b0c-81cc-680953bc7ce8" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_8f3bc226-75fb-4b0c-81cc-680953bc7ce8" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('8f3bc226-75fb-4b0c-81cc-680953bc7ce8',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_8f3bc226-75fb-4b0c-81cc-680953bc7ce8" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> Fibonacci(n):
+    a, b </span>= 0, 1<span style="color: #000000;">
+    count_num </span>=<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">while</span> count_num &lt;<span style="color: #000000;"> n:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果函数中有一个yield语句，那么这个就不再是函数，而是一个生成器的模板</span>
+        <span style="color: #0000ff;">yield</span><span style="color: #000000;"> a
+        a, b </span>= b, a+<span style="color: #000000;">b
+        count_num </span>+= 1
+    <span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span><span style="color: #800000;">okhaha</span><span style="color: #800000;">"</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 如果在调用时发现这个函数中有yield，那么此时，不是调用函数，而是创建一个生成器对象</span>
+fb = Fibonacci(5<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        result </span>=<span style="color: #000000;"> next(fb)
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(result)
+
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(e.value)
+        </span><span style="color: #0000ff;">break</span></pre>
+</div>
+<span class="cnblogs_code_collapse">生成器使用send</span></div>
+<p>除了使用next来启动生成器之外，还可以使用send来启动生成器；</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('b6ccf7b4-8a8e-4dd3-b9bd-cf17d4b71c59')"><img id="code_img_closed_b6ccf7b4-8a8e-4dd3-b9bd-cf17d4b71c59" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_b6ccf7b4-8a8e-4dd3-b9bd-cf17d4b71c59" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('b6ccf7b4-8a8e-4dd3-b9bd-cf17d4b71c59',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_b6ccf7b4-8a8e-4dd3-b9bd-cf17d4b71c59" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> Fibonacci(n):
+    a, b </span>= 0, 1<span style="color: #000000;">
+    count_num </span>=<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">while</span> count_num &lt;<span style="color: #000000;"> n:
+        ret </span>= <span style="color: #0000ff;">yield</span><span style="color: #000000;"> a
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">ret:</span><span style="color: #800000;">"</span><span style="color: #000000;">, ret)
+        a, b </span>= b, a+<span style="color: #000000;">b
+        count_num </span>+= 1<span style="color: #000000;">
+
+fb </span>= Fibonacci(5<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(next(fb))
+</span><span style="color: #0000ff;">print</span>(fb.send(<span style="color: #800000;">"</span><span style="color: #800000;">haha</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(next(fb))
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 0</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> ret: haha</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 1</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> ret: None</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 1</span></pre>
+</div>
+<span class="cnblogs_code_collapse">使用send来启动生成器</span></div>
+<p><span style="text-decoration: underline;">我们可以理解为，第一次使用next，先执行等号右边的代码，就将yield a返回给了next(fb)；然后下次调用send时，执行等号左边的，将send的传值赋值给ret，再执行后续代码；</span><br /><span style="text-decoration: underline;">或者我们可以理解 ret = yield a 为两步 ===&gt;1.yield a； 2.ret = arg；其中的arg表示send的传值，如果不传值，默认为None，所以当next在send后面调用时，就默认传了None；</span></p>
+<p>注意，一般不将send用作第一次唤醒生成器，如果一定要使用send第一次唤醒，要send(None);</p>
+<p>&nbsp;</p>
+<p><strong>生成器-小总结</strong><br />生成器特点：</p>
+<ul>
+<li>一个没有__iter__和__next__方法的特殊迭代器；</li>
+<li>函数只执行一部分就返回；</li>
+<li>可以让一个函数暂停执行，并且保存上次的值，根据上次的值恢复到原来的样子，再做接下来的操作；</li>
+<li>迭代器节省空间，实现循环；</li>
+<li>生成器可以让一个看起来像函数的代码暂停执行，并根据自己的想法调用next/send继续执行；</li>
+
+
+
+
+
+</ul>
+<p>&nbsp;</p>
+<p><strong>使用yield完成多任务</strong></p>
+<ul>
+<li>在python2中，while1 的执行时间大概是while True的2/3，这是因为True在2中不是关键字，可以随意赋值，因此用while 1；</li>
+<li>在python3中，True已经是关键字了，解释器不用判断True的值，所以while True和 while 1的区别不大，但可能还是1更快；</li>
+
+
+
+
+
+</ul>
+<p>进程之间切换任务，占用的资源很大，创建进程，释放进程需要浪费大量的时间，进程的效率没有线程高，比线程占用资源更少的是协程；</p>
+<p>使用yield完成多任务</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('46c65f93-bd7b-4e48-8ff5-1b153ed6c7a1')"><img id="code_img_closed_46c65f93-bd7b-4e48-8ff5-1b153ed6c7a1" class="code_img_closed" src="./images/Python多任务之协程0.png" alt="" /><img id="code_img_opened_46c65f93-bd7b-4e48-8ff5-1b153ed6c7a1" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('46c65f93-bd7b-4e48-8ff5-1b153ed6c7a1',event)" src="./images/Python多任务之协程1.png" alt="" />
+<div id="cnblogs_code_open_46c65f93-bd7b-4e48-8ff5-1b153ed6c7a1" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> task_1():
+    </span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---1---</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        time.sleep(</span>0.5<span style="color: #000000;">)
+        </span><span style="color: #0000ff;">yield</span>
+
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> task_2():
+    </span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">---2---</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        time.sleep(</span>0.5<span style="color: #000000;">)
+        </span><span style="color: #0000ff;">yield</span>
+
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    t1 </span>=<span style="color: #000000;"> task_1()
+    t2 </span>=<span style="color: #000000;"> task_2()
+    </span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+        next(t1)
+        next(t2)
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    main()</span></pre>
+</div>
+<span class="cnblogs_code_collapse">使用yield完成多任务</span></div>
+<p>是假的多任务，属于并发；</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

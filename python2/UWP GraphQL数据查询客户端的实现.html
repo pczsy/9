@@ -1,0 +1,273 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修UWP GraphQL数据查询客户端的实现' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>UWP GraphQL数据查询客户端的实现</center></div><div class='banquan'>原文出处:本文由博客园博主星期八再娶你提供。<br/>
+原文连接:https://www.cnblogs.com/hupo376787/p/12076841.html</div><br>
+    <p><span style="font-size: 18pt;"><strong><span style="color: #ff00ff;">1. 缘起</span></strong></span></p>
+<p><span style="color: #ff00ff;">Facebook</span> 的移动应用从 2012 年就开始使用 <span style="color: #ff00ff;">GraphQL</span>。<span style="color: #ff00ff;">GraphQL</span> 规范于 2015 年开源，现已经在多种环境下可用，并被各种体量的团队所使用。</p>
+<p>在<a href="https://graphql.cn/users/" target="_blank">这个链接</a>可以看到更多的<span style="color: #ff00ff;">GraphQL</span>使用者。</p>
+<p><img src="./images/UWP GraphQL数据查询客户端的实现0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18pt;"><strong><span style="color: #ff00ff;">2. GraphQL是什么</span></strong></span></p>
+<p><a href="https://graphql.org/" target="_blank">英文官网</a>：<span style="color: #ff00ff;">GraphQL is a query language for APIs and a runtime for fulfilling those queries with your existing data.</span></p>
+<p><a href="https://graphql.cn/" target="_blank">中文官网</a>：<span style="color: #ff00ff;">GraphQL 既是一种用于 API 的查询语言也是一个满足你数据查询的运行时。</span></p>
+<p>个人理解：<span style="color: #ff00ff;">GraphQL利用了传统的SQL查询，并且以restful api的形式返回数据。</span></p>
+<p>举个栗子：</p>
+<p>传统的<span style="color: #ff00ff;">Restful api</span>查询，你要查询一个用户的头像信息，不需要别的信息，那么就是需要利用<span style="color: #ff00ff;">Http</span>发送给服务区<span style="color: #ff00ff;">user_id</span>，然后服务器返回给你这个用户的所有信息，比如邮箱、昵称、电话、头像等信息。</p>
+<p>这样以来，如果返回的数据过大的话，可能会因为网络的各种问题导致延迟。</p>
+<p>但是如果像<span style="color: #ff00ff;">GraphQL</span>，我要查询头像信息，只需要发送</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{
+  hero {
+    head_url
+  }
+}</span></pre>
+</div>
+<p>那么服务器就只会返回给</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{
+  </span><span style="color: #800000;">"</span><span style="color: #800000;">hero</span><span style="color: #800000;">"</span><span style="color: #000000;">: {
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">head_url</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"https://pic.cnblogs.com/face/298986/20150104103009.png</span><span style="color: #800000;">"</span><span style="color: #000000;">
+  }
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>嗯，基本就是这样子。仅仅是我的理解，如果不对，麻烦大声告诉我，谢谢。</p>
+<p>&nbsp;</p>
+<p>官网还有一个gif，更加形象。</p>
+<p><img src="./images/UWP GraphQL数据查询客户端的实现1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>怎么样，可以的吧。</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18pt;"><strong><span style="color: #ff00ff;">3. 现存的GraphQL框架</span></strong></span></p>
+<p>前面说了，<span style="color: #ff00ff;">GraphQL</span>仅仅就是一个查询语言，如果想用在自己的项目中，你不可能从头开始研究这个语言，然后手撸自己需要的框架。当然，自己写当然没问题。</p>
+<p>不过官网提供了一些自己写的或者第三方写的库，包括服务器端和客户端的实现。</p>
+<p>详见 &darr;</p>
+<p>英文：<a href="https://graphql.org/code/">https://graphql.org/code/</a>&nbsp;</p>
+<p>中文：<a href="https://graphql.cn/code/">https://graphql.cn/code/</a></p>
+<p>&nbsp;</p>
+<p>这其中不得不赞一下一个第三方的<span style="font-size: 18pt;"><strong><span style="color: #ff00ff;">Apollo</span></strong></span>，牛逼的不要不要的。<span style="color: #ff00ff; font-size: 18pt;"><strong>写了Android、iOS、Javascript，就是不写dot net</strong></span><span style="color: #ff00ff;"><strong><span style="font-size: 18pt;">。</span></strong></span></p>
+<p>.net下不过也有三个：</p>
+<ul>
+<li><a href="https://github.com/graphql-dotnet/graphql-client" rel="nofollow noopener noreferrer" target="_blank">GraphQL.Client</a>: A GraphQL Client for .NET.</li>
+<li><a href="https://github.com/bkniffler/graphql-net-client" rel="nofollow noopener noreferrer" target="_blank">graphql-net-client</a>: Basic example GraphQL client for .NET.</li>
+<li><a href="https://github.com/sahb1239/SAHB.GraphQLClient" rel="nofollow noopener noreferrer" target="_blank">SAHB.GraphQLClient</a>: GraphQL client which supports generating queries from C# classes</li>
+</ul>
+<p>&nbsp;</p>
+<p>第一个好像是微软写的，261 stars。。。不过距离上一个版本发版已经有一年了，这一年有了一些新的bug，但是他们之说下一个版本解决，但是需要多久？？？God knows。</p>
+<p>第二个是个人开发者写的，80 stars。但是距离他上一次提交代码是三年前了，so。。。放弃吧先</p>
+<p>第三个也是个人开发者写的，26 stars。这个库更新的比较频繁，可以使用。</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18pt;"><strong><span style="color: #ff00ff;">4. 一个简单的例子</span></strong></span></p>
+<p>拿微软的例子<a href="https://github.com/graphql-dotnet/graphql-client" rel="nofollow noopener noreferrer" target="_blank">GraphQL.Client</a>说一下吧</p>
+<p>比如就从服务器获取一个<span style="color: #ff00ff;">pin code</span></p>
+<p><img src="./images/UWP GraphQL数据查询客户端的实现2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;首先自己先写好<span style="color: #ff00ff;">mutation</span>句子，类似<span style="color: #ff00ff;">SQL</span>查询的语句。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800000;">@"</span><span style="color: #800000;">mutation{
+                    generatePinCode
+                }</span><span style="color: #800000;">"</span></pre>
+</div>
+<p>还是有一点点麻烦的地方，就是自己要写查询语句。</p>
+<p>像刚才提到的<span style="color: #ff00ff;">Apollo</span>框架，人家都是给你自动生成的，你气不气。</p>
+<p>不过有人在<span style="color: #ff00ff;">Github</span>提问了，但是微软的人并不打算这么做，可能他们在忙别的事情吧，比如写win10的bug<img src="./images/UWP GraphQL数据查询客户端的实现3.png" alt="" width="78" height="80" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>然后声明一个<span style="color: #ff00ff;">GraphQL</span>的Client，指定<span style="color: #ff00ff;">EndPoint</span>地址。</p>
+<div class="cnblogs_code">
+<pre><code>            GraphQLClient client = <span style="color: #0000ff;">new</span> GraphQLClient(<span style="color: #0000ff;">new</span><span style="color: #000000;"> GraphQLClientOptions
+            {
+                EndPoint </span>= <span style="color: #0000ff;">new</span> Uri(<span style="color: #800000;">"</span><span style="color: #800000;">http://dev.xxx.com/api/graphql/guest</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            });</span></pre>
+</div>
+<p>然后声明<span style="color: #ff00ff;">GraphQLResponse</span>，来接受服务器返回的消息。</p>
+<div class="cnblogs_code">
+<pre><code>GraphQLResponse response = <span style="color: #0000ff;">await</span><span style="color: #000000;"> client.PostQueryAsync(
+                </span><span style="color: #800000;">@"</span><span style="color: #800000;">mutation{
+                    generatePinCode
+                }</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+
+            </span><span style="color: #0000ff;">if</span>(response.Errors == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">var</span> result = response.GetDataFieldAs&lt;<span style="color: #0000ff;">string</span>&gt;(<span style="color: #800000;">"</span><span style="color: #800000;">generatePinCode</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+                textBox_Result.Text </span>= textBox_PinCode.Text =<span style="color: #000000;"> result;
+            }
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                textBox_Result.Text </span>= <span style="color: #800000;">"</span><span style="color: #800000;">Generate Pin Code Failed</span><span style="color: #800000;">"</span>;</pre>
+</div>
+<p>看，就是这么简单的例子。</p>
+<p>有人可能好奇，上面的<span style="color: #ff00ff;">generatePinCode</span>是什么鬼？在哪里出来的。</p>
+<p>其实这个是服务器返回来的数据，我们需要从<span style="color: #ff00ff;">generatePinCode</span>数据区拿数据而已。</p>
+<p>说到这里，那么就不得不说一下<span style="font-size: 18pt; color: #ff00ff;"><strong>Altair</strong></span>这个神器了。</p>
+<p>在<span style="color: #ff00ff;">Altair</span>中，发送请求，返回来的数据都是包含在<span style="color: #ff00ff;">data</span>数据体中的。<span style="color: #ff00ff;">data</span>里面的<span style="color: #ff00ff;">generatePinCode</span>才是我们真正想要的。</p>
+<p>&nbsp;</p>
+<p>而通过<span style="color: #ff00ff;">Altair</span>看出，<span style="color: #ff00ff;">generatePinCode</span>其实返回了就是一个<span style="color: #ff00ff;">string</span>类型的字符串。</p>
+<p>那么我们只需要<strong><span style="color: #ff00ff;">GetDataFieldAs</span></strong>函数，直接反序列化即可。</p>
+<p><img src="./images/UWP GraphQL数据查询客户端的实现4.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18pt;"><strong><span style="color: #ff00ff;">5. 一个有一点点复杂的例子</span></strong></span></p>
+<p>拿微软的例子<a href="https://github.com/graphql-dotnet/graphql-client" rel="nofollow noopener noreferrer" target="_blank">GraphQL.Client</a>说一下吧</p>
+<p>比如需要做个用户输入用户名密码登录的例子：</p>
+<p><img src="./images/UWP GraphQL数据查询客户端的实现5.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>那么我们写一个简单的<span style="color: #ff00ff;">xaml</span>代码：</p>
+<div class="cnblogs_code">
+<pre><code>&lt;TextBox x:Name=<span style="color: #800000;">"</span><span style="color: #800000;">textBox_Username</span><span style="color: #800000;">"</span> PlaceholderText=<span style="color: #800000;">"</span><span style="color: #800000;">user name</span><span style="color: #800000;">"</span> BorderThickness=<span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span> Margin=<span style="color: #800000;">"</span><span style="color: #800000;">0, 20</span><span style="color: #800000;">"</span>/&gt;
+&lt;TextBox x:Name=<span style="color: #800000;">"</span><span style="color: #800000;">textBox_pswd</span><span style="color: #800000;">"</span> PlaceholderText=<span style="color: #800000;">"</span><span style="color: #800000;">password</span><span style="color: #800000;">"</span> BorderThickness=<span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>/&gt;
+&lt;Button Content=<span style="color: #800000;">"</span><span style="color: #800000;">Login</span><span style="color: #800000;">"</span> Margin=<span style="color: #800000;">"</span><span style="color: #800000;">0, 20</span><span style="color: #800000;">"</span> Tapped=<span style="color: #800000;">"</span><span style="color: #800000;">LoginWithUsernamePassword_Tapped</span><span style="color: #800000;">"</span>/&gt;</pre>
+</div>
+<p>&nbsp;</p>
+<p>然后自己需要写<span style="color: #ff00ff;">mutation</span>代码，这里我们就查询<span style="color: #ff00ff;">user</span> 的所有信息。不过这些信息可以按需自己获取。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800000;">@"</span><span style="color: #800000;">mutation{
+                    login(email:""</span><span style="color: #800000;">"</span> +<span style="color: #000000;"> textBox_Username.Text 
+                    </span>+ <span style="color: #800000;">@"</span><span style="color: #800000;">"", password:""</span><span style="color: #800000;">"</span>+<span style="color: #000000;"> textBox_pswd.Text 
+                    </span>+ <span style="color: #800000;">@"</span><span style="color: #800000;">""){
+                    access_token
+                    token_type
+                    expires_in
+                    user{id
+                        email
+                        nickname
+                        email_verified_at
+                        password
+                        remember_token
+                        mobile
+                        gender
+                        birthdate
+                        type
+                        avatar_uri
+                        avatar_radius_uri
+                        status
+                        auth_privacy
+                        account_type
+                        created_at
+                        updated_at}
+                    }
+                    }</span><span style="color: #800000;">"</span>;</pre>
+</div>
+<p>&nbsp;</p>
+<p>然后在C#里面响应&nbsp;<span style="color: #ff00ff;">LoginWithUsernamePassword_Tapped</span> 时间。</p>
+<p>先声明一个<span style="color: #ff00ff;">GraphQL</span>的<span style="color: #ff00ff;">Client</span>，指定<span style="color: #ff00ff;">EndPoint</span>地址。</p>
+<div class="cnblogs_code">
+<pre><code>GraphQLClient client = <span style="color: #0000ff;">new</span> GraphQLClient(<span style="color: #0000ff;">new</span><span style="color: #000000;"> GraphQLClientOptions
+            {
+                EndPoint </span>= <span style="color: #0000ff;">new</span> Uri(<span style="color: #800000;">"</span><span style="color: #800000;">http://dev.xxx.com/api/graphql/guest</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            });</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>然后声明<span style="color: #ff00ff;">GraphQLResponse</span>，来接受服务器返回的消息。</p>
+<div class="cnblogs_code">
+<pre><code>            GraphQLResponse response = <span style="color: #0000ff;">await</span><span style="color: #000000;"> client.PostQueryAsync(query);
+            </span><span style="color: #0000ff;">if</span> (response.Errors == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                
+            }
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                textBox_Result.Text </span>= <span style="color: #800000;">"</span><span style="color: #800000;">Login With Username Password Failed</span><span style="color: #800000;">"</span>;</pre>
+</div>
+<p>&nbsp;</p>
+<p>其实看上面的代码，可以看出，和我们之前用<span style="color: #ff00ff;">Restful Ap</span>i的方式一模一样。</p>
+<p>1. 向指定的url发送请求</p>
+<p>2. 获取相应信息</p>
+<p>3. 判断返回的消息是否成功，比如<span style="color: #ff00ff;">status code</span>等。</p>
+<p>&nbsp;</p>
+<p>如果<span style="color: #ff00ff;">GraphQL</span>返回的<span style="color: #ff00ff;">Response.Errors</span>是空的话，表示查询成功。接下来要对数据进行反序列化处理，以便接下来我们可以直接使用。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">                var</span> result = response.GetDataFieldAs&lt;LoginWithPinCode&gt;(<span style="color: #800000;">"</span><span style="color: #800000;">login</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+                textBox_Result.Text </span>=<span style="color: #000000;"> result.access_token;
+                image_Head.Source </span>= <span style="color: #0000ff;">new</span> BitmapImage(<span style="color: #0000ff;">new</span> Uri(result.user.avatar_radius_uri));</pre>
+</div>
+<p>&nbsp;</p>
+<p>到这里，可能会有人好奇<strong><span style="color: #ff00ff;">"login"</span></strong>是怎么来的？</p>
+<p>在<span style="color: #ff00ff;">Altair</span>中，发送请求，返回来的数据都是包含在<span style="color: #ff00ff;">data</span>数据体中的。<span style="color: #ff00ff;">data</span>里面的<span style="color: #ff00ff;">login</span>才是我们真正想要的。</p>
+<p>而<span style="color: #ff00ff;">LoginWithPinCode</span>类是根据返回的<span style="color: #ff00ff;">login</span>数据，自己定义的<span style="color: #ff00ff;">model</span>。</p>
+<p>&nbsp;<img src="./images/UWP GraphQL数据查询客户端的实现6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>好了，到此。一个完整的利用用户名密码登录的例子就完成了。</p>
+<p>C#完整代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">        private</span> <span style="color: #0000ff;">async</span> <span style="color: #0000ff;">void</span> LoginWithUsernamePassword_Tapped(<span style="color: #0000ff;">object</span><span style="color: #000000;"> sender, TappedRoutedEventArgs e)
+        {
+            client </span>= <span style="color: #0000ff;">new</span> GraphQLClient(<span style="color: #0000ff;">new</span><span style="color: #000000;"> GraphQLClientOptions
+            {
+                EndPoint </span>= <span style="color: #0000ff;">new</span> Uri(<span style="color: #800000;">"</span><span style="color: #800000;">http://dev.xxx.com/api/graphql/guest</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            });
+
+            </span><span style="color: #0000ff;">string</span> query = <span style="color: #800000;">@"</span><span style="color: #800000;">mutation{
+                    login(email:""</span><span style="color: #800000;">"</span> +<span style="color: #000000;"> textBox_Username.Text 
+                    </span>+ <span style="color: #800000;">@"</span><span style="color: #800000;">"", password:""</span><span style="color: #800000;">"</span>+<span style="color: #000000;"> textBox_pswd.Text 
+                    </span>+ <span style="color: #800000;">@"</span><span style="color: #800000;">""){
+                    access_token
+                    token_type
+                    expires_in
+                    user{id
+                        email
+                        nickname
+                        email_verified_at
+                        password
+                        remember_token
+                        mobile
+                        gender
+                        birthdate
+                        type
+                        avatar_uri
+                        avatar_radius_uri
+                        status
+                        auth_privacy
+                        account_type
+                        created_at
+                        updated_at}
+                    }
+                    }</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+
+            GraphQLResponse response </span>= <span style="color: #0000ff;">await</span><span style="color: #000000;"> client.PostQueryAsync(query);
+
+            </span><span style="color: #0000ff;">if</span> (response.Errors == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">var</span> result = response.GetDataFieldAs&lt;LoginWithPinCode&gt;(<span style="color: #800000;">"</span><span style="color: #800000;">login</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+                textBox_Result.Text </span>=<span style="color: #000000;"> result.access_token;
+                image_Head.Source </span>= <span style="color: #0000ff;">new</span> BitmapImage(<span style="color: #0000ff;">new</span><span style="color: #000000;"> Uri(result.user.avatar_radius_uri));
+            }
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                textBox_Result.Text </span>= <span style="color: #800000;">"</span><span style="color: #800000;">Login With Username Password Failed</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+        }<br /></span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="color: #ff00ff; font-size: 18pt;"><strong>6. GraphQL使用总结</strong></span></p>
+<p>如果你的项目突然说要换<span style="color: #ff00ff;">GraphQL</span>方式查询之类的，不要慌。没听过没关系，它也是一个<span style="color: #ff00ff;">api</span>，通过结合了<span style="color: #ff00ff;">SQL</span>查询的方式实现。</p>
+<p>上面的两个例子都是用微软的库实现的。</p>
+<p>如果这三个库都不能满足你的要求，那么就需要用<span style="color: #ff00ff;">dot net</span>提供的<span style="color: #ff00ff;">HttpClient</span>来从最底层做起。这样有个好处就是你可以完全按照自己的需要定制。</p>
+<p>像前面提到的<span style="color: #ff00ff;">Apollo</span>框架，它就存在这样那种的限制。<span style="color: #ff00ff;">Android</span>和<span style="color: #ff00ff;">iOS</span>开发组，在几个<span style="color: #ff00ff;">schema</span>文件上花费了好大一段时间，又是合并文件又是命名空间啥的。</p>
+<p>不过由于微软的那个库（其实也就是封装了<span style="color: #ff00ff;">HttpClient</span>，做多了一点处理），封了虽然并没有那么的理想，反而避开了<span style="color: #ff00ff;">schema</span>这一点。</p>
+<p>如果你从<span style="color: #ff00ff;">HttpClient</span>，当然更不会存在这种问题了。</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

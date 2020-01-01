@@ -1,0 +1,237 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修微信小程序登入流程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>微信小程序登入流程</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11580715.html</div><br>
+    <h1 id="微信小程序登入流程">微信小程序登入流程</h1>
+<p><img src="./images/微信小程序登入流程0.png" /></p>
+<h2 id="一.首先前端先传code去后端">一.首先前端先传code去后端</h2>
+<pre><code><code>wx.login({
+      success(res) {
+        if (res.code) {
+          //发起网络请求
+          wx.request({
+            url: app.globalData.host+&#39;login&#39;,
+            method:&quot;post&quot;,
+            data: {
+              code: res.code
+            }
+          })
+        } else {
+          console.log(&#39;登录失败！&#39; + res.errMsg)
+        }
+      }
+    })</code></pre>
+<h2 id="二.后端接受到请求中的code">二.后端接受到请求中的code</h2>
+<pre class="python"><code>#.......省略一下配置路由啥的
+class Login(APIView):
+    def post(self,request):
+        code = request.data.get(&#39;code&#39;)
+        print(code,type(code))
+        #061HMtlG0hAQ6d2hOYkG0DlhlG0HMtlh &lt;class &#39;str&#39;&gt;</code></pre>
+<h2 id="三.后端获得code之后向微信官方发起请求获得相关参数">三.后端获得code之后向微信官方发起请求获得相关参数</h2>
+<h3 id="发起的链接">发起的链接</h3>
+<pre class="python"><code>GET https://api.weixin.qq.com/sns/jscode2session?appid=APPID&amp;secret=SECRET&amp;js_code=JSCODE&amp;grant_type=authorization_code</code></pre>
+<h3 id="请求参数">请求参数</h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">属性</th>
+<th style="text-align: left;">类型</th>
+<th style="text-align: left;">默认值</th>
+<th style="text-align: left;">必填</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">appid</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">小程序 appId</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">secret</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">小程序 appSecret</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">js_code</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">登录时获取的 code</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">grant_type</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;"></td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">授权类型，此处只需填写 authorization_code</td>
+</tr>
+</tbody>
+</table>
+<h3 id="返回值">返回值</h3>
+<h3 id="object">Object</h3>
+<p>返回的 JSON 数据包</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">属性</th>
+<th style="text-align: left;">类型</th>
+<th style="text-align: left;">说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">openid</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;">用户唯一标识</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">session_key</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;">会话密钥</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">unionid</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;">用户在开放平台的唯一标识符，在满足 UnionID 下发条件的情况下会返回，详见 <a href="https://developers.weixin.qq.com/miniprogram/dev/framework/open-ability/union-id.html">UnionID 机制说明</a>。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">errcode</td>
+<td style="text-align: left;">number</td>
+<td style="text-align: left;">错误码</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">errmsg</td>
+<td style="text-align: left;">string</td>
+<td style="text-align: left;">错误信息</td>
+</tr>
+</tbody>
+</table>
+<h3 id="errcode-的合法值"><strong>errcode 的合法值</strong></h3>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">值</th>
+<th style="text-align: left;">说明</th>
+<th style="text-align: left;">最低版本</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">-1</td>
+<td style="text-align: left;">系统繁忙，此时请开发者稍候再试</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">0</td>
+<td style="text-align: left;">请求成功</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">40029</td>
+<td style="text-align: left;">code 无效</td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">45011</td>
+<td style="text-align: left;">频率限制，每个用户每分钟100次</td>
+<td style="text-align: left;"></td>
+</tr>
+</tbody>
+</table>
+<h3 id="接着上述我们对于路径进行拼接成他需要的内容">接着上述我们对于路径进行拼接成他需要的内容</h3>
+<pre class="python"><code>import requests
+class Login(APIView):
+    def post(self,request):
+        code = request.data.get(&#39;code&#39;)
+    #https: // api.weixin.qq.com / sns / jscode2session?appid = {} &amp; secret ={} &amp; js_code = {} &amp; grant_type = authorization_code
+        url= f&quot;https://api.weixin.qq.com/sns/jscode2session?appid=xxxx&amp;secret=xxxx&amp;js_code={code}&amp;grant_type=authorization_code&quot;
+        #appid与secret不同的开发者不一样
+        reponse=requests.get(url)
+        #因为返回值是json的形式
+        data=reponse.json()
+        print(data)</code></pre>
+<p>appid看你小程序中设置了是哪个appid</p>
+<p>对于的appid有对应的secret</p>
+<p>其中<code>appid</code>以及<code>secret</code>均在你<code>小程序账号中</code></p>
+<h2 id="四.获取参数后后台对于参数进行加密处理">四.获取参数后后台对于参数进行加密处理</h2>
+<pre class="python"><code>import hashlib
+class Login(APIView):
+    ........
+    if data.get(&quot;openid&quot;) and data.get(&quot;session_key&quot;):
+        md5 = hashlib.md5()
+        md5.update(data[&#39;openid&#39;].encode(&quot;utf-8&quot;))
+        md5.update(data[&#39;session_key&#39;].encode(&quot;utf-8&quot;))
+        key = md5.hexdigest()
+        val =data[&#39;session_key&#39;]+&quot;&amp;&quot;+data[&#39;openid&#39;]
+        print(key,val)</code></pre>
+<h2 id="五.如果上述过程都成功返回前端一个标识方便后续操作">五.如果上述过程都成功,返回前端一个标识方便后续操作</h2>
+<pre class="python"><code>from rest_framework.response import  Response
+from django.core.cache import cache
+
+class Login(APIView):
+    ........
+    cache.set(key,val)  #存缓存中较少对于数据库的压力
+    has_user=models.Wxuser.objects.filter(openid=data[&#39;openid&#39;]).first() #将唯一标识进行存储
+    if not  has_user:
+        models.Wxuser.objects.create(openid=data[&#39;openid&#39;])
+        return Response({
+            &quot;code&quot;: 200,
+            &quot;msg&quot;: &quot;ok&quot;,
+            &quot;data&quot;:{&#39;login_key&#39;:key}  #发送login_key其目的是为了后续可以直接去缓存取对于信息
+        })</code></pre>
+<h2 id="六.前端在前没有任何问题的情况下对于标识信息进行接收">六.前端在前没有任何问题的情况下对于标识信息进行接收</h2>
+<p>目的,标识已登入以及获取标识,方便后续对于用户信息的查找</p>
+<pre><code><code> var that = this
+    wx.login({
+      success(res) {
+        if (res.code) {
+          //发起网络请求
+          wx.request({
+            url: app.globalData.host + &#39;login&#39;,
+            method: &quot;post&quot;,
+            data: {
+              code: res.code
+            },
+            success(res) {
+              console.log(res.data.data.login_key)
+              console.log(that)
+              that.setData({
+                login_key: res.data.data.login_key
+              }
+              )
+            },
+          })
+        }else {
+          console.log(&#39;登录失败！&#39; + res.errMsg)
+        }
+      }
+    })</code></pre>
+<p><code>其中setData</code>方法的必须对象是整个页面</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

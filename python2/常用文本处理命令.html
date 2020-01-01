@@ -1,0 +1,221 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修常用文本处理命令' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>常用文本处理命令</center></div><div class='banquan'>原文出处:本文由博客园博主远方789提供。<br/>
+原文连接:https://www.cnblogs.com/chenfangzhi/p/11997028.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#一awk">一、awk</a><ul>
+        <li><a href="#基本句式">基本句式</a></li>
+        <li><a href="#过滤记录">过滤记录</a></li>
+        <li><a href="#指定分隔符">指定分隔符</a></li>
+        <li><a href="#特殊关键字">特殊关键字：</a></li>
+        <li><a href="#正则">正则</a></li>
+        <li><a href="#输出到不同的文件">输出到不同的文件</a></li>
+        <li><a href="#和环境变量的交互">和环境变量的交互</a></li>
+        </ul></li>
+        <li><a href="#二grep">二、grep</a></li>
+        <li><a href="#三sed">三、sed</a></li>
+        <li><a href="#四sort和uniq">四、sort和uniq</a></li>
+        <li><a href="#五实战">五、实战</a><ul>
+        <li><a href="#处理以下文件内容将域名取出并进行计数排序如处理">处理以下文件内容,将域名取出并进行计数排序,如处理:</a></li>
+        <li><a href="#awk例子">awk例子</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<p>Linux中很多文本工具都使用到了正则表达式，正则表达式可以极大的简化linux系统管理工作，因为网上有很多正则相关的教程，所以这里不再讲述，我当时看的是菜鸟的<a href="https://www.runoob.com/regexp/regexp-syntax.html">正则表达式</a>，看个一下午在实验几遍基本就会了，除了正向肯定预查，反向肯定预查这几个比较复杂一些，其他都是非常简单的，很多时候记不住也可以查询网上对着写，并不需要你实时记住。这里主要谈谈awk等用到正则表达式的文本处理工具。</p>
+<h2 id="一awk">一、awk</h2>
+<p>awk的指令必须包含在单引号中。</p>
+<h3 id="基本句式">基本句式</h3>
+<p>awk -F'指定输入分隔符' 'BEGIN{做一些初始化工作} 一些过滤条件 {针对每行的工作}... END{最后收尾工作}'</p>
+<p>中间的处理块可以有多个，通过过滤条件单每行都会走一遍过滤条件，其中BEGIN和END边只会执行一遍</p>
+<h3 id="过滤记录">过滤记录</h3>
+<ol>
+<li>awk '$3==0 &amp;&amp; $6==&quot;LISTEN&quot; ' netstat.txt</li>
+<li>awk '$3==0 &amp;&amp; $6==&quot;LISTEN&quot; || NR==1 ' netstat.txt</li>
+</ol>
+<h3 id="指定分隔符">指定分隔符</h3>
+<ol>
+<li><code>awk  -F: '{print $1,$3,$6}' /etc/passwd</code>等价于<code>awk  'BEGIN{FS=&quot;:&quot;} {print $1,$3,$6}' /etc/passwd</code></li>
+<li><code>awk -F '[;:]'</code> 指定多个分隔符</li>
+<li><code>awk  -F: '{print $1,$3,$6}' OFS=&quot;\t&quot; /etc/passwd</code>指定输出分隔符</li>
+</ol>
+<p>需要注意的是上面<code>print $1,$3,$6</code>中的<code>,</code>被替换成了分隔符，如果是<code>print $1$3$6</code>则中间没有分隔符</p>
+<h3 id="特殊关键字">特殊关键字：</h3>
+<ol>
+<li>NR 目前处理的行号</li>
+<li>NF 当前处理的行一共用到的字段数目</li>
+<li>FNR 目前处理的文件的行号（当处理多个文件时，NR会不停的累加，但如果是FNR则在处理新文件是从1开始）</li>
+<li>FILENAME 文件名</li>
+<li>$0 当前整行</li>
+<li>FS 输入字段分隔符 默认是空格或Tab</li>
+<li>RS 输入记录分隔符 默认为换行符</li>
+<li>OFS 输出字段分隔符 默认是空格或Tab</li>
+<li>ORS 输出记录分隔符 默认为换行符</li>
+</ol>
+<h3 id="正则">正则</h3>
+<ol>
+<li>普通匹配： <code>awk'/hello/ {print}' test.sh</code><br />
+</li>
+<li>匹配取反： <code>awk '!/hello/ {print}' test.sh</code></li>
+<li>同时匹配： <code>awk '/hello/ &amp;&amp; /world/ {print}' test.sh</code><br />
+</li>
+<li>或者匹配： <code>awk '/hello/ || /world/ {print}' test.sh</code> 也可以写成<code>awk '/hello|world/ {print}' test.sh</code><br />
+</li>
+<li>指定列匹配： <code>awk '$5 ~ /hello/ {print}' test.sh</code></li>
+<li>指定列匹配取反： <code>awk '$5 !~ /hello/ {print}' test.sh</code></li>
+</ol>
+<h3 id="输出到不同的文件">输出到不同的文件</h3>
+<ol>
+<li><code>$ awk 'NR!=1{if($6 ~ /TIME|ESTABLISHED/) print &gt; &quot;1.txt&quot;;  else if($6 ~ /LISTEN/) print &gt; &quot;2.txt&quot;;  else print &gt; &quot;3.txt&quot; }' netstat.txt</code></li>
+<li><code>awk 'NR!=1{print &gt; $6}' netstat.txt</code></li>
+</ol>
+<p>其实使用了 <code>&gt;</code>重定向,上例子使用了if语句</p>
+<ol>
+<li>统计数据： <code>awk 'NR!=1{a[$6]++;} END {for (i in a) print i &quot;, &quot; a[i];}' netstat.txt</code></li>
+<li>行数筛选，开头和结尾的条件使用,分隔： awk '/test1/,/test2/ {print}' test.txt</li>
+</ol>
+<h3 id="和环境变量的交互">和环境变量的交互</h3>
+<pre><code><code>$ x=5
+ 
+$ y=10
+$ export y
+ 
+$ echo $x $y
+5 10
+$ awk -v val=$x &#39;{print $1, $2, $3, $4+val, $5+ENVIRON[&quot;y&quot;]}&#39; OFS=&quot;\t&quot; score.txt
+Marry   2143    78      89      87
+Jack    2321    66      83      55
+Tom     2122    48      82      81
+Mike    2537    87      102     105
+Bob     2415    40      62      72</code></pre>
+<h2 id="二grep">二、grep</h2>
+<p>参数列表：</p>
+<ol>
+<li>-w 匹配整个单词</li>
+<li>-s 忽略文件不存在等报错</li>
+<li>-l 仅列出匹配文件列表</li>
+<li>-L 仅列出不匹配文件列表</li>
+<li>-A 显示后的行数 如-1 匹配行的后1行</li>
+<li>-B 显示前的行数 如-1 匹配行的前1行</li>
+<li>-number 显示前后的行数 如-1 匹配行的前后1行</li>
+<li>-n 打印行数</li>
+<li>-c 仅显示个数</li>
+<li>-v 反向</li>
+<li>-o 仅显示匹配的内容</li>
+<li>-E 则表示要使用EREs</li>
+<li>-P 则表示要使用PREs</li>
+</ol>
+<p>grep主要就是一个正则表达式的使用，其中需要注意正则有三种BREs、EREs和PREs。前两种不支持非贪婪匹配。grep默认是BREs，所以他<code>?,+,|,{,},（,）</code><br />
+这种字符都需要用<code>\</code>转义，另外他不支持<code>\s，\S，\D，\d,\n</code>等字符。</p>
+<h2 id="三sed">三、sed</h2>
+<p>sed命令在自动化脚本编写的过程还是经常用到的。</p>
+<p>基本句式： sed -nfei [操作]</p>
+<p>操作： n1,n2 动作</p>
+<p>动作：</p>
+<ol>
+<li>d： 删除</li>
+<li>s： 替换，行内替换，行内匹配的字符串，如hello world该行替换hello为hi变成hi world</li>
+<li>a和i： a增加在匹配的后面增加行 i增加在匹配的前面增加行</li>
+<li>c ：替换，针对整行替换</li>
+</ol>
+<p>例子：</p>
+<ol>
+<li><code>sed -e 's/hello/hi/g'</code>:替换文本,-e可以省略</li>
+<li><code>sed -e '1,2s/hello/hi/g' -e '3,4s/world/man/g</code>:等价于<code>sed -e '1,2s/hello/hi/g；3,4s/world/man/g</code></li>
+<li><code>sed s/hello \(world\)/\1 hi/g'</code>:群组匹配，可以使用\n选择前面的群组</li>
+</ol>
+<h2 id="四sort和uniq">四、sort和uniq</h2>
+<p>sort参数</p>
+<ol>
+<li>-r： 默认升序，-r表示反序</li>
+<li>-u： 移除重复</li>
+<li>-o： 重定向到文件，注意<code>sort  test.txt &gt;test.txt</code>不可用，因为&gt; 是想清空文件，所以会导致文件在排序之前就清空了</li>
+<li>-n： 默认按字符排序，如10小于2，-n表示按数字排序</li>
+<li>-t： 指定分隔符</li>
+<li>-k： 指明用哪一列来做排序</li>
+<li>-b： 忽略每行前面开始出的空格字符</li>
+</ol>
+<p>例子：</p>
+<ol>
+<li><code>sort -t  $'\t'  -k 1  -u  res.txt &gt; res2.txt</code> 以tab作为分隔符，按第一列排序并去重</li>
+</ol>
+<p>uniq参数</p>
+<blockquote>
+<p>需要注意uniq需要文本是有序的，所以一般使用uniq的时候是用更早sort的管道后面</p>
+</blockquote>
+<ol>
+<li>-c：显示出现的次数</li>
+<li>-d：仅显示重复出现行； 　　　</li>
+<li>-u ：仅显示出一次的行列； 　　</li>
+</ol>
+<p>说说<code>sort|uniq</code> 和<code>sort -u</code>,一直觉得很奇怪，两者有什么区别，功能是一样的。<code>sort -u</code>是后面加入的，所以很多人还是使用了<code>sort|uniq</code>，<br />
+目前推荐使用<code>sort -u</code>，因为还少了进程间通讯。</p>
+<h2 id="五实战">五、实战</h2>
+<h3 id="处理以下文件内容将域名取出并进行计数排序如处理">处理以下文件内容,将域名取出并进行计数排序,如处理:</h3>
+<p><a href="http://www.baidu.com/index" class="uri">http://www.baidu.com/index</a>.<a target="_blank" href="http://www.2cto.com/kf/qianduan/css/" class="keylink" style="border:none; padding:0px; margin:0px; color:rgb(51,51,51); text-decoration:none; font-size:14px">html</a><br />
+http: / / www.baidu.com/1.html<br />
+<a href="http://post.baidu.com/index.html" class="uri">http://post.baidu.com/index.html</a><br />
+<a href="http://mp3.baidu.com/index.html" class="uri">http://mp3.baidu.com/index.html</a><br />
+<a href="http://www.baidu.com/3.html" class="uri">http://www.baidu.com/3.html</a><br />
+<a href="http://post.baidu.com/2.html" class="uri">http://post.baidu.com/2.html</a><br />
+得到如下结果:<br />
+3 www.baidu.com<br />
+2 post.baidu.com<br />
+1 mp3.baidu.com</p>
+<p>解法1：<code>grep -Po  '(?&lt;=//)(.*?)(?=/)' test.txt |sort |uniq -c|sort -nr</code></p>
+<blockquote>
+<p>1.利用了Perl，他支持非贪婪，2.利用了正向和反向预查（正向预查是后面的(?=)) 3.利用了-o参数只输出匹配的内容</p>
+</blockquote>
+<p>解法2：<code>awk -F/ '{print $3}' test.txt |sort |uniq -c|sort -nr</code></p>
+<blockquote>
+<p>指明了分割符号 直接取对应值</p>
+</blockquote>
+<p>解法3：<code>sed  's/http:\/\/\([^/]*\).*/\1/' test.txt|sort |uniq -c|sort -nr</code></p>
+<blockquote>
+<p>基本的正则中小括号需要转义，如果采用-r参数即扩展的正则小括号不用转义</p>
+</blockquote>
+<p>解法4： <code>sed -e 's/http:\/\///' -e 's/\/.*//' | sort | uniq -c | sort -rn</code></p>
+<blockquote>
+<p>采用了替换，先替换前面的，在替换后面的</p>
+</blockquote>
+<h3 id="awk例子">awk例子</h3>
+<p>需要注意awk不支持多维数组，采用了一种变通的方式，普通的使用没问题，但是如果需要存的值是一个map就不合适了，如下<br />
+文件 1-6列分别为deal od sum up lj day ，现在要计算sum up lj day 的累加和输出<br />
+输出也要是deal od sum up lj day也就是sum up lj day需要是一个map，不过awk做不到这点</p>
+<pre><code><code>{
+    updealids:{
+        od: {day,sum,up,lj}
+        
+    }
+}
+awk &#39;BEGIN{OFS=&quot;\t&quot;}{result[$1,$3,&quot;sum&quot;]+=$4;result[$1,$3,&quot;up&quot;]+=$5;result[$1,$3,&quot;lj&quot;]+=$6;result[$1,$3,&quot;day&quot;]=$2}\
+END{for ( i in result)   {split(i, a, SUBSEP); print result[i] ,a[1], a[2], a[3] }}&#39;  *</code></pre>
+<p>参考资料：</p>
+<ol>
+<li><a href="https://coolshell.cn/articles/9070.html">AWK 简明教程</a></li>
+<li><a href="https://coolshell.cn/articles/9104.html">SED 简明教程</a></li>
+</ol>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

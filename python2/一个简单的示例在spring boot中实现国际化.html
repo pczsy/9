@@ -1,0 +1,207 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修一个简单的示例在spring boot中实现国际化' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>一个简单的示例在spring boot中实现国际化</center></div><div class='banquan'>原文出处:本文由博客园博主轻舟万里提供。<br/>
+原文连接:https://www.cnblogs.com/qzwl/p/12068835.html</div><br>
+    <p>最近在网上找了一个有关账单管理的spring boot项目，其中有一部分是涉及显示国际化信息的，即将页面上的中英文进行转换。因为在这之前这部分内容没有接触过，所以在这记录下过程。</p>
+<p><strong>中文效果图如下所示：</strong><br /><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/一个简单的示例在spring boot中实现国际化0.png" alt="" width="502" height="384" /></p>
+<p><strong>英文效果图如下所示：</strong></p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/一个简单的示例在spring boot中实现国际化1.png" alt="" width="510" height="430" /></p>
+<p>&nbsp;</p>
+<p>从上面两幅图可以看出在切换中英文时有五个部分的内容发送改变。分别是：<span style="color: #ff0000;"><strong>用户名</strong></span>（Username）、<span style="color: #ff0000;"><strong>密码</strong></span>（Password）、<span style="color: #ff0000;"><strong>记住我</strong></span>（Remember Me）、<span style="color: #ff0000;"><strong>登录</strong></span>（Sign）、<span style="color: #ff0000;"><strong>重置</strong></span>（Rest）。</p>
+<p>第一部分、先在resources目录下新建一个i18n文件夹，并在该文件夹下新建一个Resource Bundle.如下图所示：</p>
+<p>&nbsp;</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/一个简单的示例在spring boot中实现国际化2.png" alt="" width="599" height="476" /></p>
+<p>并在跳出的弹框内写入以下信息：</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/一个简单的示例在spring boot中实现国际化3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>点击&ldquo;OK&rdquo;后就会在i18n目录下生成3个后缀名为&ldquo;.properties&rdquo;的文件。如下所示：</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/一个简单的示例在spring boot中实现国际化4.png" alt="" /></p>
+<p>第二部分、分别在这三个文件中填入相应信息。</p>
+<p>login.properties表示默认显示的信息。login.password、login.remember、login.reset、login.submit、login.username是自己设置的key值，用于在HTML中显示。后面的是将要显示的内容。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #000000;">login.password=密码
+</span><span style="color: #008080;">2</span> <span style="color: #000000;">login.remember=记住我
+</span><span style="color: #008080;">3</span> <span style="color: #000000;">login.reset=重置
+</span><span style="color: #008080;">4</span> <span style="color: #000000;">login.submit=登录
+</span><span style="color: #008080;">5</span> login.username=用户名</pre>
+</div>
+<p>&nbsp;login_en_US.properties</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #000000;">login.password=Password
+</span><span style="color: #008080;">2</span> <span style="color: #000000;">login.remember=Remember Me
+</span><span style="color: #008080;">3</span> <span style="color: #000000;">login.reset=Rest
+</span><span style="color: #008080;">4</span> <span style="color: #000000;">login.submit=Sign
+</span><span style="color: #008080;">5</span> login.username=Username</pre>
+</div>
+<p>login_zh_CN.properties</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #000000;">login.password=密码
+</span><span style="color: #008080;">2</span> <span style="color: #000000;">login.remember=记住我
+</span><span style="color: #008080;">3</span> <span style="color: #000000;">login.reset=重置
+</span><span style="color: #008080;">4</span> <span style="color: #000000;">login.submit=登录
+</span><span style="color: #008080;">5</span> login.username=用户名</pre>
+</div>
+<p>第三部分、在HTML相应位置填入key值，并在点击&ldquo;中文&rdquo;或&ldquo;English&rdquo;发出不同请求信息。</p>
+<p>注意：在这个项目中使用的模板是thymeleaf，因此需要现在开始的html标签内引入该模板的标签。</p>
+<p>根据thymeleaf的文档</p>
+<blockquote>
+<p><img src="./images/一个简单的示例在spring boot中实现国际化5.png" alt="" width="660" height="380" /></p>
+</blockquote>
+<p>显示国际化信息时用到的&ldquo;#{}&rdquo;而不是"${}"。</p>
+<p>由于这个&ldquo;记住我&rdquo;是&lt;input&gt;单标签的没有标签体，根据thymeleaf文档发现需要使用"[[#{}]]"或&ldquo;[(#{})]&rdquo;行内表达式。</p>
+<blockquote>
+<p><img src="./images/一个简单的示例在spring boot中实现国际化6.png" alt="" width="643" height="309" /></p>
+</blockquote>
+<p>当点击&ldquo;中文&rdquo;时附带请求信息&ldquo;zh_CN&rdquo;，点击英文时附带请求信息&ldquo;en_US&rdquo;.</p>
+<p>login.html代码如下所示：</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('4f6268cc-0782-49e7-a39e-d736c04a987b')"><img id="code_img_closed_4f6268cc-0782-49e7-a39e-d736c04a987b" class="code_img_closed" src="./images/一个简单的示例在spring boot中实现国际化7.png" alt="" /><img id="code_img_opened_4f6268cc-0782-49e7-a39e-d736c04a987b" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('4f6268cc-0782-49e7-a39e-d736c04a987b',event)" src="./images/一个简单的示例在spring boot中实现国际化8.png" alt="" />
+<div id="cnblogs_code_open_4f6268cc-0782-49e7-a39e-d736c04a987b" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 2</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">xmlns:th</span><span style="color: #0000ff;">="http://www.thymeleaf.org"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 3</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #ff0000;"> th:replace</span><span style="color: #0000ff;">="main/public :: #public_head"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 4</span> 
+<span style="color: #008080;"> 5</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 6</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="login_bg"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 7</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">section </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="loginBox"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 8</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">header </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="loginHeader"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 9</span>             <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>轻舟万里账单管理系统<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">10</span>         <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">header</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">11</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">section </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="loginCont"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">12</span>             <span style="color: #008000;">&lt;!--</span><span style="color: #008000;">&lt;div style="color:red; margin-left: 130px"&gt;用户名错误！&lt;/div&gt;</span><span style="color: #008000;">--&gt;</span>
+<span style="color: #008080;">13</span>             <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="loginForm"</span><span style="color: #ff0000;"> action</span><span style="color: #0000ff;">="../main/index.html"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">14</span>                 
+<span style="color: #008080;">15</span>                 <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="inputbox"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">16</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">label </span><span style="color: #ff0000;">for</span><span style="color: #0000ff;">="user"</span><span style="color: #ff0000;"> th:text</span><span style="color: #0000ff;">="#{login.username}"</span><span style="color: #0000ff;">&gt;</span>Username<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">label</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">17</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="user"</span><span style="color: #ff0000;"> type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;">  required</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">18</span>                 <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">19</span>                 <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="inputbox"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">20</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">label </span><span style="color: #ff0000;">for</span><span style="color: #0000ff;">="mima"</span><span style="color: #ff0000;"> th:text</span><span style="color: #0000ff;">="#{login.password}"</span><span style="color: #0000ff;">&gt;</span>Password<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">label</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">21</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="mima"</span><span style="color: #ff0000;"> type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;">  required</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">22</span>                 <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">23</span>                 <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="subBtn"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">24</span>                         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="checkbox"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;"> [[#{login.remember}]]
+</span><span style="color: #008080;">25</span>                 <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">26</span>                 <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">27</span>                 <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="subBtn"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">28</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> th:value</span><span style="color: #0000ff;">="#{login.submit}"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="Sign"</span> <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">29</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="reset"</span><span style="color: #ff0000;"> th:value</span><span style="color: #0000ff;">="#{login.reset}"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="Reset"</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">30</span>                 <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">31</span>                 <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">32</span>                 <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">style</span><span style="color: #0000ff;">="margin-left: 100px;"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">33</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #ff0000;"> th:href</span><span style="color: #0000ff;">="@{/index.html(l='zh_CN')}"</span><span style="color: #0000ff;">&gt;</span>中文<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">34</span>                     <span style="color: #ff0000;">&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;</span>
+<span style="color: #008080;">35</span>                     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> th:href</span><span style="color: #0000ff;">="@{/index.html(l='en_US')}"</span><span style="color: #0000ff;">&gt;</span>English<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">36</span>                 <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">37</span>             <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">38</span>         <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">section</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">39</span>     <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">section</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">40</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">41</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">login.html</span></div>
+<p>&nbsp;</p>
+<p>第四部分、设置区域解析器</p>
+<p>在页面上显示中文还是英文是由请求信息头中&ldquo;accept-language&rdquo;的决定的，默认是中文。我们只要将点击所附带的请求信息传递给&ldquo;accept-language&rdquo;就会使页面的中英文改变。</p>
+<p>spring boot中有一个WebMvcAutoConfiguration类，提供了本地区域解析器。如下图所示：</p>
+<p><img src="./images/一个简单的示例在spring boot中实现国际化9.png" alt="" width="1019" height="341" /></p>
+<p>该本地区域解析器上有个注解@ConditionalOnMissingBean表示如果容器中没有这个bean，就将这个bean放到容器中，如果有就使用已经存在的。</p>
+<p>从下面的代码片段中可以看到有一个请求头本地区域解析器AcceptHeaderLocaleResolver实现了LocaleResolver接口。</p>
+<p><img src="./images/一个简单的示例在spring boot中实现国际化10.png" alt="" width="967" height="421" /></p>
+<p>因此我们可以在component包下新建一个自定义区域解析器MyLocaleResolver，该类需要实现接口LocaleResolver，重写方法，根据请求的参数构造一个Local返回。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">package</span><span style="color: #000000;"> club.nipengfei.springboot.component;
+</span><span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.web.servlet.LocaleResolver;
+</span><span style="color: #008080;"> 4</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> org.thymeleaf.util.StringUtils;
+</span><span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> javax.servlet.http.HttpServletRequest;
+</span><span style="color: #008080;"> 7</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> javax.servlet.http.HttpServletResponse;
+</span><span style="color: #008080;"> 8</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> java.util.Locale;
+</span><span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #008000;">/**</span>
+<span style="color: #008080;">11</span> <span style="color: #008000;"> * 自定义区域解析器
+</span><span style="color: #008080;">12</span>  <span style="color: #008000;">*/</span>
+<span style="color: #008080;">13</span> <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> MyLocaleResolver <span style="color: #0000ff;">implements</span><span style="color: #000000;"> LocaleResolver {
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">    @Override
+</span><span style="color: #008080;">15</span>     <span style="color: #0000ff;">public</span><span style="color: #000000;"> Locale resolveLocale(HttpServletRequest httpServletRequest) {
+</span><span style="color: #008080;">16</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 获取自定义请求头信息</span>
+<span style="color: #008080;">17</span>         String l = httpServletRequest.getParameter("l"<span style="color: #000000;">);
+</span><span style="color: #008080;">18</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 获取系统默认的区域信息</span>
+<span style="color: #008080;">19</span>         Locale locale =<span style="color: #000000;"> Locale.getDefault();
+</span><span style="color: #008080;">20</span>         <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">StringUtils.isEmpty(l)){
+</span><span style="color: #008080;">21</span>             String[] split = l.split("_"<span style="color: #000000;">);
+</span><span style="color: #008080;">22</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 接收第一个参数为语言代码，第二个参数为国家代码</span>
+<span style="color: #008080;">23</span>             locale = <span style="color: #0000ff;">new</span> Locale(split[0],split[1<span style="color: #000000;">]);
+</span><span style="color: #008080;">24</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">25</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> locale;
+</span><span style="color: #008080;">26</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">27</span> 
+<span style="color: #008080;">28</span> <span style="color: #000000;">    @Override
+</span><span style="color: #008080;">29</span>     <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setLocale(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Locale locale) {
+</span><span style="color: #008080;">30</span> 
+<span style="color: #008080;">31</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">32</span> }</pre>
+</div>
+<p>&nbsp;</p>
+<p>将其添加到容器中，在config包下新建一个MySpringMvcConfigure，在该类的localeResolver方法中返回LocaleResolver，注意使用注解@Bean。代码如下所示：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">package</span><span style="color: #000000;"> club.nipengfei.springboot.config;
+</span><span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> club.nipengfei.springboot.component.MyLocaleResolver;
+</span><span style="color: #008080;"> 4</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.context.annotation.Bean;
+</span><span style="color: #008080;"> 5</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.context.annotation.Configuration;
+</span><span style="color: #008080;"> 6</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.web.servlet.LocaleResolver;
+</span><span style="color: #008080;"> 7</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.web.servlet.config.annotation.ViewControllerRegistry;
+</span><span style="color: #008080;"> 8</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+</span><span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #000000;">@Configuration
+</span><span style="color: #008080;">11</span> <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> MySpringMvcConfigure {
+</span><span style="color: #008080;">12</span> 
+<span style="color: #008080;">13</span> <span style="color: #000000;">    @Bean
+</span><span style="color: #008080;">14</span>     <span style="color: #0000ff;">public</span><span style="color: #000000;"> WebMvcConfigurer webMvcConfigurer(){
+</span><span style="color: #008080;">15</span>         <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> WebMvcConfigurer() {
+</span><span style="color: #008080;">16</span> 
+<span style="color: #008080;">17</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 添加视图控制器</span>
+<span style="color: #008080;">18</span> <span style="color: #000000;">            @Override
+</span><span style="color: #008080;">19</span>             <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> addViewControllers(ViewControllerRegistry registry) {
+</span><span style="color: #008080;">20</span> 
+<span style="color: #008080;">21</span>                 registry.addViewController("/").setViewName("/main/login"<span style="color: #000000;">);
+</span><span style="color: #008080;">22</span>                 registry.addViewController("/index.html").setViewName("/main/login"<span style="color: #000000;">);
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">24</span> <span style="color: #000000;">        };
+</span><span style="color: #008080;">25</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">26</span> 
+<span style="color: #008080;">27</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 区域解析器</span>
+<span style="color: #008080;">28</span> <span style="color: #000000;">    @Bean
+</span><span style="color: #008080;">29</span>     <span style="color: #0000ff;">public</span><span style="color: #000000;"> LocaleResolver localeResolver(){
+</span><span style="color: #008080;">30</span>         <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> MyLocaleResolver();
+</span><span style="color: #008080;">31</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">32</span> }</pre>
+</div>
+<p>&nbsp;</p>
+<p>第五部分、在这过程中遇到的问题。</p>
+<ol>
+<li>中英文显示乱码，解决方法是修改properties文件编码，改为UTF-8。参考：<a href="https://blog.csdn.net/Oktfolio/article/details/78338182" target="_blank">解决 IntelliJ IDEA 中 i18n国际化 中文乱码问题。</a></li>
+<li>无法访问到login页面，因为login.html页面在template/main目录下。解决方法是添加视图控制器。</li>
+</ol>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

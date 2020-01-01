@@ -1,0 +1,340 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Spring源码学习笔记之bean标签属性介绍及作用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Spring源码学习笔记之bean标签属性介绍及作用</center></div><div class='banquan'>原文出处:本文由博客园博主城序猿提供。<br/>
+原文连接:https://www.cnblogs.com/cheng21553516/p/12026652.html</div><br>
+    <pre><code> 传统的Spring项目, xml 配置bean在代码中是经常遇到, 那么在配置bean的时候,这些属性的作用是什么呢? <br /> 虽然说现在boot项目兴起,基于xml配置的少了很多, 但是如果能够了解这些标签的作用对于我们基于注解的配置也有大有益处的.<br /><br />首先附上测试部分涉及到的类的代码:</pre>
+<div class="cnblogs_Highlighter">
+<pre class="brush:java;gutter:true;">@Data
+public class Student {
+
+    private int age;
+
+    private  String name = "test" ;
+
+    private int sex;
+}
+</pre>
+</div>
+<p>　　</p>
+<pre><code><strong>1</strong>. <strong>id</strong>:Bean的唯一标识名。它必须是合法的XMLID，在整个XML文档中唯一。<br /> </pre>
+<p><img src="./images/Spring源码学习笔记之bean标签属性介绍及作用0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<pre><code>2. <strong>name</strong>:用来为id创建一个或多个别名。它可以是任意的字母符合。多个别名之间用逗号, 分号 或者空格。</pre>
+<p><img src="./images/Spring源码学习笔记之bean标签属性介绍及作用1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;其中bean标签解析源码部分处理代码如下:</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">    public<span>&nbsp;BeanDefinitionHolder parseBeanDefinitionElement(Element ele, @Nullable BeanDefinition containingBean) {</span><br />        String id </span>=<span style="color: #000000;"> ele.getAttribute(ID_ATTRIBUTE);
+        String nameAttr </span>=<span style="color: #000000;"> ele.getAttribute(NAME_ATTRIBUTE);
+        <br />        <strong>//解析nanme 属性,<br />        // 其中  public static final String MULTI_VALUE_ATTRIBUTE_DELIMITERS = ",; ";<br />        // 我们可以发现name属性的分割符是支持三种的<br /></strong>
+        List</span>&lt;String&gt; aliases = <span style="color: #0000ff;">new</span> ArrayList&lt;&gt;<span style="color: #000000;">();
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (StringUtils.hasLength(nameAttr)) {<br />            // 使用分割符分割为数组, 作为这个bean的别名
+            String[] nameArr </span>=<span style="color: #000000;"> StringUtils.tokenizeToStringArray(nameAttr, MULTI_VALUE_ATTRIBUTE_DELIMITERS);
+            aliases.addAll(Arrays.asList(nameArr));
+        }
+
+        String beanName </span>=<span style="color: #000000;"> id;<br />        // 如果id 属性为空,则讲第一个别名作为bean的名称
+        </span><span style="color: #0000ff;">if</span> (!StringUtils.hasText(beanName) &amp;&amp; !<span style="color: #000000;">aliases.isEmpty()) {
+            beanName </span>= aliases.remove(0<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (logger.isTraceEnabled()) {
+                logger.trace(</span>"No XML 'id' specified - using '" + beanName +
+                        "' as bean name and " + aliases + " as aliases"<span style="color: #000000;">);
+            }
+        }
+
+        </span><span style="color: #0000ff;">if</span> (containingBean == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            checkNameUniqueness(beanName, aliases, ele);
+        }
+
+        AbstractBeanDefinition beanDefinition </span>=<span style="color: #000000;"> parseBeanDefinitionElement(ele, beanName, containingBean);
+        </span><span style="color: #0000ff;">if</span> (beanDefinition != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">StringUtils.hasText(beanName)) {
+                </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+                    </span><span style="color: #0000ff;">if</span> (containingBean != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                        beanName </span>=<span style="color: #000000;"> BeanDefinitionReaderUtils.generateBeanName(
+                                beanDefinition, </span><span style="color: #0000ff;">this</span>.readerContext.getRegistry(), <span style="color: #0000ff;">true</span><span style="color: #000000;">);
+                    }
+                    </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                        beanName </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.readerContext.generateBeanName(beanDefinition);
+                        </span><span style="color: #008000;">//</span><span style="color: #008000;"> Register an alias for the plain bean class name, if still possible,
+                        </span><span style="color: #008000;">//</span><span style="color: #008000;"> if the generator returned the class name plus a suffix.
+                        </span><span style="color: #008000;">//</span><span style="color: #008000;"> This is expected for Spring 1.2/2.0 backwards compatibility.</span>
+                        String beanClassName =<span style="color: #000000;"> beanDefinition.getBeanClassName();
+                        </span><span style="color: #0000ff;">if</span> (beanClassName != <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;">
+                                beanName.startsWith(beanClassName) </span>&amp;&amp; beanName.length() &gt; beanClassName.length() &amp;&amp;
+                                !<span style="color: #0000ff;">this</span><span style="color: #000000;">.readerContext.getRegistry().isBeanNameInUse(beanClassName)) {
+                            aliases.add(beanClassName);
+                        }
+                    }
+                    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (logger.isTraceEnabled()) {
+                        logger.trace(</span>"Neither XML 'id' nor 'name' specified - " +
+                                "using generated bean name [" + beanName + "]"<span style="color: #000000;">);
+                    }
+                }
+                </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Exception ex) {
+                    error(ex.getMessage(), ele);
+                    </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+                }
+            }
+            String[] aliasesArray </span>=<span style="color: #000000;"> StringUtils.toStringArray(aliases);
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> BeanDefinitionHolder(beanDefinition, beanName, aliasesArray);
+        }
+
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<pre><code><br /><br />3. <strong>class</strong>:用来定义类的全限定名（包名＋类名）。用来指定我们要实例化的类的全限定名<br /><br />4. parent:子类Bean定义它所引用它的父类Bean。子类Bean会继承父类Bean的所有属性，子类Bean也可以覆盖父类Bean的属性。<br /> 此时父类通过property 属性只能初始化子类同有的属性<br /><br /><br />5. abstract（默认为&rdquo;false&rdquo;）：用来定义Bean是否为抽象Bean。它表示这个Bean将不会被实例化，一般用于父类Bean，因为父类Bean主要是供子类Bean继承使用。<br /><br /></pre>
+<div class="cnblogs_code">
+<pre><code>&lt;bean id="parent" class="com.cbl.spring.model.Parent" abstract="true"&gt;<br />        &lt;property name="username" value="parent name"/&gt;<br />&lt;!--        &lt;property name="parent" value="parent "/&gt;--&gt;<br />    &lt;/bean&gt;<br />// 这里abstract设置为了 true ,这个parentbean不会被实例化, 一下代码会报错</pre>
+<pre><code>Parent parent = applicationContext.getBean(Parent.<span style="color: #0000ff;">class</span>);</pre>
+</div>
+<pre><code><br />属性解析部分源代码:</pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span><span style="color: #000000;"> AbstractBeanDefinition parseBeanDefinitionAttributes(Element ele, String beanName,
+            @Nullable BeanDefinition containingBean, AbstractBeanDefinition bd) {
+          <br />        // <strong>singleton 属性新版本不再有起任何作用, 1.x 的老版本中有使用到, 新版本使用scope 属性
+        </strong></span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(SINGLETON_ATTRIBUTE)) {
+            error(</span>"Old 1.x 'singleton' attribute in use - upgrade to 'scope' declaration"<span style="color: #000000;">, ele);
+        }
+        </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(SCOPE_ATTRIBUTE)) {
+            bd.setScope(ele.getAttribute(SCOPE_ATTRIBUTE));
+        }
+        </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (containingBean != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> Take default from containing bean in case of an inner bean definition.</span>
+<span style="color: #000000;">            bd.setScope(containingBean.getScope());
+        }
+
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(ABSTRACT_ATTRIBUTE)) {
+            bd.setAbstract(TRUE_VALUE.equals(ele.getAttribute(ABSTRACT_ATTRIBUTE)));
+        }
+
+        String lazyInit </span>=<span style="color: #000000;"> ele.getAttribute(LAZY_INIT_ATTRIBUTE);
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (DEFAULT_VALUE.equals(lazyInit)) {
+            lazyInit </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.defaults.getLazyInit();
+        }
+        bd.setLazyInit(TRUE_VALUE.equals(lazyInit));
+
+        String autowire </span>=<span style="color: #000000;"> ele.getAttribute(AUTOWIRE_ATTRIBUTE);
+        bd.setAutowireMode(getAutowireMode(autowire));
+
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(DEPENDS_ON_ATTRIBUTE)) {
+            String dependsOn </span>=<span style="color: #000000;"> ele.getAttribute(DEPENDS_ON_ATTRIBUTE);
+            bd.setDependsOn(StringUtils.tokenizeToStringArray(dependsOn, MULTI_VALUE_ATTRIBUTE_DELIMITERS));
+        }
+
+        String autowireCandidate </span>=<span style="color: #000000;"> ele.getAttribute(AUTOWIRE_CANDIDATE_ATTRIBUTE);
+        </span><span style="color: #0000ff;">if</span> ("".equals(autowireCandidate) ||<span style="color: #000000;"> DEFAULT_VALUE.equals(autowireCandidate)) {
+            String candidatePattern </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.defaults.getAutowireCandidates();
+            </span><span style="color: #0000ff;">if</span> (candidatePattern != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                String[] patterns </span>=<span style="color: #000000;"> StringUtils.commaDelimitedListToStringArray(candidatePattern);
+                bd.setAutowireCandidate(PatternMatchUtils.simpleMatch(patterns, beanName));
+            }
+        }
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            bd.setAutowireCandidate(TRUE_VALUE.equals(autowireCandidate));
+        }
+
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(PRIMARY_ATTRIBUTE)) {
+            bd.setPrimary(TRUE_VALUE.equals(ele.getAttribute(PRIMARY_ATTRIBUTE)));
+        }
+
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(INIT_METHOD_ATTRIBUTE)) {
+            String initMethodName </span>=<span style="color: #000000;"> ele.getAttribute(INIT_METHOD_ATTRIBUTE);
+            bd.setInitMethodName(initMethodName);
+        }
+        </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">this</span>.defaults.getInitMethod() != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            bd.setInitMethodName(</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.defaults.getInitMethod());
+            bd.setEnforceInitMethod(</span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        }
+
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(DESTROY_METHOD_ATTRIBUTE)) {
+            String destroyMethodName </span>=<span style="color: #000000;"> ele.getAttribute(DESTROY_METHOD_ATTRIBUTE);
+            bd.setDestroyMethodName(destroyMethodName);
+        }
+        </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">this</span>.defaults.getDestroyMethod() != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            bd.setDestroyMethodName(</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.defaults.getDestroyMethod());
+            bd.setEnforceDestroyMethod(</span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+        }
+
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(FACTORY_METHOD_ATTRIBUTE)) {
+            bd.setFactoryMethodName(ele.getAttribute(FACTORY_METHOD_ATTRIBUTE));
+        }
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (ele.hasAttribute(FACTORY_BEAN_ATTRIBUTE)) {
+            bd.setFactoryBeanName(ele.getAttribute(FACTORY_BEAN_ATTRIBUTE));
+        }
+
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> bd;
+    }</span><span style="color: #0000ff;"><strong>//beanDifinition 的部分属性默认值定义</strong></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><em id="__mceDel"><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">abstract</span> <span style="color: #0000ff;">class</span> AbstractBeanDefinition <span style="color: #0000ff;">extends</span><span style="color: #000000;"> BeanMetadataAttributeAccessor
+        </span><span style="color: #0000ff;">implements</span><span style="color: #000000;"> BeanDefinition, Cloneable {
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant for the default scope name: {</span><span style="color: #808080;">@code</span><span style="color: #008000;"> ""}, equivalent to singleton
+     * status unless overridden from a parent bean definition (if applicable).
+     </span><span style="color: #008000;">*/<br /><br /></span>     // 默认值是空,等同于singleton ,除非被父类给覆盖,也就是说默认值时 singleton
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> String SCOPE_DEFAULT = ""<span style="color: #000000;">;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates no autowiring at all.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setAutowireMode
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> AUTOWIRE_NO =<span style="color: #000000;"> AutowireCapableBeanFactory.AUTOWIRE_NO;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates autowiring bean properties by name.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setAutowireMode
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> AUTOWIRE_BY_NAME =<span style="color: #000000;"> AutowireCapableBeanFactory.AUTOWIRE_BY_NAME;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates autowiring bean properties by type.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setAutowireMode
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> AUTOWIRE_BY_TYPE =<span style="color: #000000;"> AutowireCapableBeanFactory.AUTOWIRE_BY_TYPE;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates autowiring a constructor.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setAutowireMode
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> AUTOWIRE_CONSTRUCTOR =<span style="color: #000000;"> AutowireCapableBeanFactory.AUTOWIRE_CONSTRUCTOR;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates determining an appropriate autowire strategy
+     * through introspection of the bean class.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setAutowireMode
+     * </span><span style="color: #808080;">@deprecated</span><span style="color: #008000;"> as of Spring 3.0: If you are using mixed autowiring strategies,
+     * use annotation-based autowiring for clearer demarcation of autowiring needs.
+     </span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    @Deprecated
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> AUTOWIRE_AUTODETECT =<span style="color: #000000;"> AutowireCapableBeanFactory.AUTOWIRE_AUTODETECT;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates no dependency check at all.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setDependencyCheck
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> DEPENDENCY_CHECK_NONE = 0<span style="color: #000000;">;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates dependency checking for object references.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setDependencyCheck
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> DEPENDENCY_CHECK_OBJECTS = 1<span style="color: #000000;">;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates dependency checking for "simple" properties.
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setDependencyCheck
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> org.springframework.beans.BeanUtils#isSimpleProperty
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> DEPENDENCY_CHECK_SIMPLE = 2<span style="color: #000000;">;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates dependency checking for all properties
+     * (object references as well as "simple" properties).
+     * </span><span style="color: #808080;">@see</span><span style="color: #008000;"> #setDependencyCheck
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> DEPENDENCY_CHECK_ALL = 3<span style="color: #000000;">;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constant that indicates the container should attempt to infer the
+     * {</span><span style="color: #808080;">@link</span><span style="color: #008000;"> #setDestroyMethodName destroy method name} for a bean as opposed to
+     * explicit specification of a method name. The value {</span><span style="color: #808080;">@value</span><span style="color: #008000;">} is specifically
+     * designed to include characters otherwise illegal in a method name, ensuring
+     * no possibility of collisions with legitimately named methods having the same
+     * name.
+     * &lt;p&gt;Currently, the method names detected during destroy method inference
+     * are "close" and "shutdown", if present on the specific bean class.
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> String INFER_METHOD = "(inferred)"<span style="color: #000000;">;
+
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">volatile</span><span style="color: #000000;"> Object beanClass;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span> String scope =<span style="color: #000000;"> SCOPE_DEFAULT;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> abstractFlag = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+<br />    // 懒加载的默认值时false
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> lazyInit = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span> autowireMode =<span style="color: #000000;"> AUTOWIRE_NO;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span> dependencyCheck =<span style="color: #000000;"> DEPENDENCY_CHECK_NONE;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String[] dependsOn;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> autowireCandidate = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> primary = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> Map&lt;String, AutowireCandidateQualifier&gt; qualifiers = <span style="color: #0000ff;">new</span> LinkedHashMap&lt;&gt;<span style="color: #000000;">();
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span> Supplier&lt;?&gt;<span style="color: #000000;"> instanceSupplier;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> nonPublicAccessAllowed = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> lenientConstructorResolution = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String factoryBeanName;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String factoryMethodName;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> ConstructorArgumentValues constructorArgumentValues;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> MutablePropertyValues propertyValues;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> MethodOverrides methodOverrides;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String initMethodName;
+
+    @Nullable
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String destroyMethodName;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> enforceInitMethod = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> enforceDestroyMethod = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> synthetic = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+}</span></em></pre>
+</div>
+<p>&nbsp;</p>
+<pre><code><br /><br /><br />6. singleton（默认为&ldquo;true&rdquo;）：定义Bean是否是Singleton（单例）。</pre>
+<pre><code><span>singleton 属性新版本不再有起任何作用, 1.x 的老版本中有使用到, 新版本使用scope 属性</span></pre>
+<pre><code><br />7.lazy-init（默认为&ldquo;false&rdquo;）：用来定义这个Bean是否实现懒初始化。如果为&ldquo;false&rdquo;，它将在BeanFactory启动时初始化所有的SingletonBean。反之，如果为&ldquo;true&rdquo;,它只在Bean请求时才开始创建SingletonBean。<br /><br />默认创建的beandefinition 对象是 <em>GenericBeanDefinition, 而 </em>GenericBeanDefinition 继承自 AbstractBeanDefinition ,那么我们的默认的一些属性必然就使用的这两个类中提供的默认值,从上面的部分成员变量的属性值可以看出,默认值为false</pre>
+<pre><code><br />8、autowire（自动装配，默认为&ldquo;default&rdquo;）：它定义了Bean的自动装载方式。<br /><br />8.1、&ldquo;no&rdquo;:不使用自动装配功能。<br /><br />8.2、&ldquo;byName&rdquo;:通过Bean的属性名实现自动装配。<br /><br />8.3、&ldquo;byType&rdquo;:通过Bean的类型实现自动装配。<br /><br />8.4、&ldquo;constructor&rdquo;:类似于byType，但它是用于构造函数的参数的自动组装。<br /><br />8.5、&ldquo;autodetect&rdquo;:通过Bean类的反省机制（introspection）决定是使用&ldquo;constructor&rdquo;  还是使用&ldquo;byType&rdquo;。</pre>
+<pre><code><br />9、dependency-check（依赖检查，默认为&ldquo;default&rdquo;）：它用来确保Bean组件通过JavaBean描述的所以依赖关系都得到满足。在与自动装配功能一起使用时，它特别有用。<br /><br />   9.1、none：不进行依赖检查。<br /><br />  9.2、objects：只做对象间依赖的检查。<br /><br />  9.3、simple：只做原始类型和String类型依赖的检查<br /><br />  9.4、all：对所有类型的依赖进行检查。它包括了前面的objects和simple。<br /><br />10、depends-on（依赖对象）：这个Bean在初始化时依赖的对象，这个对象会在这个Bean初始化之前创建。<br /><br />11、init-method:用来定义Bean的初始化方法，它会在Bean组装之后调用。它必须是一个无参数的方法。<br /><br />12、destroy-method：用来定义Bean的销毁方法，它在BeanFactory关闭时调用。同样，它也必须是一个无参数的方法。它只能应用于singletonBean。<br /><br />13、factory-method：定义创建该Bean对象的工厂方法。它用于下面的&ldquo;factory-bean&rdquo;，表示这个Bean是通过工厂方法创建。此时，&ldquo;class&rdquo;属性失效。<br /><br />14、factory-bean:定义创建该Bean对象的工厂类。如果使用了&ldquo;factory-bean&rdquo;则&ldquo;class&rdquo;属性失效。<br /><br />15、autowire-candidate：采用xml格式配置bean时，将&lt;bean/&gt;元素的autowire-candidate属性设置为false，这样容器在查找自动装配对象时，将不考虑该bean，即它不会被考虑作为其它bean自动装配的候选者，但是该bean本身还是可以使用自动装配来注入其它bean的。</pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

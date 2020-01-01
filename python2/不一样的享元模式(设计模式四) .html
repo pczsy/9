@@ -1,0 +1,120 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修不一样的享元模式(设计模式四) ' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>不一样的享元模式(设计模式四) </center></div><div class='banquan'>原文出处:本文由博客园博主族语提供。<br/>
+原文连接:https://www.cnblogs.com/aoximin/p/12095033.html</div><br>
+    <h3 id="前言">前言</h3>
+<p>享元模式，表面意思是共享单元，属于结构型设计模式。哦？good啊，如今共享文化高大上，共享肯定节约很多资源吧，肯定用的地方挺多吧，然而并不多，但是又是不可或缺的一种模式。<br />
+至于为什么，请看正文部分，将会通过计算分析出为什么用的地方不多，或者说有些地方为什么不该用，同时得出为什么属于结构型，到底属于结构型的哪一种。</p>
+<h3 id="开车触发">开车触发</h3>
+<p>介绍一下什么是结构型:<br />
+结构型模式所描述的是如何将类和对象结合在一起来形成一个更大的结构，它描述两种不同的事物：类和对象，根据这一点，可分为类结构型和对象结构型模式。类结构型模式关心类的组合，由多个类可以组合成一个更大的系统，在类结构型模式中一般只存在继承关系和实现关系；对象结构型模式关心类与对象的组合，通过关联关系使得在一个类中定义另一个类的实例对象，然后通过该对象调用其方法。根据“合成复用原则”，在系统中尽量使用关联关系来替代继承关系，因此大部分结构型模式都是对象结构型模式。<br />
+好了，先对结构型有一个小小的概念，然后出发吧。<br />
+有一个Font，字体类。</p>
+<pre><code><code>public class Font
+{
+    // unique
+    private string key;
+    //表示字体大小
+    private int size;
+    //表示字体颜色
+    private string color;
+    public Font(string key, int size,string color)
+    {
+        this.key = key;
+        this.size = size;
+        this.color = color;
+    }
+}</code></pre>
+<p>一个对字体进行渲染的静态类。</p>
+<pre><code><code>public static class render
+{
+    public static void renderFont(char a,Font font) {
+        //进行字体渲染
+    }
+}</code></pre>
+<p>main 中调用</p>
+<pre><code><code>static void Main(string[] args)
+{
+    Font fontx = new Font(&quot;xxx&quot;,12,&quot;red&quot;);
+    render.renderFont(&#39;a&#39;,fontx);
+    Font fonty = new Font(&quot;yyy&quot;, 13, &quot;red&quot;);
+    render.renderFont(&#39;b&#39;,fonty);
+    Font fontx2 = new Font(&quot;xxx&quot;, 12, &quot;red&quot;);
+    render.renderFont(&#39;c&#39;,fontx2);
+}</code></pre>
+<p>如果仔细看下main中，会发现我渲染了两个相同的:</p>
+<pre><code><code>Font fontx = new Font(&quot;xxx&quot;,12,&quot;red&quot;);</code></pre>
+<p>我这是描述渲染过程，比如我们在渲染文章的时候是一个一个输出，根本就不知道下一个要输出什么，它的字体类型是什么。<br />
+上面描述的过程是当前字体类型为fontx，我写下了a，然后使用字体fonty，去描述b，最后我有用字体fontx2(和fontx相同配置)去渲染c。<br />
+如此下去会有一个什么问题呢？假设有10万字需要渲染。<br />
+先查下Font 实例会占用多少个byte。<br />
+在Font头部加上StructLayout，使得它按照structLayout 对齐，否则无法取得其大小。</p>
+<pre><code><code>[StructLayout(LayoutKind.Sequential)]
+public class Font</code></pre>
+<p>然后调用:</p>
+<pre><code><code>Font fontx = new Font(&quot;xxx&quot;,12,&quot;red&quot;);
+unsafe {
+    var byteSize = Marshal.SizeOf(fontx);
+    Console.WriteLine(&quot;查询大小&quot;);
+}</code></pre>
+<p>查询结果为24字节。<br />
+开始计算:<br />
+24byte * 1<em>10^6=2.4</em>10^7 /1024 /1024=2.4<em>10^7 /(1.048576</em>10^6)约等于24m.<br />
+也就是假设我要渲染10w字我需要24m内存，可想而知，是需要优化的。<br />
+那就加上一个工厂类吧:</p>
+<pre><code><code>public class FontFactory
+{
+    private Hashtable flyweights = new Hashtable();
+
+    public Font getFont(string key,int size,string color) {
+        if (!flyweights.ContainsKey(key))
+        {
+            flyweights.Add(key,new Font(key,size,color));
+        }
+        return (Font)flyweights[key];
+    }
+}</code></pre>
+<p>调用:</p>
+<pre><code><code>static void Main(string[] args)
+{
+    FontFactory fontFactory = new FontFactory();
+    Font fontx = fontFactory.getFont(&quot;xxx&quot;,12,&quot;red&quot;);
+    Font fonty = fontFactory.getFont(&quot;yyy&quot;, 13, &quot;red&quot;);
+}</code></pre>
+<p>通过一个font生成工厂，如果有的话就提取，没有的话就生成，然后返回。<br />
+但是前面提及到了，这种模式使用的少。为什么这么说?<br />
+首先，FontFactory的机制需要消耗我们的cpu以及不可忽略的一部分内存。<br />
+如果产生的对象消耗只有几k，那么这种优化是几乎没有意义的。<br />
+第二呢，可以看到生产出来的Font要符合只读，为何只读呢？<br />
+如果需要修改的话，那么也遇不到该问题，之所以不去修改，修改的消耗比较大。<br />
+所以场景并不是很多,但是服务器端倒是有那么多的地方使用。注：场景和使用的地方不是一个概念哈。<br />
+最后，看下对象结构型的概念。<br />
+对象结构型模式关心类与对象的组合，通过关联关系使得在一个类中定义另一个类的实例对象，然后通过该对象调用其方法。根据“合成复用原则”，在系统中尽量使用关联关系来替代继承关系，因此大部分结构型模式都是对象结构型模式。<br />
+不言而喻，恰恰符合这种模式的概念。</p>
+<h3 id="uml图">uml图</h3>
+<p>后续补上</p>
+<h3 id="总结">总结</h3>
+<p>享元主要用于减少创建对象的数量，以减少内存占用和提高性能。<br />
+场景:会产生特别多数量对象，消耗过多内存的情况。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,743 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python并发编程之多进程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python并发编程之多进程</center></div><div class='banquan'>原文出处:本文由博客园博主与鹿逐秋提供。<br/>
+原文连接:https://www.cnblogs.com/wangyueping/p/11173703.html</div><br>
+    <h1 id="python并发编程之多进程">Python并发编程之多进程</h1>
+<h2 id="一什么是进程">一、什么是进程</h2>
+<p>进程：正在进行的一个过程或者说一个任务。而负责执行任务则是cpu。</p>
+<p>进程是资源分配的基本单位</p>
+<p>进程有：代码段，数据段，进程控制块（PCB）组成</p>
+<h2 id="二进程与程序的区别">二、进程与程序的区别</h2>
+<p>程序仅仅只是一堆代码而已，而进程指的是程序的运行过程。</p>
+<p>举例：</p>
+<p>想象一位有一手好厨艺的计算机科学家正在为他的女儿烘制生日蛋糕。</p>
+<p>他有做生日蛋糕的食谱，</p>
+<p>厨房里有所需的原料:面粉、鸡蛋、韭菜，蒜泥等。</p>
+<p>在这个比喻中：</p>
+<p>​ <strong>做蛋糕的食谱就是程序</strong>(即用适当形式描述的算法)</p>
+<p>​ <strong>计算机科学家就是处理器(cpu)</strong></p>
+<p>​ <strong>而做蛋糕的各种原料就是输入数据</strong>。</p>
+<p><strong>进程就是厨师阅读食谱、取来各种原料以及烘制蛋糕等一系列动作的总和</strong>。</p>
+<p><strong>需要强调的是：同一个程序执行两次，那也是两个进程，比如打开暴风影音，虽然都是同一个软件，但是一个可以播放苍井空，一个可以播放饭岛爱。</strong></p>
+<h2 id="三并发与并行">三、并发与并行</h2>
+<p>无论是并行还是并发，在用户看来都是'同时'运行的，不管是进程还是线程，都只是一个任务而已，真是干活的是cpu，cpu来做这些任务，而一个cpu同一时刻只能执行一个任务</p>
+<ol>
+<li><p>并发：在同一个<strong>时间段</strong>内多个任务同时进行，伪并行，即看起来是同时运行。单个cpu+多道技术就可以实现并发（并行也属于并发）</p>
+<p>举例：</p>
+<p>你是一个cpu，你同时谈了三个女朋友，每一个都可以是一个恋爱任务，你被这三个任务共享，要玩出并发恋爱的效果，应该是你先跟女友1去看电影，看了一会说：不好，我要拉肚子，然后跑去跟第二个女友吃饭，吃了一会说：那啥，我去趟洗手间，然后跑去跟女友3开了个房</p></li>
+<li><p>并行：在同一个<strong>时间点</strong>上多个任务同时进行，同时运行，只有具备多个cpu才能实现并行</p>
+<p>单核下，可以利用多道技术，多个核，每个核也都可以利用多道技术（<strong>多道技术是针对单核而言的</strong>）</p>
+<p>举例：</p>
+<p>有四个核，六个任务，这样同一时间有四个任务被执行，假设分别被分配给了cpu1，cpu2，cpu3，cpu4， 一旦任务1遇到I/O就被迫中断执行，此时任务5就拿到cpu1的时间片去执行，这就是单核下的多道技术，而一旦任务1的I/O结束了，操作系统会重新调用它(<strong>需知进程的调度、分配给哪个cpu运行，由操作系统说了算</strong>)，可能被分配给四个cpu中的任意一个去执行</p></li>
+</ol>
+<h2 id="四同步异步阻塞非阻塞">四、同步、异步、阻塞、非阻塞</h2>
+<ol>
+<li><p>同步</p>
+<p>同步：某一个任务的执行必须依赖于另一个任务的返回结果</p>
+<p>所谓同步，就是在发出一个功能调用时，在没有得到结果之前，该调用就不会返回。按照这个定义，其实绝大多数函数都是同步调用。但是一般而言，我们在说同步、异步的时候，特指那些需要其他部件协作或者需要一定时间完成的任务</p></li>
+<li><p>异步</p>
+<p>异步：某一个任务的执行，不需要依赖于另一个任务的返回，只需要告诉另一个任务一声</p>
+<p>异步的概念和同步相对。当一个异步功能调用发出后，调用者不能立刻得到结果。当该异步功能完成后，通过状态、通知或回调来通知调用者。</p></li>
+<li><p>阻塞</p>
+<p>阻塞：程序因为类似于IO等待、等待事件等导致无法继续执行。</p>
+<p>阻塞调用是指调用结果返回之前，当前线程会被挂起（如遇到io操作）。函数只有在得到结果之后才会将阻塞的线程激活。有人也许会把阻塞调用和同步调用等同起来，实际上他是不同的。对于同步调用来说，很多时候当前线程还是激活的，只是从逻辑上当前函数没有返回而已。</p></li>
+<li><p>非阻塞</p>
+<p>程序遇到类似于IO操作时，不再阻塞等待，如果没有及时的处理IO，就报错或者跳过等其他操作</p>
+<p>非阻塞和阻塞的概念相对应，指在不能立刻得到结果之前也会立刻返回，同时该函数不会阻塞当前线程。</p></li>
+</ol>
+<h2 id="五进程的基本状态">五、进程的基本状态</h2>
+<p>进程的三大基本状态：</p>
+<ol>
+<li>就绪状态：所有进程需要的资源都获取到了，等待着CPU的调用</li>
+<li>执行状态：获取到了所有资源包括CPU，进程处于运行状态</li>
+<li>阻塞状态：程停滞不再运行，放弃了CPU，进程此时处于内存里</li>
+</ol>
+<h2 id="六multiprocessing模块介绍">六、multiprocessing模块介绍</h2>
+<p>Python中的多线程无法利用多核优势，如果想要充分地使用多核CPU的资源（os.cpu_count()查看），在Python中大部分情况需要使用多进程。Python提供了multiprocessing。<br />
+multiprocessing模块用来开启子进程，并在子进程中执行我们定制的任务（比如函数），该模块与多线程模块threading的编程接口类似。</p>
+<p>multiprocessing模块的功能众多：支持子进程、通信和共享数据、执行不同形式的同步，提供了Process、Queue、Pipe、Lock等组件。</p>
+<p>需要再次强调的一点是：与线程不同，进程没有任何共享状态，进程修改的数据，改动仅限于该进程内。</p>
+<h2 id="七process类的介绍">七、Process类的介绍</h2>
+<ol>
+<li><p>创建进程的类</p>
+<pre><code><code>Process([group [, target [, name [, args [, kwargs]]]]])，由该类实例化得到的对象，表示一个子进程中的任务（尚未启动）
+
+强调：
+1. 需要使用关键字的方式来指定参数
+2. args指定的为传给target函数的位置参数，是一个元组形式，必须有逗号</code></pre></li>
+<li><p>参数介绍</p>
+<pre><code><code>group参数未使用，值始终为None
+
+target表示调用对象，即子进程要执行的任务
+
+args表示调用对象的位置参数元组，args=(1,2,&#39;egon&#39;,)
+
+kwargs表示调用对象的字典,kwargs={&#39;name&#39;:&#39;egon&#39;,&#39;age&#39;:18}
+
+name为子进程的名称</code></pre></li>
+<li><p>方法介绍</p>
+<pre><code><code> p.start()：启动进程，并调用该子进程中的p.run() 
+ p.run():进程启动时运行的方法，正是它去调用target指定的函数，我们自定义类的类中一定要实现该方法  
+
+ p.terminate():强制终止进程p，不会进行任何清理操作，如果p创建了子进程，该子进程就成了僵尸进程，使用该方法需要特别小心这种情况。如果p还保存了一个锁那么也将不会被释放，进而导致死锁
+ p.is_alive():如果p仍然运行，返回True
+
+ p.join([timeout]):主线程等待p终止（强调：是主线程处于等的状态，而p是处于运行的状态）。timeout是可选的超时时间，需要强调的是，p.join只能join住start开启的进程，而不能join住run开启的进程  </code></pre></li>
+<li><p>属性介绍</p>
+<pre><code><code>p.daemon：默认值为False，如果设为True，代表p为后台运行的守护进程，当p的父进程终止时，p也随之终止，并且设定为True后，p不能创建自己的新进程，必须在p.start()之前设置
+
+p.name:进程的名称
+
+p.pid：进程的pid
+
+p.exitcode:进程在运行时为None、如果为–N，表示被信号N结束
+
+p.authkey:进程的身份验证键,默认是由os.urandom()随机生成的32字符的字符串。这个键的用途是为涉及网络连接的底层进程间通信提供安全性，这类连接只有在具有相同的身份验证键时才能成功</code></pre></li>
+</ol>
+<h2 id="八process类的使用">八、Process类的使用</h2>
+<p><strong>注意：在windows中Process()必须放到# if <strong>name</strong> == '<strong>main</strong>':下</strong></p>
+<ol>
+<li><p>创建并开启子进程的两种方式</p>
+<pre class="python"><code>from multiprocessing import Process
+import os
+
+
+def child_process():
+    print(&quot;这是子进程{0},父进程是{1}&quot;.format(os.getpid(), os.getppid()))
+
+if __name__ == &#39;__main__&#39;:
+    child_p = Process(target=child_process)
+    child_p.start()
+
+    # child_p.join()
+    print(&quot;这是父进程{0}&quot;.format(os.getpid()))</code></pre>
+<pre class="python"><code>from multiprocessing import Process
+import os
+
+
+class ChildProcess(Process):
+    def __init__(self):
+        super(ChildProcess, self).__init__()
+
+    def run(self):
+        print(&quot;这是子进程{0}，父进程是{1}&quot;.format(os.getpid(), os.getppid()))
+
+
+if __name__ == &#39;__main__&#39;:
+    child_p = ChildProcess()
+    child_p.start()
+
+    # child_p.join()
+    print(&quot;这是父进程{0}&quot;.format(os.getpid()))</code></pre></li>
+<li><p>进程之间的内存空间是隔离的</p>
+<pre class="python"><code>from multiprocessing import Process
+import os
+
+num = 100
+
+def chile_process():
+    global num
+    num = 0
+    print(&quot;子进程中：{0}&quot;.format(num))
+
+if __name__ == &#39;__main__&#39;:
+    p = Process(target=chile_process)
+    p.start()
+
+    print(&quot;父进程中：{0}&quot;.format(num))
+
+# 父进程中：100
+# 子进程中：0</code></pre></li>
+<li><p>Process中的join()方法</p>
+<p>join()：主进程等待，等待子进程结束</p>
+<pre class="python"><code>from multiprocessing import Process
+import os
+import time
+
+def child_process():
+    time.sleep(3)
+    print(&quot;这是子进程&quot;)
+
+
+if __name__ == &#39;__main__&#39;:
+    p = Process(target=child_process)
+    p.start()
+    # p.join()
+
+    print(&quot;这是主进程&quot;)
+
+# 这是主进程
+# 这是子进程
+# 分析：如果不加join那么则是先打印主进程中的“这是主进程”，然后等待三秒在打印“这是子进程”
+
+
+from multiprocessing import Process
+import os
+import time
+
+def child_process():
+    time.sleep(3)
+    print(&quot;这是子进程&quot;)
+
+
+if __name__ == &#39;__main__&#39;:
+    p = Process(target=child_process)
+    p.start()
+    p.join()
+
+    print(&quot;这是主进程&quot;)
+# 这是子进程
+# 这是主进程
+# 分析：如果加了join那么主进程会等待子进程执行完之后再执行主进程，也就是说会先等待三秒然后同时打印出“这是子进程”和“这是主进程”</code></pre></li>
+</ol>
+<h2 id="九守护进程">九、守护进程</h2>
+<p>守护进程的特点：</p>
+<ol>
+<li><p>守护进程会在主进程执行完成后终止</p></li>
+<li><p>设置了守护进程后，守护进程不能再开启子进程，否则会报异常</p>
+<pre class="python"><code>from multiprocessing import Process
+import time
+
+def func(name):
+    time.sleep(1)
+    print(&quot;我是{0}&quot;.format(name))
+
+
+def foo(name):
+    time.sleep(3)
+    print(&quot;{0}是谁&quot;.format(name))
+
+
+if __name__ == &#39;__main__&#39;:
+    p1 = Process(target=func, args=(&quot;oldwang&quot;,))
+    p2 = Process(target=foo, args=(&quot;oldwang&quot;,))
+
+    p1.daemon = True
+    # 一定要在p.start()前设置,设置p为守护进程,禁止p创建子进程,并且父进程代码执行结束,p即终止运行
+    p1.start()
+    p2.start()
+
+    print(&quot;这是主进程...&quot;)
+
+# 执行结果：
+# 这是主进程...
+# oldwang是谁</code></pre></li>
+</ol>
+<h2 id="十进程同步">十、进程同步</h2>
+<p>进程之间数据不共享,但是共享同一套文件系统,所以访问同一个文件,或同一个打印终端,是没有问题的,</p>
+<p>而共享带来的是竞争，竞争带来的结果就是错乱，如何控制，就是加锁处理</p>
+<pre class="python"><code># 模拟抢票，购票行为由并行变成了串行，牺牲了效率，提高了数据安全性
+from multiprocessing import Process, Lock
+import json
+import time
+import os
+
+def search_ticket():
+    with open(&quot;file/ticket&quot;, mode=&quot;r&quot;, encoding=&quot;utf-8&quot;) as f:
+        ticket_num = int(f.read())
+        print(&quot;剩余票数：{0}&quot;.format(ticket_num))
+
+def get_ticket():
+    with open(&quot;file/ticket&quot;, mode=&quot;r&quot;, encoding=&quot;utf-8&quot;) as f:
+        ticket = int(f.read())
+        time.sleep(0.1)  # 模拟抢票延时
+        if ticket:
+            ticket -= 1
+            print(&quot;{0}抢到了一张票，还剩{1}张票&quot;.format(os.getpid(), ticket))
+
+        else:
+            print(&quot;{0}没有抢到票&quot;.format(os.getpid()))
+
+    f = open(&quot;file/ticket&quot;, mode=&quot;w&quot;, encoding=&quot;utf-8&quot;)
+    f.write(str(ticket))
+
+def task(lock):
+    search_ticket()
+    lock.acquire()
+    get_ticket()
+    lock.release()
+
+if __name__ == &#39;__main__&#39;:
+    lock = Lock()
+    for i in range(100):
+        p = Process(target=task, args=(lock,))
+        p.start()</code></pre>
+<p>总结：加锁可以保证多个进程修改同一块数据时，同一时间只能有一个任务可以进行修改，即串行的修改，没错，速度是慢了，但牺牲了速度却保证了数据安全。</p>
+<p>虽然可以用文件共享数据实现进程间通信，但问题是：</p>
+<ol>
+<li>效率低（共享数据基于文件，而文件是硬盘上的数据）</li>
+<li>需要自己加锁处理</li>
+</ol>
+<h2 id="十一队列推荐使用">十一、队列（推荐使用）</h2>
+<p>进程彼此之间互相隔离，要实现进程间通信（IPC），multiprocessing模块支持两种形式：队列和管道，这两种方式都是使用消息传递的</p>
+<ol>
+<li><p>Queue（<strong>底层就是以管道和锁的方式实现</strong>）</p>
+<p>方法介绍</p>
+<pre><code><code>maxsize是队列中允许最大项数，省略则无大小限制。    
+
+q.put方法用以插入数据到队列中，put方法还有两个可选参数：blocked和timeout。如果blocked为True（默认值），并且timeout为正值，该方法会阻塞timeout指定的时间，直到该队列有剩余的空间。如果超时，会抛出Queue.Full异常。如果blocked为False，但该Queue已满，会立即抛出Queue.Full异常。
+
+q.get方法可以从队列读取并且删除一个元素。同样，get方法有两个可选参数：blocked和timeout。如果blocked为True（默认值），并且timeout为正值，那么在等待时间内没有取到任何元素，会抛出Queue.Empty异常。如果blocked为False，有两种情况存在，如果Queue有一个值可用，则立即返回该值，否则，如果队列为空，则立即抛出Queue.Empty异常.
+
+q.get_nowait():同q.get(False)
+q.put_nowait():同q.put(False)
+
+q.empty():调用此方法时q为空则返回True，该结果不可靠，比如在返回True的过程中，如果队列中又加入了项目。
+q.full()：调用此方法时q已满则返回True，该结果不可靠，比如在返回True的过程中，如果队列中的项目被取走。
+q.qsize():返回队列中目前项目的正确数量，结果也不可靠，理由同q.empty()和q.full()一样
+
+q.cancel_join_thread():不会在进程退出时自动连接后台线程。可以防止join_thread()方法阻塞
+
+q.close():关闭队列，防止队列中加入更多数据。调用此方法，后台线程将继续写入那些已经入队列但尚未写入的数据，但将在此方法完成时马上关闭。如果q被垃圾收集，将调用此方法。关闭队列不会在队列使用者中产生任何类型的数据结束信号或异常。例如，如果某个使用者正在被阻塞在get()操作上，关闭生产者中的队列不会导致get()方法返回错误。
+
+q.join_thread()：连接队列的后台线程。此方法用于在调用q.close()方法之后，等待所有队列项被消耗。默认情况下，此方法由不是q的原始创建者的所有进程调用。调用q.cancel_join_thread方法可以禁止这种行为</code></pre>
+<pre class="python"><code>from multiprocessing import Queue
+
+q = Queue(maxsize=3)
+
+q.put(1)
+q.put({&quot;name&quot;:&quot;dogfa&quot;})
+q.put([1,2,3])
+
+print(q.full())      # True
+
+print(q.get())       # 1
+print(q.get())       # {&#39;name&#39;: &#39;dogfa&#39;}
+print(q.get())       # [1, 2, 3]
+
+print(q.empty()) # True</code></pre></li>
+<li><p>生产者消费者模型</p>
+<p>在并发编程中使用生产者和消费者模式能够解决绝大多数并发问题。该模式通过平衡生产线程和消费线程的工作能力来提高程序的整体处理数据的速度。</p></li>
+<li><p>为什么使用生产者消费者模式</p>
+<p>在线程世界里，生产者就是生产数据的线程，消费者就是消费数据的线程。在多线程开发当中，如果生产者处理速度很快，而消费者处理速度很慢，那么生产者就必须等待消费者处理完，才能继续生产数据。同样的道理，如果消费者的处理能力大于生产者，那么消费者就必须等待生产者。为了解决这个问题于是引入了生产者和消费者模式。</p></li>
+<li><p>什么是生产者消费者模式</p>
+<p>生产者消费者模式是通过一个容器来解决生产者和消费者的强耦合问题。生产者和消费者彼此之间不直接通讯，而通过阻塞队列来进行通讯，所以生产者生产完数据之后不用等待消费者处理，直接扔给阻塞队列，消费者不找生产者要数据，而是直接从阻塞队列里取，阻塞队列就相当于一个缓冲区，平衡了生产者和消费者的处理能力。</p></li>
+<li><p>JoinableQueue()</p>
+<pre class="python"><code>  #JoinableQueue([maxsize])：这就像是一个Queue对象，但队列允许项目的使用者通知生成者项目已经被成功处理。通知进程是使用共享的信号和条件变量来实现的。
+
+   #参数介绍：
+    maxsize是队列中允许最大项数，省略则无大小限制。    
+　 #方法介绍：
+    JoinableQueue的实例p除了与Queue对象相同的方法之外还具有：
+    q.task_done()：使用者使用此方法发出信号，表示q.get()的返回项目已经被处理。如果调用此方法的次数大于从队列中删除项目的数量，将引发ValueError异常
+    q.join():生产者调用此方法进行阻塞，直到队列中所有的项目均被处理。阻塞将持续到队列中的每个项目均调用q.task_done（）方法为止</code></pre></li>
+<li><p>生产者消费者模型的实现</p>
+<pre class="python"><code>from multiprocessing import JoinableQueue, Process
+import os
+import random
+import time
+
+def customer(q):
+    while 1:
+        time.sleep(0.5)
+        print(&quot;{0}号顾客吃了{1}&quot;.format(os.getpid(), q.get()))
+        q.task_done()
+
+
+def producter(food, q):
+    for i in range(10):
+        time.sleep(random.randint(1, 2))
+        q.put(food)
+        print(&quot;{0}号厨师完成了{1}的制作&quot;.format(os.getpid(), food))
+
+    q.join()
+
+
+if __name__ == &#39;__main__&#39;:
+    q = JoinableQueue()
+
+    pro1 = Process(target=producter, args=(&quot;包子&quot;, q))
+    pro2 = Process(target=producter, args=(&quot;油条&quot;, q))
+    pro3 = Process(target=producter, args=(&quot;花卷&quot;, q))
+
+    cus1 = Process(target=customer, args=(q,))
+    cus2 = Process(target=customer, args=(q,))
+
+    cus1.daemon = True
+    cus2.daemon = True
+    lst = [pro1, pro2, pro3, cus1, cus2]
+    [i.start() for i in lst]
+
+    pro1.join()
+    pro2.join()
+    pro3.join()
+
+    print(&quot;ending...&quot;)
+    # 主进程等待pro1，Pro2，pro3执行完成，当pro执行完成意味着cus必定执行完成，所以可以将cus设置成守护进程</code></pre></li>
+<li><p>生产者消费者模式总结</p>
+<pre><code><code>    #程序中有两类角色
+        一类负责生产数据（生产者）
+        一类负责处理数据（消费者）
+
+    #引入生产者消费者模型为了解决的问题是：
+        平衡生产者与消费者之间的工作能力，从而提高程序整体处理数据的速度
+
+    #如何实现：
+        生产者&lt;--&gt;队列&lt;——&gt;消费者
+    #生产者消费者模型实现类程序的解耦和</code></pre></li>
+</ol>
+<h2 id="十二管道不推荐使用">十二、管道（不推荐使用）</h2>
+<ol>
+<li><p>管道</p>
+<pre><code><code>#创建管道的类：
+Pipe([duplex]):在进程之间创建一条管道，并返回元组（conn1,conn2）,其中conn1，conn2表示管道两端的连接对象，强调一点：必须在产生Process对象之前产生管道
+#参数介绍：
+dumplex:默认管道是全双工的，如果将duplex射成False，conn1只能用于接收，conn2只能用于发送。
+#主要方法：
+    conn1.recv():接收conn2.send(obj)发送的对象。如果没有消息可接收，recv方法会一直阻塞。如果连接的另外一端已经关闭，那么recv方法会抛出EOFError。
+    conn1.send(obj):通过连接发送对象。obj是与序列化兼容的任意对象
+ #其他方法：
+conn1.close():关闭连接。如果conn1被垃圾回收，将自动调用此方法
+conn1.fileno():返回连接使用的整数文件描述符
+conn1.poll([timeout]):如果连接上的数据可用，返回True。timeout指定等待的最长时限。如果省略此参数，方法将立即返回结果。如果将timeout射成None，操作将无限期地等待数据到达。
+
+conn1.recv_bytes([maxlength]):接收c.send_bytes()方法发送的一条完整的字节消息。maxlength指定要接收的最大字节数。如果进入的消息，超过了这个最大值，将引发IOError异常，并且在连接上无法进行进一步读取。如果连接的另外一端已经关闭，再也不存在任何数据，将引发EOFError异常。
+conn.send_bytes(buffer [, offset [, size]])：通过连接发送字节数据缓冲区，buffer是支持缓冲区接口的任意对象，offset是缓冲区中的字节偏移量，而size是要发送字节数。结果数据以单条消息的形式发出，然后调用c.recv_bytes()函数进行接收    
+
+conn1.recv_bytes_into(buffer [, offset]):接收一条完整的字节消息，并把它保存在buffer对象中，该对象支持可写入的缓冲区接口（即bytearray对象或类似的对象）。offset指定缓冲区中放置消息处的字节位移。返回值是收到的字节数。如果消息长度大于可用的缓冲区空间，将引发BufferTooShort异常。</code></pre></li>
+<li><p>利用管道实现进程间的通信</p>
+<pre class="python"><code>from multiprocessing import Process,Pipe
+
+import time,os
+def consumer(p,name):
+    left,right=p
+    left.close()
+    while True:
+        try:
+            baozi=right.recv()
+            print(&#39;%s 收到包子:%s&#39; %(name,baozi))
+        except EOFError:
+            right.close()
+            break
+def producer(seq,p):
+    left,right=p
+    right.close()
+    for i in seq:
+        left.send(i)
+        # time.sleep(1)
+    else:
+        left.close()
+if __name__ == &#39;__main__&#39;:
+    left,right=Pipe()
+
+    c1=Process(target=consumer,args=((left,right),&#39;c1&#39;))
+    c1.start()
+
+
+    seq=(i for i in range(10))
+    producer(seq,(left,right))
+
+    right.close()
+    left.close()
+
+    c1.join()
+    print(&#39;主进程&#39;)</code></pre></li>
+</ol>
+<h2 id="十三数据共享">十三、数据共享</h2>
+<p>进程间数据是独立的，可以借助于队列或管道实现通信，二者都是基于消息传递的，虽然进程间数据独立，但可以通过Manager实现数据共享</p>
+<pre class="python"><code>from multiprocessing import Process, Manager, Lock
+import os
+import random
+import time
+
+
+def func(dic, lock):
+    lock.acquire()  # 不加锁肯定会造成数据混乱
+    time.sleep(random.randrange(2))
+    dic[&quot;count&quot;] -= 1
+    lock.release()
+
+
+
+if __name__ == &#39;__main__&#39;:
+    lock = Lock()
+    with Manager() as m:
+        dic = m.dict({&quot;count&quot;: 100})
+        lst = []
+        for i in range(100):
+            p = Process(target=func, args=(dic, lock))
+            lst.append(p)
+            p.start()
+
+        [i.join() for i in lst]
+        print(dic[&quot;count&quot;])</code></pre>
+<p><strong>进程间通信应该尽量避免使用上述共享数据的方式</strong></p>
+<h2 id="十三进程池">十三、进程池</h2>
+<p>在利用Python进行系统管理的时候，特别是同时操作多个文件目录，或者远程控制多台主机，并行操作可以节约大量的时间。多进程是实现并发的手段之一，需要注意的问题是：</p>
+<ol>
+<li>很明显需要并发执行的任务通常要远大于核数</li>
+<li>一个操作系统不可能无限开启进程，通常有几个核就开几个进程</li>
+<li>进程开启过多，效率反而会下降（开启进程是需要占用系统资源的，而且开启多余核数目的进程也无法做到并行）</li>
+</ol>
+<p>如果当被操作对象数目不大时，可以直接利用multiprocessing中的Process动态成生多个进程，十几个还好，但如果是上百个，上千个。。。手动的去限制进程数量却又太过繁琐，此时可以发挥进程池的功效。我们就可以通过维护一个进程池来控制进程数目。</p>
+<p>ps：对于远程过程调用的高级应用程序而言，应该使用进程池，Pool可以提供指定数量的进程，供用户调用，当有新的请求提交到pool中时，如果池还没有满，那么就会创建一个新的进程用来执行该请求；但如果池中的进程数已经达到规定最大值，那么该请求就会等待，直到池中有进程结束，就重用进程池中的进程。</p>
+<p><strong>创建进程池的类：如果指定numprocess为3，则进程池会从无到有创建三个进程，然后自始至终使用这三个进程去执行所有任务，不会开启其他进程</strong></p>
+<ol>
+<li><p>创建进程池</p>
+<pre><code><code>Pool([numprocess  [,initializer [, initargs]]]):创建进程池 </code></pre></li>
+<li><p>参数介绍</p>
+<pre><code><code>numprocess:要创建的进程数，如果省略，将默认使用cpu_count()的值
+initializer：是每个工作进程启动时要执行的可调用对象，默认为None
+initargs：是要传给initializer的参数组</code></pre></li>
+<li><p>方法介绍</p>
+<pre><code><code>p.apply(func [, args [, kwargs]]):在一个池工作进程中执行func(*args,**kwargs),然后返回结果。需要强调的是：此操作并不会在所有池工作进程中并执行func函数。如果要通过不同参数并发地执行func函数，必须从不同线程调用p.apply()函数或者使用p.apply_async()
+
+p.apply_async(func [, args [, kwargs]]):在一个池工作进程中执行func(*args,**kwargs),然后返回结果。此方法的结果是AsyncResult类的实例，callback是可调用对象，接收输入参数。当func的结果变为可用时，将理解传递给callback。callback禁止执行任何阻塞操作，否则将接收其他异步操作中的结果。
+
+p.close():关闭进程池，防止进一步操作。如果所有操作持续挂起，它们将在工作进程终止前完成
+P.jion():等待所有工作进程退出。此方法只能在close()或teminate()之后调用方法apply_async()和map_async（）的返回值是AsyncResul的实例obj。实例具有以下方法:
+
+obj.get():返回结果，如果有必要则等待结果到达。
+obj.ready():如果调用完成，返回True
+obj.successful():如果调用完成且没有引发异常，返回True，如果在结果就绪之前调用此方法，引发异常
+obj.wait([timeout]):等待结果变为可用。
+obj.terminate()：立即终止所有工作进程，同时不执行任何清理或结束任何挂起工作。如果p被垃圾回收，将自动调用此函数</code></pre></li>
+<li><p>进程池的使用</p>
+<ol>
+<li><p>使用进程池（异步调用，apply_async）</p>
+<pre class="python"><code>from multiprocessing import Process, Pool
+import os
+import time
+import socket
+
+def func(i):
+    print(i)
+    time.sleep(1)
+    return i ** 2
+
+if __name__ == &#39;__main__&#39;:
+    pool = Pool(os.cpu_count() + 1)
+    ret_lst = []
+
+    for i in range(100):
+        # 维持执行的进程总数为processes，当一个进程执行完毕后会添加新的进程进去
+        ret = pool.apply_async(func, args=(i,))
+        ret_lst.append(ret)
+
+    # 没有后面的join，或get，则程序整体结束，进程池中的任务还没来得及全部执行完也都跟着主进程一起结束了
+    print(&quot;=======================&quot;)
+     # 关闭进程池，防止进一步操作。如果所有操作持续挂起，它们将在工作进程终止前完成
+    pool.close()
+    # 调用join之前，先调用close函数，否则会出错。执行完close后不会有新的进程加入到pool,join函数等待所有子进程结束
+    pool.join()
+    # 看到的是&lt;multiprocessing.pool.ApplyResult object at 0x10357c4e0&gt;对象组成的列表,而非最终的结果,但这一步是在join后执行的,证明结果已经计算完毕,剩下的事情就是调用每个对象下的get方法去获取结果
+    print(ret_lst)
+  # 使用get来获取apply_aync的结果,如果是apply,则没有get方法,因为apply是同步执行,立刻获取结果,也根本无需get
+    [print(i.get()) for i in ret_lst]</code></pre></li>
+<li><p>使用进程池（同步调用，apply）</p>
+<pre class="python"><code>from multiprocessing import Process, Pool
+import os
+import time
+import socket
+
+def func(i):
+    print(i)
+    time.sleep(1)
+    return i ** 2
+
+if __name__ == &#39;__main__&#39;:
+  # 维持执行的进程总数为processes，当一个进程执行完毕后会添加新的进程进去
+    pool = Pool(os.cpu_count() + 1)
+    # 同步执行，即执行完一个拿到结果，再去执行另外一个
+    ret_lst = []
+
+    for i in range(100):
+        ret = pool.apply(func, args=(i,))
+        ret_lst.append(ret)
+  # 看到的就是最终的结果组成的列表，apply是同步的，所以直接得到结果，没有get()方法
+    print(ret_lst)</code></pre></li>
+<li><p>进程池实现基于TCP协议的socket并发效果</p>
+<pre class="python"><code># 服务端
+from multiprocessing import Process, Pool
+import os
+import time
+import socket
+
+def func(conn, client_addr):
+    print(&quot;进程：{0}&quot;.format(os.getpid()))
+    while 1:
+        try:
+            c_msg = conn.recv(1024).decode(&quot;utf-8&quot;)
+            if not c_msg: break
+            print(c_msg)
+            conn.send(c_msg.upper().encode(&quot;utf-8&quot;))
+        except Exception:
+            break
+
+if __name__ == &#39;__main__&#39;:
+    sk = socket.socket()
+    sk.bind((&quot;127.0.0.1&quot;, 8080))
+    sk.listen(5)
+    pool = Pool(os.cpu_count() + 1)
+    while 1:
+        conn, addr = sk.accept()
+        pool.apply_async(func, args=(conn, addr))
+
+
+
+# 服务端
+import socket
+
+sk = socket.socket()
+
+sk.connect((&quot;127.0.0.1&quot;, 8080))
+
+while 1:
+    c_msg = input(&quot;&gt;&gt;&quot;)
+    if not c_msg: continue
+    sk.send(c_msg.encode(&quot;utf-8&quot;))
+    s_msg = sk.recv(1024).decode(&quot;utf-8&quot;)
+    print(s_msg)</code></pre>
+<p>当连接数达到开启的进程池中的最大进程数量时，再有其它客户端进行连接，将会阻塞等待，当另外的客户端结束连接时才会建立起会话连接。</p></li>
+</ol></li>
+<li><p>回调函数（callback()）</p>
+<p>需要回调函数的场景：进程池中任何一个任务一旦处理完了，就立即告知主进程：我好了额，你可以处理我的结果了。主进程则调用一个函数去处理该结果，该函数即回调函数</p>
+<p>我们可以把耗时间（阻塞）的任务放到进程池中，然后指定回调函数（主进程负责执行），这样主进程在执行回调函数时就省去了I/O的过程，直接拿到的是任务的结果。</p>
+<pre class="python"><code>from multiprocessing import Pool
+import requests
+import json
+import os
+
+def get_page(url):
+    print(&#39;&lt;进程%s&gt; get %s&#39; %(os.getpid(),url))
+    respone=requests.get(url)
+    if respone.status_code == 200:
+        return {&#39;url&#39;:url,&#39;text&#39;:respone.text}
+
+def pasrse_page(res):
+    print(&#39;&lt;进程%s&gt; parse %s&#39; %(os.getpid(),res[&#39;url&#39;]))
+    parse_res=&#39;url:&lt;%s&gt; size:[%s]\n&#39; %(res[&#39;url&#39;],len(res[&#39;text&#39;]))
+    with open(&#39;db.txt&#39;,&#39;a&#39;) as f:
+        f.write(parse_res)
+
+
+if __name__ == &#39;__main__&#39;:
+    urls=[
+        &#39;https://www.baidu.com&#39;,
+        &#39;https://www.python.org&#39;,
+        &#39;https://www.openstack.org&#39;,
+        &#39;https://help.github.com/&#39;,
+        &#39;http://www.sina.com.cn/&#39;
+    ]
+
+    p=Pool(3)
+    res_l=[]
+    for url in urls:
+        res=p.apply_async(get_page,args=(url,),callback=pasrse_page)
+        res_l.append(res)
+
+    p.close()
+    p.join()
+    print([res.get() for res in res_l]) # 拿到的是get_page的结果,其实完全没必要拿该结果,该结果已经传给回调函数处理了
+
+&#39;&#39;&#39;
+打印结果:
+&lt;进程3388&gt; get https://www.baidu.com
+&lt;进程3389&gt; get https://www.python.org
+&lt;进程3390&gt; get https://www.openstack.org
+&lt;进程3388&gt; get https://help.github.com/
+&lt;进程3387&gt; parse https://www.baidu.com
+&lt;进程3389&gt; get http://www.sina.com.cn/
+&lt;进程3387&gt; parse https://www.python.org
+&lt;进程3387&gt; parse https://help.github.com/
+&lt;进程3387&gt; parse http://www.sina.com.cn/
+&lt;进程3387&gt; parse https://www.openstack.org
+[{&#39;url&#39;: &#39;https://www.baidu.com&#39;, &#39;text&#39;: &#39;&lt;!DOCTYPE html&gt;\r\n...&#39;,...}]
+&#39;&#39;&#39;</code></pre>
+<p>如果在主进程中等待进程池中所有任务都执行完毕后，再统一处理结果，则无需回调函数</p></li>
+</ol>
+<h2 id="十四信号量">十四、信号量</h2>
+<p>互斥锁 同时只允许一个线程更改数据，而Semaphore是同时允许一定数量的线程更改数据 ，比如厕所有3个坑，那最多只允许3个人上厕所，后面的人只能等里面有人出来了才能再进去，如果指定信号量为3，那么来一个人获得一把锁，计数加1，当计数等于3时，后面的人均需要等待。一旦释放，就有人可以获得一把锁</p>
+<p>信号量与进程池的概念很像，但是要区分开，信号量涉及到加锁的概念</p>
+<pre class="python"><code>from multiprocessing import Process,Semaphore
+import time,random
+
+def go_wc(sem,user):
+    sem.acquire()
+    print(&#39;%s 占到一个茅坑&#39; %user)
+    time.sleep(random.randint(0,3)) #模拟每个人拉屎速度不一样，0代表有的人蹲下就起来了
+    sem.release()
+
+if __name__ == &#39;__main__&#39;:
+    sem=Semaphore(5)
+    p_l=[]
+    for i in range(13):
+        p=Process(target=go_wc,args=(sem,&#39;user%s&#39; %i,))
+        p.start()
+        p_l.append(p)
+
+    for i in p_l:
+        i.join()
+    print(&#39;============》&#39;)</code></pre>
+<h2 id="十五事件">十五、事件</h2>
+<p>Python线程的事件用于主线程控制其他线程的执行，事件主要提供了三个方法 set、wait、clear。</p>
+<p>事件处理的机制：全局定义了一个“Flag”，如果“Flag”值为 False，那么当程序执行 event.wait 方法时就会阻塞，如果“Flag”值为True，那么event.wait 方法时便不再阻塞。</p>
+<p>clear：将“Flag”设置为False<br />
+set：将“Flag”设置为True</p>
+<pre class="python"><code>from multiprocessing import Process,Event
+import time,random
+
+def car(e,n):
+    while True:
+        if not e.is_set(): #Flase
+            print(&#39;\033[31m红灯亮\033[0m，car%s等着&#39; %n)
+            e.wait()
+            print(&#39;\033[32m车%s 看见绿灯亮了\033[0m&#39; %n)
+            time.sleep(random.randint(3,6))
+            if not e.is_set():
+                continue
+            print(&#39;走你,car&#39;, n)
+            break
+
+def police_car(e,n):
+    while True:
+        if not e.is_set():
+            print(&#39;\033[31m红灯亮\033[0m，car%s等着&#39; % n)
+            e.wait(1)
+            print(&#39;灯的是%s，警车走了,car %s&#39; %(e.is_set(),n))
+            break
+
+def traffic_lights(e,inverval):
+    while True:
+        time.sleep(inverval)
+        if e.is_set():
+            e.clear() #e.is_set() ----&gt;False
+        else:
+            e.set()
+
+if __name__ == &#39;__main__&#39;:
+    e=Event()
+    # for i in range(10):
+    #     p=Process(target=car,args=(e,i,))
+    #     p.start()
+
+    for i in range(5):
+        p = Process(target=police_car, args=(e, i,))
+        p.start()
+    t=Process(target=traffic_lights,args=(e,10))
+    t.start()
+
+    print(&#39;============》&#39;)</code></pre>
+<p>..............</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

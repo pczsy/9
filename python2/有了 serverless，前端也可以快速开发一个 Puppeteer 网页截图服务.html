@@ -1,0 +1,164 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修有了 serverless，前端也可以快速开发一个 Puppeteer 网页截图服务' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>有了 serverless，前端也可以快速开发一个 Puppeteer 网页截图服务</center></div><div class='banquan'>原文出处:本文由博客园博主阿里巴巴云原生提供。<br/>
+原文连接:https://www.cnblogs.com/alisystemsoftware/p/12033806.html</div><br>
+    <p><strong>更多云原生技术资讯可关注<a href="https://developer.aliyun.com/group/alisoftwaretech/">阿里巴巴云原生技术圈</a>。</strong></p>
+<h1 id="puppeteer-是什么">Puppeteer 是什么？</h1>
+<blockquote>
+<p><a href="https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2Fpptr.dev">puppeteer 官网</a>的介绍如下：<br />
+Puppeteer is a Node library which provides a high-level API to control Chrome or Chromium over the <a href="https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2Fchromedevtools.github.io%2Fdevtools-protocol%2F">DevTools Protocol</a>. Puppeteer runs <a href="https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2Fdevelopers.google.com%2Fweb%2Fupdates%2F2017%2F04%2Fheadless-chrome">headless</a> by default, but can be configured to run full (non-headless) Chrome or Chromium.</p>
+</blockquote>
+<p>通俗描述就是：Puppeteer 可以将 Chrome 或者 Chromium 以无界面的方式运行（当然也可以运行在有界面的服务器上），然后可以通过代码控制浏览器的行为，即使是非界面的模式运行，Chrome 或 Chromium 也可以在内存中正确渲染网页的内容。<br />那么 Puppeteer 能做什么呢？</p>
+<ul>
+<li>生成网页截图或者 PDF</li>
+<li>抓取 SPA（Single-Page Application) 进行服务器渲染（SSR）</li>
+<li>高级爬虫，可以爬取大量异步渲染内容的网页</li>
+<li>模拟键盘输入、表单自动提交、登录网页等，实现 UI 自动化测试</li>
+<li>捕获站点的时间线，以便追踪你的网站，帮助分析网站性能问题</li>
+</ul>
+<p>本文选择截图场景作为演示。</p>
+<p>废话不多说了，我们直接给大家介绍下如何用函数计算产品来快速部署一个 Puppeteer Web 应用。</p>
+<h2 id="如何快速部署一个分布式-puppeteer-web-应用">如何快速部署一个分布式 Puppeteer Web 应用？</h2>
+<p>为了快速部署分布式 Puppeteer Web 应用，本文以<a href="https://fc.console.aliyun.com/fc/overview/cn-hangzhou">函数计算服务</a>为例来做展示。</p>
+<blockquote>
+<p><strong>函数计算（Function Compute）</strong>: 函数计算是一个事件驱动的服务，通过函数计算，用户无需管理服务器等运行情况，只需编写代码并上传。函数计算准备计算资源，并以弹性伸缩的方式运行用户代码，而用户只需根据实际代码运行所消耗的资源进行付费。函数计算更多信息<a href="https://help.aliyun.com/product/50980.html">参考</a>。</p>
+</blockquote>
+<p>有了函数计算服务，我们这里目标是搭建一个分布式应用，但做的事情其实很简单，那就是写好业务代码，部署到函数计算，仅此而已。</p>
+<p>使用函数计算后，我们的系统架构图如下：</p>
+<p><img src="./images/有了 serverless，前端也可以快速开发一个 Puppeteer 网页截图服务0.png" alt="1.png" /></p>
+<h2 id="效果演示">效果演示</h2>
+<p>可以直接通过以下链接查看效果：<br /><a href="https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2F1911504709953557.cn-hangzhou.fc.aliyuncs.com%2F2016-08-15%2Fproxy%2Fpuppeteer-test%2Fhtml2png%2F%3Furl%3Dhttps%3A%2F%2Fwww.aliyun.com%2Fproduct%2Ffc">https://1911504709953557.cn-hangzhou.fc.aliyuncs.com/2016-08-15/proxy/puppeteer-test/html2png/?url=https://www.aliyun.com/product/fc</a><br /><strong>PS：第一次请求可能会有几秒的冷启动时间，通过使用<a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://help.aliyun.com/document_detail/138103.html?spm=a2c4g.11174283.6.687.882d5212Y0AECh">预留模式</a>可以完全去除冷启动，这题超纲，下次再讲。</strong></p>
+<h2 id="搭建步骤步骤">搭建步骤步骤：</h2>
+<p>整体流程如下图所示：</p>
+<p><img src="./images/有了 serverless，前端也可以快速开发一个 Puppeteer 网页截图服务1.png" alt="2.png" /></p>
+<p>其中，需要我们操作的只有 Fun Init、Fun Install 以及 Fun Deploy 命令，每个的步骤内容都会由这三个命令自动完成。</p>
+<h3 id="工具安装">1. 工具安装</h3>
+<p><strong>安装 Fun 工具</strong>：</p>
+<p>建议直接从这里下载二进制可执行程序，解压后即可直接使用。<a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://github.com/alibaba/funcraft/blob/master/docs/usage/installation-zh.md">下载地址</a>。</p>
+<p><strong>安装 Docker</strong>：<br />
+可以按照<a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://github.com/alibaba/funcraft/blob/master/docs/usage/installation-zh.md?spm=a2c4e.10696291.0.0.6bb619a4UjYXqN#docker">这里介绍的方法</a>进行安装。</p>
+<h3 id="初始化项目">2. 初始化项目：</h3>
+<p>通过 Fun 工具，使用下面的命令可以快速初始化一个 Puppeteer Web 应用的脚手架：</p>
+<pre><code><code>fun init -n puppeteer-test http-trigger-node-puppeteer</code></pre>
+<p>其中 <code>-n puppeteer-test</code>  表示初始化项目的目录名称， <code>http-trigger-node-puppeteer</code>  表示要使用的模板名称，可以省略该名称，省略后，可以从终端提示的列表中自行选择需要的模板。<br />执行完毕后，可以看到如下的目录结构：</p>
+<pre><code><code>.
+├── index.js
+├── package.json
+└── template.yml</code></pre>
+<p>相比较于传统的 puppeteer 应用，这里仅仅多了一个 <a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://github.com/alibaba/funcraft/blob/master/docs/specs/2018-04-03-zh-cn.md?spm=a2c4e.10696291.0.0.717019a45X1W0g&amp;file=2018-04-03-zh-cn.md">template.yml</a> 文件，用于描述函数计算的资源。<br />而 index.js 就是我们的业务代码了，可以按照 <a href="https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2Fpptr.dev">Puppeteer 官方帮助文档</a>的要求书写自己的业务代码，这里不再重复阐述，核心代码如下：</p>
+<pre><code><code>const browser = await puppeteer.launch({
+  headless: true,
+  args: [
+    &#39;--no-sandbox&#39;,
+    &#39;--disable-setuid-sandbox&#39;,
+  ]
+});
+const page = await browser.newPage();
+await page.emulateTimezone(&#39;Asia/Shanghai&#39;);
+await page.goto(&#39;https://www.baidu.com&#39;, {
+  &#39;waitUntil&#39;: &#39;networkidle2&#39;
+});
+await page.screenshot({ path: &#39;/tmp/example&#39;, fullPage: true, type: &#39;png&#39; });
+await browser.close();</code></pre>
+<p>package.json 内容如下：</p>
+<pre><code><code>{
+  ... ...
+  &quot;dependencies&quot;: {
+    &quot;puppeteer&quot;: &quot;^2.0.0&quot;
+  },
+  ... ...
+}</code></pre>
+<p>可以看到，在 package.json 中声明了 puppeteer 的依赖。这个也是我们使用 node 开发时的标准做法，并无特别之处。</p>
+<h3 id="一键安装依赖">3. 一键安装依赖</h3>
+<p>puppeteer 的安装，即使是在传统的 linux 机器上，也不是那么的轻松。因为 puppeteer 本身依赖了非常多的<a href="https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2Fgithub.com%2FGoogleChrome%2Fpuppeteer%2Fissues%2F560">系统库</a>，要安装哪些系统库、如何安装这些系统库成了一个比较头痛的问题。</p>
+<p>好在函数计算命令行工具 <a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://github.com/alibaba/funcraft">Fun</a> 已经集成了 Puppeteer 的解决方案，只要 package.json 中包含了 puppeteer 依赖，然后使用 fun install -d 即可一键安装所有系统依赖。</p>
+<pre><code><code>fun install -d</code></pre>
+<h3 id="本地运行调试函数">4. 本地运行、调试函数</h3>
+<p>Puppeteer 的本地运行、调试方法与<a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://yq.aliyun.com/articles/683683">这里</a>介绍的完全一致，我们就不再重复介绍。我们这里只演示下运行效果：</p>
+<p><img src="./images/有了 serverless，前端也可以快速开发一个 Puppeteer 网页截图服务2.png" alt="4.gif" /></p>
+<h3 id="一键部署应用">5. 一键部署应用</h3>
+<p>基本上所有的 FaaS 平台为了减小应用的冷启动，都会设置代码包的限制，函数计算也不例外。而 puppeteer 自身已经达到了 350M 左右，连同其系统依赖已经达到了 450M。如何将 450M 体积的函数部署到 FaaS 平台是一个比较头痛而且繁琐的问题。</p>
+<p>函数计算的命令行工具 Fun 现在原生支持了这种大依赖部署（3.1.1 版本仅支持 node runtime）。不需要任何额外操作，仅仅执行 fun deploy：</p>
+<pre><code><code>$ fun deploy</code></pre>
+<p>fun 会自动完成依赖的部署。而当检测到打包的依赖超过了平台的限制时，会进入到配置向导，帮助用户自动化地配置。</p>
+<p>我们这里推荐的路径是当提示是否由 Fun 自动帮助 NAS 管理是，输入 yes，然后提示提示是否使用 NasConfig: Auto 自动处理 NAS 时，也选择是，之后就不需要做其他的事情，等待函数部署成功即可。</p>
+<p><img src="./images/有了 serverless，前端也可以快速开发一个 Puppeteer 网页截图服务3.png" alt="5.png" /></p>
+<p>如果有其他的需求，比如想使用自己已经存在的 NAS 服务，可以在提示使用 <a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://yq.aliyun.com/articles/712693">NasConfig: Auto</a> 时，输入 no，这样就会进入到相应的流程。更详细的说明，请参考下面的 FAQ。</p>
+<h2 id="faq">FAQ</h2>
+<h3 id="在安装-puppeteer-时fun-都做了哪些事情">在安装 puppeteer 时，Fun 都做了哪些事情？</h3>
+<p>puppeteer 本身是一个 npm 包，它的安装是非常简单的，通过 npm install 即可。这里的问题在于，puppeteer 依赖了 chromium，而 chromium 又依赖一些系统库。所以 npm install 后，还会触发下载 chromium 的操作。这里用户经常遇到的问题，主要是：</p>
+<ol>
+<li>由于 chromium 的体积比较大，所以经常遇到网络问题导致下载失败。</li>
+<li>npm 仅仅只下载 chromium，chromium 依赖的系统库并不会自动安装。用户还需要自行查找缺失的依赖进行安装。</li>
+</ol>
+<p>Fun 做的优化主要是：</p>
+<ol>
+<li>通过检测网络环境，对于国内用户，会帮助配置<a href="https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2Fnpm.taobao.org%2F">淘宝 NPM 镜像</a>实现加速下载的效果。</li>
+<li>自动为用户安装 chromium 所缺失的依赖库。</li>
+</ol>
+<h3 id="fun-是如何把大依赖部署到函数计算的不是有代码包大小的限制吗">Fun 是如何把大依赖部署到函数计算的？不是有代码包大小的限制吗？</h3>
+<p>基本上所有的 FaaS 为了优化函数冷启动，都会加入函数代码包大小的限制。函数计算也不例外。但是，Fun 通过内置 NAS（阿里云文件存储） 解决方案，可以一键帮用户创建、配置 NAS，并上传依赖到 NAS 上。而函数计算在运行时，可以自动从 NAS 读取到函数依赖。</p>
+<p>为了帮助用户自动化地完成这些操作，Fun 内置了一个向导（3.1.1 版本仅支持 node，后续会支持更多，欢迎 <a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://yq.aliyun.com/go/articleRenderRedirect?url=https%3A%2F%2Fgithub.com%2Falibaba%2Ffuncraft%2Fissues">github issue </a>提需求），在检测到代码体积大小超过平台限制时，会提示是否由 Fun 将其改造成 NAS 的方案，整个向导的逻辑如下：</p>
+<ol>
+<li>询问是否使用 Fun 来自动化的配置 NAS 管理依赖？（如果回答是，则进入向导，回答否，则继续发布流程）</li>
+<li>检测用户的 yml 中是否已经配置了 NAS</li>
+<li>如果已经配置，则提示用户选择已经配置的 NAS 存储函数依赖</li>
+<li>如果没有配置，则提示用户是否使用<a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://yq.aliyun.com/articles/712693">NasConfig: Auto</a>自动创建 NAS 配置</li>
+<li>如果选择了是，则帮助用户自动配置 nas、vpc 资源。</li>
+<li>如果选择了否，则列出用户当前 NAS 控制台上已经有的 NAS 资源，让用户选择</li>
+<li>无论上面使用哪种方式，最终都会在 template.yml 生成 NAS 以及 VPC 相关的配置</li>
+<li>根据语言检测，比如 node runtime，会将 node_modules 以及 .fun/root 目录映射到 nas 目录（通过 .nas.yml 实现）</li>
+<li>自动执行 fun nas sync 帮用户把本地的依赖上传到 NAS 服务</li>
+<li>自动执行 fun deploy，帮用户把代码上传到函数计算</li>
+<li>提示帮助信息，对于 HTTP Trigger 的，提示函数的 Endpoint，直接打开浏览器访问即可看到效果</li>
+</ol>
+<h3 id="是否可以指定-puppeteer-的版本">是否可以指定 puppeteer 的版本？</h3>
+<p>可以的，只需要修改 package.json 中的 puppeteer 的版本，重新安装即可。</p>
+<h3 id="函数计算实例中的时区采用的-utc是否有办法改为北京时间">函数计算实例中的时区采用的 UTC，是否有办法改为北京时间？</h3>
+<p>某些网页的显示效果是和时区挂钩的，时区不同，可能会导致显示的内容有差异。使用本文介绍的方法，可以非常容易的使用 puppeteer 的最新版本，而在 puppeteer 的最新版本 2.0 提供了一个新的 API <a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://github.com/puppeteer/puppeteer/blob/v2.0.0/docs/api.md?spm=a2c4e.10696291.0.0.6b9c19a4BsT3qZ#pageemulatetimezonetimezoneid">page.emulateTimezone(timezoneId)</a> , 可以非常容易的修改时区。</p>
+<h3 id="如果-puppeteer-后续版本更新后依赖更多的系统依赖本文介绍的方法还适用吗">如果 Puppeteer 后续版本更新后，依赖更多的系统依赖，本文介绍的方法还适用吗？</h3>
+<p>Fun 内置了 .so 缺失检测机制，当在本地调试运行时，会智能地根据报错识别出缺失的依赖库，然后精准地给出安装命令，可以做到一键安装。</p>
+<h3 id="如果添加了新的依赖如何更新">如果添加了新的依赖，如何更新？</h3>
+<p>如果添加了新的依赖，比如 node_modules 目录添加了新的依赖库，只需要重新执行 fun nas sync 进行同步即可。</p>
+<p>如果修改了代码，只需要使用 fun deploy 重新部署即可。由于大依赖和代码通过 NAS 进行了分离，依赖通常不需要频繁变化，所以调用的频率比较低，而 fun deploy 的由于没有了大依赖</p>
+<h3 id="除了本文介绍的方法还有哪些方法可以一键安装-puppeteer">除了本文介绍的方法还有哪些方法可以一键安装 puppeteer？</h3>
+<p>Fun 提供了非常多的依赖安装方式，除了本文介绍的将依赖直接声明在 package.json 中，然后通过 fun install -d 的方式安装外，还有很多其他方法，他们均有各自适用的场景：</p>
+<ol>
+<li><a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://yq.aliyun.com/articles/719100">命令式安装</a>。比如 <code>fun install -f functionName -p npm puppeteer</code>。这种安装方式的好处是即使对 fun 不了解的用户也可以傻瓜式的使用。</li>
+<li><a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://yq.aliyun.com/articles/719100">声明式安装</a>。这种安装方式的好处是提供了类 Dockerfile 的体验，Dockerfile 的大部分指令在这里都是可以直接使用的。通过这种方式声明的依赖，可以通过直接提交到版本仓库。他人拉取代码后，也可以一键安装所有依赖。</li>
+<li><a href="https://statistics.functioncompute.com/?title=%E6%9C%89%E4%BA%86%20serverless%EF%BC%8C%E5%89%8D%E7%AB%AF%E4%B9%9F%E5%8F%AF%E4%BB%A5%E5%BF%AB%E9%80%9F%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%20Puppeteer%20%E7%BD%91%E9%A1%B5%E6%88%AA%E5%9B%BE%E6%9C%8D%E5%8A%A1&amp;src=article&amp;author=%E5%B0%8F%E9%BB%98&amp;url=https://yq.aliyun.com/articles/716663">交互环境安装</a>。这种安装方式的好处是提供了类似传统物理机的安装体验。在交互环境中，大部分 linux 命令都是可以使用的，而且可以不断试错。</li>
+</ol>
+<h2 id="总结">总结</h2>
+<p>本文介绍了一种比较简单易行地从零开始搭建分布式 Puppeteer Web 服务的方法。利用该方法，可以做到不需要关心如何安装依赖、也不需要关系如何上传依赖，顺滑地完成部署。</p>
+<p>部署完成后，即可享受函数计算带来的优势，即：</p>
+<ul>
+<li>无需采购和管理服务器等基础设施，只需专注业务逻辑的开发，可以大幅缩短项目交付时间和人力成本</li>
+<li>提供日志查询、性能监控、报警等功能快速排查故障</li>
+<li>免运维，毫秒级别弹性伸缩，快速实现底层扩容以应对峰值压力，性能优异</li>
+<li>成本极具竞争力</li>
+</ul>
+<blockquote>
+<p>“<a href="https://developer.aliyun.com/group/alisoftwaretech/">阿里巴巴云原生</a>关注微服务、Serverless、容器、Service Mesh 等技术领域、聚焦云原生流行技术趋势、云原生大规模的落地实践，做最懂云原生开发者的技术圈。”</p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

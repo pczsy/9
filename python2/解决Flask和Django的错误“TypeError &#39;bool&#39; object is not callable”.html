@@ -1,0 +1,113 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修解决Flask和Django的错误“TypeError &#39;bool&#39; object is not callable”' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>解决Flask和Django的错误“TypeError &#39;bool&#39; object is not callable”</center></div><div class='banquan'>原文出处:本文由博客园博主子钦加油提供。<br/>
+原文连接:https://www.cnblogs.com/zmdComeOn/p/11452652.html</div><br>
+    <div class="article">
+<div class="show-content" data-note-content="">
+<div class="show-content-free">
+<p>跟着<a href="https://link.jianshu.com?t=http%3A%2F%2Fwww.pythondoc.com%2Fflask-mega-tutorial%2F" rel="nofollow" target="_blank">欢迎进入Flask大型教程项目！</a>的教程学习Flask，到了<a href="https://link.jianshu.com?t=http%3A%2F%2Fwww.pythondoc.com%2Fflask-mega-tutorial%2Fuserlogin.html%23id4" rel="nofollow" target="_blank">重构用户模型</a>的时候，运行脚本后报错:</p>
+<blockquote>
+<p><strong><em>TypeError: 'bool' object is not callable</em></strong></p>
+</blockquote>
+<p>这是用户模型：</p>
+<pre><code><code><span class="hljs-class"><span class="hljs-keyword">class <span class="hljs-title">User<span class="hljs-params">(db.Model):
+    id = db.Column(db.Integer, primary_key=<span class="hljs-keyword">True)
+    nickname = db.Column(db.String(<span class="hljs-number">64), index=<span class="hljs-keyword">True, unique=<span class="hljs-keyword">True)
+    email = db.Column(db.String(<span class="hljs-number">120), index=<span class="hljs-keyword">True, unique=<span class="hljs-keyword">True)
+    posts = db.relationship(<span class="hljs-string">'Post', backref=<span class="hljs-string">'author', lazy=<span class="hljs-string">'dynamic')
+
+<span class="hljs-meta">    @property
+    <span class="hljs-function"><span class="hljs-keyword">def <span class="hljs-title">is_authenticated<span class="hljs-params">(self):
+        <span class="hljs-keyword">return <span class="hljs-keyword">True
+
+<span class="hljs-meta">    @property
+    <span class="hljs-function"><span class="hljs-keyword">def <span class="hljs-title">is_active<span class="hljs-params">(self):
+        <span class="hljs-keyword">return <span class="hljs-keyword">True
+
+<span class="hljs-meta">    @property
+    <span class="hljs-function"><span class="hljs-keyword">def <span class="hljs-title">is_anonymous<span class="hljs-params">(self):
+        <span class="hljs-keyword">return <span class="hljs-keyword">False
+
+    <span class="hljs-function"><span class="hljs-keyword">def <span class="hljs-title">get_id<span class="hljs-params">(self):
+        <span class="hljs-keyword">try:
+            <span class="hljs-keyword">return unicode(self.id)  <span class="hljs-comment"># python 2
+        <span class="hljs-keyword">except NameError:
+            <span class="hljs-keyword">return str(self.id)  <span class="hljs-comment"># python 3
+
+    <span class="hljs-function"><span class="hljs-keyword">def <span class="hljs-title">__repr__<span class="hljs-params">(self):
+        <span class="hljs-keyword">return <span class="hljs-string">'&lt;User %r&gt;' % (self.nickname)
+
+
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>这是调用的时候的代码：</p>
+<pre><code><code><span class="hljs-keyword">from flask <span class="hljs-keyword">import render_template, flash, redirect, session, url_for, request, g
+<span class="hljs-keyword">from flask.ext.login <span class="hljs-keyword">import login_user, logout_user, current_user, login_required
+<span class="hljs-keyword">from app <span class="hljs-keyword">import app, db, lm, oid
+<span class="hljs-keyword">from .forms <span class="hljs-keyword">import LoginForm
+<span class="hljs-keyword">from .models <span class="hljs-keyword">import User
+
+<span class="hljs-meta">@app.route('/login', methods=['GET', 'POST'])
+<span class="hljs-meta">@oid.loginhandler
+<span class="hljs-function"><span class="hljs-keyword">def <span class="hljs-title">login<span class="hljs-params">():
+    <span class="hljs-keyword"><span style="color: #ff0000;">if g.user </span><span class="hljs-keyword"><span style="color: #ff0000;">is </span><span class="hljs-keyword"><span style="color: #ff0000;">not </span><span class="hljs-keyword"><span style="color: #ff0000;">None </span><span class="hljs-keyword"><span style="color: #ff0000;">and g.user.is_authenticated():  </span><span class="hljs-comment"><span style="color: #ff0000;"># 这一句报错</span>
+        <span class="hljs-keyword">return redirect(url_for(<span class="hljs-string">'index'))
+    form = LoginForm()
+    <span class="hljs-keyword">if form.validate_on_submit():
+        session[<span class="hljs-string">'remember_me'] = form.remember_me.data
+        <span class="hljs-keyword">return oid.try_login(form.openid.data, ask_for=[<span class="hljs-string">'nickname', <span class="hljs-string">'email'])
+    <span class="hljs-keyword">return render_template(<span class="hljs-string">'login.html',
+                           title=<span class="hljs-string">'Sign In',
+                           form=form,
+                           providers=app.config[<span class="hljs-string">'OPENID_PROVIDERS'])
+</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>解决方法：</p>
+<blockquote>
+<p>按照参考资料里面的说法:<br />
+is_authenticated是属性而不是方法，把括号去掉就可以了。书里这一段有两处印刷错误，请参照git源码。</p>
+
+
+
+
+</blockquote>
+<p>把出错的地方：<br />
+<code>if g.user is not None and g.user.is_authenticated():</code><br />
+修改为<br />
+<span style="color: #ff0000;"><code>if g.user is not None and g.user.is_authenticated:</code></span><br />然后就不报错了。</p>
+
+
+
+
+
+          </div>
+
+
+
+
+        </div>
+
+
+
+
+    </div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

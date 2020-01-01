@@ -1,0 +1,242 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修对中文汉字进行特征提取' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>对中文汉字进行特征提取</center></div><div class='banquan'>原文出处:本文由博客园博主何同学提供。<br/>
+原文连接:https://www.cnblogs.com/henabo/p/11588437.html</div><br>
+    <h3 id="1、CountVectorizer方法进行特征提取">方法一：CountVectorizer方法进行特征提取</h3>
+<p>from sklearn.feature.extraction.text import CountVectorizer</p>
+<p>这个方法根据分词进行数量统计继续文本分类</p>
+<h4 id="文本特征提取">文本特征提取</h4>
+<p>作用：对文本进行特征值化</p>
+<p>sklearn.feature_extraction.text.CountVectorizer(stop_words = [])</p>
+<pre><code><code> 返回：词频矩阵</code></pre>
+<p>CountVectorizer.fit_transform(X) X:文本或者包含文本字符串的可迭代对象</p>
+<pre><code><code> 返回：sparse矩阵 在后面加上 .toarray() 可以转换为二维数组</code></pre>
+<p>CountVectorizer.inverse_transform(X) X:array数组或者sparse矩阵</p>
+<pre><code><code> 返回：转换之前数据格</code></pre>
+<p>CountVectorizer.get_feature_names()</p>
+<pre><code><code> 返回：单词列表，也可以说是返回特征名字</code><br /><br /><br /><br /></pre>
+<h2 id="中文特征提取举例（手动分词）">中文特征提取举例（手动分词）</h2>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> sklearn.feature_extraction.text <span style="color: #0000ff;">import</span><span style="color: #000000;"> CountVectorizer
+</span><span style="color: #008000;">#</span><span style="color: #008000;">中文 需要分词，否则是以整句作为一个词。英文则不需要，因为英文单词本来就有空格</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> chinese_text_count_demo():
+    data </span>= [<span style="color: #800000;">"</span><span style="color: #800000;">我 爱 北京 天安门</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">天安门 上 太阳 升</span><span style="color: #800000;">"</span><span style="color: #000000;">]
+    
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1、实例化一个转换器类(为什么叫转化器，因为是将 文本 转化为 数值)</span>
+    transfer =<span style="color: #000000;"> CountVectorizer()
+    
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2、调用fit_transform</span>
+    data_new =<span style="color: #000000;"> transfer.fit_transform(data)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">data_new:\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, data_new.toarray())
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">特征名字：\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, transfer.get_feature_names())
+    
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> None
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    chinese_text_count_demo()
+
+输出结果：
+data_new:
+ [[</span>1 1<span style="color: #000000;"> 0]
+ [0 </span>1 1<span style="color: #000000;">]]
+特征名字：
+ [</span><span style="color: #800000;">'</span><span style="color: #800000;">北京</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">天安门</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">太阳</span><span style="color: #800000;">'</span>]<br /><br /></pre>
+<p>解析：上面第一行表示的是，data第一句话</p>
+<p>数字表示的是，这个 特征词 出现的次数</p>
+</div>
+<h2 id="中文特征提取举例（使用jieba分词）">中文特征提取举例（使用jieba分词）</h2>
+<p>首先你需要在自己的cmd命令行中下载jieba</p>
+<p>pip3 install jieba / pip install jieba</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> sklearn.feature_extraction.text <span style="color: #0000ff;">import</span><span style="color: #000000;"> CountVectorizer
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> jieba
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> cut_word(text):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">进行中文分词</span>
+    <span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #000000;">.join(list(jieba.cut(text)))
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> jieba.cut(text)返回的是一个生成器对象，需要转换为迭代器</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">return "".join(jieba.lcut(text))</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">jieba.cut(text)直接返回一个列表list</span>
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> auto_chinese_text_count_demo():
+    data </span>= [<span style="color: #800000;">"</span><span style="color: #800000;">你说这该怎么办</span><span style="color: #800000;">"</span><span style="color: #000000;">
+           ,</span><span style="color: #800000;">"</span><span style="color: #800000;">唐龙大声问怎么回事</span><span style="color: #800000;">"</span><span style="color: #000000;">
+           ,</span><span style="color: #800000;">"</span><span style="color: #800000;">晚上找个地方喝几盅怎么样</span><span style="color: #800000;">"</span><span style="color: #000000;">
+           ,</span><span style="color: #800000;">"</span><span style="color: #800000;">老忠领他们到朱老明那里站在大柏树坟前说你看看这个地势怎么样我们的人要是从城里过来经过大渡口或是小渡口沿着千里堤</span><span style="color: #800000;">"</span><span style="color: #000000;">]
+    data_new </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">for</span> sent <span style="color: #0000ff;">in</span><span style="color: #000000;"> data:
+        data_new.append(cut_word(sent))
+    
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">句子分词后：\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, data_new)
+    
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1、实例化一个转换器类</span>
+    transfer = CountVectorizer(stop_words = [<span style="color: #800000;">"</span><span style="color: #800000;">说</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">的</span><span style="color: #800000;">"</span>])<span style="color: #008000;">#</span><span style="color: #008000;">停顿词应该预处理清理，这里只是示范</span>
+    
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 2、调用fit_transform</span>
+    data_vector_value =<span style="color: #000000;"> transfer.fit_transform(data_new)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">data_vector_value:\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, data_vector_value.toarray())
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">特征名字：\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, transfer.get_feature_names())
+    
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> None
+    
+    
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> ==<span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    auto_chinese_text_count_demo()
+
+
+输出结果：
+句子分词后：
+ [</span><span style="color: #800000;">'</span><span style="color: #800000;">你 说 这 该 怎么办</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">唐龙 大声 问 怎么回事</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">晚上 找个 地方 喝 几盅 怎么样</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">老忠领 他们 到 朱老明 那里 站 在 大柏树 坟前 说 你 看看 这个 地势 怎么样 我们 的 人 要 是从 城里 过来 经过 大渡口 或是 小 渡口 沿着 千里 堤</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+data_vector_value:
+ [[0 0 0 0 0 0 0 0 0 0 0 </span>1<span style="color: #000000;"> 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+ [0 0 0 </span>1 0 0 0 0 1 0 0 0 1<span style="color: #000000;"> 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+ [0 </span>1 0 0 0 1 0 0 0 0 0 0 0 1 0 0 1 0 1<span style="color: #000000;"> 0 0 0 0 0 0 0 0 0]
+ [</span>1 0 1 0 1 0 1 1 0 1 1 0 0 1 1 1 0 1 0 1 1 1 1 1 1 1 1 1<span style="color: #000000;">]]
+特征名字：
+ [</span><span style="color: #800000;">'</span><span style="color: #800000;">他们</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">几盅</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">千里</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">唐龙</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">地势</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">地方</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">坟前</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">城里</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">大声</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">大柏树</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">大渡口</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">怎么办</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">怎么回事</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">怎么样</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">我们</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">或是</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">找个</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">是从</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">晚上</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">朱老明</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">沿着</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">渡口</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">看看</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">经过</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">老忠领</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">过来</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">这个</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">那里</span><span style="color: #800000;">'</span>]</pre>
+</div>
+<p>&nbsp;</p>
+<h3>方法二：TfidfVectorizer方法进行特征提取</h3>
+<p>from sklearn.feature_extraction.text import TfidfVectorizer</p>
+<div class="cell text_cell unselected rendered">
+<div class="inner_cell">
+<div class="text_cell_render rendered_html">
+<p>sklearn.feature_extraction.text.TfidfVectorizer(stop_words=None)</p>
+<p>返回：权重矩阵</p>
+<p>TfidfVectorizer.fit_transform(X)</p>
+<p>X:文本或者包括文本字符串的可迭代对象</p>
+<p>返回：sparse矩阵</p>
+<p>TfidfVectorizer.inverse_transform(X)</p>
+<p>X:array数组或者sparse矩阵</p>
+<p>返回：转换之前数据格式</p>
+<p>TfidfVectorizer.get_feature_names()</p>
+<p>返回：单词列表，也可以说是特征名字</p>
+</div>
+</div>
+</div>
+<div class="cell text_cell unselected rendered">
+<div class="prompt input_prompt">&nbsp;</div>
+<div class="inner_cell">
+<div class="text_cell_render rendered_html">
+<p>TfidfVectorizer衡量的就是一个词在文章中的重要程度</p>
+<p>TF-IDF的主要思想是：如果某个词或短语在一篇文章中出现的概率高，并且在其他文章中很少出现，则认为此词或者短语具有很好的类别区分能力。（适合：分类）</p>
+<p>TF-IDF作用：用以评估一字词对于一个文件集或一个语料库中的其中一份文件的重要程度。</p>
+<p>TfidfVectorizer = TF + IDF</p>
+<pre><code><code>  --&gt; TF   - 词频（term frequency，tf)
+
+  --&gt; IDF - 逆向文档频率(inverse document frequency, idf)
+
+  举例：
+
+  假设现在有两个关键词&ldquo;经济&rdquo;，&ldquo;非常&rdquo;。
+
+  现在基础数据是1000篇文章的语料库。其中1000篇文章&ldquo;非常&rdquo;一词出现的频率很高，10篇文章&ldquo;经济&rdquo;一词出现的很高。
+
+  计算公式：
+
+  TF（词频）= 出现的频率/总次数
+
+  IDF（逆向文档频率） = log10 （文件总数/包含该词语的文件数目）
+
+  TF-IDF = TF * IDF
+
+  要求计算：
+
+  现有两篇文章
+
+  文章A（100词）：10次&ldquo;经济&rdquo; TF-IDF：0.2
+
+    tf：10/100 = 0.1
+
+    idf：lg （1000/10） = 2
+
+  文章B（100词）：10次&ldquo;非常&rdquo; TF-IDF：0.1
+
+    tf：10/100 = 0.1
+
+    idf：lg （1000/100） = 1</code><br /><br /><br /></pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> sklearn.feature_extraction.text <span style="color: #0000ff;">import</span><span style="color: #000000;"> TfidfVectorizer
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> jieba
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> cut_word(text):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">进行中文分词</span>
+    <span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #000000;">.join(list(jieba.cut(text)))
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> jieba.cut(text)返回的是一个生成器对象，需要转换为迭代器</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">return "".join(jieba.lcut(text))</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">jieba.cut(text)直接返回一个列表list</span>
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> tf_idf_demo():
+    data </span>= [<span style="color: #800000;">"</span><span style="color: #800000;">你说这该怎么办</span><span style="color: #800000;">"</span><span style="color: #000000;">
+           ,</span><span style="color: #800000;">"</span><span style="color: #800000;">唐龙大声问怎么回事</span><span style="color: #800000;">"</span><span style="color: #000000;">
+           ,</span><span style="color: #800000;">"</span><span style="color: #800000;">晚上找个地方喝几盅怎么样</span><span style="color: #800000;">"</span><span style="color: #000000;">
+           ,</span><span style="color: #800000;">"</span><span style="color: #800000;">老忠领他们到朱老明那里站在大柏树坟前说你看看这个地势怎么样我们的人要是从城里过来经过大渡口或是小渡口沿着千里堤</span><span style="color: #800000;">"</span><span style="color: #000000;">]
+    
+    data_new </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">for</span> sent <span style="color: #0000ff;">in</span><span style="color: #000000;"> data:
+        data_new.append(cut_word(sent))
+    
+    transfer </span>= TfidfVectorizer( stop_words = [<span style="color: #800000;">"</span><span style="color: #800000;">的</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">说</span><span style="color: #800000;">"</span><span style="color: #000000;">])
+    
+    data_feature_value </span>=<span style="color: #000000;"> transfer.fit_transform(data_new)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">data_feature_value:\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, data_feature_value.toarray())
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">特征名字:\n</span><span style="color: #800000;">"</span><span style="color: #000000;">, transfer.get_feature_names())
+    
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> None
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> ==<span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    tf_idf_demo()
+
+
+输出结果：
+data_feature_value:
+ [[0.         0.         0.         0.         0.         0.
+  0.         0.         0.         0.         0.         </span>1<span style="color: #000000;">.
+  0.         0.         0.         0.         0.         0.
+  0.         0.         0.         0.         0.         0.
+  0.         0.         0.         0.        ]
+ [0.         0.         0.         </span>0.57735027<span style="color: #000000;"> 0.         0.
+  0.         0.         </span>0.57735027<span style="color: #000000;"> 0.         0.         0.
+  </span>0.57735027<span style="color: #000000;"> 0.         0.         0.         0.         0.
+  0.         0.         0.         0.         0.         0.
+  0.         0.         0.         0.        ]
+ [0.         </span>0.46516193 0.         0.         0.         0.46516193<span style="color: #000000;">
+  0.         0.         0.         0.         0.         0.
+  0.         </span>0.36673901 0.         0.         0.46516193<span style="color: #000000;"> 0.
+  </span>0.46516193<span style="color: #000000;"> 0.         0.         0.         0.         0.
+  0.         0.         0.         0.        ]
+ [</span>0.22575266 0.         0.22575266 0.         0.22575266<span style="color: #000000;"> 0.
+  </span>0.22575266 0.22575266 0.         0.22575266 0.22575266<span style="color: #000000;"> 0.
+  0.         </span>0.17798599 0.22575266 0.22575266 0.         0.22575266<span style="color: #000000;">
+  0.         </span>0.22575266 0.22575266 0.22575266 0.22575266 0.22575266
+  0.22575266 0.22575266 0.22575266 0.22575266<span style="color: #000000;">]]
+特征名字:
+ [</span><span style="color: #800000;">'</span><span style="color: #800000;">他们</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">几盅</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">千里</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">唐龙</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">地势</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">地方</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">坟前</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">城里</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">大声</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">大柏树</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">大渡口</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">怎么办</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">怎么回事</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">怎么样</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">我们</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">或是</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">找个</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">是从</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">晚上</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">朱老明</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">沿着</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">渡口</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">看看</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">经过</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">老忠领</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">过来</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">这个</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">那里</span><span style="color: #800000;">'</span>]</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>参考链接：<a href="https://www.cnblogs.com/ftl1012/p/10498480.html">https://www.cnblogs.com/ftl1012/p/10498480.html</a></p>
+</div>
+</div>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

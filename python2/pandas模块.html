@@ -1,0 +1,2795 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修pandas模块' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>pandas模块</center></div><div class='banquan'>原文出处:本文由博客园博主蔚蓝的爱提供。<br/>
+原文连接:https://www.cnblogs.com/Hades123/p/11738909.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#pandas模块简介">pandas模块简介</a></li>
+        <li><a href="#series数据结构">Series数据结构</a><ul>
+        <li><a href="#series创建方式">Series创建方式</a></li>
+        <li><a href="#series缺失数据处理">Series缺失数据处理</a></li>
+        <li><a href="#series特性">Series特性</a><ul>
+        <li><a href="#支持字典的特性">支持字典的特性</a></li>
+        <li><a href="#整数索引">整数索引</a></li>
+        <li><a href="#series数据对齐">Series数据对齐</a></li>
+        </ul></li>
+        </ul></li>
+        <li><a href="#datafram">DataFram</a><ul>
+        <li><a href="#datafram创建方式">DataFram创建方式</a></li>
+        <li><a href="#datafram常用属性和方法">DataFram常用属性和方法</a></li>
+        <li><a href="#datafram的索引和切片">DataFram的索引和切片</a><ul>
+        <li><a href="#通过columns取值">通过columns取值</a></li>
+        <li><a href="#loc通过行标签进行取值">loc通过行标签进行取值</a></li>
+        <li><a href="#iloc类似于numpy数组取值">iloc(类似于numpy数组取值)</a></li>
+        <li><a href="#使用逻辑判断进行取值">使用逻辑判断进行取值</a></li>
+        </ul></li>
+        <li><a href="#datafram值替换">DataFram值替换</a></li>
+        <li><a href="#产生时间对象数组-date_range">产生时间对象数组: date_range</a></li>
+        <li><a href="#数据分组和聚合">数据分组和聚合</a><ul>
+        <li><a href="#分组groupby">分组(groupby)</a></li>
+        <li><a href="#聚合">聚合</a></li>
+        <li><a href="#apply">apply</a></li>
+        </ul></li>
+        <li><a href="#其他常用方法">其他常用方法</a></li>
+        <li><a href="#合并数据">合并数据</a></li>
+        <li><a href="#导入导出数据">导入导出数据</a><ul>
+        <li><a href="#读取文件导入数据">读取文件导入数据</a></li>
+        <li><a href="#写入文件导出数据">写入文件导出数据</a></li>
+        <li><a href="#读取csv文件并处理数据">读取CSV文件并处理数据</a></li>
+        <li><a href="#处理丢失数据">处理丢失数据</a></li>
+        <li><a href="#读取json文件">读取json文件</a></li>
+        </ul></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="pandas模块简介">pandas模块简介</h1>
+<p>pandas是python数据分析的核心模块。它主要提供了五大功能:</p>
+<ol>
+<li>支持文件存取操作，支持数据库(sql)、html、json、pickle、csv(txt、excel)、sas、stata、hdf等。</li>
+<li>支持增删改查、切片、高阶函数、分组聚合等单表操作，以及和dict、list的互相转换。</li>
+<li>支持多表拼接合并操作。</li>
+<li>支持简单的绘图操作。</li>
+<li>支持简单的统计分析操作。</li>
+</ol>
+<h1 id="series数据结构">Series数据结构</h1>
+<p>Series是一种类似于一维数组的对象，由一组数据和一组与之相关的数据标签（索引）组成。</p>
+<p>Series比较像列表（数组）和字典的结合体</p>
+<pre><code><code>import numpy as np
+import pandas as pd</code></pre>
+<h2 id="series创建方式">Series创建方式</h2>
+<ul>
+<li>第一种: 直接传入一个列表,此时由于没有指定数据索引,则会自动创建一个0~N-1(N为数据的长度)的整型索引,可以通过索引进行取值</li>
+</ul>
+<pre><code><code>df = pd.Series([i for i in range(4, 8)])
+df</code></pre>
+<pre><code><code>0    4
+1    5
+2    6
+3    7
+dtype: int64</code></pre>
+<pre><code><code>df[1]</code></pre>
+<pre><code><code>5</code></pre>
+<pre><code><code>df.values</code></pre>
+<pre><code><code>array([4, 5, 6, 7], dtype=int64)</code></pre>
+<ul>
+<li>第二种:传入一个列表,自定义索引列表(索引列表长度需要和数据的长度一致),此时就可以通过自定义的索引进行取值, 但还是可以通过默认索引进行取值</li>
+</ul>
+<pre><code><code>df1 = pd.Series([2,3,5,7,9], index=[&#39;a&#39;,&#39;c&#39;, &#39;b&#39;,&#39;e&#39;,&#39;f&#39;])
+df1</code></pre>
+<pre><code><code>a    2
+c    3
+b    5
+e    7
+f    9
+dtype: int64</code></pre>
+<pre><code><code>df1[2]</code></pre>
+<pre><code><code>5</code></pre>
+<pre><code><code>df1[&#39;b&#39;]</code></pre>
+<pre><code><code>5</code></pre>
+<pre><code><code>df1.index</code></pre>
+<pre><code><code>Index([&#39;a&#39;, &#39;c&#39;, &#39;b&#39;, &#39;e&#39;, &#39;f&#39;], dtype=&#39;object&#39;)</code></pre>
+<ul>
+<li>第三种: 传入一个字典,相当于第二种方式</li>
+</ul>
+<pre><code><code>df2 = pd.Series({&#39;b&#39;: 2, &#39;f&#39;: 5})
+df2</code></pre>
+<pre><code><code>b    2
+f    5
+dtype: int64</code></pre>
+<pre><code><code>df2[0]</code></pre>
+<pre><code><code>2</code></pre>
+<pre><code><code>df2[&#39;f&#39;]</code></pre>
+<pre><code><code>5</code></pre>
+<ul>
+<li>第四种: 创建一个值都是0的数组</li>
+</ul>
+<pre><code><code>pd.Series(0, index=[&#39;a&#39;,&#39;b&#39;])</code></pre>
+<pre><code><code>a    0
+b    0
+dtype: int64</code></pre>
+<h2 id="series缺失数据处理">Series缺失数据处理</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">方法</th>
+<th style="text-align: left;">详解</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">dropna()</td>
+<td style="text-align: left;">过滤掉值为NaN的行</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">fillna()</td>
+<td style="text-align: left;">填充缺失数据</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">isnull()</td>
+<td style="text-align: left;">返回布尔数组，缺失值对应为True</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">notnull()</td>
+<td style="text-align: left;">返回布尔数组，缺失值对应为False</td>
+</tr>
+</tbody>
+</table>
+<pre><code><code>df = pd.Series([1, 2, 3, 4, np.nan], index=[&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;d&#39;, &#39;e&#39;])
+print(df)</code></pre>
+<pre><code><code>a    1.0
+b    2.0
+c    3.0
+d    4.0
+e    NaN
+dtype: float64</code></pre>
+<pre><code><code>print(df.dropna())  # 不会改变原先的数组</code></pre>
+<pre><code><code>a    1.0
+b    2.0
+c    3.0
+d    4.0
+dtype: float64</code></pre>
+<pre><code><code>df1 = df.copy()
+df1.dropna(inplace=True)  # inplace参数默认为False,当设为True的时候,则会改变原先的数组
+df1</code></pre>
+<pre><code><code>a    1.0
+b    2.0
+c    3.0
+d    4.0
+dtype: float64</code></pre>
+<pre><code><code>df.fillna(0)</code></pre>
+<pre><code><code>a    1.0
+b    2.0
+c    3.0
+d    4.0
+e    0.0
+dtype: float64</code></pre>
+<pre><code><code>df.isna()</code></pre>
+<pre><code><code>a    False
+b    False
+c    False
+d    False
+e     True
+dtype: bool</code></pre>
+<pre><code><code>df.notnull()</code></pre>
+<pre><code><code>a     True
+b     True
+c     True
+d     True
+e    False
+dtype: bool</code></pre>
+<h2 id="series特性">Series特性</h2>
+<ul>
+<li>从ndarray创建Series:Series(arr)</li>
+<li>与标量（数字）：sr * 2</li>
+<li>两个Series运算</li>
+<li>通用函数：np.ads(sr)</li>
+<li>布尔值过滤：sr[sr&gt;0]</li>
+<li>统计函数：mean()、sum()、cumsum()</li>
+</ul>
+<h3 id="支持字典的特性">支持字典的特性</h3>
+<ul>
+<li>从字典创建Series：Series(dic),</li>
+<li>In运算：'a'in sr、for x in sr</li>
+<li>键索引：sr['a'],sr[['a','b','d']]</li>
+<li>键切片：sr['a':'c']</li>
+<li>其他函数：get('a',default=0)等</li>
+</ul>
+<h3 id="整数索引">整数索引</h3>
+<p>pandas当中的整数索引对象可能会让初次接触它的人很懵逼，<br />
+接下来通过代码演示：</p>
+<pre><code><code>df = pd.Series(np.arange(10))
+df1 = df[3:].copy()
+df1</code></pre>
+<pre><code><code>3    3
+4    4
+5    5
+6    6
+7    7
+8    8
+9    9
+dtype: int32</code></pre>
+<pre><code><code>df1[1]  # 报错, 因为pandas当中使用整数索引取值是优先以标签解释的，而不是下标</code></pre>
+<p>此时有如下解决办法:</p>
+<ol>
+<li>loc属性: 以标签解释</li>
+<li>iloc属性: 以下标解释</li>
+</ol>
+<pre><code><code>df1.loc[3]</code></pre>
+<pre><code><code>3</code></pre>
+<pre><code><code>df1.iloc[0]</code></pre>
+<pre><code><code>3</code></pre>
+<h3 id="series数据对齐">Series数据对齐</h3>
+<p>pandas在运算时，会按索引进行对齐然后计算。如果存在不同的索引，则结果的索引是两个操作数索引的并集。</p>
+<pre><code><code>sr1 = pd.Series([12,23,34], index=[&#39;c&#39;,&#39;a&#39;,&#39;d&#39;])
+sr1</code></pre>
+<pre><code><code>c    12
+a    23
+d    34
+dtype: int64</code></pre>
+<pre><code><code>sr2 = pd.Series([11,20,10], index=[&#39;d&#39;,&#39;c&#39;,&#39;a&#39;,])
+sr2</code></pre>
+<pre><code><code>d    11
+c    20
+a    10
+dtype: int64</code></pre>
+<pre><code><code>sr1 + sr2  # 可以通过这种索引对齐直接将两个Series对象进行运算</code></pre>
+<pre><code><code>a    33
+c    32
+d    45
+dtype: int64</code></pre>
+<pre><code><code>sr3 = pd.Series([11,20,10,14], index=[&#39;d&#39;,&#39;c&#39;,&#39;a&#39;,&#39;b&#39;])
+sr3</code></pre>
+<pre><code><code>d    11
+c    20
+a    10
+b    14
+dtype: int64</code></pre>
+<pre><code><code>sr1 + sr3  #  sr1 和 sr3的索引不一致，所以最终的运行会发现b索引对应的值无法运算，就返回了NaN,一个缺失值</code></pre>
+<pre><code><code>a    33.0
+b     NaN
+c    32.0
+d    45.0
+dtype: float64</code></pre>
+<p>此时可以将两个Series对象相加时将缺失值设为0</p>
+<pre><code><code>sr1.add(sr3, fill_value=0)# 将缺失值设为0，所以最后算出来b索引对应的结果为14</code></pre>
+<pre><code><code>a    33.0
+b    14.0
+c    32.0
+d    45.0
+dtype: float64</code></pre>
+<h1 id="datafram">DataFram</h1>
+<p>DataFrame是一个表格型的数据结构，含有一组有序的列。<br />
+DataFrame可以被看做是由Series组成的字典，并且共用一个索引。</p>
+<h2 id="datafram创建方式">DataFram创建方式</h2>
+<ul>
+<li>利用包含等长度列表或Numpy数组的字典来形成DataFrame</li>
+</ul>
+<pre><code><code>pd.DataFrame({&#39;a&#39;: pd.Series([1,2,3,4]),&#39;b&#39;:pd.Series([5,6,7,8])})</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>a</th>
+      <th>b</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>5</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>2</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>3</td>
+      <td>7</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4</td>
+      <td>8</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<ul>
+<li>通过columns参数指定列参数</li>
+</ul>
+<pre><code><code>pd.DataFrame(np.random.randint(1,100,(3,4),dtype=int), columns=[&#39;c1&#39;,&#39;c2&#39;,&#39;c3&#39;,&#39;c4&#39;])</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c2</th>
+      <th>c3</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>43</td>
+      <td>72</td>
+      <td>62</td>
+      <td>87</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>77</td>
+      <td>91</td>
+      <td>42</td>
+      <td>98</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>22</td>
+      <td>76</td>
+      <td>62</td>
+      <td>63</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<ul>
+<li>通过index指定行参数</li>
+</ul>
+<pre><code><code>df = pd.DataFrame(np.random.randint(1,100,(3,4),dtype=int),index=[&#39;one&#39;, &#39;tow&#39;, &#39;three&#39;] ,columns=[&#39;c1&#39;,&#39;c3&#39;,&#39;c2&#39;,&#39;c4&#39;])
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>37</td>
+      <td>85</td>
+      <td>3</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>45</td>
+      <td>7</td>
+      <td>36</td>
+      <td>49</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>62</td>
+      <td>15</td>
+      <td>28</td>
+      <td>79</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h2 id="datafram常用属性和方法">DataFram常用属性和方法</h2>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">属性/方法</th>
+<th style="text-align: left;">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">dtypes</td>
+<td style="text-align: left;">查看数据类型</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">index</td>
+<td style="text-align: left;">获取行索引</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">columns</td>
+<td style="text-align: left;">获取列索引</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">transpose</td>
+<td style="text-align: left;">转置,也可用Ｔ来操作</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">values</td>
+<td style="text-align: left;">获取值索引</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">describe()</td>
+<td style="text-align: left;">获取快速统计</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">sort_index(axis)</td>
+<td style="text-align: left;">排序，可按行(axis=0)或列(axis=1)index排序输出</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">sort_values(by)</td>
+<td style="text-align: left;">按数据值来排序</td>
+</tr>
+</tbody>
+</table>
+<pre><code><code>df.dtypes</code></pre>
+<pre><code><code>c1    int32
+c3    int32
+c2    int32
+c4    int32
+dtype: object</code></pre>
+<pre><code><code>df.index</code></pre>
+<pre><code><code>Index([&#39;one&#39;, &#39;tow&#39;, &#39;three&#39;], dtype=&#39;object&#39;)</code></pre>
+<pre><code><code>df.values</code></pre>
+<pre><code><code>array([[24, 51, 24,  6],
+       [32,  9, 44, 57],
+       [ 3, 27,  1, 84]])</code></pre>
+<pre><code><code>df.columns</code></pre>
+<pre><code><code>Index([&#39;c1&#39;, &#39;c3&#39;, &#39;c2&#39;, &#39;c4&#39;], dtype=&#39;object&#39;)</code></pre>
+<pre><code><code>df.T</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>one</th>
+      <th>tow</th>
+      <th>three</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>c1</th>
+      <td>24</td>
+      <td>32</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>c3</th>
+      <td>51</td>
+      <td>9</td>
+      <td>27</td>
+    </tr>
+    <tr>
+      <th>c2</th>
+      <td>24</td>
+      <td>44</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>c4</th>
+      <td>6</td>
+      <td>57</td>
+      <td>84</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df.describe()</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>count</th>
+      <td>3.000000</td>
+      <td>3.000000</td>
+      <td>3.000000</td>
+      <td>3.000000</td>
+    </tr>
+    <tr>
+      <th>mean</th>
+      <td>19.666667</td>
+      <td>29.000000</td>
+      <td>23.000000</td>
+      <td>49.000000</td>
+    </tr>
+    <tr>
+      <th>std</th>
+      <td>14.977761</td>
+      <td>21.071308</td>
+      <td>21.517435</td>
+      <td>39.610605</td>
+    </tr>
+    <tr>
+      <th>min</th>
+      <td>3.000000</td>
+      <td>9.000000</td>
+      <td>1.000000</td>
+      <td>6.000000</td>
+    </tr>
+    <tr>
+      <th>25%</th>
+      <td>13.500000</td>
+      <td>18.000000</td>
+      <td>12.500000</td>
+      <td>31.500000</td>
+    </tr>
+    <tr>
+      <th>50%</th>
+      <td>24.000000</td>
+      <td>27.000000</td>
+      <td>24.000000</td>
+      <td>57.000000</td>
+    </tr>
+    <tr>
+      <th>75%</th>
+      <td>28.000000</td>
+      <td>39.000000</td>
+      <td>34.000000</td>
+      <td>70.500000</td>
+    </tr>
+    <tr>
+      <th>max</th>
+      <td>32.000000</td>
+      <td>51.000000</td>
+      <td>44.000000</td>
+      <td>84.000000</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df.sort_index(axis=0)  # 按照行索引进行排序</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>3</td>
+      <td>27</td>
+      <td>1</td>
+      <td>84</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>9</td>
+      <td>44</td>
+      <td>57</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df.sort_index(axis=1) # 按照列索引进行排序</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c2</th>
+      <th>c3</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>24</td>
+      <td>51</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>44</td>
+      <td>9</td>
+      <td>57</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>3</td>
+      <td>1</td>
+      <td>27</td>
+      <td>84</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df.sort_values(by=&#39;c3&#39;, ascending=False)  # 默认按照列的值进行排序</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>3</td>
+      <td>27</td>
+      <td>1</td>
+      <td>84</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>9</td>
+      <td>44</td>
+      <td>57</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df.sort_values(by=&#39;three&#39;,axis=1) # 按照行的值进行排序</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c2</th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>24</td>
+      <td>51</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>44</td>
+      <td>32</td>
+      <td>9</td>
+      <td>57</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>1</td>
+      <td>3</td>
+      <td>27</td>
+      <td>84</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h2 id="datafram的索引和切片">DataFram的索引和切片</h2>
+<h3 id="通过columns取值">通过columns取值</h3>
+<pre><code><code>df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>9</td>
+      <td>44</td>
+      <td>57</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>3</td>
+      <td>27</td>
+      <td>1</td>
+      <td>84</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df[[&#39;c1&#39;,&#39;c3&#39;]]  # 取多列数据需要传一个列表类型</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>9</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>3</td>
+      <td>27</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="loc通过行标签进行取值">loc通过行标签进行取值</h3>
+<ul>
+<li>通过自定义的行标签进行取值</li>
+</ul>
+<pre><code><code>df.loc[:&#39;one&#39;]</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<ul>
+<li>通过索引取值</li>
+</ul>
+<pre><code><code>df[1:3]</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>9</td>
+      <td>44</td>
+      <td>57</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>3</td>
+      <td>27</td>
+      <td>1</td>
+      <td>84</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="iloc类似于numpy数组取值">iloc(类似于numpy数组取值)</h3>
+<pre><code><code>df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>9</td>
+      <td>44</td>
+      <td>57</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>3</td>
+      <td>27</td>
+      <td>1</td>
+      <td>84</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df.iloc[0, 0]</code></pre>
+<pre><code><code>24</code></pre>
+<pre><code><code>df.iloc[:2, 1:4]</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>9</td>
+      <td>44</td>
+      <td>57</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="使用逻辑判断进行取值">使用逻辑判断进行取值</h3>
+<pre><code><code>df[df[&#39;c1&#39;] &gt;20]</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>32</td>
+      <td>9</td>
+      <td>44</td>
+      <td>57</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df[(df[&#39;c1&#39;] &gt; 20) &amp; (df[&#39;c2&#39;] &lt;30)]</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>24</td>
+      <td>51</td>
+      <td>24</td>
+      <td>6</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h2 id="datafram值替换">DataFram值替换</h2>
+<pre><code><code>df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>37</td>
+      <td>85</td>
+      <td>3</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>45</td>
+      <td>7</td>
+      <td>36</td>
+      <td>49</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>62</td>
+      <td>15</td>
+      <td>28</td>
+      <td>79</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df1 = df.copy()
+df1[df1 &lt; 20] = 100
+df1</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>one</th>
+      <td>37</td>
+      <td>85</td>
+      <td>100</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <th>tow</th>
+      <td>45</td>
+      <td>100</td>
+      <td>36</td>
+      <td>49</td>
+    </tr>
+    <tr>
+      <th>three</th>
+      <td>62</td>
+      <td>100</td>
+      <td>28</td>
+      <td>79</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h2 id="产生时间对象数组-date_range">产生时间对象数组: date_range</h2>
+<p><strong>参数:</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">详解</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">start</td>
+<td style="text-align: left;">开始时间</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">end</td>
+<td style="text-align: left;">结束时间</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">periods</td>
+<td style="text-align: left;">时间长度</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">freq</td>
+<td style="text-align: left;">时间频率，默认为'D'，可选H(our),W(eek),B(usiness),S(emi-)M(onth),(min)T(es), S(econd), A(year),…</td>
+</tr>
+</tbody>
+</table>
+<pre><code><code>dates = pd.date_range(&#39;20190101&#39;, periods=3, freq=&#39;M&#39;)
+dates</code></pre>
+<pre><code><code>DatetimeIndex([&#39;2019-01-31&#39;, &#39;2019-02-28&#39;, &#39;2019-03-31&#39;], dtype=&#39;datetime64[ns]&#39;, freq=&#39;M&#39;)</code></pre>
+<pre><code><code>df.index = dates
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>c1</th>
+      <th>c3</th>
+      <th>c2</th>
+      <th>c4</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2019-01-31</th>
+      <td>37</td>
+      <td>85</td>
+      <td>3</td>
+      <td>22</td>
+    </tr>
+    <tr>
+      <th>2019-02-28</th>
+      <td>45</td>
+      <td>7</td>
+      <td>36</td>
+      <td>49</td>
+    </tr>
+    <tr>
+      <th>2019-03-31</th>
+      <td>62</td>
+      <td>15</td>
+      <td>28</td>
+      <td>79</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h2 id="数据分组和聚合">数据分组和聚合</h2>
+<p>在数据分析当中，我们有时需要将数据拆分，然后在每一个特定的组里进行运算，这些操作通常也是数据分析工作中的重要环节。</p>
+<h3 id="分组groupby">分组(groupby)</h3>
+<p>pandas对象（无论Series、DataFrame还是其他的什么）当中的数据会根据提供的一个或者多个键被拆分为多组，拆分操作是在对象的特定轴上执行的。就比如DataFrame可以在他的行上或者列上进行分组，然后将一个函数应用到各个分组上并产生一个新的值。最后将所有的执行结果合并到最终的结果对象中。</p>
+<p><strong>分组键的形式:</strong></p>
+<ul>
+<li>列表或者数组，长度与待分组的轴一样</li>
+<li>表示DataFrame某个列名的值。</li>
+<li>字典或Series，给出待分组轴上的值与分组名之间的对应关系</li>
+<li>函数，用于处理轴索引或者索引中的各个标签吗</li>
+</ul>
+<p>后三种只是快捷方式，最终仍然是为了产生一组用于拆分对象的值。<br />
+首先，通过一个很简单的DataFrame数组尝试一下：</p>
+<pre><code><code>df = pd.DataFrame({&#39;key1&#39;:[&#39;x&#39;,&#39;x&#39;,&#39;y&#39;,&#39;y&#39;,&#39;x&#39;],                               
+            &#39;key2&#39;:[&#39;one&#39;,&#39;two&#39;,&#39;one&#39;,&#39;two&#39;,&#39;one&#39;],
+            &#39;data1&#39;:np.random.randn(5),
+            &#39;data2&#39;:np.random.randn(5)})
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>key1</th>
+      <th>key2</th>
+      <th>data1</th>
+      <th>data2</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>x</td>
+      <td>one</td>
+      <td>0.506897</td>
+      <td>-1.189281</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>x</td>
+      <td>two</td>
+      <td>-1.448441</td>
+      <td>-1.658427</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>y</td>
+      <td>one</td>
+      <td>-0.665272</td>
+      <td>-1.708576</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>y</td>
+      <td>two</td>
+      <td>-1.466032</td>
+      <td>-1.705750</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>x</td>
+      <td>one</td>
+      <td>3.127327</td>
+      <td>-1.591700</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code># 访问data1，并根据key1调用groupby：
+f1 = df[&#39;data1&#39;].groupby(df[&#39;key1&#39;])
+f1.groups</code></pre>
+<pre><code><code>{&#39;x&#39;: Int64Index([0, 1, 4], dtype=&#39;int64&#39;),
+ &#39;y&#39;: Int64Index([2, 3], dtype=&#39;int64&#39;)}</code></pre>
+<p>上述运行是没有进行任何计算的，但是我们想要的中间数据已经拿到了，接下来，就可以调用groupby进行任何计算</p>
+<pre><code><code># 调用mean函数求出平均值
+f1.mean()</code></pre>
+<pre><code><code>key1
+x    0.728594
+y   -1.065652
+Name: data1, dtype: float64</code></pre>
+<p>以上数据经过分组键（一个Series数组）进行了聚合，产生了一个新的Series，索引就是<code>key1</code>列中的唯一值。这些索引的名称就为<code>key1</code>。接下来就尝试一次将多个数组的列表传进来</p>
+<pre><code><code>f2 = df[&#39;data1&#39;].groupby([df[&#39;key1&#39;],df[&#39;key2&#39;]])
+f2.mean()</code></pre>
+<pre><code><code>key1  key2
+x     one     1.817112
+      two    -1.448441
+y     one    -0.665272
+      two    -1.466032
+Name: data1, dtype: float64</code></pre>
+<p>传入多个数据之后会发现，得到的数据具有一个层次化的索引，key1对应的x\y;key2对应的one\two.</p>
+<pre><code><code># 通过unstack方法就可以让索引不堆叠在一起了
+
+f2.mean().unstack()</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th>key2</th>
+      <th>one</th>
+      <th>two</th>
+    </tr>
+    <tr>
+      <th>key1</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>x</th>
+      <td>1.817112</td>
+      <td>-1.448441</td>
+    </tr>
+    <tr>
+      <th>y</th>
+      <td>-0.665272</td>
+      <td>-1.466032</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p><strong>补充:</strong></p>
+<ol>
+<li>分组键可以是任意长度的数组</li>
+<li>分组时，对于不是数组数据的列会从结果中排除，例如key1、key2这样的列</li>
+<li>GroupBy的size方法，返回一个含有分组大小的Series</li>
+</ol>
+<pre><code><code>f1.size()</code></pre>
+<pre><code><code>key1
+x    3
+y    2
+Name: data1, dtype: int64</code></pre>
+<h3 id="聚合">聚合</h3>
+<p>聚合是指任何能够从数组产生标量值的数据转换过程。刚才上面的操作会发现使用GroupBy并不会直接得到一个显性的结果，而是一个中间数据，可以通过执行类似mean、count、min等计算得出结果，常见的还有一些:</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">函数名</th>
+<th style="text-align: left;">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">sum</td>
+<td style="text-align: left;">非NA值的和</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">median</td>
+<td style="text-align: left;">非NA值的算术中位数</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">std、var</td>
+<td style="text-align: left;">无偏（分母为n-1）标准差和方差</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">prod</td>
+<td style="text-align: left;">非NA值的积</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">first、last</td>
+<td style="text-align: left;">第一个和最后一个非NA值</td>
+</tr>
+</tbody>
+</table>
+<h4 id="自定义聚合函数">自定义聚合函数</h4>
+<p>不仅可以使用这些常用的聚合运算，还可以自己自定义。使用自定义的聚合函数，需要将其传入aggregate或者agg方法当中</p>
+<pre><code><code>def peak_to_peak(arr):
+    return arr.max() - arr.min()
+
+f1.aggregate(peak_to_peak)</code></pre>
+<pre><code><code>key1
+x    4.575767
+y    0.800759
+Name: data1, dtype: float64</code></pre>
+<pre><code><code>f1.agg([&#39;mean&#39;,&#39;std&#39;])</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>mean</th>
+      <th>std</th>
+    </tr>
+    <tr>
+      <th>key1</th>
+      <th></th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>x</th>
+      <td>0.728594</td>
+      <td>2.295926</td>
+    </tr>
+    <tr>
+      <th>y</th>
+      <td>-1.065652</td>
+      <td>0.566222</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<p>最终得到的列就会以相应的函数命名生成一个DataFrame数组</p>
+<h3 id="apply">apply</h3>
+<p>GroupBy当中自由度最高的方法就是apply，它会将待处理的对象拆分为多个片段，然后各个片段分别调用传入的函数，最后将它们组合到一起。</p>
+<p><code>df.apply( ['func', 'axis=0', 'broadcast=None', 'raw=False',     'reduce=None', 'result_type=None', 'args=()', '**kwds'])</code></p>
+<ul>
+<li>func:传入一个自定义函数</li>
+<li>axis:函数传入参数当axis=1就会把一行数据作为Series的数据</li>
+</ul>
+<p>案例:</p>
+<pre><code><code>url=&quot;https://baike.baidu.com/item/NBA%E6%80%BB%E5%86%A0%E5%86%9B/2173192?fr=aladdin&quot;
+nba_champions=pd.read_html(url)  # 获取数据
+a1 = nba_champions[0]    # 取出决赛名单</code></pre>
+<pre><code><code>a1.columns = a1.loc[0]  # 使用第一行的数据替换默认的横向索引
+a1.drop(0,inplace=True)  # 将第一行的数据删除
+a1.head()</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>年份</th>
+      <th>比赛日期</th>
+      <th>冠军</th>
+      <th>总比分</th>
+      <th>亚军</th>
+      <th>FMVP</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>1947</td>
+      <td>4.16-4.22</td>
+      <td>费城勇士队</td>
+      <td>4-1</td>
+      <td>芝加哥牡鹿队</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1948</td>
+      <td>4.10-4.21</td>
+      <td>巴尔的摩子弹队</td>
+      <td>4-2</td>
+      <td>费城勇士队</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>1949</td>
+      <td>4.4-4.13</td>
+      <td>明尼阿波利斯湖人队</td>
+      <td>4-2</td>
+      <td>华盛顿国会队</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>1950</td>
+      <td>4.8-4.23</td>
+      <td>明尼阿波利斯湖人队</td>
+      <td>4-2</td>
+      <td>塞拉库斯民族队</td>
+      <td>无</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>1951</td>
+      <td>4.7-4.21</td>
+      <td>罗切斯特皇家队</td>
+      <td>4-3</td>
+      <td>纽约尼克斯队</td>
+      <td>无</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code># 取各个球队获取总冠军的次数的前10名
+
+a1.groupby(&#39;冠军&#39;).size().sort_values(ascending=False).head(10)</code></pre>
+<pre><code><code>冠军
+波士顿凯尔特人队     17
+洛杉矶湖人队       11
+芝加哥公牛队        6
+圣安东尼奥马刺队      5
+明尼阿波利斯湖人队     5
+金州勇士队         4
+迈阿密热火队        3
+底特律活塞队        3
+休斯顿火箭队        2
+纽约尼克斯队        2
+dtype: int64</code></pre>
+<h2 id="其他常用方法">其他常用方法</h2>
+<p>pandas常用方法（适用Series和DataFrame）</p>
+<ul>
+<li>mean(axis=0,skipna=False)</li>
+<li>sum(axis=1)</li>
+<li>sort_index(axis, …, ascending) # 按行或列索引排序</li>
+<li>sort_values(by, axis, ascending) # 按值排序</li>
+<li>apply(func, axis=0) # 将自定义函数应用在各行或者各列上，func可返回标量或者Series</li>
+<li>applymap(func) # 将函数应用在DataFrame各个元素上</li>
+<li>map(func) # 将函数应用在Series各个元素上</li>
+</ul>
+<h2 id="合并数据">合并数据</h2>
+<ul>
+<li>pd.concat: 合并数据,合并行(axis=1),合并列(axis=0)</li>
+<li>obj.append: 只能合并列</li>
+</ul>
+<pre><code><code>df1 = pd.DataFrame(np.zeros((3, 4)))
+df1</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df2 = df2 = pd.DataFrame(np.ones((3, 4)))
+df2</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>pd.concat((df1, df2),axis=1)</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code>df1.append(df2)</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+      <th>2</th>
+      <th>3</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>0</th>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+      <td>1.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h2 id="导入导出数据">导入导出数据</h2>
+<p>使用df = pd.read_excel(filename)读取文件，使用df.to_excel(filename)保存文件。</p>
+<h3 id="读取文件导入数据">读取文件导入数据</h3>
+<p><strong>读取文件导入数据函数主要参数：</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">详解</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">sep</td>
+<td style="text-align: left;">指定分隔符，可用正则表达式如'\s+'</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">header=None</td>
+<td style="text-align: left;">指定文件无行名</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">name</td>
+<td style="text-align: left;">指定列名</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">index_col</td>
+<td style="text-align: left;">指定某列作为索引</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">skip_row</td>
+<td style="text-align: left;">指定跳过某些行</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">na_values</td>
+<td style="text-align: left;">指定某些字符串表示缺失值</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">parse_dates</td>
+<td style="text-align: left;">指定某些列是否被解析为日期，布尔值或列表</td>
+</tr>
+</tbody>
+</table>
+<h3 id="写入文件导出数据">写入文件导出数据</h3>
+<p><strong>写入文件函数的主要参数：</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">参数</th>
+<th style="text-align: left;">详解</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">sep</td>
+<td style="text-align: left;">分隔符</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">na_rep</td>
+<td style="text-align: left;">指定缺失值转换的字符串，默认为空字符串</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">header=False</td>
+<td style="text-align: left;">不保存列名</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">index=False</td>
+<td style="text-align: left;">不保存行索引</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">cols</td>
+<td style="text-align: left;">指定输出的列，传入列表</td>
+</tr>
+</tbody>
+</table>
+<h3 id="读取csv文件并处理数据">读取CSV文件并处理数据</h3>
+<pre><code><code>from io import StringIO
+
+test_data = &#39;&#39;&#39;
+5.1,,1.4,0.2
+4.9,3.0,1.4,0.2
+4.7,3.2,,0.2
+7.0,3.2,4.7,1.4
+6.4,3.2,4.5,1.5
+6.9,3.1,4.9,
+,,,
+&#39;&#39;&#39;
+
+test_data = StringIO(test_data)
+df = pd.read_csv(test_data, header=None)
+df.columns = [&#39;A&#39;, &#39;B&#39;, &#39;C&#39;, &#39;D&#39;]
+df.index = [1,2,3,4,5,6,7]
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>5.1</td>
+      <td>NaN</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>4.9</td>
+      <td>3.0</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4.7</td>
+      <td>3.2</td>
+      <td>NaN</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7.0</td>
+      <td>3.2</td>
+      <td>4.7</td>
+      <td>1.4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6.4</td>
+      <td>3.2</td>
+      <td>4.5</td>
+      <td>1.5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>6.9</td>
+      <td>3.1</td>
+      <td>4.9</td>
+      <td>NaN</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="处理丢失数据">处理丢失数据</h3>
+<pre><code><code># 通过在isnull()方法后使用sum()方法即可获得该数据集某个特征含有多少个缺失值
+
+df.isnull().sum()</code></pre>
+<pre><code><code>A    1
+B    2
+C    2
+D    2
+dtype: int64</code></pre>
+<pre><code><code># axis=0删除有NaN值的行
+
+df.dropna(axis=0)</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2</th>
+      <td>4.9</td>
+      <td>3.0</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7.0</td>
+      <td>3.2</td>
+      <td>4.7</td>
+      <td>1.4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6.4</td>
+      <td>3.2</td>
+      <td>4.5</td>
+      <td>1.5</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code># 删除全为NaN值得行或列
+df.dropna(how=&#39;all&#39;)</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>5.1</td>
+      <td>NaN</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>4.9</td>
+      <td>3.0</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4.7</td>
+      <td>3.2</td>
+      <td>NaN</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7.0</td>
+      <td>3.2</td>
+      <td>4.7</td>
+      <td>1.4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6.4</td>
+      <td>3.2</td>
+      <td>4.5</td>
+      <td>1.5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>6.9</td>
+      <td>3.1</td>
+      <td>4.9</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code># 删除行不为4个值的
+df.dropna(thresh=4)</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2</th>
+      <td>4.9</td>
+      <td>3.0</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7.0</td>
+      <td>3.2</td>
+      <td>4.7</td>
+      <td>1.4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6.4</td>
+      <td>3.2</td>
+      <td>4.5</td>
+      <td>1.5</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code># 删除B中有NaN值的行
+df.dropna(subset=[&#39;B&#39;])</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>2</th>
+      <td>4.9</td>
+      <td>3.0</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4.7</td>
+      <td>3.2</td>
+      <td>NaN</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7.0</td>
+      <td>3.2</td>
+      <td>4.7</td>
+      <td>1.4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6.4</td>
+      <td>3.2</td>
+      <td>4.5</td>
+      <td>1.5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>6.9</td>
+      <td>3.1</td>
+      <td>4.9</td>
+      <td>NaN</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<pre><code><code># 填充nan值
+df.fillna(value=0)</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>A</th>
+      <th>B</th>
+      <th>C</th>
+      <th>D</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>5.1</td>
+      <td>0.0</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>4.9</td>
+      <td>3.0</td>
+      <td>1.4</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>4.7</td>
+      <td>3.2</td>
+      <td>0.0</td>
+      <td>0.2</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>7.0</td>
+      <td>3.2</td>
+      <td>4.7</td>
+      <td>1.4</td>
+    </tr>
+    <tr>
+      <th>5</th>
+      <td>6.4</td>
+      <td>3.2</td>
+      <td>4.5</td>
+      <td>1.5</td>
+    </tr>
+    <tr>
+      <th>6</th>
+      <td>6.9</td>
+      <td>3.1</td>
+      <td>4.9</td>
+      <td>0.0</td>
+    </tr>
+    <tr>
+      <th>7</th>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+      <td>0.0</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h3 id="读取json文件">读取json文件</h3>
+<pre><code><code>strtext = &#39;[{&quot;ttery&quot;:&quot;min&quot;,&quot;issue&quot;:&quot;20130801-3391&quot;,&quot;code&quot;:&quot;8,4,5,2,9&quot;,&quot;code1&quot;:&quot;297734529&quot;,&quot;code2&quot;:null,&quot;time&quot;:1013395466000},\
+{&quot;ttery&quot;:&quot;min&quot;,&quot;issue&quot;:&quot;20130801-3390&quot;,&quot;code&quot;:&quot;7,8,2,1,2&quot;,&quot;code1&quot;:&quot;298058212&quot;,&quot;code2&quot;:null,&quot;time&quot;:1013395406000},\
+{&quot;ttery&quot;:&quot;min&quot;,&quot;issue&quot;:&quot;20130801-3389&quot;,&quot;code&quot;:&quot;5,9,1,2,9&quot;,&quot;code1&quot;:&quot;298329129&quot;,&quot;code2&quot;:null,&quot;time&quot;:1013395346000},\
+{&quot;ttery&quot;:&quot;min&quot;,&quot;issue&quot;:&quot;20130801-3388&quot;,&quot;code&quot;:&quot;3,8,7,3,3&quot;,&quot;code1&quot;:&quot;298588733&quot;,&quot;code2&quot;:null,&quot;time&quot;:1013395286000},\
+{&quot;ttery&quot;:&quot;min&quot;,&quot;issue&quot;:&quot;20130801-3387&quot;,&quot;code&quot;:&quot;0,8,5,2,7&quot;,&quot;code1&quot;:&quot;298818527&quot;,&quot;code2&quot;:null,&quot;time&quot;:1013395226000}]&#39;
+
+df = pd.read_json(strtext, orient=&#39;records&#39;)
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>code</th>
+      <th>code1</th>
+      <th>code2</th>
+      <th>issue</th>
+      <th>time</th>
+      <th>ttery</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8,4,5,2,9</td>
+      <td>297734529</td>
+      <td>NaN</td>
+      <td>20130801-3391</td>
+      <td>1013395466000</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>7,8,2,1,2</td>
+      <td>298058212</td>
+      <td>NaN</td>
+      <td>20130801-3390</td>
+      <td>1013395406000</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>5,9,1,2,9</td>
+      <td>298329129</td>
+      <td>NaN</td>
+      <td>20130801-3389</td>
+      <td>1013395346000</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3,8,7,3,3</td>
+      <td>298588733</td>
+      <td>NaN</td>
+      <td>20130801-3388</td>
+      <td>1013395286000</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>4</th>
+      <td>0,8,5,2,7</td>
+      <td>298818527</td>
+      <td>NaN</td>
+      <td>20130801-3387</td>
+      <td>1013395226000</td>
+      <td>min</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<h4 id="orient参数的五种形式">orient参数的五种形式</h4>
+<p>orient是表明预期的json字符串格式。orient的设置有以下五个值：</p>
+<ol>
+<li><p>'split' : dict like {index -&gt; [index], columns -&gt; [columns], data -&gt; [values]}</p>
+<p>这种就是有索引，有列字段,和数据矩阵构成的json格式。key名称只能是index,columns和data。</p></li>
+</ol>
+<pre><code><code>s = &#39;{&quot;index&quot;:[1,2,3],&quot;columns&quot;:[&quot;a&quot;,&quot;b&quot;],&quot;data&quot;:[[1,3],[2,8],[3,9]]}&#39;
+df = pd.read_json(s, orient=&#39;split&#39;)
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>a</th>
+      <th>b</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>1</th>
+      <td>1</td>
+      <td>3</td>
+    </tr>
+    <tr>
+      <th>2</th>
+      <td>2</td>
+      <td>8</td>
+    </tr>
+    <tr>
+      <th>3</th>
+      <td>3</td>
+      <td>9</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<ol>
+<li><p>'records' : list like [{column -&gt; value}, ... , {column -&gt; value}]</p>
+<p>这种就是成员为字典的列表。如我今天要处理的json数据示例所见。构成是列字段为键,值为键值,每一个字典成员就构成了dataframe的一行数据。</p></li>
+</ol>
+<pre><code><code>strtext = &#39;[{&quot;ttery&quot;:&quot;min&quot;,&quot;issue&quot;:&quot;20130801-3391&quot;,&quot;code&quot;:&quot;8,4,5,2,9&quot;,&quot;code1&quot;:&quot;297734529&quot;,&quot;code2&quot;:null,&quot;time&quot;:1013395466000},\
+{&quot;ttery&quot;:&quot;min&quot;,&quot;issue&quot;:&quot;20130801-3390&quot;,&quot;code&quot;:&quot;7,8,2,1,2&quot;,&quot;code1&quot;:&quot;298058212&quot;,&quot;code2&quot;:null,&quot;time&quot;:1013395406000}]&#39;
+
+df = pd.read_json(strtext, orient=&#39;records&#39;)
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>code</th>
+      <th>code1</th>
+      <th>code2</th>
+      <th>issue</th>
+      <th>time</th>
+      <th>ttery</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>8,4,5,2,9</td>
+      <td>297734529</td>
+      <td>NaN</td>
+      <td>20130801-3391</td>
+      <td>1013395466000</td>
+      <td>min</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>7,8,2,1,2</td>
+      <td>298058212</td>
+      <td>NaN</td>
+      <td>20130801-3390</td>
+      <td>1013395406000</td>
+      <td>min</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<ol>
+<li><p>'index' : dict like {index -&gt; {column -&gt; value}}</p>
+<p>以索引为key,以列字段构成的字典为键值。如：</p></li>
+</ol>
+<pre><code><code>s = &#39;{&quot;0&quot;:{&quot;a&quot;:1,&quot;b&quot;:2},&quot;1&quot;:{&quot;a&quot;:9,&quot;b&quot;:11}}&#39;
+df = pd.read_json(s, orient=&#39;index&#39;)
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>a</th>
+      <th>b</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>9</td>
+      <td>11</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<ol>
+<li><p>'columns' : dict like {column -&gt; {index -&gt; value}}</p>
+<p>这种处理的就是以列为键，对应一个值字典的对象。这个字典对象以索引为键,以值为键值构成的json字符串。如下图所示:</p></li>
+</ol>
+<pre><code><code>s = &#39;{&quot;a&quot;:{&quot;0&quot;:1,&quot;1&quot;:9},&quot;b&quot;:{&quot;0&quot;:2,&quot;1&quot;:11}}&#39;
+df = pd.read_json(s, orient=&#39;columns&#39;)
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>a</th>
+      <th>b</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>1</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>9</td>
+      <td>11</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+<ol>
+<li><p>'values' : just the values array。</p>
+<p>values这种我们就很常见了。就是一个嵌套的列表。里面的成员也是列表，2层的。</p></li>
+</ol>
+<pre><code><code>s = &#39;[[&quot;a&quot;,1],[&quot;b&quot;,2]]&#39;
+df = pd.read_json(s, orient=&#39;values&#39;)
+df</code></pre>
+<div>
+<style scoped>
+    .dataframe tbody tr th:only-of-type {
+        vertical-align: middle;
+    }
+
+    .dataframe tbody tr th {
+        vertical-align: top;
+    }
+    
+    .dataframe thead th {
+        text-align: right;
+    }
+</style>
+<table border="1" class="dataframe">
+  <thead>
+    <tr style="text-align: right;">
+      <th></th>
+      <th>0</th>
+      <th>1</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th>0</th>
+      <td>a</td>
+      <td>1</td>
+    </tr>
+    <tr>
+      <th>1</th>
+      <td>b</td>
+      <td>2</td>
+    </tr>
+  </tbody>
+</table>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

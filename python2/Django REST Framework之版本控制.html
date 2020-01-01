@@ -1,0 +1,90 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django REST Framework之版本控制' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django REST Framework之版本控制</center></div><div class='banquan'>原文出处:本文由博客园博主学霸初养成提供。<br/>
+原文连接:https://www.cnblogs.com/V587Chinese/p/11607600.html</div><br>
+    <h2>何谓版本控制？</h2>
+<h3>为什么需要版本控制？</h3>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">一个项目在升级迭代的时候，不会立马抛弃旧的版本，甚至会出现多个版本共存同时维护的情况，因此需要版本控制。</span></p>
+<h3>版本控制做了什么？</h3>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">版本控制做的事情很简单，在前后端分离的情况下，只是对请求做判断，判断这是哪个版本的请求，然后将版本信息封装入request对象中。</span></p>
+<h2>自定义版本控制类</h2>
+<h3>1.settings.py配置</h3>
+<div class="cnblogs_Highlighter">
+<pre><code>REST_FRAMEWORK = {
+    "DEFAULT_VERSIONING_CLASS": "utils.version.MyVersion", # 默认使用的版本控制类
+}</pre>
+</div>
+<h3>2.编写自定义版本控制类（根据请求参数）</h3>
+<div class="cnblogs_Highlighter">
+<pre><code>class MyVersion(object):
+    def determine_version(self, request, *args, **kwargs):
+        "版本号携带在请求"
+        version = request.query_params.get("version", "v1") # 请求参数中查找有无version字段，如果没有默认是v1
+        return version # 将版本返回</pre>
+</div>
+<h3>3.视图中获取</h3>
+<div class="cnblogs_Highlighter">
+<pre><code>request.version     # 版本号
+request.versioning_scheme  # 版本控制类的实例</pre>
+</div>
+<h2>使用DRF的版本控制类</h2>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">Django REST Framework为我们提供了5个版本控制类，分别是五种不同的判断方式，基本能满足开发需求。</span></p>
+<div class="cnblogs_Highlighter">
+<pre><code>1.AcceptHeaderVersioning 将版本信息放在请求头
+2.URLPathVersioning      将版本信息放在URL中，
+3.NamespaceVersioning    将版本信息放在URL中，不同之处在于Django路由的处理方式，使用命名空间
+4.HostNameVersioning     将版本信息放在域名的最低一层
+5.QueryParameterVersioning 降版本信息放在请求参数中</pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">直接在settings中配置就可以用：</span></p>
+<div class="cnblogs_Highlighter">
+<pre><code>REST_FRAMEWORK = {
+    "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.QueryParameterVersioning",
+    "DEFAULT_VERSION": "v1.0.0",    # 默认的版本,当无法从请求中获取版本信息的时候，默认按照此版本执行
+    "ALLOWED_VERSIONS": "v1.0.0, v1.1.0, v2.0.0", # 允许的版本
+    "VERSION_PARAM": "ver", # 获取版本的参数。
+}</pre>
+</div>
+<h2>源码分析</h2>
+<h3>1.为什么用 &ldquo;versioning_class&rdquo;属性变量，它有什么用？</h3>
+<p><img src="./images/Django REST Framework之版本控制0.png" alt="" width="655" height="381" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">还是要从APIView类中的dispatch开始说起，跟之前讲的认证等功能接口一样，首先要完成对django原生request的封装，然后同样是在initial方法中实现版本控制。在initial方法中可以看到，是通过调用determine_version方法实现版本控制。</span></p>
+<p><img src="./images/Django REST Framework之版本控制1.png" alt="" width="654" height="216" /></p>
+<p><img src="./images/Django REST Framework之版本控制2.png" alt="" width="650" height="233" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">在determine_version方法中就可以看到versioning_class属性变量，再跳转到version_class定义的地方。可以看到，它的初始值是通过配置文件设置的，而这种方式，主要是来实现全局配置的（下文会说明全局配置）。通过全局配置和&ldquo;scheme = self.versioning_class()&rdquo;代码可以看出，这段代码是在做对象的实例化，所以version_class属性变量存储的是一个对象，具体是哪个对象，全局配置方法中告诉了我们。使用的就是基本代码结构中的&ldquo;URLPathVersioning&rdquo;对象。而这个类就是实现版本控制核心代码的类。当我们不使用全局配置时，那么我们就必须在自定义的视图类中给version_class属性变量赋值，即：version_class = URLPathVersioning。</span></p>
+<h3>2.在urls.py中，版本的正在为什么要写成&ldquo;(?P&lt;version&gt;[v1|v2]+)&rdquo;的形式？为什么正则中的变量是version？</h3>
+<p><img src="./images/Django REST Framework之版本控制3.png" alt="" width="661" height="490" />&nbsp;</p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">跳转到URLPathVersioning类定义的地方可以看到，这种样式的正则&ldquo;(?P&lt;version&gt;[v1|v2]+)&rdquo;url的编写方式是在源码中已经规定好的，所以我们要使用源码中提供的接口。</span></p>
+<h3>3.在settings配置文件中，为什么会使用&ldquo;DEFAULT_VERSION&rdquo;,"ALLOWED_VERSION","VERSION_PARM"这三个key值来做版本配置？</h3>
+<p><img src="./images/Django REST Framework之版本控制4.png" alt="" width="665" height="408" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">由URLPathVersioning类的定义可以看出，它的父类是BaseVersioning类，先看一下这个类的具体定义。最开始定义的三个属性变量&ldquo;default_version&rdquo;，&ldquo;allowed_versions&rdquo;，&ldquo;version_param&rdquo;的值，也都是通过settings配置文件赋值的，而这三个值不就是问题中提到的三个key值吗？</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">再看determine_version方法，它会抛出异常，所以它的子类（URLPathVersioning类）必须重写这个方法。而下面的is_allowed_version方法，就是用来判断前端请求的版本号是否是配置文件中所配置的版本之一，这就用到了allowed_versions属性变量。如果没有配置allowed_versions变量（也就是说没有设置版本控制的功能，那自然是允许通过的，返回True），如果做了版本控制，那么就要判断当前获取的版本号（version变量）是否在配置的版本中，这里就会用到default_version变量和allowed_versions变量。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">reverse方法是用于URL反射用的，这里就不多谈了。</span></p>
+<p><img src="./images/Django REST Framework之版本控制5.png" alt="" width="665" height="206" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">再回到URLPathVersioning类中，可以看到determine_version方法。在这个方法中可以看到，通过kwargs.get()来获取前端请求时的版本号，这就要用到version_param和default_version变量。值得注意的是在对version_param变量配置时，的字符串必须跟在urls.py中的正则表达式中的变量保存一致（这里用的是&ldquo;version&rdquo;字符串）。当version变量为None时，就使用默认的版本。之后再调用is_allowed_version方法，完成对当前版本的是否合法的判断。最后返回合法的版本号。</span></p>
+<p><img src="./images/Django REST Framework之版本控制6.png" alt="" width="667" height="399" /></p>
+<p><img src="./images/Django REST Framework之版本控制7.png" alt="" width="668" height="220" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">再回到APIView类中的initial方法中，可以看到它也调用了自己的determine_version方法。在determine_version方法中，可以看到上文提到过的versioning_class属性变量，它保存了URLPathVersion类对象。再看determine_version方法的返回值，返回的是一个元组。元组第一个元素正是上文提到过的URLPathVersion类中的determine_version方法，而这个方法返回的也正是合法的版本号。元组第二个元素是就是这个版本类对象。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">再来到initial方法中，determine_version方法返回的元组的值，分别赋值到了request.version和request_versioning_scheme变量中。因此，在代码基本结构中，通过request.version变量来获取合法的版本号。</span></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

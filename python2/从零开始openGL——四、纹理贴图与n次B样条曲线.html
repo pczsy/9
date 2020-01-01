@@ -1,0 +1,611 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修从零开始openGL——四、纹理贴图与n次B样条曲线' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>从零开始openGL——四、纹理贴图与n次B样条曲线</center></div><div class='banquan'>原文出处:本文由博客园博主ITryagain提供。<br/>
+原文连接:https://www.cnblogs.com/csu-lmw/p/12048686.html</div><br>
+    <h1 id="前言">前言</h1>
+<p>在<a href="https://www.cnblogs.com/csu-lmw/p/12006050.html#前言">上篇</a>文章中，介绍了如何加载绘制模型以及鼠标交互的实现，并且遗留了个问题，就是没有模型表面没有纹理，看起来很丑。这篇文章将介绍如何贴纹理，以及曲线的绘制。</p>
+<h1 id="纹理贴图">纹理贴图</h1>
+<h2 id="纹理加载">纹理加载</h2>
+<p>既然是贴图，那首先我们得要有合适的纹理图片，openGL中支持的图片为bmp格式。在这里我还用到了个额外的库glaux，但当时在找这个库的时候花了不少时间，这里为了方便大家就把<a href="https://files.cnblogs.com/files/csu-lmw/glui-2.36.zip">链接</a>放出来。配置方式与之前glut与glui的配置方式相同。</p>
+<p>然后是固定的加载图片的代码</p>
+<pre><code><code>GLuint  texture[1];  // 存储一个纹理---数组
+
+AUX_RGBImageRec *LoadBMP(CHAR *Filename)
+{
+    FILE *File = NULL;         // 文件句柄
+    if (!Filename)          // 确保文件名已提供
+    {
+        return NULL;         // 如果没提供，返回 NULL
+    }
+    File = fopen(Filename, &quot;r&quot;);       // 尝试打开文件
+    if (File)           // 判断文件存在与否 
+    {
+        fclose(File);         // 关闭句柄
+        return auxDIBImageLoadA(Filename);    // 载入位图并返回指针
+    }
+    return NULL;          // 如果载入失败，返回 NULL
+}</code></pre>
+<p>加载完图片后，我们还需要把图片转换成纹理</p>
+<pre><code><code>int LoadGLTextures(GLuint *texture, char *bmp_file_name, int texture_id)
+{
+    int Status = FALSE;         // 状态指示器
+    // 创建纹理的存储空间
+    AUX_RGBImageRec *TextureImage[1];
+    memset(TextureImage, 0, sizeof(void *) * 1);   // 将指针设为 NULL
+    // 载入位图，检查有无错误，如果位图没找到则退出
+    if (TextureImage[0] = LoadBMP(bmp_file_name))
+    {
+        Status = TRUE;         // 将 Status 设为 TRUE
+        //生成(generate)纹理
+        glGenTextures(texture_id, texture); //&amp;texture[0]);     
+        //绑定2D纹理对象
+        glBindTexture(GL_TEXTURE_2D, *texture); //texture[0]);
+        //关联图像数据与纹理对象
+        glTexImage2D(GL_TEXTURE_2D, 0, 3, TextureImage[0]-&gt;sizeX, TextureImage[0]-&gt;sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, TextureImage[0]-&gt;data);
+        //图形绘制时所使用的滤波器参数
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); // 线形滤波
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR); // 线形滤波
+    }
+
+    //释放图像的内存，因为已经生成纹理了，没用了
+    if (TextureImage[0])        // 纹理是否存在
+    {
+        if (TextureImage[0]-&gt;data)      // 纹理图像是否存在
+        {
+            free(TextureImage[0]-&gt;data);    // 释放纹理图像占用的内存
+        }
+        free(TextureImage[0]);       // 释放图像结构
+    }
+    else
+        printf(&quot;纹理不存在&quot;);
+    return Status;          // 返回 Status
+}</code></pre>
+<p>使用方式如下</p>
+<pre><code><code>LoadGLTextures(&amp;texture[0], &quot;4.bmp&quot;, 1);  //可添加到初始化代码中</code></pre>
+<p>这样，我们就把纹理载入到了texture数组中去了。</p>
+<h2 id="贴图">贴图</h2>
+<p>对于纹理贴图，有这么几个函数是需要知道的：</p>
+<ol>
+<li>glBindTexture(GL_TEXTURE_2D, texName); 绑定纹理：改变OpenGL状态，使得后续的纹理操作都对texName指向的2D纹理生效</li>
+<li>glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT); 确定纹理如何应用到每个像素上
+<ul>
+<li>GL_REPEAT：默认选择，重复纹理图像</li>
+<li>GL_MIRRORED_REPEAT：和GL_REPEAT一样，但每次重复图片是镜像放置的</li>
+<li>GL_CLAMP_TO_EDGE：纹理坐标会被约束在0到1之间，超出的部分会重复纹理坐标的边缘，产生一种边缘被拉伸的效果</li>
+<li>GL_CLAMP_TO_BORDER：用户指定边缘颜色，作为超出的坐标的颜色</li>
+<li>GL_NEAREST_MIPMAP_NEAREST：使用最邻近的多级渐远纹理来匹配像素大小，并使用邻近插值进行纹理采样</li>
+<li>GL_LINEAR_MIPMAP_NEAREST：使用最邻近的多级渐远纹理级别，并使用线性插值进行采样</li>
+<li>GL_NEAREST_MIPMAP_LINEAR：在两个最匹配像素大小的多级渐远纹理之间进行线性插值，使用邻近插值进行采样</li>
+<li>GL_LINEAR_MIPMAP_LINEAR：在两个邻近的多级渐远纹理之间使用线性插值，并使用线性插值进行采样</li>
+</ul></li>
+<li>glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_DECAL); 纹理贴图与材质的混合
+<ul>
+<li>GL_DECAL</li>
+<li>GL_REPLACE</li>
+<li>GL_BLEND</li>
+<li>GL_MODULATE</li>
+<li>GL_ADD</li>
+</ul></li>
+<li>glTexture2f(x, y); 指定纹理坐标进行贴图</li>
+</ol>
+<p>下面就拿之前的模型来做演示</p>
+<pre><code><code>void DrawModel(CObj &amp;model)
+{//TODO: 绘制模型
+    for (int i = 0; i &lt; model.m_faces.size(); i++)
+    {
+        glBindTexture(GL_TEXTURE_2D, texture[0]);
+        glBegin(GL_TRIANGLES);
+        glNormal3f(model.m_faces[i].normal.fX, model.m_faces[i].normal.fY, model.m_faces[i].normal.fZ);
+        glTexCoord2f(model.m_pts[model.m_faces[i].pts[0] - 1].normal.fX, model.m_pts[model.m_faces[i].pts[0] - 1].normal.fY);
+        glVertex3f(model.m_pts[model.m_faces[i].pts[0] - 1].normal.fX, model.m_pts[model.m_faces[i].pts[0] - 1].normal.fY, model.m_pts[model.m_faces[i].pts[0] - 1].normal.fZ);
+        glTexCoord2f(model.m_pts[model.m_faces[i].pts[1] - 1].normal.fX, model.m_pts[model.m_faces[i].pts[1] - 1].normal.fY);
+        glVertex3f(model.m_pts[model.m_faces[i].pts[1] - 1].normal.fX, model.m_pts[model.m_faces[i].pts[1] - 1].normal.fY, model.m_pts[model.m_faces[i].pts[1] - 1].normal.fZ);
+        glTexCoord2f(model.m_pts[model.m_faces[i].pts[2] - 1].normal.fX, model.m_pts[model.m_faces[i].pts[2] - 1].normal.fY);
+        glVertex3f(model.m_pts[model.m_faces[i].pts[2] - 1].normal.fX, model.m_pts[model.m_faces[i].pts[2] - 1].normal.fY, model.m_pts[model.m_faces[i].pts[2] - 1].normal.fZ);
+        glEnd();
+    }
+
+}
+
+// 初始化代码中加入
+glEnable(GL_TEXTURE_2D);</code></pre>
+<p>效果如下</p>
+<p><img src="./images/从零开始openGL——四、纹理贴图与n次B样条曲线0.png" alt="img" /></p>
+<p>好吧，它还是很丑 orz。。。。</p>
+<h1 id="n次b样条曲线">n次B样条曲线</h1>
+<p>从前面的学习中，或许已经发现，openGL并不能直接绘制曲线或曲面，那我们要如何绘制呢？对于曲线，一个很简单的想法就是用直线逼近，但是如何实现呢？如果我们知道这条曲线的参数方程，或许还是比较容易的。</p>
+<p>首先先理解一些基本概念：</p>
+<ul>
+<li>节点（knots）：给定集合U，它包含m+1个有理数<span class="math inline">\(u_0,u_1,u_2,...,u_m\)</span>，且满足<span class="math inline">\(u_0 ≤ u_1 ≤ u_2 ≤ ... ≤ u_m\)</span> 。</li>
+<li>节点矢量（knot vector）：由节点数据组成的矢量 <span class="math inline">\([ u_0,u_1,u_2,...,u_m)\)</span></li>
+<li>节点区间（knot span）：<span class="math inline">\([u_i, u_{i+1})\)</span>称为第i个区间节点</li>
+<li>控制点：定义n个点，用于控制曲线形状</li>
+<li>阶数：d（2 ≤ d ≤ n）</li>
+<li>次数：d - 1</li>
+</ul>
+<p>引入曲线表达式$ p(u) = ∑<em>{k=0}^{n}P_kB</em>{k,d}(u) , u_{min} ≤ u ≤ u_{max}, 2 ≤ d ≤ n + 1$</p>
+<p>B样条曲线的混合函数由cox-deBoor递归公式定义为<br />
+<span class="math display">\[
+B_{k,1}=\begin{cases}
+1,\quad &amp;u_k \leq u \leq u_{k+1}\\
+0,\quad &amp;else
+\end{cases} \\
+B_{k,d}(u) = \frac{u-u_k}{u_{k+d-1}-u_k}B_{k,d-1}(u)+\frac{u_{k+d}-u}{u_{k+d}-u_{k+1}}B_{k+1,d-1}(u)
+\]</span><br />
+这里有个<a href="http://www.inf.ed.ac.uk/teaching/courses/cg/d3/deBoor.html">动态过程</a>帮助理解</p>
+<p>代码实现</p>
+<p>先给出基本框架</p>
+<pre><code><code>#ifndef COMMON
+#define COMMON
+
+#define VIEW_YES            0x00
+#define VIEW_NO             0x01
+
+#define CRTL_LOAD           0x00
+#define CRTL_ADD            0x01
+#define CRTL_DRAG           0x02
+#define CRTL_DENSE          0x03
+#define CRTL_WAIT           0x04
+#define CRTL_CYLINDER       0x05
+#define CRTL_CONE           0x06
+#define CRTL_MODEL          0x07
+
+#define CHANGE_DENSE        0x00
+#define SHAPE_CUBE          0x01
+#define SHAPE_CIRCLE        0x02
+#define SHAPE_CYLINDER      0x03
+#define SHAPE_TORUS         0x04
+#define SHAPE_MODEL         0x05
+
+#define TRANSFORM_ADD      0x51 
+#define TRANSFORM_DRAG    0x52
+#define TRANSFORM_NONE     0x53 
+#define TRANSFORM_TRANSLATE 0x54
+
+#endif </code></pre>
+<pre><code><code>// 实验二.cpp : 此文件包含 &quot;main&quot; 函数。程序执行将在此处开始并结束。
+//
+
+#include &quot;pch.h&quot;
+#include&quot;common.h&quot;
+#include&lt;windows.h&gt;
+#include&lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;math.h&gt;
+#include &lt;iostream&gt;
+#include &lt;sstream&gt;
+#include &lt;algorithm&gt;
+#include&lt;gl/glui.h&gt;
+#include&lt;gl/glut.h&gt;
+#include&lt;vector&gt;
+
+int g_xform_mode = TRANSFORM_NONE;
+int g_form_mode = TRANSFORM_NONE;
+int g_view_type = VIEW_YES;
+int g_control_type = CRTL_LOAD;
+int g_dense = 0;
+int  g_main_window;
+int g_index;
+double g_windows_width, g_windows_height;
+
+static int  g_press_x; //鼠标按下时的x坐标
+static int  g_press_y; //鼠标按下时的y坐标
+
+struct Point {
+    double x, y;
+};
+
+std::vector&lt;Point&gt; points; // 用于记录每个控制点的坐标
+std::vector&lt;float&gt; vecs;
+static int controlNum = 0; // 控制点的数量
+static int pointNum = 0; // 节点数
+static int degree = 0; // B样条曲线的次数
+std::vector&lt;Point&gt; opts;
+
+void createKnots() {
+    vecs.clear();
+    int nKnots = controlNum + degree;
+    for (int i = 0; i &lt;= nKnots; i++) {
+        if (i &lt; degree) {
+            vecs.push_back(0);
+        }
+        else if (i &lt; nKnots - degree + 1) {
+            vecs.push_back(vecs[i - 1] + 1);
+        }
+        else {
+            vecs.push_back(vecs[i - 1]);
+        }
+    }
+}
+
+int find_point(int x, int y) {
+
+}
+
+void add_point(float x, float y) {
+
+}
+
+float Deboor(int k, int d, float t){
+
+}
+
+void bspToPoint() {
+    
+}
+
+
+bool load_Point(const char* pcszFileName)
+{
+    FILE* fpFile = fopen(pcszFileName, &quot;r&quot;); //以只读方式打开文件
+    if (fpFile == NULL)
+    {
+        return false;
+    }
+
+    points.clear();
+    opts.clear(); 
+    vecs.clear();
+
+    char strLine[1024];
+    Point point;
+    float vec;
+
+    fgets(strLine, 1024, fpFile);
+    std::istringstream sin(strLine);
+    sin &gt;&gt; degree;
+
+    fgets(strLine, 1024, fpFile);
+    std::istringstream sin1(strLine);
+    sin1 &gt;&gt; controlNum;
+
+    fgets(strLine, 1024, fpFile);
+    std::istringstream sin2(strLine);
+    while (sin2 &gt;&gt; vec)
+    {
+        vecs.push_back(vec);
+    }
+
+    while (!feof(fpFile))
+    {
+        fgets(strLine, 1024, fpFile);
+    
+        std::istringstream sin3(strLine);
+        sin3 &gt;&gt; point.x &gt;&gt; point.y;
+        points.push_back(point);
+    }
+    points.pop_back();
+    fclose(fpFile);
+
+    g_dense = controlNum + degree;
+    bspToPoint();
+    return true;
+}
+
+void displayImage()
+{
+    glClear(GL_COLOR_BUFFER_BIT);
+    glPointSize(1.0);
+    glColor3f(1.0, 0.0, 0.0);
+    //glEnable(GL_LINE_STIPPLE);
+    glLineStipple(1, 0xF0F0);
+
+    if (g_view_type == VIEW_YES) {
+        glBegin(GL_LINE_STRIP);
+        //glNormal3f(0.0f, 0.0f, 1.0f);
+        for (int i = 0; i &lt; controlNum; i++) {
+            glVertex2f(points[i].x, points[i].y);
+        }
+        glEnd();
+    }
+
+    //glDisable(GL_LINE_STIPPLE);
+
+    glColor3f(1.0, 1.0, 1.0);
+    glBegin(GL_LINE_STRIP);
+    for (int i = 0; i &lt; opts.size(); i++) {
+        glVertex2f(opts[i].x, opts[i].y);
+    }
+    glEnd();
+
+    glPointSize(5.0);
+    glColor3f(1.0, 1.0, 0.0);
+    glBegin(GL_POINTS);
+    //glNormal3f(0.0f, 0.0f, 1.0f);
+    for (int i = 0; i &lt; controlNum; i++) {
+        glVertex2f(points[i].x, points[i].y);
+    }
+    glEnd();
+    glFlush();
+}
+
+void myGlutDisplay() //绘图函数， 操作系统在必要时刻就会对窗体进行重新绘制操作
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //清除颜色缓冲以及深度缓冲
+
+    displayImage();
+    
+    glutSwapBuffers(); //双缓冲
+}
+
+void myGlutReshape(int x, int y) //当改变窗口大小时的回调函数
+{
+    if (y == 0)
+    {
+        y = 1;
+    }
+
+    g_windows_width = x;
+    g_windows_height = y;
+    double xy_aspect = (float)x / (float)y;
+    GLUI_Master.auto_set_viewport(); //自动设置视口大小
+
+    glMatrixMode(GL_PROJECTION);//当前矩阵为投影矩阵
+    glLoadIdentity();
+    gluPerspective(60.0, xy_aspect, 0.01, 1000.0);//视景体
+
+    glutPostRedisplay(); //标记当前窗口需要重新绘制
+}
+
+void mouse(int button, int state, int x, int y) 
+{
+    g_press_x = x;
+    g_press_y = y;
+    if (button == GLUT_LEFT_BUTTON) {
+        if (g_xform_mode + 1 == CRTL_ADD) {
+            add_point(x, 600 - y);
+            createKnots();
+            bspToPoint();
+            displayImage();
+            glutPostRedisplay();
+        }
+        else if (g_xform_mode + 1 == CRTL_DRAG) {
+            g_index = find_point(g_press_x, 600 - g_press_y);
+            g_form_mode = TRANSFORM_DRAG;
+        }
+    }
+    else {
+        g_form_mode = TRANSFORM_NONE;
+    }
+    
+}
+
+void init()
+{
+    //glClearColor(1.0f, 1.0f, 1.0f, 1.0f);//用白色清屏
+    
+    glMatrixMode(GL_MODELVIEW); //指定当前矩阵为模型视景矩阵
+    glLoadIdentity(); //将当前的用户坐标系的原点移到了屏幕中心：类似于一个复位操作
+    gluOrtho2D(0.0, 800, 0.0, 600);
+}
+
+void myGlutMotion(int x, int y) //处理当鼠标键摁下时,鼠标拖动的事件
+{
+    if (g_form_mode == TRANSFORM_DRAG) //拖拽点
+    {
+        
+        float x_offset = (x - g_press_x);
+        float y_offset = (y - g_press_y);
+        if (g_index != -1) {
+            points[g_index].x += x_offset;
+            points[g_index].y -= y_offset;
+        }
+        g_press_x = x;
+        g_press_y = y;
+    }
+    bspToPoint();
+    // force the redraw function
+    glutPostRedisplay();
+}
+
+void myGlutIdle(void) //空闲回调函数
+{
+    if (glutGetWindow() != g_main_window)
+        glutSetWindow(g_main_window);
+
+    glutPostRedisplay();
+}
+
+void loadFile(void)
+{//加载模型
+
+    //调用系统对话框
+    OPENFILENAME  fname;
+    ZeroMemory(&amp;fname, sizeof(fname));
+    char strfile[200] = &quot;*.txt&quot;;
+    char szFilter[] = TEXT(&quot;TXT Files(*.TXT)\0&quot;);
+    fname.lStructSize = sizeof(OPENFILENAME);
+    fname.hwndOwner = NULL;
+    fname.hInstance = NULL;
+    fname.lpstrFilter = szFilter;
+    fname.lpstrCustomFilter = NULL;
+    fname.nFilterIndex = 0;
+    fname.nMaxCustFilter = 0;
+    fname.lpstrFile = strfile;
+    fname.nMaxFile = 200;
+    fname.lpstrFileTitle = NULL;
+    fname.nMaxFileTitle = 0;
+    fname.lpstrTitle = NULL;
+    fname.Flags = OFN_HIDEREADONLY | OFN_CREATEPROMPT;
+    fname.nFileOffset = 0;
+    fname.nFileExtension = 0;
+    fname.lpstrDefExt = 0;
+    fname.lCustData = NULL;
+    fname.lpfnHook = NULL;
+    fname.lpTemplateName = NULL;
+    fname.lpstrInitialDir = NULL;
+    HDC hDC = wglGetCurrentDC();
+    HGLRC hRC = wglGetCurrentContext();
+    GetOpenFileName(&amp;fname);
+    wglMakeCurrent(hDC, hRC);
+    //printf(&quot;读取文件\n&quot;);
+    load_Point(fname.lpstrFile); //读入模型文件
+}
+
+void glui_control(int control) //处理控件的返回值
+{
+    switch (control)
+    {
+    case CRTL_LOAD://选择“open”控件
+        loadFile();
+        break;
+    case CRTL_DENSE:
+        bspToPoint();
+        break;
+    default:
+        break;
+    }
+}
+
+void myGlutKeyboard(unsigned char Key, int x, int y)
+{//键盘时间回调函数
+    if (Key = GLUT_KEY_DOWN) {
+        g_view_type = !g_view_type;
+    }
+}
+
+void myGlui()
+{
+    GLUI_Master.set_glutDisplayFunc(myGlutDisplay); //注册渲染事件回调函数， 系统在需要对窗体进行重新绘制操作时调用
+    //GLUI_Master.set_glutReshapeFunc(myGlutReshape);  //注册窗口大小改变事件回调函数
+    glutMotionFunc(myGlutMotion);//注册鼠标移动事件回调函数
+    GLUI_Master.set_glutMouseFunc(mouse);//注册鼠标点击事件回调函数
+    GLUI_Master.set_glutKeyboardFunc(myGlutKeyboard);//注册键盘输入事件回调函数
+    GLUI_Master.set_glutIdleFunc(myGlutIdle); //为GLUI注册一个标准的GLUT空闲回调函数，当系统处于空闲时,就会调用该注册的函数
+
+    //GLUI
+    GLUI *glui = GLUI_Master.create_glui_subwindow(g_main_window, GLUI_SUBWINDOW_RIGHT); //新建子窗体，位于主窗体的右部 
+    new GLUI_StaticText(glui, &quot;GLUI&quot;); //在GLUI下新建一个静态文本框，输出内容为“GLUI”
+    new GLUI_Separator(glui); //新建分隔符
+    new GLUI_Button(glui, &quot;Open&quot;, CRTL_LOAD, glui_control); //新建按钮控件，参数分别为：所属窗体、名字、ID、回调函数，当按钮被触发时,它会被调用.
+    new GLUI_Button(glui, &quot;Quit&quot;, 0, (GLUI_Update_CB)exit);//新建退出按钮，当按钮被触发时,退出程序
+
+    GLUI_Panel *type_panel = glui-&gt;add_panel(&quot;Type&quot;);
+    GLUI_RadioGroup *radio = glui-&gt;add_radiogroup_to_panel(type_panel, &amp;g_xform_mode, CRTL_ADD, glui_control);
+    glui-&gt;add_radiobutton_to_group(radio, &quot;add&quot;);
+    glui-&gt;add_radiobutton_to_group(radio, &quot;drag&quot;);
+    //glui-&gt;add_radiobutton_to_group(radio, &quot;wire&quot;);
+    //glui-&gt;add_radiobutton_to_group(radio, &quot;flat&quot;);
+
+    GLUI_Spinner *spinner = glui-&gt;add_spinner(&quot;spinner&quot;, 2, &amp;g_dense, CRTL_DENSE, glui_control);
+    spinner-&gt;set_int_limits(3, 1000, 1);
+    
+
+    glui-&gt;set_main_gfx_window(g_main_window); //将子窗体glui与主窗体main_window绑定，当窗体glui中的控件的值发生过改变，则该glui窗口被重绘
+    GLUI_Master.set_glutIdleFunc(myGlutIdle);
+}
+
+
+int main(int argc, char** argv)
+{
+    freopen(&quot;log.txt&quot;, &quot;w&quot;, stdout);//重定位，将输出放入log.txt文件中
+    glutInit(&amp;argc, argv);
+    glutInitDisplayMode(GLUT_RGB);
+    glutInitWindowPosition(200, 200); //初始化窗口位置
+    glutInitWindowSize(800, 600); //初始化窗口大小
+    g_main_window = glutCreateWindow(&quot;lmw&quot;);
+
+    myGlui();
+    init();
+
+    glutMainLoop();
+    return 0;
+}
+
+</code></pre>
+<p>递归实现基函数</p>
+<pre><code><code>std::vector&lt;Point&gt; points; // 用于记录每个控制点的坐标
+std::vector&lt;float&gt; vecs;
+static int controlNum = 0; // 控制点的数量
+static int pointNum = 0; // 节点数
+static int degree = 0; // B样条曲线的次数
+std::vector&lt;Point&gt; opts;
+
+float Deboor(int k, int d, float t){
+    float Length1 = vecs[k + d - 1] - vecs[k];
+    float Length2 = vecs[k + d] - vecs[k + 1];
+    if (d == 1) {
+        if (t &gt;= vecs[k] &amp;&amp; t &lt;= vecs[k + 1]) {
+            return 1.0;
+        }
+        else {
+            return 0.0;
+        }
+    }
+    else {
+        float first = 0.0, second = 0.0;
+        if (Length1 != 0) {
+            first = (t - vecs[k]) * Deboor(k, d - 1, t) / Length1;
+        }
+        if (Length2 != 0) {
+            second = (vecs[k + d] - t) * Deboor(k + 1, d - 1, t) / Length2;
+        }
+        return first + second;
+    }
+}</code></pre>
+<p>获取曲线上点的点</p>
+<pre><code><code>void bspToPoint() {
+    opts.clear();
+    float tJump = (vecs[controlNum] - vecs[degree]) / (g_dense); //g_dense 采样频率
+    float t = 0;
+    for (t = vecs[degree] + 1e-4; t &lt; vecs[controlNum] - 1e-4; t += tJump) {
+        float tmpx = 0, tmpy = 0;
+        for (int i = 0; i &lt; points.size(); i++) {
+            tmpx += points[i].x*Deboor(i, degree + 1, t);
+            tmpy += points[i].y*Deboor(i, degree + 1, t);
+        }
+        Point point = { tmpx, tmpy };
+        opts.push_back(point);
+    }
+    
+}</code></pre>
+<p>运行结果</p>
+<p><img src="./images/从零开始openGL——四、纹理贴图与n次B样条曲线1.png" /></p>
+<p>在这里，我还加入了控制点的添加与拖动功能</p>
+<p>对于控制点的添加，只需使用上篇提到的鼠标交互的方法即可，这里我默认加入一个点阶数也增加，可以尝试加入一个控制阶数大小的控制条。</p>
+<pre><code><code>void add_point(float x, float y) {
+    Point point;
+    point.x = x;
+    point.y = y;
+    points.push_back(point);
+    degree++;
+    controlNum++;
+}
+</code></pre>
+<p>拖动的话，也差不多，只需找到需拖动的点，然后改变坐标即可</p>
+<pre><code><code>int find_point(int x, int y) {
+    for (int i = 0; i &lt; points.size();i++) {
+        float x_diff = x - points[i].x;
+        float y_diff = y - points[i].y;
+        if (x_diff * x_diff + y_diff * y_diff &lt;= 25) {
+            return i;
+        }
+    }
+    return -1;
+}</code></pre>
+<p>再运行一遍，好像还行</p>
+<p><img src="./images/从零开始openGL——四、纹理贴图与n次B样条曲线2.png" /></p>
+<h1 id="小节">小节</h1>
+<p>到这里，n次B样条曲线的绘制也完成了，下一篇将以光线追踪收尾这一系列的博客。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

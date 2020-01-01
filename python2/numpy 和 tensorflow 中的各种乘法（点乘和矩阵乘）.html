@@ -1,0 +1,97 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）</center></div><div class='banquan'>原文出处:本文由博客园博主python学习者0提供。<br/>
+原文连接:https://www.cnblogs.com/xxpythonxx/p/11332860.html</div><br>
+    <h3 id="点乘和矩阵乘的区别">点乘和矩阵乘的区别：</h3>
+<h4 id="点乘即------各个矩阵对应元素做乘法"><strong>1）点乘（即“ * ”） ---- 各个矩阵对应元素做乘法</strong></h4>
+<p>若 w 为 <strong>m*1</strong> 的矩阵，x 为 <strong>m*n</strong> 的矩阵，那么通过点乘结果就会得到一个 <strong>m*n</strong> 的矩阵。</p>
+<p><img src="./images/numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）0.png" alt="image.png" /></p>
+<p>若 w 为 <strong>m*n</strong> 的矩阵，x 为 <strong>m*n</strong> 的矩阵，那么通过点乘结果就会得到一个 <strong>m*n</strong> 的矩阵。</p>
+<p><img src="./images/numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）1.png" alt="image.png" /></p>
+<p><strong>w的列数</strong>只能为 <strong>1</strong> 或 <strong>与x的列数相等</strong>（即n），<strong>w的行数与x的行数相等</strong> 才能进行乘法运算。</p>
+<h4 id="矩阵乘------按照矩阵乘法规则做运算">2）矩阵乘 ---- 按照矩阵乘法规则做运算</h4>
+<p>若 w 为 <strong>m*p</strong> 的矩阵，x 为 <strong>p*n</strong> 的矩阵，那么通过矩阵相乘结果就会得到一个 <strong>m*n</strong> 的矩阵。</p>
+<p>只有 <strong>w 的列数 == x的行数</strong> 时，才能进行乘法运算</p>
+<p><img src="./images/numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）2.png" alt="img" /></p>
+<h3 id="numpy">1. numpy</h3>
+<h4 id="点乘">1）点乘</h4>
+<pre><code><code>
+1 import numpy as np
+2 
+3 w = np.array([[0.4], [1.2]])
+4 x = np.array([range(1,6), range(5,10)])
+5 
+6 print w
+7 print x
+8 print w*x</code></pre>
+<p>运行结果如下图：</p>
+<p><img src="./images/numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）3.png" alt="img" /></p>
+<h4 id="矩阵乘">2）矩阵乘</h4>
+<pre><code><code>
+1 import numpy as np
+2 
+3 w = np.array([[0.4, 1.2]])
+4 x = np.array([range(1,6), range(5,10)])
+5 
+6 print w
+7 print x
+8 print np.dot(w,x)</code></pre>
+<p>运行结果如下：</p>
+<p><img src="./images/numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）4.png" alt="img" /></p>
+<h3 id="tensorflow">2. tensorflow</h3>
+<h4 id="点乘-1">1）点乘</h4>
+<pre><code><code> 1 import tensorflow as tf
+ 2 
+ 3 w = tf.Variable([[0.4], [1.2]], dtype=tf.float32) # w.shape: [2, 1]
+ 4 x = tf.Variable([range(1,6), range(5,10)], dtype=tf.float32) # x.shape: [2, 5]
+ 5 y = w * x     # 等同于 y = tf.multiply(w, x)   y.shape: [2, 5]
+ 6 
+ 7 sess = tf.Session()
+ 8 init = tf.global_variables_initializer()
+ 9 sess.run(init)
+10 
+11 print sess.run(w)
+12 print sess.run(x)
+13 print sess.run(y)</code></pre>
+<p>运行结果如下：</p>
+<p><img src="./images/numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）5.png" alt="image.png" /></p>
+<h4 id="矩阵乘-1">2）矩阵乘</h4>
+<pre><code><code>
+ 1 # coding:utf-8
+ 2 import tensorflow as tf
+ 3 
+ 4 w = tf.Variable([[0.4, 1.2]], dtype=tf.float32) # w.shape: [1, 2]
+ 5 x = tf.Variable([range(1,6), range(5,10)], dtype=tf.float32) # x.shape: [2, 5]
+ 6 y = tf.matmul(w, x) # y.shape: [1, 5]
+ 7 
+ 8 sess = tf.Session()
+ 9 init = tf.global_variables_initializer()
+10 sess.run(init)
+11 
+12 print sess.run(w)
+13 print sess.run(x)
+14 print sess.run(y)</code></pre>
+<p>运行结果如下：</p>
+<p><img src="./images/numpy 和 tensorflow 中的各种乘法（点乘和矩阵乘）6.png" alt="img" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

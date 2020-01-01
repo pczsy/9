@@ -1,0 +1,134 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python with语句和过程抽取思想' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python with语句和过程抽取思想</center></div><div class='banquan'>原文出处:本文由博客园博主Mysticbinary提供。<br/>
+原文连接:https://www.cnblogs.com/mysticbinary/p/12081662.html</div><br>
+    <h1 id="with语句的应用场景">with语句的应用场景</h1>
+<p>  编程中有很多操作都是配套使用的，这种配套的流程可以称为计算过程，Python语言为这种计算过程专门设计了一种结构：with语句。比如文件处理就是这类计算过程的典型代表。</p>
+<p><br></p>
+<h1 id="使用with语句前后对比">使用with语句前后对比</h1>
+<p>没有使用with语句之前，我们是这样打开一个文件的：</p>
+<pre><code><code>try:
+    # 1. [进入]
+    f = open(&#39;a.txt&#39;, &#39;r&#39;, encoding=&quot;utf-8&quot;)
+    # 2. [执行]
+    print(f.read())
+finally:
+    if f:
+        # 3. [退出]
+        f.close()</code></pre>
+<p>python操作文件的流程一般就是这三步：</p>
+<ol>
+<li>[进入]用只读方式打开文件<br />
+如果文件不存在，open()函数就会抛出一个IOError的错误，并且给出错误码和详细的信息告诉你文件不存在</li>
+<li>[执行]读取文件内容<br />
+如果文件打开成功，接下来，调用read()方法可以一次读取文件的全部内容，Python把内容读到内存，用一个str对象表示</li>
+<li>[退出]关闭打开的文件<br />
+文件使用完毕后必须关闭，因为文件对象会占用操作系统的资源，并且操作系统同一时间能打开的文件数量也是有限的</li>
+</ol>
+<p>思考为什么关闭文件操作一定要放在finallly语句里？<br />
+  由于文件读写时都有可能产生IOError，一旦出错，后面的f.close()就不会调用。所以，为了保证无论是否出错都能正确地关闭文件，我们可以使用try ... finally来实现。</p>
+<p>发现共性：<br />
+我们发现其实这种过程化的语句有共性，比如说在进去一个片段<code>前</code>必须做某种超赞，处理工作<code>后</code>又需要执行一个结束操作。比如上面的这段代码：</p>
+<pre><code><code>finally:
+    if f:
+        f.close()</code></pre>
+<p>上面的代码块就可以做一个封装。</p>
+<p>使用with语句后，我们是这样打开一个文件的：</p>
+<pre><code><code>with open(&quot;a.txt&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as f:
+    print(f.read())</code></pre>
+<p>这个with语句和前面的try ... finally结构是一样的，但是代码更佳简洁，并且不必调用f.close()方法。</p>
+<p><br></p>
+<h1 id="with语句的执行原理">with语句的执行原理</h1>
+<blockquote>
+<p>从解释器的角度去理解with语句执行流程。</p>
+</blockquote>
+<p>with语句的基本形式是：</p>
+<pre><code><code>with 表达式 as 变量：
+    语句块</code></pre>
+<p>  这样的一段代码可以称为一个上下文（context），在执行with语句时，解释器会先求出表达式的值，这个值（对象）是一个上下文管理器，并且假设这个对象拥有如下两个类魔术方法：</p>
+<pre><code><code>    def __enter__():
+        # 描述进入上下文的动作
+        pass
+
+    def __exit__():
+        # 描述退出上下文的动作
+        pass</code></pre>
+<p>with语句在求出这个上下文管理器对象之后，自动执行<code>进入方法</code>，并将这个对象的返回值赋值于 as 之后的变量，然后执行语句块。然后在退出上下文前，自动执行对象的<code>退出方法</code>。</p>
+<p>python系统和标准库的一些类型定义了这对操作，可以直接用于with语句。比如文件对象就直接支持这一对操作，因此可以用在with语句的头部。</p>
+<p>如果你也有类似的计算过程需要抽取出来，那么可以自定义一个类，并且包含进入、退出方法。</p>
+<h2 id="自定义open函数">自定义open函数</h2>
+<blockquote>
+<p>自己实现才发现，使用装饰器和生成器就能很好的解决这个问题，不需要用到类魔术方法来实现；</p>
+</blockquote>
+<pre><code><code>import contextlib  # 引入上下文管理包
+
+@contextlib.contextmanager  # 给函数引入装饰器
+def myopen(dir, mode):
+    print(&quot;开始&quot;)
+    f = open(dir, mode, encoding=&#39;utf-8&#39;)
+    try:  # 上文
+        yield f
+    finally:  # 下文
+        print(&quot;结束&quot;)
+        f.close()
+
+with myopen(&quot;a.txt&quot;, &#39;r&#39;) as fobj:  # 把try中的yield中的f赋值给fobj
+    # with会将with后面的函数中的yield赋值给fobj
+    for i in fobj:
+        print(i)
+        # 等待上面的循环结束后,才最终执行finally的代码，所以这就是上下文管理</code></pre>
+<p>输出：</p>
+<pre class="text"><code>开始
+hello，我是a.txt的第1行文字。
+结束</code></pre>
+<p><br></p>
+<h1 id="总结">总结</h1>
+<blockquote>
+<p>打开文件读写、用pickle包完成数据的存储、恢复的操作，都非常适合使用with语句。</p>
+</blockquote>
+<p>pickle包的使用案例：</p>
+<pre><code><code>try:
+    with open(&quot;phone.pickle&quot;, &quot;wb&quot;) as outf:
+        pickle.dump(&quot;13193388105&quot;, outf)
+except:
+    print(&quot;file have errow.&quot;)
+
+
+try:
+    with open(&quot;phone.pickle&quot;, &quot;rb&quot;) as outf:
+        data = pickle.load(outf)
+        print(type(data))
+        print(data)
+except:
+    print(&quot;file have errow.&quot;)</code></pre>
+<p>我总结了一下使用with语句的优点：</p>
+<ol>
+<li><p>采用with语句的代码更简洁；</p></li>
+<li><p>防止因为忘记写f.close()而引发的错误；</p></li>
+<li><p>一个对象（上下文）的操作有进入、退出过程就可以抽取出来，并做成自动化执行；</p></li>
+</ol>
+<p><br></p>
+<h1 id="参考">参考</h1>
+<p>《从问题到程序用Python编程和计算》</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

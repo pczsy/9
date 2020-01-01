@@ -1,0 +1,71 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修爬取安居客上芜湖房价' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>爬取安居客上芜湖房价</center></div><div class='banquan'>原文出处:本文由博客园博主九命猫幺提供。<br/>
+原文连接:https://www.cnblogs.com/yongestcat/p/11769797.html</div><br>
+    <p>忘记在哪儿百度到的代码，学习一下</p><div class="cnblogs_Highlighter">
+<pre><code>import requests
+from bs4 import BeautifulSoup
+import time
+headers={'User-Agent':'Baiduspider'}
+total=[]
+def get_loupan(url):
+    try:
+        res=requests.get(url,headers=headers)
+        soup=BeautifulSoup(res.text,'html.parser')
+        titles=soup.find_all('span',class_='items-name')
+        title=list(map(lambda x:x.text,titles))
+        dizhis=soup.find_all('span',class_='list-map')
+        dizhi=list(map(lambda x:x.text,dizhis))
+        diqus=soup.find_all('span',class_='list-map')
+        diqu=list(map(lambda x:x.text.split('\xa0')[1],diqus))
+        mianjis_quan=soup.find_all('a',class_='huxing')
+        mianji_quan=list(map(lambda x:x.text,mianjis_quan))
+        mianjis=soup.find_all('a',class_='huxing')
+        mianji=list(map(lambda x:x.text.split('\t')[-1].strip(),mianjis))
+        jiages=soup.find_all('a',class_='favor-pos')
+        jiage=list(map(lambda x:x.p.text,jiages))
+        for tit,dizhi,diqu,mianq,mianj,jiage in zip(title,dizhi,diqu,mianji_quan,mianji,jiage):
+            info={'标题':tit,
+                  '地址':dizhi,
+                  '地区':diqu,
+                  '面积（全）':mianq,
+                  '面积':mianj,
+                  '价格':jiage}
+            total.append(info)
+    except:
+        print('')
+    return total
+if __name__ == '__main__':
+    for i in range(1,21):
+        url='https://wuh.fang.anjuke.com/loupan/all/p{}/'.format(i)
+        get_loupan(url)
+        print('第{}页抓取完毕'.format(i))
+        time.sleep(1)
+import pandas as pd
+df=pd.DataFrame(total)
+df.to_excel('安居客.xls')
+</pre>
+</div>
+<p>
+<img width="1047" height="642" title="image" style="margin: 0px auto; border: 0px currentcolor; border-image: none; float: none; display: block; background-image: none;" alt="image" src="./images/爬取安居客上芜湖房价0.png" border="0"></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

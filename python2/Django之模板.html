@@ -1,0 +1,1013 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django之模板' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django之模板</center></div><div class='banquan'>原文出处:本文由博客园博主YifChan提供。<br/>
+原文连接:https://www.cnblogs.com/yifchan/p/python-1-29.html</div><br>
+    <p>Django1.8.2中文文档：<a href="https://yiyibooks.cn/xx/django_182/index.html" target="_blank">Django1.8.2中文文档</a></p>
+<h2>模板</h2>
+<h4>模板注释</h4>
+<p>单行注释：</p>
+<div class="cnblogs_code">
+<pre><code>{<span style="color: #008000;">#</span><span style="color: #008000;"> 注释内容 #}</span></pre>
+</div>
+<p>多行注释：</p>
+<div class="cnblogs_code">
+<pre><code>{% comment %<span style="color: #000000;">}
+注释内容
+{</span>% endcomment %}</pre>
+</div>
+<p>注意，模板注释和html注释不同，html注释后浏览器检查还能看到朱时候的代码，但模板注释不能被看到。</p>
+<p>&nbsp;</p>
+<h3>模板的功能</h3>
+<p>产生html，控制页面上展示的内容。模板文件不仅仅是一个html文件。<br />模板文件包含两部分内容：<br />1)静态内容：css,js,html。<br />2)动态内容：用于动态去产生一些网页内容。通过模板语言来产生。</p>
+<p>&nbsp;</p>
+<h3>模板文件的使用</h3>
+<p>通常是在视图函数中使用模板产生html内容返回给客户端。<br />a)加载模板文件 loader.get_template<br />获取模板文件的内容，产生一个模板对象。<br />b)定义模板上下文 RequeseContext<br />给模板文件传递数据。<br />c)模板渲染产生html页面内容 render<br />用传递的数据替换相应的变量，产生一个替换后的标准的html内容。</p>
+<p>不用render自己渲染模板示例/ 给一个函数使用templates模板</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> index(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1.加载模板文件，获取一个模板对象</span>
+    temp = loader.get_template(<span style="color: #800000;">'</span><span style="color: #800000;">booktest/index.html</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.定义模板上下文，给模板文件传数据</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> context = RequestContext(request, {})  # 在django1.11中不能使用这种方法，只能直接定义一个字典</span>
+    context =<span style="color: #000000;"> {}
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 3.模板渲染，产生一个替换后的html内容</span>
+    res_html =<span style="color: #000000;"> temp.render(context)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 4.返回应答</span>
+    <span style="color: #0000ff;">return</span> HttpResponse(res_html)</pre>
+</div>
+<p>自定义render渲染模板示例/ 抽离出templates渲染函数给多个视图函数使用</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span> my_render(request, template_path, context=<span style="color: #000000;">{}):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1.加载模板文件，获取一个模板对象</span>
+    temp =<span style="color: #000000;"> loader.get_template(template_path)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.定义模板上下文，给模板文件传数据</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> context = RequestContext(request, context)</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> context = {}</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 3.模板渲染，产生一个替换后的html内容</span>
+    res_html =<span style="color: #000000;"> temp.render(context)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 4.返回应答</span>
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(res_html)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> index(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> return render(request, 'booktest/index.html')</span>
+    <span style="color: #0000ff;">return</span> my_render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/index.html</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+<h3>模板文件加载顺序</h3>
+<p>1)首先去配置的模板目录下面去找模板文件。<br />2)去INSTALLED_APPS下面的每个应用的templates去找模板文件，前提是应用中必须有templates文件夹。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> index2页面未创建</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> index2(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">模板文件的加载顺序</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">return</span> my_render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/index2.html</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>报错结果</p>
+<p><img src="./images/Django之模板0.png" alt="" width="1062" height="135" /></p>
+<p>&nbsp;</p>
+<h2>模板语言</h2>
+<p>模板语言简称为DTL。（Django Template Language）</p>
+<h3>模板变量</h3>
+<p><strong>模板变量名是由数字，字母，下划线和点组成的，不能以下划线开头。</strong><br />使用模板变量：</p>
+<div class="cnblogs_code">
+<pre><code>{{模板变量名}}</pre>
+</div>
+<p>模板变量的解析顺序：<br />例如：{{ book.btitle }}</p>
+<ul>
+<li>1)首先把book当成一个字典，把btitle当成键名，进行取值book['btitle']</li>
+<li>2)把book当成一个对象，把btitle当成属性，进行取值book.btitle</li>
+<li>3)把book当成一个对象，把btitle当成对象的方法，进行取值book.btitle</li>
+
+
+
+
+
+
+
+</ul>
+<p>例如：{{book.0}}</p>
+<ul>
+<li>1)首先把book当成一个字典，把0当成键名，进行取值book[0]</li>
+<li>2)把book当成一个列表，把0当成下标，进行取值book[0]</li>
+
+
+
+
+
+
+
+</ul>
+<p>如果解析失败，则产生内容时用空字符串填充模板变量。<br /><strong>使用模板变量时，.前面的可能是一个字典，可能是一个对象，还可能是一个列表。</strong></p>
+<h4>使用模板变量示例</h4>
+<p>模板变量函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> temp_var(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">模板变量</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    my_dict </span>= {<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">字典键值</span><span style="color: #800000;">"</span><span style="color: #000000;">}
+    my_list </span>= [1, 2, 3<span style="color: #000000;">]
+    book </span>= models.BookInfo.objects.get(id=1<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义模板上下文</span>
+    context = {<span style="color: #800000;">'</span><span style="color: #800000;">my_dict</span><span style="color: #800000;">'</span>: my_dict, <span style="color: #800000;">'</span><span style="color: #800000;">my_list</span><span style="color: #800000;">'</span>: my_list, <span style="color: #800000;">'</span><span style="color: #800000;">book</span><span style="color: #800000;">'</span><span style="color: #000000;">: book}
+    </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/temp_var.html</span><span style="color: #800000;">'</span>, context)</pre>
+</div>
+<p>模板变量html代码(booktest/temp_var.html)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>模板变量<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+使用字典属性：{{ my_dict.title }} </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+使用列表元素：{{ my_list.1 }} </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+使用对象属性：{{ book.btitle }}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<h3>模板标签</h3>
+<p>模板标签使用格式：</p>
+<div class="cnblogs_code">
+<pre><code>{% 代码段 %}</pre>
+</div>
+<p>for循环：</p>
+<div class="cnblogs_code">
+<pre><code>{% <span style="color: #0000ff;">for</span> x <span style="color: #0000ff;">in</span> 列表 %<span style="color: #000000;">}
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 列表不为空时执行</span>
+{% empty %<span style="color: #000000;">}
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 列表为空时执行</span>
+{% endfor %}</pre>
+</div>
+<p>可以通过{{ forloop.counter }}得到for循环遍历到了第几次。</p>
+<p>if判断：</p>
+<div class="cnblogs_code">
+<pre><code>{% <span style="color: #0000ff;">if</span> 条件 %<span style="color: #000000;">}
+{</span>% <span style="color: #0000ff;">elif</span> 条件 %<span style="color: #000000;">}
+{</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+{</span>% endif %}</pre>
+</div>
+<p>&nbsp;</p>
+<p>关系比较操作符：&gt; &lt; &gt;= &lt;= == !=<br />注意：<strong>进行比较操作时，比较操作符两边必须有空格。</strong></p>
+<p>逻辑运算：not and or</p>
+<p>django内置标签与过滤器文档：<a href="https://yiyibooks.cn/xx/django_182/ref/templates/builtins.html" target="_blank">内置标签与过滤器文档</a>&nbsp;或者&nbsp;https://yiyibooks.cn/xx/django_182/ref/templates/builtins.html</p>
+<h4>模板标签使用示例</h4>
+<p>&nbsp;函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> temp_tags(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">模板标签</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    books </span>=<span style="color: #000000;"> models.BookInfo.objects.all()
+    </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/temp_tags.html</span><span style="color: #800000;">'</span>, {<span style="color: #800000;">'</span><span style="color: #800000;">books</span><span style="color: #800000;">'</span>: books})</pre>
+</div>
+<p>html代码</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('253bcdd0-738d-48c3-be4b-291fcf3ff9cd')"><img id="code_img_closed_253bcdd0-738d-48c3-be4b-291fcf3ff9cd" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_253bcdd0-738d-48c3-be4b-291fcf3ff9cd" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('253bcdd0-738d-48c3-be4b-291fcf3ff9cd',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_253bcdd0-738d-48c3-be4b-291fcf3ff9cd" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>模板标签<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span><span style="background-color: #f5f5f5; color: #800000;">
+        .red </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> red</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .blue </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> blue</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .gray </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> gray</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>模板标签<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% for book in books %}
+        {% if book.id </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">= 2 </span><span style="color: #ff0000;">%}
+            &lt;li class</span><span style="color: #0000ff;">="red"</span><span style="color: #0000ff;">&gt;</span>{{ forloop.counter }}--{{ book.btitle }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% elif book.id </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">= 3 </span><span style="color: #ff0000;">%}
+            &lt;li class</span><span style="color: #0000ff;">="blue"</span><span style="color: #0000ff;">&gt;</span>{{ forloop.counter }}--{{ book.btitle }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% else %}
+            </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="gray"</span><span style="color: #0000ff;">&gt;</span>{{ forloop.counter }}--{{ book.btitle }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% endif %}
+    {% endfor %}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">booktest/temp_tags.html</span></div>
+<p>&nbsp;</p>
+<h3>过滤器</h3>
+<p>过滤器其实就是python函数。</p>
+<p>过滤器用于对模板变量进行操作。</p>
+<ul>
+<li>date：改变日期的显示格式。</li>
+<li>length:求长度。字符串，列表.</li>
+<li>default:设置模板变量的默认值。</li>
+</ul>
+<p>格式：</p>
+<div class="cnblogs_code">
+<pre><code>模板变量｜过滤器：参数</pre>
+</div>
+<p>自定义过滤器。<br />自定义的过滤器函数，至少有一个参数，最多两个</p>
+<h4>过滤器的使用示例</h4>
+<p>过滤器函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> temp_filter(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">模板过滤器</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    books </span>=<span style="color: #000000;"> models.BookInfo.objects.all()
+    </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/temp_filter.html</span><span style="color: #800000;">'</span>, {<span style="color: #800000;">'</span><span style="color: #800000;">books</span><span style="color: #800000;">'</span>: books})</pre>
+</div>
+<p>过滤器html代码</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('3950305d-1e3b-47ed-b5b4-54370f6d8d0f')"><img id="code_img_closed_3950305d-1e3b-47ed-b5b4-54370f6d8d0f" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_3950305d-1e3b-47ed-b5b4-54370f6d8d0f" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('3950305d-1e3b-47ed-b5b4-54370f6d8d0f',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_3950305d-1e3b-47ed-b5b4-54370f6d8d0f" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>模板过滤器<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span><span style="background-color: #f5f5f5; color: #800000;">
+        .red </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> red</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .blue </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> blue</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .gray </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> gray</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>模板标签<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% for book in books %}
+        {% if book.id </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">= 2 </span><span style="color: #ff0000;">%}
+            &lt;li class</span><span style="color: #0000ff;">="red"</span><span style="color: #0000ff;">&gt;</span>{{ book.btitle }}--{{ book.bpub_date|date:'Y-m-d' }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% else %}
+            {#  加了length后，会将原来的图书名编程图书名长度的数字  #}
+            </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="gray"</span><span style="color: #0000ff;">&gt;</span>{{ book.btitle|length }}--{{ book.bpub_date }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% endif %}
+    {% endfor %}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+default过滤器：
+{#  如果content没有值，则过滤器会显示默认的值  #}
+{{ content|default:"hello" }}
+
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">booktest/temp_filter.html</span></div>
+<p>注意：<strong>过滤器中，冒号后不能加空格，</strong><br />例如{{ book.bpub_date|date:'Y-m-d' }}是正确的，而{{ book.bpub_date|date: 'Y-m-d' }}是错误的。<br />否则会报错，Could not parse the remainder: ': 'Y-m-d'' from 'book.bpub_date|date: 'Y-m-d''</p>
+<p>&nbsp;</p>
+<h3>自定义过滤器</h3>
+<p>自定义过滤器</p>
+<ul>
+<li>1.在自己的应用下面新建一个 templatetags 文件夹，名字固定；</li>
+<li>2.在templatetags文件夹下面新建一个py文件，名字自定义，比如filters.py；</li>
+<li>3.1.在文件中，引入Library类；</li>
+<li>3.2.创建一个Library类的对象；</li>
+<li>3.3.定义自己的函数，给函数添加装饰器@register.filter进行过滤器装饰；</li>
+
+
+
+
+
+
+
+</ul>
+<p>使用自定义装饰器</p>
+<ul>
+<li>1.在需要使用的html文件中导入自定义装饰器文件，{% load filters %}，即 load 文件名；</li>
+<li>2.使用过滤器；</li>
+
+
+
+
+
+
+
+</ul>
+<p>自定义过滤器示例</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> django.template
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个Library类的对象</span>
+register =<span style="color: #000000;"> django.template.Library()
+
+@register.filter
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> mod(num):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">判断num是否为偶数</span><span style="color: #800000;">"""</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 如果传过来的num是偶数，则返回True，否则返回False</span>
+    <span style="color: #0000ff;">return</span> num % 2 == 0</pre>
+</div>
+<p>在html代码中使用模板过滤器</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('cf163e5c-d804-46e8-a5f4-bbad13f23a92')"><img id="code_img_closed_cf163e5c-d804-46e8-a5f4-bbad13f23a92" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_cf163e5c-d804-46e8-a5f4-bbad13f23a92" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('cf163e5c-d804-46e8-a5f4-bbad13f23a92',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_cf163e5c-d804-46e8-a5f4-bbad13f23a92" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% load filters %}
+</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>模板过滤器<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span><span style="background-color: #f5f5f5; color: #800000;">
+        .red </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> red</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .blue </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> blue</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .gray </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> gray</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>模板标签<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% for book in books %}
+        {% if book.id|mod %}
+            </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="red"</span><span style="color: #0000ff;">&gt;</span>{{ book.id }}--{{ book.btitle }}--{{ book.bpub_date|date:'Y-m-d' }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% else %}
+            </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="gray"</span><span style="color: #0000ff;">&gt;</span>{{ book.btitle }}--{{ book.bpub_date }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% endif %}
+    {% endfor %}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">html使用一个参数的过滤器</span></div>
+<p>&nbsp;</p>
+<p>两个参数的自定义过滤器</p>
+<p>自定义过滤器</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 自定义的过滤器，最少有一个参数，最多有两个参数</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 只有一个参数的话，由|前面的参数传过来，两个参数的话，：后面再跟一个参数</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 应注意过滤器参数的前后顺序</span>
+<span style="color: #000000;">@register.filter
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> mod_val(num, val):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">判断num是否能把value整除</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">return</span> num % val == 0</pre>
+</div>
+<p>html代码</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('7fa5a868-c3b4-4881-a32a-49abf4359da7')"><img id="code_img_closed_7fa5a868-c3b4-4881-a32a-49abf4359da7" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_7fa5a868-c3b4-4881-a32a-49abf4359da7" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('7fa5a868-c3b4-4881-a32a-49abf4359da7',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_7fa5a868-c3b4-4881-a32a-49abf4359da7" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% load filters %}
+</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>模板过滤器<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span><span style="background-color: #f5f5f5; color: #800000;">
+        .red </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> red</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .blue </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> blue</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span><span style="background-color: #f5f5f5; color: #800000;">
+        .gray </span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">background-color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> gray</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #000000;">}</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>模板标签<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% for book in books %}
+        {# {% if book.id </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">= 2 </span><span style="color: #ff0000;">%} #}
+        {# % if book.id|mod %} #}
+        {% if book.id|mod_val:3 %}
+            &lt;li class</span><span style="color: #0000ff;">="red"</span><span style="color: #0000ff;">&gt;</span>{{ book.id }}--{{ book.btitle }}--{{ book.bpub_date|date:'Y-m-d' }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% else %}
+            {#  加了length后，会将原来的图书名编程图书名长度的数字  #}
+            </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="gray"</span><span style="color: #0000ff;">&gt;</span>{{ book.btitle|length }}--{{ book.bpub_date }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {% endif %}
+    {% endfor %}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+default过滤器：
+{#  如果content没有值，则过滤器会显示默认的值  #}
+{{ content|default:"hello" }}
+
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">html使用两个参数的自定义过滤器</span></div>
+<p>&nbsp;</p>
+<h2>模板继承</h2>
+<p>模板继承也是为了重用html页面内容。</p>
+<p><img src="./images/Django之模板9.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>在父模板里可以定义块，使用标签：</p>
+<div class="cnblogs_code">
+<pre><code>{% block 块名 %<span style="color: #000000;">}
+　　块中间可以写内容，也可以不写
+{</span>% endblock 块名%}</pre>
+</div>
+<p>子模板去继承父模板之后，可以重写父模板中的某一块的内容。<br />继承格式：</p>
+<div class="cnblogs_code">
+<pre><code>{% extends 父模板文件路径%<span style="color: #000000;">}
+
+
+{</span>% block 块名 %<span style="color: #000000;">}
+    {{ block.super}} </span><span style="color: #008000;">#</span><span style="color: #008000;">获取父模板中块的默认内容</span>
+<span style="color: #000000;">    重写的内容
+{</span>% endblock 块名%}</pre>
+</div>
+<p>&nbsp;</p>
+<h4>模板继承示例</h4>
+<p>&nbsp;base/母模板</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>{% block title %}base模板文件的title{% endblock title %}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>base模板的header<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    
+    {% block b1 %}
+        </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span>base模板的block1<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% endblock b1 %}
+    
+    {% block b2 %}
+        </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span>base模板的block1<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% endblock b2 %}
+    
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>base模板的footer<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>child/子模板</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{% extends 'booktest/base.html' %}
+
+{% block title %}child模板中的title{% endblock title %}
+
+{% block b1 %}
+    {{ block.super }}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span>child模板的block1<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock b1 %}
+
+{% block b2 %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span>child模板的block2<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h2</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock b2 %}</span></pre>
+</div>
+<p>配套函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> temp_inherit(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">返回child模板继承于base的文件</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/child.html</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p><strong>在块里面还可以写块</strong>，需要注意endblock后面跟 块名 用以区分哪个块结束。</p>
+<p>&nbsp;</p>
+<h2>html转义</h2>
+<p>场景：编辑商品详情信息，数据表中保存的是html内容。<br />在模板上下文中的html标记默认是会被转义的。</p>
+<div class="cnblogs_code">
+<pre><code>小于号&lt; 转换为&amp;<span style="color: #000000;">lt;
+大于号</span>&gt; 转换为&amp;<span style="color: #000000;">gt;
+单引号</span><span style="color: #800000;">'</span><span style="color: #800000;"> 转换为&amp;#39;</span>
+双引号<span style="color: #800000;">"</span><span style="color: #800000;"> 转换为 &amp;quot;</span>
+与符号&amp; 转换为 &amp;amp;</pre>
+</div>
+<p>要关闭模板上下文字符串的转义：可以使用</p>
+<div class="cnblogs_code">
+<pre><code>{{ 模板变量|safe}}</pre>
+</div>
+<p>也可以使用：</p>
+<div class="cnblogs_code">
+<pre><code>{% autoescape off %<span style="color: #000000;">}
+模板语言代码
+{</span>% endautoescape %}</pre>
+</div>
+<p>模板硬编码中的字符串默认不会经过转义，如果需要转义，那需要手动进行转义。</p>
+<p>safe和autoescape的区别在于，safe只能转义一个模板变量，而autoescape可以转义多个变量；</p>
+<p>&nbsp;</p>
+<h4>html转义示例</h4>
+<p>html_escape.html</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>模板转义<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+html转义结果：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{{ content }}</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+使用safe过滤器关闭转义结果：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{{ content|safe }}</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+使用autoescape关闭转义结果：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% autoescape off %}
+    {{ content }}
+    {{ content }}
+{% endautoescape %}</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+模板硬编码中的字符串默认不会转义，即会经过html渲染：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{{ test|default:'</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>hello<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>' }}<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+手动对硬编码进行转义：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{{ test|default:'</span><span style="color: #ff0000;">&amp;lt;</span>h1<span style="color: #ff0000;">&amp;gt;</span>hello<span style="color: #ff0000;">&amp;lt;</span>/h1<span style="color: #ff0000;">&amp;gt;</span><span style="color: #000000;">' }}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>配套函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> /html_escape</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> html_escape(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">模板转义</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/html_escape.html</span><span style="color: #800000;">'</span>, {<span style="color: #800000;">'</span><span style="color: #800000;">content</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;hello&lt;/h1&gt;</span><span style="color: #800000;">'</span>})</pre>
+</div>
+<p>&nbsp;</p>
+<h2>验证码</h2>
+<p>在用户注册、登录页面，为了防止暴力请求，可以加入验证码功能，<br />如果验证码错误，则不需要继续处理，可以减轻业务服务器、数据库服务器的压力。</p>
+<p>自实现验证码</p>
+<p>安装pillow</p>
+<div class="cnblogs_code">
+<pre><code>pip install Pillow==3.4.1</pre>
+</div>
+<p>编写函数/视图</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('1ed120ac-8096-4cdc-b8b0-2161bfd70e6b')"><img id="code_img_closed_1ed120ac-8096-4cdc-b8b0-2161bfd70e6b" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_1ed120ac-8096-4cdc-b8b0-2161bfd70e6b" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('1ed120ac-8096-4cdc-b8b0-2161bfd70e6b',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_1ed120ac-8096-4cdc-b8b0-2161bfd70e6b" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> PIL <span style="color: #0000ff;">import</span><span style="color: #000000;"> Image, ImageDraw, ImageFont
+</span><span style="color: #0000ff;">from</span> django.utils.six <span style="color: #0000ff;">import</span><span style="color: #000000;"> BytesIO
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> verify_code(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 引入随机函数模块</span>
+    <span style="color: #0000ff;">import</span><span style="color: #000000;"> random
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义变量，用于画面的背景色、宽、高</span>
+    bgcolor = (random.randrange(20, 100<span style="color: #000000;">), random.randrange(
+        </span>20, 100), 255<span style="color: #000000;">)
+    width </span>= 100<span style="color: #000000;">
+    height </span>= 25
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 创建画面对象</span>
+    im = Image.new(<span style="color: #800000;">'</span><span style="color: #800000;">RGB</span><span style="color: #800000;">'</span><span style="color: #000000;">, (width, height), bgcolor)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建画笔对象</span>
+    draw =<span style="color: #000000;"> ImageDraw.Draw(im)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 调用画笔的point()函数绘制噪点</span>
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(0, 100<span style="color: #000000;">):
+        xy </span>=<span style="color: #000000;"> (random.randrange(0, width), random.randrange(0, height))
+        fill </span>= (random.randrange(0, 255), 255, random.randrange(0, 255<span style="color: #000000;">))
+        draw.point(xy, fill</span>=<span style="color: #000000;">fill)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义验证码的备选值</span>
+    str1 = <span style="color: #800000;">'</span><span style="color: #800000;">ABCD123EFGHIJK456LMNOPQRS789TUVWXYZ0</span><span style="color: #800000;">'</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 随机选取4个值作为验证码</span>
+    rand_str = <span style="color: #800000;">''</span>
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(0, 4<span style="color: #000000;">):
+        rand_str </span>+=<span style="color: #000000;"> str1[random.randrange(0, len(str1))]
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 构造字体对象，ubuntu的字体路径为&ldquo;/usr/share/fonts/truetype/freefont&rdquo;</span>
+    font = ImageFont.truetype(<span style="color: #800000;">'</span><span style="color: #800000;">FreeMono.ttf</span><span style="color: #800000;">'</span>, 23<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 构造字体颜色</span>
+    fontcolor = (255, random.randrange(0, 255), random.randrange(0, 255<span style="color: #000000;">))
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 绘制4个字</span>
+    draw.text((5, 2), rand_str[0], font=font, fill=<span style="color: #000000;">fontcolor)
+    draw.text((</span>25, 2), rand_str[1], font=font, fill=<span style="color: #000000;">fontcolor)
+    draw.text((</span>50, 2), rand_str[2], font=font, fill=<span style="color: #000000;">fontcolor)
+    draw.text((</span>75, 2), rand_str[3], font=font, fill=<span style="color: #000000;">fontcolor)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 释放画笔</span>
+    <span style="color: #0000ff;">del</span><span style="color: #000000;"> draw
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 存入session，用于做进一步验证</span>
+    request.session[<span style="color: #800000;">'</span><span style="color: #800000;">verifycode</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> rand_str
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 内存文件操作</span>
+    buf =<span style="color: #000000;"> BytesIO()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将图片保存在内存中，文件类型为png</span>
+    im.save(buf, <span style="color: #800000;">'</span><span style="color: #800000;">png</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将内存中的图片数据返回给客户端，MIME类型为图片png</span>
+    <span style="color: #0000ff;">return</span> HttpResponse(buf.getvalue(), <span style="color: #800000;">'</span><span style="color: #800000;">image/png</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<span class="cnblogs_code_collapse">自实现验证码函数</span></div>
+<p>查看验证码</p>
+<div class="cnblogs_code">
+<pre><code>url(r<span style="color: #800000;">'</span><span style="color: #800000;">^verify_code/$</span><span style="color: #800000;">'</span>, views.verify_code),</pre>
+</div>
+<p>在网页中使用验证码</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('f0fa127b-147e-4488-8052-b11b9b169b6b')"><img id="code_img_closed_f0fa127b-147e-4488-8052-b11b9b169b6b" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_f0fa127b-147e-4488-8052-b11b9b169b6b" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('f0fa127b-147e-4488-8052-b11b9b169b6b',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_f0fa127b-147e-4488-8052-b11b9b169b6b" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>Login<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">action</span><span style="color: #0000ff;">="/login_check/"</span><span style="color: #ff0000;"> method</span><span style="color: #0000ff;">="post"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% csrf_token %}
+    用户:</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="{{ usernam }}"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span><span style="color: #000000;">
+    密码:</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="checkbox"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="remember"</span><span style="color: #0000ff;">&gt;</span>记住用户名<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="/verify_code"</span><span style="color: #0000ff;">&gt;</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="vcode"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="登录"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">html中使用验证码</span></div>
+<p>登录校验验证码函数</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('4cde0e7a-948f-435c-abe0-7aa5d94e9eed')"><img id="code_img_closed_4cde0e7a-948f-435c-abe0-7aa5d94e9eed" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_4cde0e7a-948f-435c-abe0-7aa5d94e9eed" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('4cde0e7a-948f-435c-abe0-7aa5d94e9eed',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_4cde0e7a-948f-435c-abe0-7aa5d94e9eed" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> login_check(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1.获取用户名和密码</span>
+    username = request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">username</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    password </span>= request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">password</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    remember </span>= request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">remember</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(username, password)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取用户输入的验证码</span>
+    vcode1 = request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">vcode</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取session中保存的验证码</span>
+    vcode2 = request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">verifycode</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 进行验证码校验</span>
+    <span style="color: #0000ff;">if</span> vcode1 !=<span style="color: #000000;"> vcode2:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 验证码错误</span>
+        <span style="color: #0000ff;">return</span> redirect(<span style="color: #800000;">'</span><span style="color: #800000;">/login</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.进行校验</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 3.返回应答</span>
+    <span style="color: #0000ff;">if</span> username == <span style="color: #800000;">"</span><span style="color: #800000;">yifchan</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">and</span> password == <span style="color: #800000;">"</span><span style="color: #800000;">yifchan</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> response = redirect("/index")</span>
+        response = redirect(<span style="color: #800000;">"</span><span style="color: #800000;">/change_pwd</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判断是否需要记住用户名</span>
+        <span style="color: #0000ff;">if</span> remember == <span style="color: #800000;">'</span><span style="color: #800000;">on</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置cookie username-过期时间为1周</span>
+            response.set_cookie(<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>, username, max_age=7 * 24 * 3600<span style="color: #000000;">)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 记住用户登录状态</span>
+            <span style="color: #008000;">#</span><span style="color: #008000;"> 只有session中有islogin，就认为用户已经登录</span>
+            request.session[<span style="color: #800000;">'</span><span style="color: #800000;">islogin</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> True
+            request.session[</span><span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> username
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> response
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">"</span><span style="color: #800000;">账号或密码错误</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<span class="cnblogs_code_collapse">验证码校验函数</span></div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>url反向解析</h2>
+<p>当某一个url配置的地址发生变化时，页面上使用反向解析生成地址的位置不需要发生变化。<br />根据url 正则表达式的配置动态的生成url。</p>
+<p><br />在项目urls中包含具体应用的urls文件时指定namespace;</p>
+<div class="cnblogs_code">
+<pre><code>urlpatterns =<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^admin/</span><span style="color: #800000;">'</span><span style="color: #000000;">, admin.site.urls),
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^</span><span style="color: #800000;">'</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">booktest.urls</span><span style="color: #800000;">'</span>, namespace=<span style="color: #800000;">'</span><span style="color: #800000;">booktest</span><span style="color: #800000;">'</span><span style="color: #000000;">)),
+]</span></pre>
+</div>
+<p>在应用的urls中配置是指定name;</p>
+<div class="cnblogs_code">
+<pre><code>urlpatterns =<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^index/$</span><span style="color: #800000;">'</span>, views.index, name=<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^url_reverse/$</span><span style="color: #800000;">'</span>, views.url_reverse),  <span style="color: #008000;">#
+</span>    url(r<span style="color: #800000;">'</span><span style="color: #800000;">^show_args/(\d+)/(\d+)$</span><span style="color: #800000;">'</span>, views.show_args, name=<span style="color: #800000;">'</span><span style="color: #800000;">show_args</span><span style="color: #800000;">'</span>),  <span style="color: #008000;">#</span><span style="color: #008000;"> 捕获位置参数</span>
+    url(r<span style="color: #800000;">'</span><span style="color: #800000;">^show_kwargs/(?P&lt;c&gt;\d+)/(?P&lt;d&gt;\d+)$</span><span style="color: #800000;">'</span>, views.show_kwargs, name=<span style="color: #800000;">'</span><span style="color: #800000;">show_kwargs</span><span style="color: #800000;">'</span>),  <span style="color: #008000;">#</span><span style="color: #008000;"> 捕获关键字参数</span>
+]</pre>
+</div>
+<p>在模板文件中使用时，格式如下:</p>
+<div class="cnblogs_code">
+<pre><code>{% url <span style="color: #800000;">'</span><span style="color: #800000;">namespace名字：name</span><span style="color: #800000;">'</span> %} 例如{% url <span style="color: #800000;">'</span><span style="color: #800000;">booktest:fan2</span><span style="color: #800000;">'</span> %}</pre>
+</div>
+<p>带位置参数：</p>
+<div class="cnblogs_code">
+<pre><code>{% url <span style="color: #800000;">'</span><span style="color: #800000;">namespace名字：name</span><span style="color: #800000;">'</span> 参数 %} 例如{% url <span style="color: #800000;">'</span><span style="color: #800000;">booktest:fan2</span><span style="color: #800000;">'</span> 1 %}</pre>
+</div>
+<p>带关键字参数：</p>
+<div class="cnblogs_code">
+<pre><code>{% url <span style="color: #800000;">'</span><span style="color: #800000;">namespace名字：name</span><span style="color: #800000;">'</span> 关键字参数 %} 例如{% url <span style="color: #800000;">'</span><span style="color: #800000;">booktest:fan2</span><span style="color: #800000;">'</span> id=1 %}</pre>
+</div>
+<p>在视图中/重定向的时候使用反向解析：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.core.urlresolvers <span style="color: #0000ff;">import</span> reverse</pre>
+</div>
+<p>无参数：</p>
+<div class="cnblogs_code">
+<pre><code>reverse(<span style="color: #800000;">'</span><span style="color: #800000;">namespace名字:name名字</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>如果有位置参数</p>
+<div class="cnblogs_code">
+<pre><code>reverse(<span style="color: #800000;">'</span><span style="color: #800000;">namespace名字:name名字</span><span style="color: #800000;">'</span>, args = 位置参数元组)</pre>
+</div>
+<p>如果有关键字参数</p>
+<div class="cnblogs_code">
+<pre><code>reverse(<span style="color: #800000;">'</span><span style="color: #800000;">namespace名字:name名字</span><span style="color: #800000;">'</span>, kwargs=字典)</pre>
+</div>
+<p>&nbsp;</p>
+<h4>url反向解析示例</h4>
+<p>项目下的url文件</p>
+<div class="cnblogs_code">
+<pre><code>urlpatterns =<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^admin/</span><span style="color: #800000;">'</span><span style="color: #000000;">, admin.site.urls),
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^</span><span style="color: #800000;">'</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">booktest.urls</span><span style="color: #800000;">'</span>, namespace=<span style="color: #800000;">'</span><span style="color: #800000;">booktest</span><span style="color: #800000;">'</span><span style="color: #000000;">)),
+]</span></pre>
+</div>
+<p>应用下的url文件</p>
+<div class="cnblogs_code">
+<pre><code>urlpatterns =<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^index/$</span><span style="color: #800000;">'</span>, views.index, name=<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^url_reverse/$</span><span style="color: #800000;">'</span>, views.url_reverse),  <span style="color: #008000;">#
+</span>    url(r<span style="color: #800000;">'</span><span style="color: #800000;">^show_args/(\d+)/(\d+)$</span><span style="color: #800000;">'</span>, views.show_args, name=<span style="color: #800000;">'</span><span style="color: #800000;">show_args</span><span style="color: #800000;">'</span>),  <span style="color: #008000;">#</span><span style="color: #008000;"> 捕获位置参数</span>
+    url(r<span style="color: #800000;">'</span><span style="color: #800000;">^show_kwargs/(?P&lt;c&gt;\d+)/(?P&lt;d&gt;\d+)$</span><span style="color: #800000;">'</span>, views.show_kwargs, name=<span style="color: #800000;">'</span><span style="color: #800000;">show_kwargs</span><span style="color: #800000;">'</span>),  <span style="color: #008000;">#</span><span style="color: #008000;"> 捕获关键字参数<br /></span></pre>
+<pre><code>　　 url(r'^test_reverse/$', views.test_reverse, name='test_reverse'),  # 视图使用反向解析</pre>
+<pre><code>]</pre>
+</div>
+<p><strong>模板中使用url反向解析</strong></p>
+<p>配套函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> url_reverse(request):
+    </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/url_reverse.html</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> show_args(request, a, b):
+    </span><span style="color: #0000ff;">return</span> HttpResponse(a+<span style="color: #800000;">'</span><span style="color: #800000;">:</span><span style="color: #800000;">'</span>+<span style="color: #000000;">b)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> show_kwargs(request, c, d):
+    </span><span style="color: #0000ff;">return</span> HttpResponse(c+<span style="color: #800000;">'</span><span style="color: #800000;">:</span><span style="color: #800000;">'</span>+d)</pre>
+</div>
+<p>url_reverse.html</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>url反向解析<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    index链接：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="/index"</span><span style="color: #0000ff;">&gt;</span>首页<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    url反向解析生成index链接：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{% url 'booktest:index' %}"</span><span style="color: #0000ff;">&gt;</span>首页<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+    位置参数 /show_args/1/2：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="/show_args/1/2"</span><span style="color: #0000ff;">&gt;</span>/show_args/1/2<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    动态生成/show_args/1/2：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{% url 'booktest:show_args' 1 2 %}"</span><span style="color: #0000ff;">&gt;</span>/show_args/1/2<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+    关键字参数 /show_kwargs/3/4：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="/show_kwargs/3/4"</span><span style="color: #0000ff;">&gt;</span>/show_args/3/4<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    动态生成/show_kwargs/3/4：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{% url 'booktest:show_kwargs' c=3 d=4 %}"</span><span style="color: #0000ff;">&gt;</span>/show_args/3/4<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>视图中使用反向解析</strong><br />反向解析函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.core.urlresolvers <span style="color: #0000ff;">import</span><span style="color: #000000;"> reverse
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> url: /test_reverse</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> test_reverse(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 重定向到 /index</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> return redirect('/index')</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> url = reverse('booktest:index')</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 重定向到位置参数 show_args/1/2</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> url = reverse('booktest:show_args', args=(1, 2))</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 重定向到关键字参数 show_kwargs/3/4</span>
+    url = reverse(<span style="color: #800000;">'</span><span style="color: #800000;">booktest:show_kwargs</span><span style="color: #800000;">'</span>, kwargs={<span style="color: #800000;">'</span><span style="color: #800000;">c</span><span style="color: #800000;">'</span>: 3, <span style="color: #800000;">'</span><span style="color: #800000;">d</span><span style="color: #800000;">'</span>: 4<span style="color: #000000;">})
+
+    </span><span style="color: #0000ff;">return</span> redirect(url)</pre>
+</div>
+<p>&nbsp;</p>
+<h2>csrf攻击</h2>
+<p>首先做一个登录页，让用户输入用户名和密码进行登录，登录成功之后跳转的修改密码页面。在修改密码页面输入新密码，点击确认按钮完成密码修改。<br />登录页需要一个模板文件login.html.修改密码页面也需要一个模板文件change_pwd.html.<br />显示登录页的视图login，验证登录的视图login_check，显示发帖页的视图change_pwd,处理修改密码的视图change_pwd_action.<br />加功能：<br />a)只有用户登录之后才可以进行修改密码操作。<br />登录装饰器函数。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> login_required(view_func):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">登录判断装饰器</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span> wrapper(request, *args, **<span style="color: #000000;">kwargs):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判断用户是否登录</span>
+        <span style="color: #0000ff;">if</span> request.session.has_key(<span style="color: #800000;">'</span><span style="color: #800000;">islogin</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 已经登录了，就返回到函数</span>
+            <span style="color: #0000ff;">return</span> view_func(request, *args, **<span style="color: #000000;">kwargs)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 未登录，返回到登录页面</span>
+            <span style="color: #0000ff;">return</span> redirect(<span style="color: #800000;">'</span><span style="color: #800000;">/login</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">return</span> wrapper</pre>
+</div>
+<p>&nbsp;</p>
+<p>案例流程图：</p>
+<p><img src="./images/Django之模板16.png" alt="" width="688" height="448" /></p>
+<p>&nbsp;</p>
+<p>django防止csrf的方式：</p>
+<ul>
+<li>1) 默认打开csrf中间件。</li>
+<li>2) 表单post提交数据时加上{% csrf_token %}标签。</li>
+</ul>
+<p>防御原理:</p>
+<ul>
+<li>1)渲染模板文件时在页面生成一个名字叫做csrfmiddlewaretoken的隐藏域。</li>
+<li>2)服务器交给浏览器保存一个名字为csrftoken的cookie信息。</li>
+<li>3)提交表单时，两个值都会发给服务器，服务器进行比对，如果一样，则csrf验证通过，否则失败。</li>
+</ul>
+<p>&nbsp;</p>
+<p><strong>登录案例代码</strong></p>
+<p>设计路由</p>
+<div class="cnblogs_code">
+<pre><code>url(r<span style="color: #800000;">'</span><span style="color: #800000;">^login/$</span><span style="color: #800000;">'</span>, views.login), <span style="color: #008000;">#</span><span style="color: #008000;"> 返回登录页面</span>
+url(r<span style="color: #800000;">'</span><span style="color: #800000;">^login_check/$</span><span style="color: #800000;">'</span>, views.login_check), <span style="color: #008000;">#</span><span style="color: #008000;"> 进行登录校验</span>
+url(r<span style="color: #800000;">'</span><span style="color: #800000;">^change_pwd/$</span><span style="color: #800000;">'</span>, views.change_pwd), <span style="color: #008000;">#</span><span style="color: #008000;"> 返回修改密码页面</span>
+url(r<span style="color: #800000;">'</span><span style="color: #800000;">^change_pwd_action/$</span><span style="color: #800000;">'</span>, views.change_pwd_action), <span style="color: #008000;">#</span><span style="color: #008000;"> 修改密码处理函数</span></pre>
+</div>
+<p>编写login.html页面</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('06dd4227-4956-4113-8f84-4093f5deb98a')"><img id="code_img_closed_06dd4227-4956-4113-8f84-4093f5deb98a" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_06dd4227-4956-4113-8f84-4093f5deb98a" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('06dd4227-4956-4113-8f84-4093f5deb98a',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_06dd4227-4956-4113-8f84-4093f5deb98a" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>Login<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">action</span><span style="color: #0000ff;">="/login_check/"</span><span style="color: #ff0000;"> method</span><span style="color: #0000ff;">="post"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">label </span><span style="color: #ff0000;">for</span><span style="color: #0000ff;">="username"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">用户:
+        </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="{{ usernam }}"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">label</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">label </span><span style="color: #ff0000;">for</span><span style="color: #0000ff;">="password"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">密码:
+        </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">label</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="checkbox"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="remember"</span><span style="color: #0000ff;">&gt;</span>记住用户名<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="登录"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">login.html</span></div>
+<p>编写login函数</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('bbcfe9f3-727f-456a-9eb4-788c4a2ed888')"><img id="code_img_closed_bbcfe9f3-727f-456a-9eb4-788c4a2ed888" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_bbcfe9f3-727f-456a-9eb4-788c4a2ed888" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('bbcfe9f3-727f-456a-9eb4-788c4a2ed888',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_bbcfe9f3-727f-456a-9eb4-788c4a2ed888" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> login(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">登录处理函数</span><span style="color: #800000;">"""</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 判断用户是否登录</span>
+    <span style="color: #0000ff;">if</span> request.session.has_key(<span style="color: #800000;">'</span><span style="color: #800000;">islogin</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> return redirect('/index')</span>
+        <span style="color: #0000ff;">return</span> redirect(<span style="color: #800000;">'</span><span style="color: #800000;">/change_pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取cookie username</span>
+        <span style="color: #0000ff;">if</span> <span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> request.COOKIES:
+            username </span>= request.COOKIES[<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            username </span>= <span style="color: #800000;">''</span>
+        <span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">"</span><span style="color: #800000;">booktest/login.html</span><span style="color: #800000;">"</span>, {<span style="color: #800000;">'</span><span style="color: #800000;">usernam</span><span style="color: #800000;">'</span>: username})</pre>
+</div>
+<span class="cnblogs_code_collapse">login函数</span></div>
+<p>编写</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('b0d5e801-533c-4bb0-809b-8b1973807dbf')"><img id="code_img_closed_b0d5e801-533c-4bb0-809b-8b1973807dbf" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_b0d5e801-533c-4bb0-809b-8b1973807dbf" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('b0d5e801-533c-4bb0-809b-8b1973807dbf',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_b0d5e801-533c-4bb0-809b-8b1973807dbf" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> login_check(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1.获取用户名和密码</span>
+    username = request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">username</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    password </span>= request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">password</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    remember </span>= request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">remember</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(username, password)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.进行校验</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 3.返回应答</span>
+    <span style="color: #0000ff;">if</span> username == <span style="color: #800000;">"</span><span style="color: #800000;">yifchan</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">and</span> password == <span style="color: #800000;">"</span><span style="color: #800000;">yifchan</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> response = redirect("/index")</span>
+        response = redirect(<span style="color: #800000;">"</span><span style="color: #800000;">/change_pwd</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判断是否需要记住用户名</span>
+        <span style="color: #0000ff;">if</span> remember == <span style="color: #800000;">'</span><span style="color: #800000;">on</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置cookie username-过期时间为1周</span>
+            response.set_cookie(<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>, username, max_age=7*24*3600<span style="color: #000000;">)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 记住用户登录状态</span>
+            <span style="color: #008000;">#</span><span style="color: #008000;"> 只有session中有islogin，就认为用户已经登录</span>
+            request.session[<span style="color: #800000;">'</span><span style="color: #800000;">islogin</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> True
+            request.session[</span><span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> username
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> response
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">"</span><span style="color: #800000;">账号或密码错误</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<span class="cnblogs_code_collapse">login_check函数</span></div>
+<p>编写change_pwd.html页面</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('e51cc3ef-db39-4a91-8b26-ba05644f3178')"><img id="code_img_closed_e51cc3ef-db39-4a91-8b26-ba05644f3178" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_e51cc3ef-db39-4a91-8b26-ba05644f3178" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('e51cc3ef-db39-4a91-8b26-ba05644f3178',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_e51cc3ef-db39-4a91-8b26-ba05644f3178" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>修改密码<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">action</span><span style="color: #0000ff;">="/change_pwd_action"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    新密码：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="pwd"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="确认修改"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">change_pwd.html</span></div>
+<p>编写登录判断装饰器</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('c18c1a21-8847-4e24-a594-eb31c2f8fbf6')"><img id="code_img_closed_c18c1a21-8847-4e24-a594-eb31c2f8fbf6" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_c18c1a21-8847-4e24-a594-eb31c2f8fbf6" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('c18c1a21-8847-4e24-a594-eb31c2f8fbf6',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_c18c1a21-8847-4e24-a594-eb31c2f8fbf6" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> login_required(view_func):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">登录判断装饰器</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span> wrapper(request, *args, **<span style="color: #000000;">kwargs):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判断用户是否登录</span>
+        <span style="color: #0000ff;">if</span> request.session.has_key(<span style="color: #800000;">'</span><span style="color: #800000;">islogin</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 已经登录了，就返回到函数</span>
+            <span style="color: #0000ff;">return</span> view_func(request, *args, **<span style="color: #000000;">kwargs)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 未登录，返回到登录页面</span>
+            <span style="color: #0000ff;">return</span> redirect(<span style="color: #800000;">'</span><span style="color: #800000;">/login</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">return</span> wrapper</pre>
+</div>
+<span class="cnblogs_code_collapse">登录判断装饰器</span></div>
+<p>定义change_pwd函数</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('bd1d5a78-c73c-425f-a908-95e37268a507')"><img id="code_img_closed_bd1d5a78-c73c-425f-a908-95e37268a507" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_bd1d5a78-c73c-425f-a908-95e37268a507" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('bd1d5a78-c73c-425f-a908-95e37268a507',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_bd1d5a78-c73c-425f-a908-95e37268a507" class="cnblogs_code_hide">
+<pre><code><span style="color: #000000;">@login_required
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> change_pwd(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">显示修改密码页面</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">booktest/change_pwd.html</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<span class="cnblogs_code_collapse">change_pwd函数</span></div>
+<p>定义change_pwd_action函数</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('5c8f53cb-e29c-4110-9215-ffe495bb81ad')"><img id="code_img_closed_5c8f53cb-e29c-4110-9215-ffe495bb81ad" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_5c8f53cb-e29c-4110-9215-ffe495bb81ad" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('5c8f53cb-e29c-4110-9215-ffe495bb81ad',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_5c8f53cb-e29c-4110-9215-ffe495bb81ad" class="cnblogs_code_hide">
+<pre><code><span style="color: #000000;">@login_required
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> change_pwd_action(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">模拟修改密码处理</span><span style="color: #800000;">"""</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 1.获取新密码</span>
+    pwd = request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">pwd</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> username = request.COOKIES['username']</span>
+    username = request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.实际开发的时候，修改对应的数据库中的数据</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 3.返回应答</span>
+    <span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">'</span><span style="color: #800000;">%s修改密码为：%s</span><span style="color: #800000;">'</span> % (username, pwd))</pre>
+</div>
+<span class="cnblogs_code_collapse">change_pwd_action函数</span></div>
+<p>&nbsp;</p>
+<p><strong>csrf伪造</strong><br />django默认开启csrf防护，并且只针对post提交；</p>
+<ul>
+<li>1.开启csrf防护，把注释的settings文件里面的csrf放开注释；</li>
+<li>2.在要提交表单的地方，添加{% csrf_token %}</li>
+
+</ul>
+<p>csrf防护示例代码</p>
+<p>login页面</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('7e0e39fc-c516-4b6a-8c14-cf177db780aa')"><img id="code_img_closed_7e0e39fc-c516-4b6a-8c14-cf177db780aa" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_7e0e39fc-c516-4b6a-8c14-cf177db780aa" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('7e0e39fc-c516-4b6a-8c14-cf177db780aa',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_7e0e39fc-c516-4b6a-8c14-cf177db780aa" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>Login<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">action</span><span style="color: #0000ff;">="/login_check/"</span><span style="color: #ff0000;"> method</span><span style="color: #0000ff;">="post"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% csrf_token %}
+    用户:</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="{{ usernam }}"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span><span style="color: #000000;">
+    密码:</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="checkbox"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="remember"</span><span style="color: #0000ff;">&gt;</span>记住用户名<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">br </span><span style="color: #0000ff;">/&gt;</span>
+
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="登录"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">login.html</span></div>
+<p>change_pwd页面</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('2b239a07-ed41-4749-9501-a688c867f5a2')"><img id="code_img_closed_2b239a07-ed41-4749-9501-a688c867f5a2" class="code_img_closed" src="./images/Django之模板1.png" alt="" /><img id="code_img_opened_2b239a07-ed41-4749-9501-a688c867f5a2" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('2b239a07-ed41-4749-9501-a688c867f5a2',event)" src="./images/Django之模板2.png" alt="" />
+<div id="cnblogs_code_open_2b239a07-ed41-4749-9501-a688c867f5a2" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="UTF-8"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>修改密码<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="viewport"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="width=device-width, initial-scale=1"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">action</span><span style="color: #0000ff;">="/change_pwd_action/"</span><span style="color: #ff0000;"> method</span><span style="color: #0000ff;">="post"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% csrf_token %}
+    新密码：</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="pwd"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="确认修改"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">change_pwd.html</span></div>
+<p>在模拟的时候，自制的第三方网站，可以拿到自己页面的csrftoken隐藏域的信息，然后放到自己的第三方网站代码去；<br />但在实际上，这样很难实现。</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

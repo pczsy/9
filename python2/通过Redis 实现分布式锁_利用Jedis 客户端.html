@@ -1,0 +1,190 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修通过Redis 实现分布式锁_利用Jedis 客户端' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>通过Redis 实现分布式锁_利用Jedis 客户端</center></div><div class='banquan'>原文出处:本文由博客园博主Uzhizhe提供。<br/>
+原文连接:https://www.cnblogs.com/liqingjiang/p/12059340.html</div><br>
+    <h3 id="前言">前言</h3>
+<p>分布式锁一般有三种实现方式：</p>
+<ol>
+<li>数据库乐观锁；2. 基于Redis的分布式锁；3. 基于ZooKeeper的分布式锁。</li>
+</ol>
+<p>本篇博客将介绍第二种方式，基于Redis实现分布式锁。</p>
+<p>虽然网上已经有各种介绍Redis分布式锁实现的博客，然而他们的实现却有着各种各样的问题，为了避免误人子弟，本篇博客将详细介绍如何正确地实现Redis分布式锁。</p>
+<h3 id="可靠性">可靠性</h3>
+<p>首先，为了确保分布式锁可用，我们至少要确保锁的实现同时满足以下四个条件：</p>
+<p><strong>互斥性：</strong>在任意时刻，只有一个客户端能持有锁。<br />
+<strong>不会发生死锁：</strong>即使有一个客户端在持有锁的期间崩溃而没有主动解锁，也能保证后续其他客户端能加锁。<br />
+<strong>具有容错性：</strong>只要大部分的Redis节点正常运行，客户端就可以加锁和解锁。<br />
+<strong>解铃还须系铃人：</strong>加锁和解锁必须是同一个客户端，客户端自己不能把别人加的锁给解了。</p>
+<h3 id="代码实现">代码实现</h3>
+<h4 id="一引入redis-依赖">一、引入redis 依赖</h4>
+<pre><code><code>&lt;dependency&gt;
+    &lt;groupId&gt;redis.clients&lt;/groupId&gt;
+    &lt;artifactId&gt;jedis&lt;/artifactId&gt;
+    &lt;version&gt;2.9.0&lt;/version&gt;
+&lt;/dependency&gt;
+
+备注：根据版本不同，jedis 的set 方法也有所不同</code></pre>
+<h4 id="二配置文件增加redis-配置">二、配置文件增加redis 配置</h4>
+<pre><code><code># redis.properties 配置文件：
+
+# region Redis jedis
+# redis配置开始
+
+# Redis数据库索引（默认为0）
+spring.redis.database=0
+
+# Redis服务器地址
+spring.redis.host=localhost
+
+# Redis服务器连接端口
+spring.redis.port=6379
+
+# Redis服务器连接密码（默认为空）
+spring.redis.password=redis123456
+
+# 连接池最大连接数（使用负值表示没有限制）
+spring.redis.jedis.pool.max-active=1024
+
+# 连接池最大阻塞等待时间（使用负值表示没有限制）
+spring.redis.jedis.pool.max-wait=10000
+
+# 连接池中的最大空闲连接
+spring.redis.jedis.pool.max-idle=100
+
+# 连接池中的最小空闲连接
+spring.redis.jedis.pool.min-idle=5
+
+# 连接超时时间（毫秒）
+spring.redis.timeout=10000
+
+# 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时
+spring.redis.block-when-exhausted=true
+
+# endregion</code></pre>
+<h4 id="三利用spring-把jedispool-加入bean-工厂">三、利用Spring 把JedisPool 加入Bean 工厂</h4>
+<pre><code><code>@Configuration
+@PropertySource(&quot;classpath:application.properties&quot;)
+@Slf4j
+public class RedisConfig {
+
+    @Value(&quot;${spring.redis.host}&quot;)
+    private String host;
+
+    @Value(&quot;${spring.redis.port}&quot;)
+    private int port;
+
+    @Value(&quot;${spring.redis.timeout}&quot;)
+    private int timeout;
+
+    @Value(&quot;${spring.redis.jedis.pool.max-idle}&quot;)
+    private int maxIdle;
+
+    @Value(&quot;${spring.redis.jedis.pool.max-wait}&quot;)
+    private long maxWaitMillis;
+
+    @Value(&quot;${spring.redis.password}&quot;)
+    private String password;
+
+    @Value(&quot;${spring.redis.block-when-exhausted}&quot;)
+    private boolean blockWhenExhausted;
+
+    @Bean
+    public JedisPool redisPoolFactory() throws Exception {
+        log.info(&quot;JedisPool注入开始！！&quot;);
+        log.info(&quot;redis地址：&quot; + host + &quot;:&quot; + port);
+        JedisPoolConfig jedisPoolConfig = new JedisPoolConfig();
+        jedisPoolConfig.setMaxIdle(maxIdle);
+        jedisPoolConfig.setMaxWaitMillis(maxWaitMillis);
+        // 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时, 默认true
+        jedisPoolConfig.setBlockWhenExhausted(blockWhenExhausted);
+        // 是否启用pool的jmx管理功能, 默认true
+        jedisPoolConfig.setJmxEnabled(true);
+        JedisPool jedisPool = new JedisPool(jedisPoolConfig, host, port, timeout, password);
+        log.info(&quot;JedisPool注入成功！！&quot;);
+        return jedisPool;
+    }
+}</code></pre>
+<h4 id="四封装redisservice-对外提供服务">四、封装RedisService 对外提供服务</h4>
+<pre><code><code>@Service
+@Slf4j
+public class RedisService {
+
+    //Redis 成功返回结果标识
+    private static final String LOCK_SUCCESS = &quot;OK&quot;;
+    //Reis 操作返回成功
+    private static final Long RELEASE_SUCCESS = 1L;
+    //Redis锁不存在时才设置成功
+    private static final String SET_IF_NOT_EXIST = &quot;NX&quot;;
+    //Redis锁超时时间单位
+    private static final String SET_WITH_EXPIRE_TIME = &quot;PX&quot;;
+
+    @Autowired
+    private JedisPool jedisPool;
+
+    /**
+     * 尝试获取分布式锁
+     *
+     * @param lockKey    锁
+     * @param requestId  请求唯一标识(可以通过uuid等方式获取唯一ID)
+     * @param expireTime 超期时间(毫秒)
+     * @return 是否获取成功
+     */
+    public boolean tryGetDistributedLock(String lockKey, String requestId, int expireTime) {
+
+        Jedis jedis = jedisPool.getResource();
+        
+        //Jedis 3.0.0 以前的版本
+        //String result = jedis.set(lockKey, requestId, SET_IF_NOT_EXIST, SET_WITH_EXPIRE_TIME, expireTime);
+        
+        //Jedis 3.0.0 及以后的版本
+        SetParams setParams = SetParams.setParams().nx().px(expireTime);
+        String result = jedis.set(lockKey, requestId, setParams);
+
+        return LOCK_SUCCESS.equals(result);
+    }
+
+    /**
+     * 释放分布式锁
+     *
+     * @param lockKey   锁
+     * @param requestId 请求唯一标识(加锁时用的唯一标识)
+     * @return 是否释放成功
+     */
+    public boolean releaseDistributedLock(String lockKey, String requestId) {
+
+        Jedis jedis = jedisPool.getResource();
+
+        String script = &quot;if redis.call(&#39;get&#39;, KEYS[1]) == ARGV[1] then return redis.call(&#39;del&#39;, KEYS[1]) else return 0 end&quot;;
+        Object result = jedis.eval(script, Collections.singletonList(lockKey), Collections.singletonList(requestId));
+
+        return RELEASE_SUCCESS.equals(result);
+    }
+}</code></pre>
+<h4 id="五简单解释">五、简单解释</h4>
+<pre><code><code>1. 利用redis 的set 命令的 5个参数保证操作的原子性
+
+2. 利用Lua 脚本保证在释放锁时的原子性
+
+3. 利用requestId 唯一标识保证不会释放别人的锁</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

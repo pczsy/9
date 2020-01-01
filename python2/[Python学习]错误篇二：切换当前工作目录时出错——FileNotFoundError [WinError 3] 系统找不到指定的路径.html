@@ -1,0 +1,218 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修[Python学习]错误篇二：切换当前工作目录时出错——FileNotFoundError [WinError 3] 系统找不到指定的路径' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>[Python学习]错误篇二：切换当前工作目录时出错——FileNotFoundError [WinError 3] 系统找不到指定的路径</center></div><div class='banquan'>原文出处:本文由博客园博主bigorangecc提供。<br/>
+原文连接:https://www.cnblogs.com/bigorangecc/p/11179863.html</div><br>
+    <p>REFERENCE:《Head First Python》</p>
+<p>ID:我的第二篇[Python学习]</p>
+<p>BIRTHDAY:2019.7.13</p>
+<p>EXPERIENCE_SHARING:解决切换当前工作目录时出现的错误&mdash;&mdash;FileNotFoundError</p>
+<p>&nbsp;</p>
+<p>1、错误类型</p>
+<p><span style="color: #ff6600;"><strong>FileNotFoundError: [WinError 3] 系统找不到指定的路径。: '../HeadFirstPython/chapter3'</strong></span></p>
+<p>在文件夹D:\0tempt，新建了文件夹&nbsp;HeadFirstPython,其包含子文件夹chapter3。</p>
+<p>试图更改 当前工作目录为包含数据文件的文件夹，却出错了&hellip;&hellip;</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; <span style="color: #0000ff;">import</span><span style="color: #000000;"> os   #从标准库导入"os"
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\Python37</span><span style="color: #800000;">'  #当前工作目录</span>
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">../HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)  #切换为包含数据文件的文件夹
+Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">&lt;pyshell#2&gt;</span><span style="color: #800000;">"</span>, line 1, <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">
+    os.chdir(</span><span style="color: #800000;">'</span><span style="color: #800000;">../HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+FileNotFoundError: [WinError </span>3] 系统找不到指定的路径。: <span style="color: #800000;">'</span><span style="color: #800000;">../HeadFirstPython/chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>先把书上的例子放出来：</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt;<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd () 
+</span><span style="color: #800000;">'</span><span style="color: #800000;"> /Users/barryp/Documents </span><span style="color: #800000;">'</span>
+&gt;&gt;&gt; os. chdir(<span style="color: #800000;">'</span><span style="color: #800000;">. . /HeadFirstPython/ chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os. getcwd ()
+</span><span style="color: #800000;">'</span><span style="color: #800000;"> /Users/barryp/HeadFirs tPython/ chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>对比一下，突然有新发现：</p>
+<pre><code>#当前工作目录</pre>
+<pre><code>我的&mdash;&mdash; 'D:\\Python37'  </pre>
+<pre><code>书上的&mdash;&mdash; ' /Users/barryp/Documents '</pre>
+<p>没错，斜杠符号的不同,'/ '和' \'，有不同吗？来试试看&mdash;&mdash;</p>
+<p>接下来的一串，是不断探索的结果：</p>
+<p>（1）把'/ ' 换成了&nbsp;' \'&mdash;&mdash;</p>
+<p>还是有错&hellip;&hellip;</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">..\HeadFirstPython\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">&lt;pyshell#5&gt;</span><span style="color: #800000;">"</span>, line 1, <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">
+    os.chdir(</span><span style="color: #800000;">'</span><span style="color: #800000;">..\HeadFirstPython\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+FileNotFoundError: [WinError </span>3] 系统找不到指定的路径。: <span style="color: #800000;">'</span><span style="color: #800000;">..\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>(2) 是路径不够完整？那写完整的试试&mdash;&mdash;</p>
+<p>还是有错&hellip;&hellip;错误类型改变了</p>
+<pre><code><span style="color: #ff6600; font-family: 黑体; font-size: 16px;"><strong>ValueError: chdir: embedded null character in path </strong></span><span style="color: #000000;"><strong>意思是:嵌入了无效字符</strong></span></pre>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">D:\0tempt\HeadFirstPython\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">&lt;pyshell#8&gt;</span><span style="color: #800000;">"</span>, line 1, <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">
+    os.chdir(</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\0tempt\HeadFirstPython\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+ValueError: chdir: embedded null character </span><span style="color: #0000ff;">in</span> path</pre>
+</div>
+<p>（3）再观察一下&mdash;&mdash;</p>
+<p>路径&nbsp;D:\0tempt\HeadFirstPython\chapter3，是在电脑文件夹搜索栏直接复制过来的，相比以下路径</p>
+<pre><code>&gt;&gt;&gt; os.getcwd()
+'D:\\Python37'  #当前工作目录</pre>
+<p>斜杠少了一个&hellip;&hellip;</p>
+<p>那试着都增加一个&mdash;&mdash;</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>Great! You make it~~</p>
+<p>切换当前工作目录操作完整的代码：</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; <span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\Python37</span><span style="color: #800000;">'</span>
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>（4）再来探究一下：</p>
+<p>1、书上的例子中，路径的写法 &mdash;&mdash;'/ '和' \'，有什么不同吗？</p>
+<p>2、路径的写法规则</p>
+<p>为什么在自己电脑磁盘的文件夹搜索栏里复制的文件路径是单斜杠</p>
+<pre><code>D:\0tempt\HeadFirstPython\chapter3</pre>
+<p>而代码中是双斜杠</p>
+<pre><code>'D:\\0tempt\\HeadFirstPython\\chapter3'<br /><br /></pre>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'<br /></span>&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">D://0tempt//HeadFirstPython//chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)  #换成'//'&mdash;&mdash;同样也没错
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span>
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">D:\0tempt\HeadFirstPython\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)     #换成'\'&mdash;&mdash;出错了&mdash;&mdash;这种写法错误
+Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">&lt;pyshell#13&gt;</span><span style="color: #800000;">"</span>, line 1, <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">
+    os.chdir(</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\0tempt\HeadFirstPython\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+ValueError: chdir: embedded null character </span><span style="color: #0000ff;">in</span><span style="color: #000000;"> path
+</span>&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">D:/0tempt/HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)      #换成'/'&mdash;&mdash;同样也没错
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<pre><code>'D:\\0tempt\\HeadFirstPython\\chapter3'</pre>
+<pre><code>'D://0tempt//HeadFirstPython//chapter3'</pre>
+<pre><code>'D:/0tempt/HeadFirstPython/chapter3'<br /><br /><span style="color: #ff6600;">三种路径的写法都OK</span></pre>
+<pre><code></pre>
+<p>【总结】</p>
+<p>书上的例子：</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt;import<span> os
+&gt;&gt;&gt;<span> os.getcwd () 
+' /Users/barryp/Documents '
+&gt;&gt;&gt; os. chdir('. . /HeadFirstPython/ chapter3'<span>)
+&gt;&gt;&gt;<span> os. getcwd ()
+' /Users/barryp/HeadFirstPython/ chapter3'</span></span></span></span></pre>
+</div>
+<pre><code>'. . /HeadFirstPython/ chapter3'<br />使用的是相对路径，在代码中会出错。原因是什么，学识尚浅，待解决，也请走过路过的大佬指教~</pre>
+<pre><code>代码修改时，使用的是绝对路径，运行无误。</pre>
+<pre><code>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;--<br />咳咳&hellip;&hellip;刚刚查资料时突然解决了这个问题&mdash;&mdash;<br /><strong>../ 表示的是表示上一级目录</strong>（也可以理解为 上一级文件夹，上行一个文件夹；<br />拿上面书上的例子来解释，就是文件夹HeadFirstPython/ chapter3往上一级，就到达目录文件夹/Users/barryp）</pre>
+<pre><code><strong>./ 表示的是当前目录<br /></strong><br /><br />来试验一下：</pre>
+<p>1、将文件夹&nbsp;HeadFirstPython（包含子文件夹chapter3，子文件夹里存放文件sketch.txt）放在Python安装目录 D:\Python37\0PRACTICES。</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; <span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\Python37</span><span style="color: #800000;">'</span>
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;"><span style="color: #ff6600;">./</span>0PRACTICES/HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\Python37\\0PRACTICES\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>&nbsp;因为 文件夹&nbsp;HeadFirstPython是放在Python默认的当前工作文件夹&nbsp;'D:\\Python37'中，</p>
+<p>故&nbsp;当前目录 即&nbsp;&nbsp;'D:\\Python37'，代码中用&ldquo;./&rdquo;，表示&ldquo;在当前目录&rdquo;。</p>
+<p>&gt;&gt;&gt; os.chdir('./0PRACTICES/HeadFirstPython/chapter3')</p>
+<p>&nbsp;</p>
+<p>2、将文件夹&nbsp;HeadFirstPython（包含子文件夹chapter3，子文件夹里存放文件sketch.txt）放在文件夹 D:\0tempt。</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; <span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\Python37</span><span style="color: #800000;">'</span>
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">../HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">&lt;pyshell#2&gt;</span><span style="color: #800000;">"</span>, line 1, <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">
+    os.chdir(</span><span style="color: #800000;">'</span><span style="color: #800000;">../HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+FileNotFoundError: [WinError </span>3] 系统找不到指定的路径。: <span style="color: #800000;">'</span><span style="color: #800000;">../HeadFirstPython/chapter3</span><span style="color: #800000;">'</span>
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">/0tempt/HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span>
+&gt;&gt;&gt; </pre>
+</div>
+<pre><code><br />在这个例子中，文件夹&nbsp;HeadFirstPython不是放在Python默认的当前工作文件夹&nbsp;'D:\\Python37'中，而是同根磁盘的D:\0tempt，<br /><br />故这时的当前目录不是'D:\\Python37'，而是&ldquo;D:&rdquo;，代码中未用&ldquo;./&rdquo;，直接省略根目录&ldquo;D:&rdquo;。</pre>
+<pre><code>&gt;&gt;&gt; os.chdir('/0tempt/HeadFirstPython/chapter3'<span>)</span></pre>
+<pre><code>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;<br />/0tempt/HeadFirstPython/chapter3<br />这种路径表示是正确的，因为这是 相对路径，文件夹0tempt和文件夹Python37 根目录都是D盘。所以省略了根目录D，也是对的。</pre>
+<pre><code><br />上面验证了，以下三种路径都ok<br />'D:\\0tempt\\HeadFirstPython\\chapter3'</pre>
+<pre><code>'D://0tempt//HeadFirstPython//chapter3'</pre>
+<pre><code>'D:/0tempt/HeadFirstPython/chapter3'<br /><br />三种路径的写法都OK<br /><br /></pre>
+<p><span style="color: #000000;">那省略一下根目录：（又是吃饱了折腾一下）</span>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span>
+
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">//0tempt//HeadFirstPython//chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">&lt;pyshell#5&gt;</span><span style="color: #800000;">"</span>, line 1, <span style="color: #0000ff;">in</span> &lt;module&gt;<span style="color: #000000;">
+    os.chdir(</span><span style="color: #800000;">'</span><span style="color: #800000;">//0tempt//HeadFirstPython//chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+FileNotFoundError: [WinError </span>53] 找不到网络路径。: <span style="color: #800000;">'</span><span style="color: #800000;">//0tempt//HeadFirstPython//chapter3</span><span style="color: #800000;">'</span>
+
+&gt;&gt;&gt; os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">/0tempt/HeadFirstPython/chapter3</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span>&gt;&gt;&gt;<span style="color: #000000;"> os.getcwd()
+</span><span style="color: #800000;">'</span><span style="color: #800000;">D:\\0tempt\\HeadFirstPython\\chapter3</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="color: #000000;">这里再补充一下<strong>绝对路径</strong>和<strong>相对路径</strong>的知识：</span></p>
+<p><span style="color: #000000;"><strong>绝对路径：</strong></span></p>
+<p>&nbsp;即从最大的根目录开始表示，一直到该文件名。</p>
+<p><span style="color: #000000;"><strong><strong>相对路径：</strong></strong></span></p>
+<p>即该文件自己相对于目标（另一个文件）位置。不论将这些文件放到哪里，只要他们的相对关系没有变，就不会出错。</p>
+<p>另外通常使用&ldquo;../&rdquo;来表示上一级目录（上行一个文件夹），&ldquo;../../&rdquo;表示上上级的目录（上行两个文件夹）（这里的&ldquo;上行&rdquo;，可以理解为向着根目录文件夹方向走），</p>
+<p>以此类推。 ./表示&ldquo;当前目录&rdquo;。</p>
+<p><em id="__mceDel"><span style="color: #000000;"><strong><strong>举例：</strong></strong></span></em></p>
+<p><span style="color: #000000;"><strong><strong>1、</strong></strong></span></p>
+<p>C盘<strong>A文件夹</strong> 下有两个&nbsp;<span style="text-decoration: underline;">文件X </span>和&nbsp;<span style="text-decoration: underline;">文件Y</span></p>
+<p>表示<span style="text-decoration: underline;">文件X</span>的位置(即路径),两种表示方法:</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; C:\A\X</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; 这就是<strong> 绝对路径</strong>,指明<span style="text-decoration: underline;">X文件</span>在C盘<strong>A文件夹</strong>下,从最大的根目录C盘开始表示出来</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; X</p>
+<div class="content-list-text" style="display: inline !important;">
+<p style="display: inline !important;">&nbsp; &nbsp; &nbsp; &nbsp; 这就是 <strong>相对路径</strong>,因为<span style="text-decoration: underline;">X文件</span>和<span style="text-decoration: underline;">Y文件</span>都在C:\A下,所以它们的路径前面"C:\A"都是一样,就不用表示出来.</p>
+</div>
+<p class="exp-content-list list-item-2">&nbsp;</p>
+<div class="list-icon">2、</div>
+<p class="exp-content-list list-item-2">C盘<strong>A文件夹</strong> 有个<span style="text-decoration: underline;">X文件</span>,还有一个<strong>B文件夹</strong>,而<strong>B文件夹</strong>下有个<span style="text-decoration: underline;">Y文件</span>.</p>
+<p>则<span style="text-decoration: underline;">文件X</span>和<span style="text-decoration: underline;">文件Y</span><strong>&nbsp;绝对路径</strong> 分别为:</p>
+<p>C:\A\X</p>
+<p>C:\A\B\Y</p>
+<p>如果让<span style="text-decoration: underline;">X文件</span>来表示<span style="text-decoration: underline;">Y文件</span>的路径</p>
+<p><strong>绝对路径</strong>: C:\A\B\Y</p>
+<p><strong>相对路径</strong>: B\Y (因为<span style="text-decoration: underline;">X文件和Y文件</span>前面的C:\A这段路径相同就不用写出)。</p>
+<p>&nbsp;</p>
+<p>（折腾完了）</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

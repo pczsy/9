@@ -1,0 +1,101 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修侠梦说pinpoint--界面上的图标之AgetnInfo数据研究' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>侠梦说pinpoint--界面上的图标之AgetnInfo数据研究</center></div><div class='banquan'>原文出处:本文由博客园博主独行侠梦提供。<br/>
+原文连接:https://www.cnblogs.com/hyq0823/p/12030984.html</div><br>
+    <h5 id="前言">前言</h5>
+<ul>
+<li><p>在启动一个挂载pinpoint的springboot项目的时候，界面上显示成了jboss的图标，所以今天研究了一下这个数据是怎么来的。</p></li>
+<li><p>我们知道不同图标和服务类型有关，服务不同，图标就不同，这在代码里面使用一个ServiceType属性来描述。</p></li>
+</ul>
+<p><img src="./images/侠梦说pinpoint--界面上的图标之AgetnInfo数据研究0.png" alt="file" /></p>
+<h5 id="从agent启动开始">从agent启动开始</h5>
+<ul>
+<li>我们都知道pinpoint采用的是字节码注入来实现APM监控，由Agent采集数据上报给Collector，所以我们的研究入口是agent下面的日志，启动过程中输出如下：</li>
+</ul>
+<pre><code><code> Sending AgentInfo TAgentInfo....
+ hostname:izwz98jc3nwxdjxg1yfd1hz, ip:172.xx.xx, ports:, 
+ agentId:testboot_agentId, applicationName:testboot_45, 
+ serviceType:1210, pid:28277, agentVersion:1.8.0,
+
+ AgentInfo sent.</code></pre>
+<ul>
+<li>这里会显示我们配置的服务名，agentId、ip等参数。</li>
+<li>agent信息由AgentInfoSendTask这个类定时生成发送。</li>
+<li>这几个数据在代码里面都是通过注解来获取的：</li>
+</ul>
+<pre><code><code>@AgentId String agentId, 
+@ApplicationName String applicationName, 
+@Container boolean isContainer, 
+@AgentStartTime long agentStartTime, 
+@ApplicationServerType ServiceType serverType</code></pre>
+<ul>
+<li>那么由此可知，找到注入@ApplicationServerType的地方就是真相！</li>
+</ul>
+<p><img src="./images/侠梦说pinpoint--界面上的图标之AgetnInfo数据研究1.png" alt="file" /></p>
+<ul>
+<li>研究出依赖关系如下：</li>
+</ul>
+<p><img src="./images/侠梦说pinpoint--界面上的图标之AgetnInfo数据研究2.png" alt="file" /></p>
+<ul>
+<li>这里我们只关注服务类型，读代码可知，启动时会读取agent配置，所以如果你想显示的指定服务类型，那么在agent的pinpoint.config中配置这个属性即可。</li>
+</ul>
+<pre><code><code>   // service type
+        this.applicationServerType = readString(&quot;profiler.applicationservertype&quot;, null);</code></pre>
+<ul>
+<li>带着疑问继续，那么我们一般也没有配置，它是如何识别不同的类型的呢？</li>
+</ul>
+<h5 id="插件声明类型">插件声明类型</h5>
+<ul>
+<li>上一篇文章有说过ServiceType，不同的插件需要声明一个code码来唯一标识。</li>
+<li>如果我们没有显式配置profiler.applicationservertype，pinpoint会怎么处理呢？</li>
+<li>继续来看日志</li>
+</ul>
+<p><img src="./images/侠梦说pinpoint--界面上的图标之AgetnInfo数据研究3.png" alt="file" /></p>
+<ul>
+<li><p>没错，就是UNDEFINED。没定义肯定取不到值呀。</p></li>
+<li><p>此时，pinpoint会获取所有已经注册的插件，调用他们的detect方法。如果校验通过，则直接返回插件中配置的serviceType。</p></li>
+</ul>
+<pre><code><code>boolean detect(ConditionProvider provider);</code></pre>
+<ul>
+<li>如果都找不到就会返回：STAND_ALONE</li>
+</ul>
+<pre><code><code>ServiceType STAND_ALONE = of(1000, &quot;STAND_ALONE&quot;, RECORD_STATISTICS);</code></pre>
+<p><img src="./images/侠梦说pinpoint--界面上的图标之AgetnInfo数据研究4.png" alt="file" /></p>
+<ul>
+<li>那为文章开头的那个图标不是springboot呢？</li>
+<li><p>借用下群友图片，我们知道如果不配置，默认会去检测MAIN-CLASS的值有没有和pinpoint.config中的配置对应上。<br />
+<img src="./images/侠梦说pinpoint--界面上的图标之AgetnInfo数据研究5.png" alt="file" /></p></li>
+<li><p>一旦检测到，就返回对应插件的serverType，也就是SpringBoot。</p></li>
+</ul>
+<p><img src="./images/侠梦说pinpoint--界面上的图标之AgetnInfo数据研究6.png" alt="file" /></p>
+<ul>
+<li>我这里没有显示boot的原因是，我使用maven原生的方式打包，将依赖包lib分离开了，启动的main-class不是上述配置哪些。</li>
+<li>至于为什么显示成了jboss，是由于我配置了</li>
+</ul>
+<pre><code><code>profiler.jboss.traceEjb=false
+profiler.applicationservertype=JBOSS</code></pre>
+<blockquote>
+<p>欢迎来公众号【侠梦的开发笔记】 一起交流进步</p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

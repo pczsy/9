@@ -1,0 +1,86 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修[UWP]使用CompositionGeometricClip裁剪复杂图形及进行动画' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>[UWP]使用CompositionGeometricClip裁剪复杂图形及进行动画</center></div><div class='banquan'>原文出处:本文由博客园博主dino.c提供。<br/>
+原文连接:https://www.cnblogs.com/dino623/p/using_compositiongeometricclip_to_cut_and_animate_complex_graphics.html</div><br>
+    <h2 id="uwp中的其它裁剪方案">1. UWP中的其它裁剪方案</h2>
+<p>之前在 <a href="https://www.cnblogs.com/dino623/p/UWP_UIElement_Clip.html">这篇文章</a> 里，我介绍了如何使用<a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.xaml.uielement.clip">UIElement.Clip</a>裁剪UIElement的内容，使用代码如下：</p>
+<pre><code><code>&lt;Canvas&gt;
+    &lt;Image Source=&quot;Images/Water_lilies.jpg&quot; Width=&quot;200&quot; Height=&quot;150&quot;&gt;
+        &lt;Image.Clip&gt;
+            &lt;RectangleGeometry Rect=&quot;100 75 50 50&quot;/&gt;
+        &lt;/Image.Clip&gt;
+    &lt;/Image&gt;
+&lt;/Canvas&gt;</code></pre>
+<p>在 <a href="https://www.cnblogs.com/dino623/p/using_win2d_and_composition_API_to_implement_the_glow_effect_of_text_and_make_animation.html">另一篇文章里</a> 我介绍了如何使用 <a href="http://microsoft.github.io/Win2D/html/T_Microsoft_Graphics_Canvas_CanvasActiveLayer.htm">CanvasActiveLayer</a> 裁剪Win2D内容，使用代码如下：</p>
+<pre class="cs"><code>var fullSizeGeometry = CanvasGeometry.CreateRectangle(session, 0, 0, width, height);
+var textGeometry = CanvasGeometry.CreateText(textLayout);
+var finalGeometry = fullSizeGeometry.CombineWith(textGeometry, Matrix3x2.Identity, CanvasGeometryCombine.Exclude);
+
+using (var layer = session.CreateLayer(1, finalGeometry))
+{
+    //DrawSth
+}</code></pre>
+<p>这两种方式都有他们的局限：CanvasActiveLayer虽然很灵活，但只能裁剪Win2D的内容，而且代码量不少；而UIElement.Clip虽然使用简单，但只能裁剪矩形区域。而介于他们之间的是使用<code>Visual.Clip</code>的裁剪方案。</p>
+<h2 id="visual.clip和insetclipcompositiongeometricclip">2. Visual.Clip和InsetClip、CompositionGeometricClip</h2>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.visual.clip#Windows_UI_Composition_Visual_Clip">Visual.Clip</a>允许用户使用<a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositionclip">CompositionClip</a>。刚开始继承CompositionClip类的只有 <a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.insetclip">InsetClip</a>，它只能裁剪矩形区域，不能否定某些情况下它还是挺有用的，何况还能进行动画，但比<code>UIElement.Clip</code>还是好不了多少。使用方法如下：</p>
+<pre class="cs"><code>var compositor = Window.Current.Compositor;
+var visual = ElementCompositionPreview.GetElementVisual(uElement);
+var clip = compositor.CreateInsetClip(leftInset, topInset, rightInset, bottomInset);
+visual.Clip = clip;</code></pre>
+<p>到了1809，<code>Compositor</code>提供了一个新的函数<a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositor.creategeometricclip">CreateGeometricClip</a>，它可以以<a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositiongeometry">CompositionGeometry</a> 为参数创建一个<a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositiongeometricclip">CompositionGeometricClip</a>，这样就可以根据<code>CompositionGeometry</code>裁剪复杂的区域。<code>Compositor</code>提供了CreateEllipseGeometry、CreateLineGeometry、CreatePathGeometry、CreatePathGeometry(CompositionPath)、CreateRectangleGeometry、CreateRoundedRectangleGeometry等一些列创建Geometry的函数，具体使用方法如下：</p>
+<pre class="cs"><code>var compositor = Window.Current.Compositor;
+var visual = ElementCompositionPreview.GetElementVisual(uElement);
+
+var geometry  = compositor.CreateEllipseGeometry();
+geometry.Center = new System.Numerics.Vector2(192, 525);
+geometry.Radius = Vector2.Zero;
+var clip = compositor.CreateGeometricClip(geometry);
+
+visual.Clip = clip;</code></pre>
+<p>上面的代码使用<code>CreateEllipseGeometry</code>创建了一个圆形的Geometry，设置好这个Geometry的中心点和半径，然后用这个圆形裁剪Visual。</p>
+<h2 id="创建动画">3. 创建动画</h2>
+<p>CompositionApi的一个最大的好处是灵活的动画，例如下面这个用EllipseGeometry制作的动画：</p>
+<p><img src="./images/[UWP]使用CompositionGeometricClip裁剪复杂图形及进行动画0.png" /></p>
+<p>它只是很简单地对<code>Radius</code>进行KeyFrame动画，代码如下：</p>
+<pre class="cs"><code>var compositor = Window.Current.Compositor;
+var animation = compositor.CreateVector2KeyFrameAnimation();
+
+animation.DelayTime = delayTime;
+animation.Duration = TimeSpan.FromSeconds(0.7);
+animation.InsertKeyFrame(1, new Vector2(600, 600));
+ellipseGeometry.StartAnimation(nameof(CompositionEllipseGeometry.Radius), animation);</code></pre>
+<p>有趣的是Radius居然是个Vector2属性，所以<code>CompositionEllipseGeometry</code>其实可以创建为椭圆形。</p>
+<h2 id="结语">4. 结语</h2>
+<p>有了CompositionGeometricClip可以在UWP裁剪复杂区域，但只能在1809以后使用。只是裁剪的话，目前看起来没比WPF有多少优势，但加上Composition动画可玩性就强太多了。使用WPF的时候我几乎不敢使用动画，总是需要照顾低端配置，又担心WPF的性能。10年过去了，UWP的性能以及现代化的电脑配置终于可以让我放飞自我了。</p>
+<h2 id="参考">5. 参考</h2>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositor">Compositor Class (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.visual.clip#Windows_UI_Composition_Visual_Clip">Visual.Clip Property (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositionclip">CompositionClip Class (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositor.createinsetclip#Windows_UI_Composition_Compositor_CreateInsetClip">Compositor.CreateInsetClip Method (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.insetclip">InsetClip Class (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositor.creategeometricclip#Windows_UI_Composition_Compositor_CreateGeometricClip">Compositor.CreateGeometricClip Method (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositiongeometry">CompositionGeometry Class (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositiongeometricclip">CompositionGeometricClip Class (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+<p><a href="https://docs.microsoft.com/en-us/uwp/api/windows.ui.composition.compositionellipsegeometry">CompositionEllipseGeometry Class (Windows.UI.Composition) - Windows UWP applications _ Microsoft Docs</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

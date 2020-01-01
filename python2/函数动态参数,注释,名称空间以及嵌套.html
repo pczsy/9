@@ -1,0 +1,248 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修函数动态参数,注释,名称空间以及嵌套' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>函数动态参数,注释,名称空间以及嵌套</center></div><div class='banquan'>原文出处:本文由博客园博主Bugbiss提供。<br/>
+原文连接:https://www.cnblogs.com/tutougold/p/11203572.html</div><br>
+    <h1 id="函数的动态参数注释名称空间及嵌套">函数的动态参数,注释,名称空间及嵌套</h1>
+<h2 id="函数的动态参数">1.函数的动态参数</h2>
+<pre><code><code>*args,**kwargs(能够接受动态的位置参数和动态的关键字参数)
+定义阶段  (*args,**kwargs)聚合
+        *args  --以元组(tuple)形式输出
+        **kwargs --以字典(dict)形式输出
+使用阶段  (*args,*kwargs) 打散
+        *args  --以源数据类型输出
+        *kwargs --打散得到的是字典的键
+优先级:位置参数 &gt; 动态位置参数  &gt; 默认参数 &gt; 动态关键字参数
+
+def func(a,b,*args):
+    print(a,b,args)
+func(1,2,3,4,5,6,7,8)
+# 1 2(3,4,5,6,7,8)
+
+# *args  是万能(接受任意多个)的位置参数,*在函数定义的时候叫做集合
+
+def func(a,b,*args):
+    print(a,b,*args)    #  * --打散
+func(1,2,3,4,5,6,7,8)
+# 1 2 3 4 5 6 7 8
+
+def func(*args,a=1,b=2):
+    print(a,b,args)       #元组(接受的位置参数)
+func(1,2,3,4,5,6)
+# 1 2 (1,2,3,4,5,6)
+
+def func(a,b,**kwargs):
+    print(a,b,kwargs)     #字典(接受的关键字的参数)
+func(1,2,c=1,d=2)
+# 1 2 {&#39;c&#39;:1,&#39;d&#39;:2}
+
+def func(a,b,*args,c=1,d=2):
+    print(a,b,*args,c,d)
+func(1,2,3,4)
+# 1 2 3 4 1 2
+
+def func(a,b,*args,c=1,d=2,**kwargs):
+    print(a,b,*args,c,d,kwargs)
+func(1,2,3,4,c=8,d=9,e=&#39;alex&#39;,f=&#39;wusir&#39;)
+# 1 2 3 4 8 9 {&#39;e&#39;:&#39;alex&#39;,&#39;f&#39;:&#39;wusir&#39;}
+
+#万能传参:动态位置参数,动态关键字参数
+    
+def func(*args,**kwargs):
+    print(args,kwargs)
+func(1,2,3,4,5,6,a=1,b=2,c=3)
+# (1,2,3,4,5,6) {&#39;a&#39;:1,&#39;b&#39;:2,&#39;c&#39;:3}</code></pre>
+<h2 id="函数的注释">2.函数的注释</h2>
+<pre><code><code>每次写函数的时候需要写注释
+函数名.__doc__
+
+
+def func(a,b):
+    &#39;&#39;&#39;
+    逻辑判断
+    :param a:str
+    :param b:int
+    :return:bool
+    &#39;&#39;&#39;
+    print(a,b)
+ 
+def func1(user,password):
+    &#39;&#39;&#39;
+    密码加密
+    :param  user:用户名 str
+    :param  password:密码 str
+    :return  加密的密码 MD5
+    &#39;&#39;&#39;
+    print(user,password)
+    
+print(func.__doc__)
+print(func1.__doc__)
+print(func.__name__)</code></pre>
+<h2 id="名称空间">3.名称空间</h2>
+<p>内置空间:python解释器自带的</p>
+<p>全局空间:当前文件(.py)</p>
+<p>局部空间:函数体开辟的空间</p>
+<p>加载顺序:内置空间 &gt; 全局空间 &gt; 局部空间</p>
+<p>取值顺序:局部空间 &gt; 全局空间 &gt; 内置空间(找不到就报错)</p>
+<p>作用域:</p>
+<p>全局作用域:内置空间 + 全局空间</p>
+<p>局部作用域:局部空间</p>
+<h2 id="函数的嵌套">4.函数的嵌套</h2>
+<pre><code><code>def func():
+    print(1)
+    def f1():
+        print(2)
+    return f1()             # 1
+func()                      # 2
+
+#不管在什么位置,只要是函数名 + (),就是在调用此函数
+#函数调用执行后,函数体中开辟的空间就自动销毁了
+
+def func():
+    a = 1
+    def foo():
+        b = 2
+        print(b)
+        print(a)
+        def f1():                   # 2
+            print(b)                # 1
+        return f1()                 # 2
+    return foo()                    # None
+print(func())            
+
+# 函数互相引用
+
+def func():
+    a = 1
+    foo()
+    print(a)
+def foo():
+    b = 2
+    print(a)                       # 2
+func()                             # 1
+
+
+
+def a():
+    a1 = 1
+    c()
+    print(c)
+def b():
+    b1 = 2
+    print(b1)
+def c():
+    c1 = 3
+    print(a)
+def run():
+    a()
+run()
+#&lt;function a at 0x0000021994595EA0&gt;   --内存地址
+#&lt;function c at 0x0000021994595F28&gt;
+
+def func():
+    a = 1
+    def b():
+        print(a)
+def foo():
+    b = 1
+    def z():
+        print(func)
+        print(b)
+    ret = z()
+    func()
+    return ret
+def run():
+    foo()
+print(run())   
+#&lt;function func at 0x0000024A1FDF7EA0&gt;
+#1
+#None
+
+def func(a):
+    foo(a)
+def func(e):
+    b(e)
+def b(c):
+    print(c)
+    return 10              # 5
+print(func(5))             # None
+</code></pre>
+<h2 id="global-及-nonlocal">5.global 及 nonlocal</h2>
+<pre><code><code>global : 修改全局空间的变量对应的值
+nonlocal: 在外层的函数中,修改局部空间的变量值,完全不涉及全局变量
+   只修改离它最近的一层,最近的一层没有变量继续向上找,直到找到最外层函数
+
+a = 10
+def func():
+    global a         # 声明修改全局变量的值
+    a += 1
+    print(a)
+func()                   # 11
+print(a)                 # 11
+
+a = 10
+def f1():
+    a = 10
+    def f2():
+        a = 15
+        def f3():
+            global a
+            a += 1
+            print(a)
+        print(a)
+        f3()
+    print(a)            # 10
+    f2                  # 15
+f1()                    # 11
+
+a = 10
+def func():
+    def f1:
+        a = 20
+        def foo():
+            nonlocal a
+            a += 1
+            print(a)
+        foo()
+        print(a)
+    f1()               # 21
+func()                 # 21
+print(a)               # 10</code></pre>
+<h2 id="其他">6.其他</h2>
+<pre><code><code>三元运算符
+a = 10
+b = 20
+c = a if a &gt; b else b
+变量名 = 条件成立的结果 条件 条件不成立的结果
+
+
+枚举  enumerate
+lst = [11,22,33]
+def func(d):
+    dic = {}
+    for k,v in enumerate(d):
+        dic[k] = v
+    return dic
+print(func(lst))
+# {0: 11, 1: 22, 2: 33}</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

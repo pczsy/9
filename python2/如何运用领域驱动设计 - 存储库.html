@@ -1,0 +1,147 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修如何运用领域驱动设计 - 存储库' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>如何运用领域驱动设计 - 存储库</center></div><div class='banquan'>原文出处:本文由博客园博主句幽提供。<br/>
+原文连接:https://www.cnblogs.com/uoyo/p/12097737.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#概述"><strong>概述</strong></a></li>
+        <li><a href="#直接看东西"><strong>直接看东西</strong></a></li>
+        <li><a href="#被广泛使用的仓储"><strong>被广泛使用的仓储</strong></a><ul>
+        <li><a href="#仓储是反模式吗"><strong>仓储是反模式吗</strong></a></li>
+        </ul></li>
+        <li><a href="#什么是存储库"><strong>什么是存储库</strong></a></li>
+        <li><a href="#如何运用存储库"><strong>如何运用存储库</strong></a><ul>
+        <li><a href="#存储库是为聚合提供操作"><strong>存储库是为聚合提供操作</strong></a></li>
+        <li><a href="#存储库对外提供哪些方法"><strong>存储库对外提供哪些方法</strong></a></li>
+        <li><a href="#不要使用过多特性干扰您的领域对象"><strong>不要使用过多特性干扰您的领域对象</strong></a></li>
+        <li><a href="#不要为了显示而使用存储库"><strong>不要为了显示而使用存储库</strong></a></li>
+        <li><a href="#工作单元"><strong>工作单元</strong></a></li>
+        </ul></li>
+        <li><a href="#持久化中的困难"><strong>持久化中的困难</strong></a></li>
+        <li><a href="#总结"><strong>总结</strong></a></li>
+        </ul>
+    </div>
+</div>
+<h2 id="概述"><strong>概述</strong></h2>
+<p>在上一篇文章中，我们已经了解过领域驱动设计中一个很核心的对象-聚合。在现实场景中，我们往往需要将聚合持久化到某个地方，或者是从某个地方创建出聚合。此时就会使得领域对象与我们的基础架构产生紧密的耦合，那么我们应该怎么隔绝这一层耦合关系，使它们自身的职责界限更加清晰呢？是的，这就要用到我们今天要讲的内容 - 存储库。在很多地方，我们喜欢叫它为仓储，特别是在现有的AspNetCore应用中，大量的应用都在引入Repository这种东西。那么究竟什么是存储库呢？我们现在的使用方式是正确的吗？它在领域驱动设计中又扮演着怎样的角色呢？本文将从不同的角度来带大家重新认识一下“存储库”这个概念，并且给出相应的代码片段（本教程的代码片段都使用的是<strong>C#</strong>,后期的实战项目也是基于 <strong>DotNet Core</strong> 平台）。</p>
+<h2 id="直接看东西"><strong>直接看东西</strong></h2>
+<p><img src="./images/如何运用领域驱动设计 - 存储库0.png" alt="直接看东西" /></p>
+<p>“少啰嗦，直接看东西”。是的，在本次的文章中，<strong>居然！居然！居然！</strong> 附带了Github的代码。本次代码其实是演示工作单元的实现，但是它确实又结合了存储库的一些内容，所以就在这里提供给大家参考。</p>
+<blockquote>
+<p><a href="https://github.com/uoyoCsharp/MiCake.Uow.Easy"><strong>GitHub 地址，点击直达哟</strong></a></p>
+</blockquote>
+<p>这是一个工作单元的超简易版本，您可以在github中看到它的描述和简介，这里我就不再重复了。下一次的文章会对工作单元的实现进行解析和优化，可能它就不属于 <strong>《如何运用领域驱动设计》</strong> 系列的正传系列了（算个番外吧 (￣▽￣)&quot;）。所以为了您不错过这一部分，可以点击博客园右上角的关注，有了动态之后就能够第一时间收到啦！</p>
+<p>哦，对了！在Github代码中，您可能会看到一个叫做MiCake（米蛋糕）的东西，它是我们一步一步实现的DDD组件，它会让您的 aspnet core 应用更轻松的融合DDD的思想，并且它包含了我们该系列博文中所提到的所有战略组件，以及它们之间的约束和处理。</p>
+<h2 id="被广泛使用的仓储"><strong>被广泛使用的仓储</strong></h2>
+<p>是的，说存储库模式您可能还不能一下想到这是个什么东西，但是一说到仓储，您可能就会有一种豁然开朗的感觉：“哦！就是这个东西呀！”。回顾一下，您现有的AspNet Core项目，是否已经引入了一个叫做Repository的对象，并且它为您提供了与数据基础架构交互的方法。</p>
+<p>仿佛从某一天开始，以往我们使用的BLL,DLL这种东西就逐渐开始消失了，替换它们的是一个叫做Repository的东西。特别是从传统的AspNet演化为AspNetCore的阶段，大量的应用都开始使用仓储了，即使您在使用类似于EF这样的ORM框架。</p>
+<h3 id="仓储是反模式吗"><strong>仓储是反模式吗</strong></h3>
+<p>关于存储厍模式存在非常多的误解和混淆，许多人认为它是多余的仪式以及不必要的抽象，它隐藏了底层持久化框架的能力。特别是当您正在使用类似于Entity FrameWork Core这样的ORM框架的时候，您是否发现明明EFCore直接就可以实现的东西，为什么我又在它的基础上套了一层，而且这一层中我并没有执行任何逻辑，只是简单的调用DbContext（EF中的数据上下文）这种东西。那为什么我不能直接调用DbContext呢？是的，这样的疑问相信不止很多同学都遇到了。所以在微软EF Core 3.x的官方教程中，提到了这样的一句话：</p>
+<p><img src="./images/如何运用领域驱动设计 - 存储库1.png" alt="Ef 中的解释" /></p>
+<p><em>该内容位于</em> <a href="https://docs.microsoft.com/zh-cn/aspnet/core/data/ef-mvc/advanced?view=aspnetcore-3.0"><em>ASP.NET Core 官方教程 - 数据访问 - 高级教程</em></a> <em>中。</em></p>
+<p>那么我们真的不需要存储库这种东西吗？答案是否定的，至少在实践领域驱动设计的应用中。还记得在上一篇文章 <a href="https://www.cnblogs.com/uoyo/p/12061334.html">如何运用领域驱动设计 - 聚合</a> 中，我们不止一次的提到了仓储这个概念，因为它是为聚合而服务的，而随着领域的深入，使得领域模型越来越复杂的时候，存储库将慢慢变成模型的扩展，它将描述您每一个用例检索聚合的意图。</p>
+<blockquote>
+<p>思考一下，您现有的应用中是否包含了一个全能的ORM框架（比如EF），那您引入仓储的原因是什么呢？</p>
+</blockquote>
+<h2 id="什么是存储库"><strong>什么是存储库</strong></h2>
+<p>好吧，这次的开篇太长了，终于回到了正题：什么是存储库？ 原著<a href="https://book.douban.com/subject/5344973/">《领域驱动设计:软件核心复杂性应对之道》</a> 中对存储库的有关解释：</p>
+<blockquote>
+<p>为每种需要全局访问的对象类型创建一个对象，这个对象就相当于该类型的所有对象在内存中的一个集合的“替身”。通过一个众所周知的接口来提供访问。提供添加和删除对象的方法，用这些方法来封装在数据存储中实际插入或删除数据的操作。提供根据具体标准来挑选对象的方法，并返回属性值满足查询标准的对象或对象集合（所返回的对象是完全实例化的），从而将实际的存储和查询技术封装起来。只为那些确实需要直接访问的Aggregate提供Repository。让客户始终聚焦于型，而将所有对象存储和访问操作交给Repository来完成。</p>
+</blockquote>
+<p>国际惯例，让我们来看看这一段话大致讲了什么。Repository提供了一个增删改查的操作，它抽象了数据访问的部分。是的，这个理解是很正确的，因为这是存储库很重要的特性。所以有很多同学就开始疯狂的使用存储库了，在项目中大量的引入Repository，而嵌套于ORM之上。</p>
+<p>但是！！！！！ 我们忽略了上面的其它几点：<strong>“确实需要直接访问的Aggregate提供Repository”</strong> ，<strong>“提供根据具体标准来挑选对象”</strong> 。 注意，这很重要，下文将一一为大家解释。</p>
+<h2 id="如何运用存储库"><strong>如何运用存储库</strong></h2>
+<h3 id="存储库是为聚合提供操作"><strong>存储库是为聚合提供操作</strong></h3>
+<p>这一点是非常关键的，<strong>存储库是为聚合而服务的</strong>。有关于聚合的部分，可以查看上一篇文章 <a href="https://www.cnblogs.com/uoyo/p/12061334.html">如何运用领域驱动设计 - 聚合</a>。为什么呢它一定要为聚合服务？ 它不能为实体服务吗？ 因为聚合是一个整体，在上一文中我们已经说过了，当凝练出一个聚合根的时候，就证明外界只能通过聚合根来访问聚合内的实体，所以我们没有理由在任何一个地方需要穿透聚合根去访问实体，这是错误并且没有意义的。那么很自然的就可以衍生出：我们什么时候需要使用存储库单独来提取实体呢？好像确实没有。不过有的同学会说了，我在做**报表的时候，我就确实需要只访问某个实体呀？那么请思考两个点：1、该实体是否需要提升为聚合根。 2、如果是广泛查询的报表，可能并不需要通过仓储来获取对象，需要专门的查询框架来完成。</p>
+<p>因此，我们建立出来的仓储的接口可能是这个样子的：</p>
+<pre><code><code>public interface IRepository&lt;TAggregateRoot&gt;
+    where TAggregateRoot : class, IAggregateRoot
+{
+}</code></pre>
+<p>此处使用了C#的接口泛型约束，将仓储的服务者约束为了一个聚合根。该代码在上文介绍的 <strong>MiCake</strong> 中您也可以看到。</p>
+<h3 id="存储库对外提供哪些方法"><strong>存储库对外提供哪些方法</strong></h3>
+<p>到目前为止，我们已经知道一个存储库至少应该包含根据ID来对聚合的增删改查方法，可能有一些时候我们只需要查，不需要删。但是就一个通用的存储库来说，它能具有这些方法是毫无疑问的。所以我们的仓储接口可以增加一些通用方法：</p>
+<pre><code><code>public interface IRepository&lt;TAggregateRoot&gt;  
+        where TAggregateRoot : class, IAggregateRoot
+{
+    TAggregateRoot Find(TKey Id);
+
+    void Add(TAggregateRoot aggregateRoot);
+
+    void Update(TAggregateRoot aggregateRoot);
+
+    void Delete(TAggregateRoot aggregateRoot);
+}</code></pre>
+<h4 id="存储库是一个明确的约定"><strong>存储库是一个明确的约定</strong></h4>
+<p>虽然存储库提供了基础的提取方法，但是在许多场景下，我们可能更需要根据某种条件来从数据库中读取对应的模型并将其转换为领域聚合对象。比如在之前的一篇文章 <a href="https://www.cnblogs.com/uoyo/p/12023896.html">如何运用领域驱动设计 - 领域服务</a> 中就有一个地方出现了使用存储库的情况：我们需要根据当前的位置来查找附近的饭店:</p>
+<pre><code><code>var nearbyRestaurants = restaurantRepository.GetNearbyRestaurant(currentAddress);</code></pre>
+<p>采用了类似于这样的写法。该存储库对外提供了一个<strong>GetNearbyRestaurant</strong>的方法出来，外界的应用服务就可以通过该方法来获取对应的结果。</p>
+<p>这是一个很好的方法签名，我们通过传入一个当前位置就能够获取到附近的饭店。通过阅读存储库提供出来的方法就能理解领域中的检索意图，从侧面也反应了领域的某些用例。</p>
+<p>但是，现在有部分的同学热爱另外一种写法：通过Lambda作为方法参数，传递给下层的ORM框架来进行查询。该方法签名类似于这样：</p>
+<pre><code><code>IQueryable&lt;TEntity&gt; FindMatch(params Expression&lt;Func&lt;TEntity, object&gt;&gt;[] propertySelectors);</code></pre>
+<p>这样做的好处是所有的存储库都可以复用这个接口，以后所有的查询都可以通过使用该方来来完成，而不需要再去单独写各种Find方法。通过返回一个<strong>IQueryable</strong>对象，甚至可以将业务查询逻辑直接放到应用层，这样想怎么操作就怎么操作。</p>
+<p><strong>请注意！！！这非常的危险！！！！</strong> 您可能会问了：“我平时所接触的框架或者仓储不都是这样写的吗？可以实现我任何的业务查询，爽歪歪。” 但是这样写正在<strong>逐渐丧失存储库原有的作用</strong>。回到开篇提到的一个问题：假如使用了EF这样的ORM框架，为什么还需要嵌套一层仓储呢？ 而现在，您可能正在这样做，开放且灵活的约定，再加上延迟的<strong>IQueryable</strong>对象，让仓储层完全丧失了原有的作用，它反而成了负担，为什么不直接使用DbContext对象呢？ 为了仓储而使用仓储，为了看上去像DDD而DDD，那不是自己骗自己吗？</p>
+<p>所以请尽量避免在您的存储库中去写这种灵活而没有任何明确检索意图的方法接口，它可能确实会使您减少代码书写量，但随着项目的复杂和领域对象的逐渐增多，它会使您的应用层越来越迷惑。所以<strong>存储库中所提供的应该是具有明确约定的方法</strong>。</p>
+<p>这里我摘抄了 <a href="https://book.douban.com/subject/26761413/">领域驱动设计模式、原理与实践</a> 中的一段话，我觉得它的描述非常好：</p>
+<blockquote>
+<p>存储库不是一个对象。它是一个程序边界以及一个明确的约定，在其上命名方法时它需要的工作量与领域模型中的对象所需的工作量一样多。你的存储库约定应该是特定的以及能够揭示意图并对领域专家具有意义。</p>
+</blockquote>
+<p>具有领域意图的东西我们都应该领域层，而类似于数据库的访问实现这类基础架构应该放在基础设施层。所以可以看出我们抽象出来的<strong>仓储接口是应该放在领域层的</strong>，而<strong>仓储的实现可以放在基础设施层</strong> 。这个问题有很多小伙伴可能迷惑了很久，我上次看到一位同学将仓储接口放在了应用层，因为它认为和领域无关，认为仓储只是一个提供增删改查的东西。而这也是因为忽略了仓储也是领域行为的一部分的结果。</p>
+<h4 id="审计追踪"><strong>审计追踪</strong></h4>
+<p>在前面讲值对象的文章中，有一位园友问了我一个问题，有一点是：类似于CreateDate，CreateUser这种审计信息，我们许多时候都会依附在领域对象身上，那么是不是应该通过领域服务来做处理呢？</p>
+<p>其实不然，它们虽然对我们有参考意义，其实并没有在捕获领域需求时捕获出来。往往这类审计信息都是我们按照以往的开发经验所提炼出来的，所以它们对领域对象的影响很小。那么我们又很需要去操作它们，比如持久化一个聚合根的时候，为它附带上创建时间，这样便于我们去追踪它的一些记录。而此时，就可以依赖我们的存储库来完成了，当聚合根在领域服务或者领域用例中已经完成了操作时，将它传递给存储库持久化之前就可以让存储库为它加上审计信息。</p>
+<h4 id="汇总"><strong>汇总</strong></h4>
+<p>存储库有时还可以拥有对集合汇总的功能，比如上面我们提到了饭店的一个仓储，可能我们在系统中想得到我系统中到底有多少个饭店，或者在某个区域有多少个饭店。这种汇总的功能您也可以交给存储库来完成，这也完美的符合“存储库”中“库”的含义。但还是请注意，这些汇总的方法依然得拥有一个明确的约定格式，不要因为是汇总就将存储库写的开放而过于灵活。</p>
+<p>有时候您可能需要形成一个报表，该报表它包含了各个领域对象的汇总情况。在此时，该汇总的职责可能并不属于存储库了，它需要您使用另外的方式来完成，该内容可以看下面的小节。</p>
+<h3 id="不要使用过多特性干扰您的领域对象"><strong>不要使用过多特性干扰您的领域对象</strong></h3>
+<p>在持久化的过程中，现在的主流方式我们都会依赖于类似于EF Core这样的ORM框架来完成。当我们需要将领域对象转换为数据库的数据对象（可以理解为表吧）时，可能有时候就需要表明什么是主键，什么具有约束等情况。如果您正在使用EF Core，对于 <strong>Data annotations</strong> 您可能再熟悉不过了，它提供了通过特性来标记的写法完成映射关系：</p>
+<pre><code><code>public class CustomerWithoutNullableReferenceTypes
+{
+    public int Id { get; set; }
+    [Required]            // Data annotations needed to configure as required
+    public string FirstName { get; set; }
+    [Required]
+    public string LastName { get; set; }     // Data annotations needed to configure as required
+    public string MiddleName { get; set; }   // Optional by convention
+}</code></pre>
+<p><em>该代码摘自 EF Core 教程 - 必需和可选属性</em></p>
+<p>这种写法很诱人，因为只需要简单的在属性上增加一个特性就完成了配置。但是！！！这些特性对领域对象其实是没有必要的，它可能还会干扰您的阅读。因为我们在构建领域对象的时候不应该考虑数据持久层面的问题，而构建出来的领域对象也应该保持干净。</p>
+<p>在EFCore中，为我们提供了Fluent API的方式来配置模型，该方式可以很好的让领域对象保持干净。假如您没有使用EFCore，另外的ORM框架也一定会为您提供类似于这样的配置方法。</p>
+<h3 id="不要为了显示而使用存储库"><strong>不要为了显示而使用存储库</strong></h3>
+<p>很多场景我们可能需要提供一个丰富的界面，或者一个完整的报表。比如在一个界面上显示了某个聚合中的一个实体的信息，又或者在报表中提供了各个实体和值对象的汇总和特定信息。在这个情况下，仓储可能就显得有点隆重了，我必须要通过A、B、C……仓储获取所有聚合A,B,C，然后再来处理汇总信息。要么就是将存储库的规则打破，直接查询利用EF Core查询出<strong>IQueryable</strong>集合对象，然后一顿输出猛如虎来达到效果。</p>
+<p>记住不要为了使用DDD而让您的开发变得复杂而不顺手，在这个时候我们甚至可以不使用存储库，我们可以利用另外的框架来直接查询数据库，也或者是使用ADO.NET运用原生Sql来达到查询的效果。还有一种方法是将查询单独划分为应用系统的一个分支，将修改（命令）单独划分为另外一个分支来操作领域对象。这是DDD的另外一种模式，可能您已经听过它的英文简写了：CQRS。该模式的内容会在后期的文章中为大家介绍，MiCake后期也会增加对CQRS的支持。</p>
+<h3 id="工作单元"><strong>工作单元</strong></h3>
+<p>在持久化的过程中，我们必须保证一个聚合的所有的部分一同保持成功，或者一个用例的多个聚合同时保存成功（在分布式中可能只能追求最终一致性）。所以我们必须得保证存储库是有事务的，而事务的管理是由工作单元来提供的。这也是为什么存储库每次都和工作单元这一概念一同出现。下面引用了微软AspNet中的一张图，方便您理解工作单元（UnitOfWork）：</p>
+<p><img src="./images/如何运用领域驱动设计 - 存储库2.png" alt="UnitOfWork" /></p>
+<p><em>该图片选取自 微软 AspNet 教程 - 实现存储库和工作单元模式</em></p>
+<p>本章附带了关于工作单元和仓储接口的演示代码，关于工作单元的部分会在下篇文章为大家介绍。</p>
+<h2 id="持久化中的困难"><strong>持久化中的困难</strong></h2>
+<p>关于持久化的问题已经是一个老生常谈的话题了，在一篇关于值对象的博文中就已经说明了这个问题。如何将领域对象如何通过ORM来持久化到数据库？在回答这个问题之前，我们得先理解一下什么是领域模型和数据模型：领域模型是问题域的抽象，富含行为和语言；数据模式是一种包含指定时间领域模型状态的存储结构，ORM可以将特定的对象（C#的类）映射到数据模型。数据模型和领域模型无关，存储库的作用就是保持这两个模型的独立并且不让它们变得模糊不清。</p>
+<p>也就是说我们在设计领域模型时应该仅仅关心领域中的对象，<strong>千万不要让框架（比如ORM）来驱动你的设计</strong>。关于这一点给了我一点灵感：既然我们只关心领域对象，那在持久化的时候能不能单独建立一个持久化对象专门供ORM去映射到数据库，而仓储负责了聚合创建和保存的过程，在这个过程中让仓储自动去完成领域对象到持久化对象的转换就行了。关于这个实现方法，准备在下下一起番外系列中为大家介绍，可能MiCake也会默认支持该方法来完成领域对象的持久化任务。当然，因为是番外的系列，所以为了您不错过这一部分，可以点击博客园右上角的关注。（ <em>好吧，我又把上面的话不要脸的又复制了一遍</em> (ง •_•)ง）</p>
+<h2 id="总结"><strong>总结</strong></h2>
+<p>本次我们介绍了有关领域驱动设计中“存储库”的内容，我们知道了什么是存储库，以及如何去使用一个存储库。由于存储库属于一个很基础的概念，所以在该章节中我们没有使用旅行记账的案例来为大家介绍。而更多的是希望大家能够理解使用存储库的场景和规范，毕竟现在存储库模式是很常用的一个模式，如果只知其然而不知其所以然的去使用存储库模式，不仅体验不到它的益处，反而会让代码变得越来越复杂。</p>
+<p><em>最后，提前祝大家元旦快乐。</em> (oﾟvﾟ)ノ<br />
+<img src="./images/如何运用领域驱动设计 - 存储库3.png" alt="*" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

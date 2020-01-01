@@ -1,0 +1,303 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Blazor 机制初探以及什么是前后端分离，还不赶紧上车？' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Blazor 机制初探以及什么是前后端分离，还不赶紧上车？</center></div><div class='banquan'>原文出处:本文由博客园博主宇辰（馨辰）提供。<br/>
+原文连接:https://www.cnblogs.com/wzxinchen/p/12082136.html</div><br>
+    <p>标签： Blazor .Net</p>
+<hr />
+<p>上一篇文章发了一个 BlazAdmin 的尝鲜版，这一次主要聊聊 Blazor 是如何做到用 C# 来写前端的，传送门：https://www.cnblogs.com/wzxinchen/p/12057171.html</p>
+<h2 id="飚车前">飚车前</h2>
+<p>需要说明的一点是，因为我深入接触 Blazor 的时间也不是多长，顶多也就半年，所以这篇文章的内容我不能保证 100% 正确，但可以保证大致原理正确</p>
+<p>另外，具有以下条件的园友食用这篇文章会更舒服：</p>
+<blockquote>
+<ul>
+<li>了解 Http 请求响应模型及 Http 协议</li>
+<li>有足够的微软技术栈 Web 开发经验，例如 MVC、WebApi 等</li>
+<li>有按照微软的 Blazor 官方文档进行入门的实战操作，传送门：https://docs.microsoft.com/zh-cn/aspnet/core/blazor/get-started?view=aspnetcore-3.1&amp;tabs=visual-studio</li>
+<li>有自己研究过 Blazor 生成的代码</li>
+<li>有过 SignalR 或 WebSocket 使用经验</li>
+</ul>
+</blockquote>
+<p>建议结合 AspNetCore 源码看这篇文章,我不能贴出所有源码，源码需要编译过才能看，不然会很麻烦，但编译这事比较难，编译源码比看源码难多了，这儿是一位园友的源码编译教程：<a href="https://www.cnblogs.com/ZaraNet/p/12001261.html" class="uri">https://www.cnblogs.com/ZaraNet/p/12001261.html</a><br />
+天底下没有新鲜事儿，Blazor 看着神奇，其实也没啥黑科技，它跑不掉 Http 协议，也跑不掉 Html</p>
+<h2 id="开始发车">开始发车</h2>
+<h3 id="blazor-服务端渲染过程">Blazor 服务端渲染过程</h3>
+<p>当您打开一个服务端渲染的 Blazor 应用时：</p>
+<pre><code><code>    浏览器 --&gt;&gt; 服务器: 建立 WebSocket 连接
+    服务器 --&gt;&gt; 浏览器: 发送首页 HTML 代码
+    loop 连接未断开
+        Note left of 浏览器: 浏览器JS捕获用户输入事件
+        浏览器 --&gt;&gt; 服务器: 通知服务器发生了该事件
+        Note right of 服务器: 服务器 .Net 处理事件
+        服务器--&gt;&gt;浏览器: 发送有变动的 HTML 代码
+        Note left of 浏览器: 浏览器JS渲染变动的 HTML 代码
+    end</code></pre>
+<p>有以下几点需要注意：</p>
+<blockquote>
+<ul>
+<li>WebSocket 连接采用 SignalR 来建立，如果浏览器不支持 WebSocket，SignalR 会采用其他技术建立</li>
+<li>浏览器捕获用户输入是使用 Javascript进行捕获的</li>
+<li>服务器处理客户端事件完成后，会生成新的 HTML 结构，然后将这个结构与老的结构进行对比，得到有变动的 HTML 代码</li>
+<li>Blazor 服务端渲染版采用在服务器端维护一个虚拟 DOM 树来实现上述操作</li>
+<li>“通知服务器发生了该事件”这一步里，从原理上来说类似于 WebForm 的 PostBack 机制，不同点在于，Blazor 只告诉服务器是哪个 DOM 节点发生了什么事件，这个传输量是极小的。</li>
+</ul>
+</blockquote>
+<p>服务端渲染的基本原理就是这样，下面我们详细讨论</p>
+<h3 id="blazor-路由渲染过程">Blazor 路由渲染过程</h3>
+<p>当我们通过 NavigationManager 去改变路由地址时，大概流程如下</p>
+<pre class="flow"><code>st=&gt;start: 服务器启动
+rt=&gt;operation: 初始化 Router 组件，Router 内部注册 LocationChanged 事件
+op1=&gt;operation: LocationChanged 事件中根据路由查找对应的组件，默认触发首页组件
+queue=&gt;operation: 加入渲染队列
+render=&gt;operation: 一直进行渲染及比对，直到队列中所有的组件全部渲染完
+diff=&gt;operation: 将比对的差异结果更新至浏览器
+e=&gt;end: 等待下一次路由改变，继续触发 LocationChanged 事件
+
+st-&gt;rt-&gt;op1-&gt;queue-&gt;render-&gt;diff-&gt;e</code></pre>
+<p>这里的 Router 组件，就是我们经常用到的，看看下面的代码，是不是很熟悉？</p>
+<pre class="csharp"><code>&lt;Router AppAssembly=&quot;@typeof(Program).Assembly&quot;&gt;
+    &lt;Found Context=&quot;routeData&quot;&gt;
+        &lt;RouteView RouteData=&quot;@routeData&quot; DefaultLayout=&quot;@typeof(MainLayout)&quot; /&gt;
+    &lt;/Found&gt;
+    &lt;NotFound&gt;
+        &lt;LayoutView Layout=&quot;@typeof(MainLayout)&quot;&gt;
+            &lt;p&gt;Sorry, there&#39;s nothing at this address.&lt;/p&gt;
+        &lt;/LayoutView&gt;
+    &lt;/NotFound&gt;
+&lt;/Router&gt;
+</code></pre>
+<h4 id="router-组件部分代码">Router 组件部分代码</h4>
+<pre class="csharp"><code>public class Router : IComponent, IHandleAfterRender, IDisposable
+{
+     public void Attach(RenderHandle renderHandle)
+        {
+            _logger = LoggerFactory.CreateLogger&lt;Router&gt;();
+            _renderHandle = renderHandle;
+            _baseUri = NavigationManager.BaseUri;
+            _locationAbsolute = NavigationManager.Uri;
+            //注册 LocationChanged 事件
+            NavigationManager.LocationChanged += OnLocationChanged;
+        }
+    private void OnLocationChanged(object sender, LocationChangedEventArgs args)
+        {
+            _locationAbsolute = args.Location;
+            if (_renderHandle.IsInitialized &amp;&amp; Routes != null)
+            {
+                Refresh(args.IsNavigationIntercepted);
+            }
+        }
+    private void Refresh(bool isNavigationIntercepted)
+        {
+            var locationPath = NavigationManager.ToBaseRelativePath(_locationAbsolute);
+            locationPath = StringUntilAny(locationPath, _queryOrHashStartChar);
+            var context = new RouteContext(locationPath);
+            Routes.Route(context);
+            
+            ..........
+            
+            var routeData = new RouteData(
+                context.Handler,
+                context.Parameters ?? _emptyParametersDictionary);
+            //此处开始渲染，Found 是一个 RenderFragment&lt;RouteData&gt; 委托，是我们在调用的时候指定的那个
+            _renderHandle.Render(Found(routeData));
+            ..........
+        }
+}</code></pre>
+<h3 id="blazor-组件渲染过程">Blazor 组件渲染过程</h3>
+<p>要开始飚车了，握紧方向盘，不要翻车。<br />
+这部分可能会比较难，如果你发现你看不懂的话就先尝试自己写个组件玩玩。<br />
+在 Blazor 中，几乎一切皆组件。首先我们得提到一个 Blazor 组件的几个关键方法，部分方法也是它的生命周期</p>
+<blockquote>
+<ul>
+<li>OnInitialized、OnInitializedAsync：仅在第一次实例化组件时，才会调用这些方法一次。注意，该方法调用时参数已经设置，但没有渲染。</li>
+<li>SetParametersAsync：该方法可以让您在设置参数之前做一些事</li>
+<li>OnParametersSetAsync、OnParametersSet：每一次参数设置完成之后都会调用</li>
+<li>OnAfterRender、OnAfterRenderAsync：在组件渲染完成之后触发</li>
+<li><strong>ShouldRender</strong>：如果该方法返回 false，则组件在第一次渲染完成后不会执行二次渲染</li>
+<li><strong>StateHasChanged</strong>：强制渲染当前组件，<strong>如果 ShouldRender 返回的是 false，则不会强制渲染</strong></li>
+<li>BuildRenderTree: 该方法一般情况下我们用不到，它的作用是拼接 HTML 代码，由 VS 自动生成的代码去调用它</li>
+</ul>
+</blockquote>
+<p>另有一个关键的结构体 <code>EventCallBack</code>，还有一个关键的委托<code>RenderFragment</code>,它俩非常重要，前者可能见得比较少，后者基本上玩过 Blazor 的园友都知道。</p>
+<p>上面提到的关键点，有个印象即可，下面将开始飚车，我们将重点讨论那个流程图中渲染对比的那部分，但将忽略浏览器捕获事件这一步，我不能贴太多的源码，尽可能用流程图表示</p>
+<h4 id="主要生命周期过程">主要生命周期过程</h4>
+<pre class="flow"><code>st=&gt;start: 开始渲染
+isfirst=&gt;condition: 是否首次渲染
+init=&gt;operation: 调用 OnInitialized 方法
+initAsync=&gt;operation: 调用 OnInitializedAsync 方法
+onSetParameter=&gt;operation: 调用 OnParametersSet 方法
+setParameter=&gt;operation: 调用 SetParametersAsync 方法
+stateHasChanged=&gt;operation: 调用 StateHasChanged 方法
+st-&gt;setParameter-&gt;isfirst-&gt;init-&gt;initAsync-&gt;onSetParameter
+onSetParameter-&gt;stateHasChanged
+isfirst(yes)-&gt;init
+isfirst(no)-&gt;onSetParameter</code></pre>
+<p>需要注意的是这个流程中没有 <code>OnAfterRender</code> 方法的调用，这个将在下面讨论</p>
+<h4 id="statehaschanged-方法">StateHasChanged 方法</h4>
+<p>这个方法至关重要，就比如上图中最终只到了 <code>StateHasChanged</code> 方法，就没了下文，我们来看看这个方法里面有什么</p>
+<pre class="flow"><code>st=&gt;start: 开始
+isfirst=&gt;condition: 是否首次渲染
+should=&gt;condition: ShouldRender 为True？
+queue=&gt;operation: 进入渲染队列
+render=&gt;operation: 开始循环渲染队列的数据
+after=&gt;operation: 触发 OnAfterRender 方法
+e=&gt;end: 结束
+st-&gt;isfirst
+queue-&gt;render-&gt;after-&gt;e
+isfirst(yes)-&gt;queue
+isfirst(no)-&gt;should
+should(yes)-&gt;queue
+should(no)-&gt;e</code></pre>
+<p>至此，我们基本把一个组件的生命周期的那几个方法讨论完了，除了一些异步版本的，逻辑都差不多，没有写进来</p>
+<h4 id="渲染队列时都干了啥">渲染队列时都干了啥？</h4>
+<p>嗯对，这是重点</p>
+<pre class="flow"><code>st=&gt;start: 开始渲染队列
+queue=&gt;condition: 队列还有组件？
+read=&gt;operation: 从队列获取组件
+swap=&gt;operation: 备份当前 DOM 树及清空
+render=&gt;operation: 调用组件的 RenderFragment 委托获取新的 DOM 树
+diff=&gt;operation: 与备份的树对比
+append=&gt;operation: 将对比结果存入列表
+display=&gt;operation: 将列表中的所有对比结果发送至浏览器
+e=&gt;end: 结束
+st-&gt;queue
+read-&gt;swap-&gt;render-&gt;diff-&gt;append-&gt;queue
+queue(yes)-&gt;read
+queue(no)-&gt;display-&gt;e</code></pre>
+<p>为了图好看点（好吧现在其实也不好看），我把流程缩短了一点，有以下几点需要注意：</p>
+<blockquote>
+<ul>
+<li>渲染开始之前是将当前树赋值成了旧的树，然后再将当前树清空</li>
+<li>组件的 <code>RenderFragment</code> 委托在大多数情况下就是组件的 <code>ChildContent</code> 属性的值，玩过的都知道几乎每个组件都有自己的 <code>ChildContent</code>。</li>
+<li>同时 <code>RenderFragment</code> 也有可能是 <code>ComponentBase</code>类中的一个私有属性，详见下面的代码。当然也有可能是其他的，限于篇幅，不细说</li>
+<li><code>RenderFragment</code> 委托输入的参数就是当前这颗树</li>
+<li>如果您在组件中调用了子组件，并且这个子组件还有自己的内容，那么 VS 会生成调用这个组件的代码，并且为这个组件添加 <code>ChildContent</code> 属性，内容就是子组件自己的内容，详见代码</li>
+</ul>
+</blockquote>
+<p>下面是 <code>ComponentBase</code> 的部分代码，上文提到的私有属性就是 <code>_renderFragment</code>,这个私有属性仅在此处被赋值，可以看到这个属性内部调用了 <code>BuildRenderTree</code> 方法</p>
+<pre class="csharp"><code>    public abstract class ComponentBase : IComponent, IHandleEvent, IHandleAfterRender
+    {
+        private readonly RenderFragment _renderFragment;
+
+        /// &lt;summary&gt;
+        /// Constructs an instance of &lt;see cref=&quot;ComponentBase&quot;/&gt;.
+        /// &lt;/summary&gt;
+        public ComponentBase()
+        {
+            _renderFragment = builder =&gt;
+            {
+                _hasPendingQueuedRender = false;
+                _hasNeverRendered = false;
+                BuildRenderTree(builder);
+            };
+        }
+    }</code></pre>
+<p>针对最后一点，举个例子<br />
+下面是 <code>NavMenu.razor</code> 组件的 Razor 代码</p>
+<pre class="razor"><code>&lt;BMenu&gt;
+    &lt;BMenuItem Route=&quot;button&quot;&gt;Button 按钮&lt;/BMenuItem&gt;
+&lt;/BMenu&gt;</code></pre>
+<p>下面是 VS 生成的代码</p>
+<pre class="csharp"><code>public partial class NavMenu : Microsoft.AspNetCore.Components.ComponentBase
+    {
+        protected override void BuildRenderTree(Microsoft.AspNetCore.Components.Rendering.RenderTreeBuilder __builder)
+        {
+            __builder.OpenComponent&lt;BMenu&gt;(1);
+            __builder.AddAttribute(4, &quot;ChildContent&quot;, (Microsoft.AspNetCore.Components.RenderFragment)((__builder2) =&gt; {
+                __builder2.OpenComponent&lt;BMenuItem&gt;(6);
+                __builder2.AddAttribute(7, &quot;Route&quot;, &quot;button&quot;);
+                __builder2.AddAttribute(8, &quot;ChildContent&quot;, (Microsoft.AspNetCore.Components.RenderFragment)((__builder3) =&gt; {
+                    __builder3.AddMarkupContent(9, &quot;Button 按钮&quot;);
+                }
+                ));
+                __builder2.CloseComponent();
+            }
+        }
+    }</code></pre>
+<p>可以看到，<code>NavMenu.razor</code> 使用了 <code>BMenu</code> 这个组件,<code>BMenu</code> 又使用了 <code>BMenuItem</code>这个组件，共套了两层，因此生成了两个 <code>ChildContent</code> 的属性，而且属性类型都是 <code>Microsoft.AspNetCore.Components.RenderFragment</code><br />
+到这儿为止，Blazor 的大概机制基本讨论了一半，接下来讨论上个流程图中的对比那一步，看看 Blazor 是如何进行的对比<br />
+这里不细说，因为确实太复杂我也没搞清楚，只说个大概流程，需要说明的一点是 Blazor 的对比是基于序列号的，序列号是什么？大家一定注意到上面代码中的 <code>__builder.AddAttribute(4</code> 中的这个 4 了，这个 4 就是序列号，然后每个序列号对应的内容称为帧，简而言之是通过判断每个序列号对应的帧是否一致来对比是否有改动</p>
+<pre class="flow"><code>st=&gt;start: 开始对比
+seq=&gt;operation: 循环每帧
+compare=&gt;condition: 序列号是否一致?
+isComponent=&gt;condition: 该帧是否都为组件？
+render=&gt;operation: 渲染该组件
+compareParameter=&gt;condition: 两边组件的参数是否有变化？
+skip=&gt;operation: 跳过该帧
+setParameter=&gt;operation: 设置新组件的参数，进入该组件的生命周期流程
+currentSkip=&gt;operation: 机制过于复杂，不讨论
+e=&gt;end: 对比结束
+endSeq=&gt;operation: 结束循环
+st-&gt;seq-&gt;compare
+compare(yes)-&gt;isComponent
+compare(no)-&gt;currentSkip
+isComponent(yes)-&gt;render-&gt;compareParameter
+isComponent(no)-&gt;currentSkip
+compareParameter(yes)-&gt;setParameter-&gt;endSeq-&gt;e
+compareParameter(no)-&gt;skip</code></pre>
+<p>流程图总算画完了，大概有以下几点需要注意：</p>
+<blockquote>
+<ul>
+<li>实际的对比过程是很复杂的，流程图是简化了再简化的结果，这篇文章的几个流程图需要结合在一起理解才行</li>
+<li>当走到设置新组件的参数这一步时，继续往下其实就是进入了新组件的生命周期流程，这个流程跟上面的生命周期流程是一样的</li>
+<li>结合所有流程图来看，如果只是组件本身重新渲染，那么组件本身设置参数的方法不会被触发，必须是它的父组件被渲染，才会触发它自己的设置参数的方法</li>
+<li>对比组件参数这一步，流程图比较笼统。我们可以<strong>简单</strong>的认为，没有组件的参数是不变化的,它的对比流程过于细节，我觉得没必要写进来。</li>
+</ul>
+</blockquote>
+<p>渲染到此结束，下面就来谈谈 Blazor 会让我们遇到的问题</p>
+<h2 id="blazor-的不足">Blazor 的不足</h2>
+<p>优势我们就不谈了，我们来谈谈一个比较隐藏但又不容易解决的不足，这个不足就是我们一不小心就让我们的 Blazor 应用变得卡，而且还比较不容易解决，这个问题在服务端渲染的应用中尤其严重。</p>
+<p>结合第一张流程图，浏览器产生任何事件都会发送到服务器端，想象一下你注册了一个 <code>onmousemove</code> 事件的话，还要不要活了？所以，大规模触发的事件尽量少注册，这里面的网络传输成本是很大的，而且也会给你的服务端造成很大的压力。</p>
+<p>Blazor 应用变卡一般有以下几种情况，我们只讨论服务端应用的情况</p>
+<blockquote>
+<ul>
+<li>服务器端已经挂了，这种情况其实浏览器端会完全失去响应，除非你刷新</li>
+<li>你的代码有问题或你引用的库的代码有问题，导致进入死循环或循环次数非常多</li>
+</ul>
+</blockquote>
+<p>第一点无所谓，第二点是要命的，至少对于我来说，一旦 Blazui 或 BlazAdmin 出现了卡的情况，会非常头疼，但实际上大多数情况都是第二种中，原因在于：</p>
+<p>结合所有流程图来看，Blazor 完成渲染才会发送至浏览器，那么完成渲染的标准就是渲染队列被清空，那如果一直无法清空呢？体现出来就是死循环，或者说发生了一次点击事件结果循环了十次，这明显不科学（你故意的例外），而渲染队列被加入新东西大多数情况下是因为调用了 <code>StateHasChanged</code> 并且 <code>ShuoldRender</code> 返回了 <code>true</code>，或者是因为使用了 <code>EventCallBack</code>，这些代码所在的地方你全都难以调试<br />
+因为这些代码不是你的代码，所以你的断点也没处打，目前的 Blazor 不会告诉你到底是哪个组件哪行代码引起的死循环</p>
+<h2 id="还欠了点东西">还欠了点东西</h2>
+<p>还有一个关键的东西是 <code>EventCallBack</code>，一次写太多了，不想写了<br />
+园友如果有兴趣的话可以继续把这个写了<br />
+有任何问题可进QQ群交流：74522853</p>
+<h2 id="什么是前后端分离">什么是前后端分离？</h2>
+<p>Blazor 出来的时候一堆人说什么 WebForm 又来了，Silverlight 又来了，还有啥啥乱七八糟的，最让我不能理解的是另一种说法：</p>
+<blockquote>
+<p>前后端分离搞得好好的，微软为什么又要把前后端合在一起？</p>
+</blockquote>
+<p>我不敢瞎说，我找了一篇文章：https://www.jianshu.com/p/bf3fa3ba2a8f<br />
+下面是摘抄的内容</p>
+<blockquote>
+<p>1.首先要知道所有的程序都是一数据为基础的，没有数据的程序没有实际意义，程序的本质就是对程序的增删改查。</p>
+<p>2.前后端分离就是把数据操作和显示分离出来。前端专注做数据显示，通过文字，图片或者图标等方式让数据形象直观的显示出来。后端专注做数据的操作。前端把数据发给后端，有后端对数据进行修改。</p>
+<p>3.后端一般用java，c#等语言，现在的node属于JavaScript也能进行后端操作，此处不意义裂解语言。后端来进行数据库的链接，并对数据进行操作。</p>
+<p>4.后端提供接口给前端调用，来触发后端对数据的操作。</p>
+<p>基本原理就是这样，可能语言上不准确，思想是没有问题的。</p>
+<p>作者：前端developer 链接：https://www.jianshu.com/p/bf3fa3ba2a8f 来源：简书<br />
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。</p>
+</blockquote>
+<p>重点在于第二点，<strong>前后端分离就是把数据操作和显示分离出来</strong>，Blazor 并没有有非要让你用 .Net 写后端<br />
+第三点也说了，前端一般是 JS，那现在把 JS 换成 .Net 并没有什么不一样</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

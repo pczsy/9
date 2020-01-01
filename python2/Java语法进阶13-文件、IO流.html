@@ -1,0 +1,523 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Java语法进阶13-文件、IO流' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Java语法进阶13-文件、IO流</center></div><div class='banquan'>原文出处:本文由博客园博主远离颠倒梦想提供。<br/>
+原文连接:https://www.cnblogs.com/Open-ing/p/12003457.html</div><br>
+    <h2 class="md-end-block md-heading md-focus" style="text-align: center;"><span class="md-expand">File</span></h2>
+<p>File是文件和目录路径名的抽象表示形式，即File类是文件或目录的路径，而不是文件本身，因此File类不能直接访问文件内容本身，如果需要访问文件内容本身，则需要使用输入/输出流。</p>
+<p class="md-end-block"><span>File类的对象用来表示文件和文件夹的对象。</span></p>
+<p class="md-end-block"><span>如果这个路径名对应的文件或目录不存在，那么在堆中的File对象的成员变量就是默认值。</span></p>
+<p class="md-end-block md-focus"><span>如果这个路径名对应的文件或目录存在，那么在堆中的File对象就根据这个路径找到对应的文件或目录，然后将一些信息获取到为File对象的成员变量赋值</span></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">常用方法</span></h3>
+<table class="md-table">
+<thead>
+<tr class="md-end-block md-focus-container"><th><span class="td-span"><span>方法签名</span></span></th><th><span class="td-span"><span>方法功能</span></span></th></tr>
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span>File(String pathName)</span></span></td>
+<td><span class="td-span"><span>根据文件、目录的路径名构建File对象</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>File(String parent, String child)</span></span></td>
+<td>构建File对象，路径名通过指定父目录与子目录方式来指定</td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>public File(File parent,String child)</span></span></td>
+<td><span class="td-span"><span>从父抽象路径名和子路径名字符串创建新的 File实例</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>String getName()</span></span></td>
+<td><span class="td-span"><span>获取文件名</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>long length()</span></span></td>
+<td><span class="td-span"><span>获取文件大小，无法直接获取目录大小,空目录返回0</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>String getPath()</span></span></td>
+<td><span class="td-span"><span>获取构造路径</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>String getAbsolutePath()</span></span></td>
+<td><span class="td-span"><span>获取绝对路径</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>String getCanonicalPath()</span></span></td>
+<td><span class="td-span"><span>获取规范路径</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>long lastModified()</span></span></td>
+<td><span class="td-span"><span>获取文件最后修改时间</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>boolean isFile()</span></span></td>
+<td><span class="td-span"><span>判断是否是文件</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>boolean isDirectory()</span></span></td>
+<td><span class="td-span"><span>判断是否是目录</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>boolean exists()</span></span></td>
+<td><span class="td-span"><span>判断文件或目录是否实际存在</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>boolean isHidden()</span></span></td>
+<td><span class="td-span"><span>判断是否隐藏</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>boolean isAbsolute()</span></span></td>
+<td><span class="td-span"><span>判断是否是绝对路径</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>boolean canRead()</span></span></td>
+<td><span class="td-span"><span>判断是否可读</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>boolean canWrite()</span></span></td>
+<td><span class="td-span"><span>判断是否可写</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>createNewFile()</span></span></td>
+<td><span class="td-span"><span>当且仅当具有该名称的文件尚不存在时,创建文件</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>mkdir()或mkdirs()</span></span></td>
+<td><span class="td-span"><span>创建目录</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>delete()</span></span></td>
+<td><span class="td-span"><span>删除文件或空目录</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>renameTo(File dest)</span></span></td>
+<td><span class="td-span"><span>重命名文件或目录</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>String[] list()</span></span></td>
+<td><span class="td-span"><span>获取目录里面的文件或子目录,返回String数组</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>File[] listFiles()</span></span></td>
+<td><span class="td-span"><span>获取目录里面的文件或子目录,返回File数组</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span>File[] listFiles(FileFilter filter)</span></span></td>
+<td><span class="td-span"><span>根据过滤条件获取目录里面的文件或子目录</span></span></td>
+</tr>
+</tbody>
+</table>
+<p>无论该路径下是否存在文件或者目录，都不影响File对象的创建。</p>
+<p>如果文件或目录不存在，那么exists()、isFile()和isDirectory()都是返回false</p>
+<p>调用listFiles方法的File对象，表示的必须是实际存在的目录，否则返回null，无法进行遍历。</p>
+<p class="md-end-block"><span class="md-expand"><strong>绝对路径</strong>：从盘符开始的路径，这是一个完整的路径。</span></p>
+<p class="md-end-block"><span><strong>相对路径</strong><span>：相对于<span><strong>项目目录</strong><span>的路径，这是一个便捷的路径，开发中经常使用。</span></span></span></span></p>
+<p class="md-end-block md-focus"><span><strong>规范路径</strong><span>：所谓规范路径名，即对路径中的&ldquo;..&rdquo;等进行解析后的路径名</span></span></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">创建和删除临时文件</span></h3>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><code>public void deleteOnExit()</code><span>：当退出JVM时，删除文件，一般用于删除临时文件，一旦请求，无法取消。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>public static File createTempFile(String prefix,String suffix) throws IOException在默认临时文件目录中创建一个空文件，使用给定前缀和后缀生成其名称。调用此方法等同于调用 createTempFile(prefix, suffix, null)。 </span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item">
+<p class="md-end-block"><span>prefix - 用于生成文件名的前缀字符串；必须至少三个字符。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>suffix - 用于生成文件名的后缀字符串；如果为 null，默认为 ".tmp" </span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>public static File createTempFile(String prefix,String suffix,File directory)throws IOException在指定目录中创建一个新的空文件，使用给定的前缀和后缀字符串生成其名称。</span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item">
+<p class="md-end-block"><span>prefix - 用于生成文件名的前缀字符串；必须至少三个字符。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>suffix - 用于生成文件名的后缀字符串；如果为 null，默认为 ".tmp"</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>directory - 将创建的文件所在的目录；如果使用默认临时文件目录，则该参数为 null </span></p>
+</li>
+</ul>
+</li>
+</ul>
+<h2 style="text-align: center;">IO</h2>
+<p><a title="颠倒梦想" href="https://www.cnblogs.com/Open-ing/p/11951499.html" target="_blank">Stream</a>即流向内存的是输入流(Reader,Input)，流出内存的输出流(Writer,Output)。</p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><strong>输入流</strong><span> ：把数据从<span><code>其他设备</code><span>上读取到<span><code>内存</code><span>中的流。 </span></span></span></span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span>以InputStream,Reader结尾</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><strong>输出流</strong><span> ：把数据从<span><code>内存</code><span> 中写出到<span><code>其他设备</code><span>上的流。</span></span></span></span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span>以OutputStream、Writer结尾</span></p>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><strong>字节流</strong><span> ：以字节为单位，读写数据的流。</span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span>以InputStream和OutputStream结尾</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><strong>字符流</strong><span> ：以字符为单位，读写数据的流。</span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span>以Reader和Writer结尾</span></p>
+</li>
+</ul>
+</li>
+</ul>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><strong>节点流</strong><span>：可以从或向一个特定的地方（节点）读写数据。如FileReader.</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><strong>处理流</strong><span>：是对一个已存在的流进行连接和封装，通过所封装的流的功能调用实现数据读写。如BufferedReader.处理流的构造方法总是要带一个其他的流对象做参数。并且可进行多次包装</span></span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">InputStream基类：字节输入流</span></h3>
+<p><span class="md-expand">抽象类字节流可以传输任意文件类型数据</span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand">int read()：读一个字节，如果流中没有数据了，返回-1。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>int read(byte[] data)：一次读取多个字节，最多读取data.length个，把读取的数据放到data中，从data[0]开始存储，如果流中没有data.length个，那么有几个读取几个，返回实际读取的字节的个数。如果流中没有数据了，返回-1。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>int read(byte[] data, int offset, int count)：一次读取多个字节，最多读取count个，把读取的数据放到data中，从data[offset]开始存储，如果流中没有count个，那么有几个读取几个，返回实际读取的字节的个数。如果流中没有数据了，返回-1。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span>void close()：关闭流资源</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">OutputStream基类：字节输出流</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><code>public void close()</code><span> ：关闭此输出流并释放与此流相关联的任何系统资源。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>public void flush()</code><span> ：刷新此输出流并强制任何缓冲的输出字节被写出。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>public void write(byte[] b)</code><span>：将 b.length字节从指定的字节数组写入此输出流。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>public void write(byte[] b, int off, int len)</code><span> ：从指定的字节数组写入 len字节，从偏移量 off开始输出到此输出流。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><code>public abstract void write(int b)</code><span> ：将指定的字节输出流。</span></span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">FileInputStream类</span></h3>
+<p><span><span>继承InoutStream方法同上，文件输入流，从文件中读取字节。</span></span></p>
+<h4 class="md-end-block md-heading"><span class="md-expand">构造方法</span></h4>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span><code>FileInputStream(File file)</code><span>： 通过打开与实际文件的连接来创建一个 FileInputStream ，该文件由文件系统中的 File对象 file命名。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>FileInputStream(String name)</code><span>： 通过打开与实际文件的连接来创建一个 FileInputStream ，该文件由文件系统中的路径名 name命名。 </span></span></p>
+</li>
+</ul>
+<p class="md-end-block md-focus"><span>当你创建一个流对象时，必须传入一个文件路径。该路径下，如果没有该文件,会抛出<span><code>FileNotFoundException</code><span> 。</span></span></span></p>
+<p class="md-end-block md-focus"><span><span><span>long<strong> skip</strong>(long n) ：从输入流中跳过并丢弃 n 个字节的数据。&nbsp;</span></span></span></p>
+<p class="md-end-block md-focus"><span><span><span><span class="md-expand">读取字节<span>：<span><strong><code>read</code></strong><span>方法，每次可以读取一个字节的数据，提升为int类型，读取到文件末尾，返回<span><code>-1</code></span></span></span></span></span></span></span></span></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">FileOutputStream类</span></h3>
+<p>继承OutputStream方法同上，文件输出流，用于将数据写出到文件。</p>
+<h4 class="md-end-block md-heading"><span>构造方法</span></h4>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span><code>public FileOutputStream(File file)</code><span class="md-expand">：创建文件输出流以写入由指定的 File对象表示的文件。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>public FileOutputStream(String name)</code><span>： 创建文件输出流以指定的名称写入文件。</span></span></p>
+</li>
+<li class="md-list-item"><span><span>public FileOutputStream(String name, boolean append)：指定 String文件名name的文件输出流</span></span></li>
+</ul>
+<p class="md-end-block md-focus"><span>　　　public FileOutputStream(File file, boolean append)：指定 File 对象的文件输出流，append为true<span class="md-expand">表示追加数据，<span><code>false</code><span> 表示清空原有数据</span></span></span>。</span></p>
+<p class="md-end-block md-focus"><span>当你创建一个流对象时，必须传入一个文件路径。该路径下，如果没有这个文件，会创建该文件。如果有这个文件，会清空这个文件的数据，或指定追加。</span></p>
+<p class="md-end-block md-focus"><span class="md-expand">系统中的换行：</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span>Windows系统里，每行结尾是 <span><code>回车+换行</code><span> ，即<span><code>\r\n</code><span>；</span></span></span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>Unix系统里，每行结尾只有 <span><code>换行</code><span> ，即<span><code>\n</code><span>；</span></span></span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span>Mac系统里，每行结尾是 <span><code>回车</code><span> ，即<span><code>\r</code><span>。从 Mac OS X开始与Linux统一。</span></span></span></span></span></p>
+</li>
+</ul>
+<p>流的关闭原则：先开后关，后开先关。</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">Reader基类：</span><span class="md-expand">字符输入流</span></h3>
+<p>抽象类以字符为单位读写数据，专门用于处理文本文件</p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span><code>public int read()</code><span>：&nbsp;读取一个字符，如果已经到达流末尾，没有数据可读了，返回-1.</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>public int read(char[] cbuf)</code><span>：&nbsp;读取多个字符到data数组中，从data[0]开始存储，最多读取data.length个字符。返回的是实际读取的字符数。如果已经到达流末尾，没有数据可读了，返回-1.</span></span></p>
+</li>
+<li><strong>abstract</strong> int read(char[] data, int offset, int len)：读取多个字符到data数组中，从data[offset]开始存储，最多读取len个字符。返回的是实际读取的字符数。如果已经到达流末尾，没有数据可读了，返回-1.</li>
+<li><code>public void close()</code>&nbsp;：关闭此流并释放与此流相关联的任何系统资源</li>
+</ul>
+<ul class="ul-list" data-mark="-">
+<li>&nbsp;long skip(long n) ： 跳过n字符。&nbsp;</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">FileReader类 </span></h3>
+<p>继承Reader类是读取字符文件的便利类。构造时使用系统默认的字符编码和默认字节缓冲区。</p>
+<h4 class="md-end-block md-heading"><span class="md-expand">构造方法</span></h4>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span><code>FileReader(File file)</code><span>： 创建一个新的 FileReader ，给定要读取的File对象。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>FileReader(String fileName)</code><span>： 创建一个新的 FileReader ，给定要读取的文件的名称。 </span></span></p>
+</li>
+</ul>
+<p class="md-end-block md-focus"><span>当你创建一个流对象时，必须传入一个文件路径。其<strong>方法同上</strong>继承父类方法</span></p>
+<p>虽然读取了一个字符，但是会自动提升为int类型。</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">Writer基类：</span><span class="md-expand">字符输出流</span></h3>
+<p>抽象类表示用于写出字符流，将指定的字符信息写出到目的地</p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><code>void write(int c)</code><span> 写入单个字符。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>void write(char[] cbuf)</code><span>写入字符数组。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code><strong>abstract</strong> void write(char[] cbuf, int off, int len)</code><span>写入字符数组的某一部分,off数组的开始索引,len写的字符个数。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>void write(String str)</code><span>写入字符串。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>void write(String str, int off, int len)</code><span> 写入字符串的某一部分,off字符串的开始索引,len写的字符个数。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>void flush()</code><span>刷新该流的缓冲。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><code>void close()</code><span> 关闭此流，但要先刷新它。 </span></span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">FileWriter类</span></h3>
+<p>继承Writer类是写出字符文件的便利类。构造时使用系统默认的字符编码和默认字节缓冲区。</p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block"><span><code>FileWriter(File file)</code><span>： 创建一个新的 FileWriter，给定要读取的File对象。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span><code>FileWriter(String fileName)</code><span>： 创建一个新的 FileWriter，给定要读取的文件的名称。</span></span></p>
+</li>
+</ul>
+<ul>
+<li>FileWriter(File file, boolean append) 根据给定的 File 对象构造一个 FileWriter 对象以及指示是否附加写入数据。</li>
+</ul>
+<ul>
+<li>FileWriter(String fileName, boolean append) 根据给定的文件名以及指示是否附加写入数据的 boolean 值来构造 FileWriter 对象。</li>
+</ul>
+<p class="md-end-block md-focus"><span class="md-expand">当你创建一个流对象时，必须传入一个文件路径，其<strong>方法同上</strong>继承父类方法</span></p>
+<p>未调用close方法，数据只是保存到了缓冲区，并未写出到文件中，即便是flush方法写出了数据，操作的最后还是要调用close方法，释放系统资源。</p>
+<h4 class="md-end-block md-heading md-focus"><span class="md-expand">操作IO流的步骤</span></h4>
+<p class="md-end-block"><span>（1）创建合适的IO流的对象</span></p>
+<p class="md-end-block"><span>（2）读、写</span></p>
+<p class="md-end-block"><span>（3）关闭IO流</span></p>
+<p class="md-end-block md-focus"><span class="md-tab"> <span>要么只关闭最外层的IO流，要是都关的话，注意顺序，先关外面的再关里面的。</span></span></p>
+<h2 class="md-end-block md-heading md-focus"><span class="md-expand">缓冲流</span></h2>
+<p>缓冲流的基本原理，是在创建流对象时，会创建一个内置的默认大小的缓冲区数组，通过缓冲区读写，减少系统IO次数，从而提高读写的效率。</p>
+<p><span class="md-expand"><strong><span>字节缓冲流</span></strong><span>：<span><code>BufferedInputStream</code><span>，<span><code>BufferedOutputStream</code></span></span></span></span></span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><code>public BufferedInputStream(InputStream in)</code><span> ：创建一个 新的缓冲输入流。亦可指定缓冲区大小(InputStream in, int size)&nbsp; </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><code>public BufferedOutputStream(OutputStream out)</code><span>： 创建一个新的缓冲输出流。亦可指定缓冲区大小(OutputStream out, int size)&nbsp;</span></span></p>
+</li>
+</ul>
+<p><span><strong><span>字符缓冲流</span></strong><span>：<span><code>BufferedReader</code><span>，<span><code>BufferedWriter</code></span></span></span></span></span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><code>public BufferedReader(Reader in)</code><span> ：创建一个 新的缓冲输入流。亦可指定缓冲区大小(Reader in, int sz)&nbsp;</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><code>public BufferedWriter(Writer out)</code><span>： 创建一个新的缓冲输出流。亦可指定缓冲区大小(Writer out, int sz)&nbsp;</span></span></p>
+</li>
+</ul>
+<p>字符缓冲流的特有方法。</p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand">BufferedReader：<span><code>public String readLine()</code><span>: 读一行文字。</span></span></span></p>
+</li>
+<li>int read(char[] cbuf, int off, int len) 将字符读入数组的某一部分从off开始读len个。&nbsp;实现了基类的抽象方法</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span>BufferedWriter：<span><code>public void newLine()</code><span>: 写一行行分隔符,由系统属性定义符号。 </span></span></span></p>
+</li>
+<li>void write(char[] cbuf, int off, int len) ：写入字符数组的某一部分从off开始写len个。实现了基类的抽象方法</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">转换流</span></h3>
+<p><span class="md-expand">解码:字节(看不懂的)--&gt;字符(能看懂的)</span></p>
+<p class="md-end-block md-focus"><span>编码:字符(能看懂的)--&gt;字节(看不懂的)&nbsp;</span></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">InputStreamReader类</span></h3>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><code>InputStreamReader(InputStream in)</code><span>: 创建一个使用系统默认字符集的字符流。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><code>InputStreamReader(InputStream in, String charsetName)</code><span>: 创建一个指定字符集的字符流。</span></span></p>
+</li>
+</ul>
+<p>是Reader的子类，用来解码包装字节流，把字节输入流包装为字符输入流。</p>
+<p>应用场景：读取源为字符类型的字节流可指定字符集解码成字符流，以便阅读</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">OutputStreamWriter类</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand"><code>OutputStreamWriter(OutputStream in)</code><span>: 创建一个使用系统默认字符集的字符流。 </span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><code>OutputStreamWriter(OutputStream in, String charsetName)</code><span>: 创建一个指定字符集的字符流。</span></span></p>
+</li>
+</ul>
+<p>是Writer的子类，用来编码包装字节流，把字节输出流包装为字符输出流。</p>
+<p>应用场景：可将要写入的字符源为字节流的数据转为字符类型写入并可按指定字符集再编码成字节存储</p>
+<p><strong><span>转换流是字节与字符间的桥梁</span></strong></p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Java语法进阶13-文件、IO流0.png" alt="" /></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">数据流</span></h3>
+<p>&nbsp;继承字节流可直接处理Java的基本数据类型，要求读写顺序一一对应</p>
+<p class="md-end-block"><span>DataOutputStream：数据输出流</span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>writeUTF(String)</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>writeInt(int)</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>writeDouble(double)</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>writeChar(char)</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>writeBoolean(boolean)</span></span></p>
+</li>
+</ul>
+<p class="md-end-block"><span>DataInputStream：数据输入流</span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>String readUTF()</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>int readInt()</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>double readDouble()</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span class="md-tab"> <span>char readChar()</span></span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-tab"> <span class="md-expand">boolean readBoolean()</span></span></p>
+</li>
+</ul>
+<h2 class="md-end-block md-heading md-focus"><span class="md-expand">序列化</span></h2>
+<p><span class="md-expand">对象<span><strong><span>序列化，</span></strong><span>用一个字节序列可以表示一个对象，该字节序列包含该<span><code>对象的类型</code><span>和<span><code>对象中存储的属性</code><span>等信息，可将字节序列写出到文件。</span></span></span></span></span></span></span><span class="md-expand">反之，该字节序列还可以从文件中读取回来，重构对象，对它进行<span class="md-expand"><strong>反序列化</strong></span></span></p>
+<p>&nbsp;<img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Java语法进阶13-文件、IO流1.png" alt="" /></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">ObjectOutputStream类</span></h3>
+<p><code>public final void writeObject (Object obj)</code>&nbsp;: 将指定的对象写出到OutputStream流。</p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand">该类必须实现<span><code>java.io.<strong>Serializable</strong></code><span> 标记接口，<span><span>不实现此接口的类将不会使任何状态序列化或反序列化，会抛<span><code>NotSerializableException</code><span>&nbsp;</span></span></span></span></span></span></span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item">
+<p class="md-end-block"><span>如果对象的某个属性也是引用数据类型，那么如果该<strong>属性</strong>也要序列化的话，也要实现<span><code>Serializable</code><span> 接口</span></span></span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>该类的所有属性必须是可序列化的。如果有一个属性不需要可序列化的，则该属性必须注明是瞬态的，使用<span><strong><code>transient</code></strong><span> 关键字修饰。</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-focus"><span><strong>静态</strong>变量的值不会序列化</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">ObjectInputStream类</span></h3>
+<p class="md-end-block"><span class="md-expand">如果能找到一个对象的<strong>class文件</strong>，我们可以进行反序列化操作，调用<span><code>ObjectInputStream</code><span>读取对象的方法：</span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span><code>public final Object readObject ()</code><span> : 读取一个对象到InputStream流。</span></span></p>
+</li>
+</ul>
+<p class="md-end-block md-focus"><span>另外，当JVM反序列化对象时，能找到class文件，但是class文件在序列化对象之后发生了修改，那么反序列化操作也会失败，抛出一个<code>InvalidClassException</code>异常<strong><span><span><span>。</span></span></span></strong><span>发生这个异常的原因如下：</span></span></p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item">
+<p class="md-end-block"><span>该类的序列版本号与从流中读取的类描述符的版本号不匹配 </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>该类包含未知数据类型 </span></p>
+</li>
+</ul>
+<p class="md-end-block"><span><code>Serializable</code><span> 接口给需要序列化的类，提供了一个序列<strong>版本号</strong>。<span><code>serialVersionUID</code><span> 该版本号的目的在于验证序列化的对象和对应类是否版本匹配。</span></span></span></span></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">java.io.Externalizable接口</span></h3>
+<p class="md-end-block"><span>实现这个接口，可以自定义需要被系列化的属性使得对象能够被序列化，但是要求程序员重写两个方法：</span></p>
+<p class="md-end-block md-focus"><span>void writeExternal(ObjectOutput out) ：编写哪些属性需要序列化</span></p>
+<p class="md-end-block md-focus"><span><span class="md-softbreak"> <span>void readExternal(ObjectInput in) ：编写哪些属性需要反序列化</span></span></span></p>
+<p><strong>注意</strong>：读取的顺序要与写的顺序一致，虽然可以自己决定任意属性的输出和读取，但是还是建议不要输出静态的和transient属性。</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">PrintStream类</span></h3>
+<p>字节流该类<span class="md-expand">调用<span><code>print</code><span>方法和<span><code>println</code><span>方法</span></span></span></span></span>能够方便地打印各种数据类型的值，是一种便捷的输出方式。</p>
+<p class="md-end-block">System.in：InputStream类型对象</p>
+<p class="md-end-block">System.out：PrintStream类型对象</p>
+<p class="md-end-block md-focus">System.err：PrintStream类型对象</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">Scanner类</span></h3>
+<p>有多个构造方法可由多种方式生成从指定流的扫描对象，并实现了迭代器接口</p>
+<ul class="ul-list" data-mark="*">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-focus"><span class="md-expand">boolean hasNextXxx()： 如果通过使用nextXxx()方法，此扫描器输入信息中的下一个标记可以解释为默认基数中的一个 Xxx 值，则返回 true。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block"><span>Xxx nextXxx()： 将输入信息的下一个标记扫描为一个Xxx</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-expand">新try..catch</span></h3>
+<p class="md-end-block"><span>语法格式：</span></p>
+<pre><code><span><span class="cm-keyword">try(<span class="cm-variable">需要关闭的资源对象的声明){<br /><span> &nbsp; &nbsp;<span class="cm-variable">业务逻辑代码<br /><span>}<span class="cm-keyword">catch(<span class="cm-variable">异常类型 <span class="cm-variable">e){<br /><span> &nbsp; &nbsp;<span class="cm-variable">处理异常代码<br /><span>}<span class="cm-keyword">catch(<span class="cm-variable">异常类型 <span class="cm-variable">e){<br /><span> &nbsp; &nbsp;<span class="cm-variable">处理异常代码<br /><span>}<br /><span>....</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+<p class="md-end-block md-focus"><span>它没有finally，也不需要程序员去关闭资源对象，无论是否发生异常，都会关闭资源对象</span></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

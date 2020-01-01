@@ -1,0 +1,199 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修多机部署之定时任务完整方案' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>多机部署之定时任务完整方案</center></div><div class='banquan'>原文出处:本文由博客园博主软件老王提供。<br/>
+原文连接:https://www.cnblogs.com/ruanjianlaowang/p/12053817.html</div><br>
+    <h3 id="场景描述">1.场景描述</h3>
+<p>老项目需要多机部署，项目中有几十个定时任务，一旦多机部署，定时任务就会重复执行，固定ip与错开时间方案都存在较大弊端，最终采用的方案是:AOP+排他锁的方式，软件老王已验证通过，介绍下，有需要的朋友可以参考下。</p>
+<h3 id="解决方案">2.解决方案</h3>
+<p>软件老王基本方案是采用：AOP+排他锁的方式。</p>
+<p>（1）目前老项目有几十个定时任务，采用AOP的方式，可以保证代码的无侵入（即使简单的微侵入，例如增加几行代码，测试验证的工作量也会比较大的）。<br />
+（2）采用排他锁的方式，保证批处理的高可用，不重复执行。</p>
+<h4 id="aop编程">2.1 AOP编程</h4>
+<p>Aop的概念就不说了，就是面向切面编程，通俗点就是统一处理一类问题，比如日志、请求鉴权等，刚开始不确定是否可行，系统中的批处理是使用spring注解的方式@Scheduled进行批处理，采用aop对注解@Scheduled进行编程，统一拦截批处理，代码如下：</p>
+<pre><code><code>/**
+ * 软件老王-AOP处理类
+ */
+@Aspect
+@Component
+public class ScheduledAspect {
+    @Autowired
+    ScheduleService scheduleService ;
+
+    @Pointcut( &quot;@annotation(org.springframework.scheduling.annotation.Scheduled)&quot;)
+    public void scheduled() {
+    }
+    @Around(&quot;scheduled()&quot;)
+    public Object scheduled(ProceedingJoinPoint pjd) {
+        Object result = null;
+        String taskName = pjd.getSignature().getName();
+        try {
+            if (scheduleService.isInvoke(taskName)){
+                return result;
+            }
+            result = pjd.proceed();
+            scheduleService.end(taskName);
+        } catch (Throwable e) {
+            throw new RuntimeException(e);
+        }
+        return result;
+    }
+}
+</code></pre>
+<p><strong>说明：</strong></p>
+<p><strong>（1）面向标签编程</strong></p>
+<pre><code><code>  @Pointcut( &quot;@annotation(org.springframework.scheduling.annotation.Scheduled)&quot;)</code></pre>
+<p>这样注解会拦截标签@Scheduled。</p>
+<p><strong>（2）使用aop的环绕标签 @Around(&quot;scheduled()&quot;)</strong></p>
+<p>@before标签拿不到执行完成状态，需要使用环绕标签@@Around，在标签中可以拿到执行完成后状态，以便放开锁。</p>
+<pre><code><code> result = pjd.proceed();</code></pre>
+<p><strong>（3）结合排他锁使用</strong></p>
+<pre><code><code>   @Autowired
+    ScheduleService scheduleService ;</code></pre>
+<h4 id="排他锁">2.2 排他锁</h4>
+<p>排他锁，简单来说就是通过数据库总的标志位+版版号进行的控制.</p>
+<p>软件老王的代码如下，：</p>
+<pre><code><code>/**
+ * 软件老王-排他锁服务类
+ */
+@Service
+public class ScheduleService {
+    @Autowired
+    ScheduleClusterMapper scheduleClusterMapper;
+
+    public boolean isInvoke(String taskName) {
+        boolean isValid = false;
+        try {
+            ScheduleCluster carIndexEntity = scheduleClusterMapper.selectByTaskName(taskName);
+            int execute = carIndexEntity.getExecute();
+            String ip = InetAddress.getLocalHost().getHostAddress();
+            long currentTimeMillis = System.currentTimeMillis();
+            long time = carIndexEntity.getUpdatedate().getTime();
+            if (execute == 0) {
+                isValid = start(taskName, carIndexEntity.getVersion(), ip);
+            }
+        } catch (UnknownHostException e) {
+            e.printStackTrace();
+        }
+        return isValid;
+    }
+    //执行锁机制，软件老王
+    public boolean start(String taskName, int version, String ip) {
+        ScheduleCluster scheduleCluster = new ScheduleCluster();
+        scheduleCluster.setVersion(version);
+        scheduleCluster.setExecuteIp(ip);
+        scheduleCluster.setUpdatedate(DateUtil.getCurrentTime());
+        scheduleCluster.setTaskName(taskName);
+        scheduleCluster.setExecute(1);
+        int count = scheduleClusterMapper.updateByTaskName(scheduleCluster);
+        if (count &gt; 0) {
+            return true;
+        }
+        return false;
+    }
+    //执行解锁机制，软件老王
+    public void end(String taskName) {
+        ScheduleCluster scheduleCluster = new ScheduleCluster();
+        scheduleCluster.setUpdatedate(DateUtil.getCurrentTime());
+        scheduleCluster.setTaskName(taskName);
+        scheduleCluster.setExecute(0);
+        scheduleClusterMapper.updateNormalByTaskName(scheduleCluster);
+    }
+}</code></pre>
+<p><strong>说明：</strong></p>
+<p>大的原理是在where条件后带上版本号，在update中更新version+1，这样通过影响数据库的影响条数，来判断是否拿到锁。</p>
+<p>（1）主类中调用start方法，该方法是更新批处理状态，软件老王这里设置了一个小点，在updateByTaskName的mybatis方法中，有个version+1的更新；</p>
+<p>（2）end方法放在更新完成后，释放锁。</p>
+<p>（3）其实还有一个点，可以考虑下，需要有个机制，比如出现异常情况，刚好批处理执行中，重启服务了等，下次批处理执行前，假如锁还未释放，代码中增加释放锁的机制。</p>
+<h4 id="数据库相关">2.3 数据库相关</h4>
+<p><strong>（1）数据库表设计</strong></p>
+<p><img src="./images/多机部署之定时任务完整方案0.png" /></p>
+<p><strong>（2）mybatis相关方法</strong></p>
+<p><strong>（1）第一个是start对应方法，执行锁和version增加。</strong></p>
+<pre><code><code> &lt;update id=&quot;updateByTaskName&quot; parameterType=&quot;com.yutong.dmp.entity.ScheduleCluster&quot;&gt;
+    update t_schedule_cluster
+    &lt;set&gt;
+        &lt;if test=&quot;executeIp != null&quot;&gt;
+            execute_ip = #{executeIp,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;version != null&quot;&gt;
+            version = #{version,jdbcType=INTEGER} + 1,
+        &lt;/if&gt;
+        &lt;if test=&quot;execute != null&quot;&gt;
+            execute = #{execute,jdbcType=INTEGER},
+        &lt;/if&gt;
+        &lt;if test=&quot;status != null&quot;&gt;
+            status = #{status,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;createby != null&quot;&gt;
+            createby = #{createby,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;createdate != null&quot;&gt;
+            createdate = #{createdate,jdbcType=TIMESTAMP},
+        &lt;/if&gt;
+        &lt;if test=&quot;updateby != null&quot;&gt;
+            updateby = #{updateby,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;updatedate != null&quot;&gt;
+            updatedate = #{updatedate,jdbcType=TIMESTAMP},
+        &lt;/if&gt;
+    &lt;/set&gt;
+    where task_name = #{taskName,jdbcType=VARCHAR}
+    and version = #{version,jdbcType=INTEGER}
+    and status =&#39;1&#39;
+  &lt;/update&gt;</code></pre>
+<p><strong>（2）第二个是释放锁，更改excute为0。</strong></p>
+<pre><code><code>&lt;update id=&quot;updateNormalByTaskName&quot; parameterType=&quot;com.yutong.dmp.entity.ScheduleCluster&quot;&gt;
+    update t_schedule_cluster
+    &lt;set&gt;
+        &lt;if test=&quot;executeIp != null&quot;&gt;
+            execute_ip = #{executeIp,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;version != null&quot;&gt;
+            version = #{version,jdbcType=INTEGER},
+        &lt;/if&gt;
+        &lt;if test=&quot;execute != null&quot;&gt;
+            execute = #{execute,jdbcType=INTEGER},
+        &lt;/if&gt;
+        &lt;if test=&quot;status != null&quot;&gt;
+            status = #{status,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;createby != null&quot;&gt;
+            createby = #{createby,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;createdate != null&quot;&gt;
+            createdate = #{createdate,jdbcType=TIMESTAMP},
+        &lt;/if&gt;
+        &lt;if test=&quot;updateby != null&quot;&gt;
+            updateby = #{updateby,jdbcType=VARCHAR},
+        &lt;/if&gt;
+        &lt;if test=&quot;updatedate != null&quot;&gt;
+            updatedate = #{updatedate,jdbcType=TIMESTAMP},
+        &lt;/if&gt;
+    &lt;/set&gt;
+    where task_name = #{taskName,jdbcType=VARCHAR}
+    and status =&#39;1&#39;
+&lt;/update&gt;</code></pre>
+<hr />
+<p>I’m 「软件老王」，如果觉得还可以的话，关注下呗，后续更新秒知！欢迎讨论区、同名公众号留言交流！</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

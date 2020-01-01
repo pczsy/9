@@ -1,0 +1,88 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修对于房天下租房信息进行爬取' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>对于房天下租房信息进行爬取</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11259941.html</div><br>
+    <h1 id="对于房天下租房信息进行爬取">对于房天下租房信息进行爬取</h1>
+<h2 id="代码">代码</h2>
+<pre><code><code>import re
+
+import requests
+from lxml.html import etree
+
+url_xpath = &#39;//dd/p[1]/a[1]/@href&#39;
+title_xpath = &#39;//dd/p[1]/a[1]/@title&#39;
+data_xpaht = &#39;//dd/p[2]/text()&#39;
+headers = {
+    &#39;rpferpr&#39;: &#39;https://sh.zu.fang.com/&#39;,
+    &#39;User-Agent&#39;: &#39;Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.90 Safari/537.36&#39;
+}
+rp = requests.get(&#39;https://sh.zu.fang.com/&#39;, headers=headers)
+rp.encoding = rp.apparent_encoding
+html = etree.HTML(rp.text)
+url = html.xpath(url_xpath)
+title = html.xpath(title_xpath)
+data = re.findall(&#39;&lt;p class=&quot;font15 mt12 bold&quot;&gt;(.*?)&lt;/p&gt;&#39;, rp.text, re.S)
+mold_lis = []
+house_type_lis = []
+area_lis = []
+for a in data:
+    a = re.sub(&#39;�O&#39;, &#39;平方米&#39;, a)
+    mold = re.findall(&#39;\r\n\s.*?(\S.*?)&lt;span class=&quot;splitline&quot;&gt;&#39;, a)
+    house_type_area = re.findall(&#39;&lt;/span&gt;(.*?)&lt;span class=&quot;splitline&quot;&gt;&#39;, a)
+    try:
+        mold_lis.append(mold[0])
+        house_type_lis.append(house_type_area[0])
+        area_lis.append(house_type_area[1])
+    except:
+        pass
+
+data_zip = zip(title, url, mold_lis, house_type_lis, area_lis)
+
+with open(&#39;info.txt&#39;, &#39;a&#39;, encoding=&#39;utf8&#39;) as fa:
+    for a in data_zip:
+        fa.write(str(a))
+        fa.write(&#39;\n&#39;)</code></pre>
+<p><code>未完待续</code></p>
+<p>后续接着对于分区进行爬取</p>
+<pre><code><code>arpa_dict = {
+    &#39;不限&#39;:&#39;house&#39;,
+    &#39;浦东&#39;:&#39;house-a025&#39;,
+    &#39;嘉定&#39;:&#39;house-a029&#39;,
+    &#39;宝山&#39;:&#39;house-a030&#39;,
+    &#39;闵行&#39;:&#39;house-a018&#39;,
+    &#39;松江&#39;:&#39;house-a0586&#39;,
+    &#39;普陀&#39;:&#39;house-a028&#39;,
+    &#39;静安&#39;:&#39;house-a021&#39;,
+    &#39;黄浦&#39;:&#39;house-a024&#39;,
+    &#39;虹口&#39;:&#39;house-a024&#39;,
+    &#39;青浦&#39;:&#39;house-a024&#39;,
+    &#39;奉贤&#39;:&#39;house-a024&#39;,
+    &#39;金山&#39;:&#39;house-a024&#39;,
+    &#39;杨浦&#39;:&#39;house-a024&#39;,
+    &#39;徐汇&#39;:&#39;house-a024&#39;,
+    &#39;长宁&#39;:&#39;house-a024&#39;,
+    &#39;崇明&#39;:&#39;house-a0996&#39;,
+    &#39;上海周边&#39;:&#39;house-a01046&#39;,
+}</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

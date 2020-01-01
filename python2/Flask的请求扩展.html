@@ -1,0 +1,83 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Flask的请求扩展' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Flask的请求扩展</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11598299.html</div><br>
+    <pre><code><code>from flask import Flask,request
+app = Flask(__name__)</code></pre>
+<h2 id="一.请求前">一.请求前</h2>
+<p><code>before_request</code></p>
+<p>用法</p>
+<pre><code><code>@app.before_request
+def func():
+    print(request) #可以在请求来前对于request进行处理
+    #return 如果有返回值页面将渲染返回值不走@app.routex相关函数
+    #如有有返回值且有after_request相关函数他的返回值会接着执行after_request相关函数
+    #如果有多个before_request他会自上而下按照顺序执行</code></pre>
+<h2 id="二.请求后">二.请求后</h2>
+<p><code>after_reques</code></p>
+<p>用法</p>
+<pre><code><code>@app.after_request
+def func(response): #必须传一个response对象
+    return response #必须返回一个response对象
+   #有多个after_request他会从后往前执行</code></pre>
+<h2 id="三.页面第一次请求">三.页面第一次请求</h2>
+<p><code>before_first_request</code></p>
+<p>用法</p>
+<pre><code><code>@app.before_first_request
+def first():
+    pass</code></pre>
+<p>FLask启动时候,页面请求第一次才会执行,第二次不会执行与浏览器无关</p>
+<h2 id="四.异常捕获">四.异常捕获</h2>
+<p><code>teardown_request</code></p>
+<p>用法</p>
+<pre><code><code>@app.teardown_request 
+def ter(e):
+    pass</code></pre>
+<ul>
+<li>只能捕获异常而不能让页面渲染出自定义的异常信息</li>
+<li>app.debug=True模式下e为空</li>
+<li>无论什么情况函数都会运行</li>
+</ul>
+<h2 id="五.异常处理">五.异常处理</h2>
+<p>用法</p>
+<pre><code><code>@app.errorhandler(状态码)
+def error_404(arg):
+    return &quot;页面我们自定义错误信息进行渲染&quot;</code></pre>
+<h2 id="六.页面渲染">六.页面渲染</h2>
+<p>用法</p>
+<pre><code><code>@app.template_global()
+def sb(a1, a2):
+    return a1 + a2</code></pre>
+<p>所有页面渲染的时候如果页面上有sb变量他将自动调用该函数</p>
+<p>页面中</p>
+<pre><code><code>{{sb(1,2)}}
+#页面显示结果为3</code></pre>
+<h2 id="七.过滤器">七.过滤器</h2>
+<p>用法</p>
+<pre><code><code>@app.template_filter()
+def db(a1, a2, a3):
+    return a1 + a2 + a3</code></pre>
+<p>页面中</p>
+<pre><code><code>#{{ 第一个变量|db(第二个变量,第三个变量)}}</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,63 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python-django中使用事务以及小坑' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python-django中使用事务以及小坑</center></div><div class='banquan'>原文出处:本文由博客园博主朱春雨提供。<br/>
+原文连接:https://www.cnblogs.com/zhuchunyu/p/11227130.html</div><br>
+    <h3 id="django中使用事务">django中使用事务</h3>
+<h4 id="一导入事务模块">一、导入事务模块</h4>
+<pre><code><code>from django.db import transaction</code></pre>
+<h4 id="二对相应的业务进行事务操作">二、对相应的业务进行事务操作</h4>
+<ol>
+<li><p>方式一:为整个函数进行事务操作</p>
+<pre><code><code>@transaction.atomic
+def mysql_test():
+ &#39;&#39;&#39;该函数进行一些关于数据库的操作&#39;&#39;&#39;
+ pass</code></pre></li>
+<li><p>方式二:为部分代码进行事务操作</p>
+<pre><code><code># 视图函数
+def mysql_test(request):
+    try:
+     with transaction.atomic():
+         # 一系列对数据库的操作
+         pass
+ except Exception:   # 最好具体的错误类型，捕捉具体的错误
+        pass</code></pre></li>
+</ol>
+<p>好了，上面就是关于django中使用事务的方式</p>
+<p>不过这里还是得提醒一下，mysql中INNODB存储引擎是支持事务的，MyISAM是不支持的！</p>
+<p>所以我们在settings.py文件中，关于mysql数据库，如果项目中需要使用到事务，那么就必须指定INNODB存储引擎。</p>
+<pre><code><code>DATABASES = {
+    &#39;default&#39;: {
+        &#39;ENGINE&#39;: &#39;django.db.backends.mysql&#39;,
+        &#39;NAME&#39;: &#39;root&#39;,
+        &#39;USER&#39;: &#39;root&#39;,
+        &#39;PASSWORD&#39;: &#39;root&#39;,
+        &#39;HOST&#39;: &#39;127.0.0.1&#39;,
+        &#39;PORT&#39;: 3306,
+        &#39;OPTIONS&#39;: {
+            &quot;init_command&quot;: &quot;SET storage_engine=INNODB&quot;,
+        }
+    }
+}</code></pre>
+<p>如果忽略掉<code>OPTIONS</code>这个键值对的话，django给我们创建的表是MyISAM。这是一个小坑，本人记录一下。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

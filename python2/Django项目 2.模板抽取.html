@@ -1,0 +1,510 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django项目 2.模板抽取' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django项目 2.模板抽取</center></div><div class='banquan'>原文出处:本文由博客园博主Tmclri提供。<br/>
+原文连接:https://www.cnblogs.com/Tmclri/p/11520507.html</div><br>
+    <h3><span style="font-size: 18px; font-family: 宋体; background-color: #00ff00;">为什么要抽模板,因为这样能够复用代码,减少代码量,需要原代码时就不需要修改,也不需要添加; 如果不同,就只需要单独修改不一样的地方就行&nbsp; : 多挖坑,少代码,这就是抽模板的精髓,挖坑就是({% block xxx %}需要改变的代码{% endblock %})</span></h3>
+<h1 class="md-end-block md-heading"><span class="md-plain">静态页面抽取模板</span></h1>
+<h2 class="md-end-block md-heading"><span class="md-plain">一、分析静态页面</span></h2>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">1.静态vs动态</span></h4>
+<p>　　<img src="./images/Django项目 2.模板抽取0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.本次项目页面分析</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">本项目由5个模块组成分别是：<span><code>news</code><span class="md-plain">、<span><code>course</code><span class="md-plain">、<span><code>doc</code><span class="md-plain">、<span class="md-expand"><code>user</code><span class="md-plain">、<span><code>admin</code><span class="md-plain">，按照django的风格，在前面创建的模板文件夹templates下，分别创建以app名命名的文件夹news，course，doc，user，admin，用于存放每个应用的模板文件。在前面创建的静态文件夹statc下，也分别创建js，css，images，font等文件夹用来存放静态文件。</span></span></span></span></span></span></span></span></span></span></span><img src="./images/Django项目 2.模板抽取1.png" alt="" /></p>
+<p>&nbsp;</p>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain">3.分析模板页面</span></h4>
+<p class="md-end-block md-p"><span class="md-plain md-expand">观察提供静态模板页面，找出模板的公共部分，然后抽取作为基础模板。</span><img src="./images/Django项目 2.模板抽取2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;经过观察，发现提供的模板布局为，顶部导航，中间内容，右边侧栏，和底部页脚。其中除了中间内容的布局有所差异，其他三个部分的布局都没有改变，我们可以将这三个部分抽出来作为base模板。</p>
+<p>&nbsp;</p>
+<h2 class="md-end-block md-heading"><span class="md-plain md-expand">二、模板抽取</span></h2>
+<p class="md-end-block md-p"><span class="md-plain">首先提供的模板静态文件先复制进static文件下相应的文件夹</span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">1.base模板抽取</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">根据上面的分析提取顶部导航，底部页脚，和侧栏，在base目录下创建base.html代码如下：</span></p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>{% load <span style="color: #0000ff;">static</span> %<span style="color: #000000;">}
+</span>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;meta charset=<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>&gt;
+    &lt;!-- title 模板 --&gt;
+  &lt;title&gt;{% block title %}{% endblock title %}&lt;/title&gt;
+    &lt;!-- title 模板 end --&gt;
+  &lt;link rel=<span style="color: #800000;">"</span><span style="color: #800000;">stylesheet</span><span style="color: #800000;">"</span> href=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'css/base/reset.css' %}</span><span style="color: #800000;">"</span>&gt;
+  &lt;link rel=<span style="color: #800000;">"</span><span style="color: #800000;">stylesheet</span><span style="color: #800000;">"</span> href=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'css/base/common.css' %}</span><span style="color: #800000;">"</span>&gt;
+  &lt;link rel=<span style="color: #800000;">"</span><span style="color: #800000;">stylesheet</span><span style="color: #800000;">"</span> href=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'css/base/side.css' %}</span><span style="color: #800000;">"</span>&gt;
+  &lt;link rel=<span style="color: #800000;">"</span><span style="color: #800000;">stylesheet</span><span style="color: #800000;">"</span> href=<span style="color: #800000;">"</span><span style="color: #800000;">http://at.alicdn.com/t/font_684044_un7umbuwwfp.css</span><span style="color: #800000;">"</span>&gt;
+    &lt;!-- 页面css 模板 --&gt;<span style="color: #000000;">
+    {</span>% block link %<span style="color: #000000;">}
+    {</span>% endblock link %<span style="color: #000000;">}
+    </span>&lt;!-- 页面css 模板 end --&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;!-- header start --&gt;
+&lt;header id=<span style="color: #800000;">"</span><span style="color: #800000;">header</span><span style="color: #800000;">"</span>&gt;
+  &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">mw1200 header-contain clearfix</span><span style="color: #800000;">"</span>&gt;
+    &lt;!-- logo start --&gt;
+    &lt;h1 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">logo</span><span style="color: #800000;">"</span>&gt;
+      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">logo-title</span><span style="color: #800000;">"</span>&gt;Python&lt;/a&gt;
+    &lt;/h1&gt;
+    &lt;!-- logo end --&gt;
+    &lt;!-- nav start --&gt;
+    &lt;nav <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">nav</span><span style="color: #800000;">"</span>&gt;
+      &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">menu</span><span style="color: #800000;">"</span>&gt;
+        &lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">active</span><span style="color: #800000;">"</span>&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">base.html</span><span style="color: #800000;">"</span>&gt;首页&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">../course/course.html</span><span style="color: #800000;">"</span>&gt;在线课堂&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">../doc/docDownload.html</span><span style="color: #800000;">"</span>&gt;下载文档&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">search.html</span><span style="color: #800000;">"</span>&gt;搜索&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/nav&gt;
+    &lt;!-- nav end --&gt;
+    &lt;!-- login start --&gt;
+      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">login-box</span><span style="color: #800000;">"</span>&gt;
+          &lt;div&gt;
+              &lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-user</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt;
+              &lt;span&gt;
+                  &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">../users/login.html</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">login</span><span style="color: #800000;">"</span>&gt;登录&lt;/a&gt; / &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">../users/register.html</span><span style="color: #800000;">"</span>
+                                                                          <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">reg</span><span style="color: #800000;">"</span>&gt;注册&lt;/a&gt;
+              &lt;/span&gt;
+          &lt;/div&gt;
+          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">author hide</span><span style="color: #800000;">"</span>&gt;
+              &lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-user</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt;
+              &lt;span&gt;qwertyui&lt;/span&gt;
+              &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">author-menu</span><span style="color: #800000;">"</span>&gt;
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;后台管理&lt;/a&gt;&lt;/li&gt;
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;退出登录&lt;/a&gt;&lt;/li&gt;
+              &lt;/ul&gt;
+          &lt;/div&gt;
+      &lt;/div&gt;
+    &lt;!-- login end --&gt;
+  &lt;/div&gt;
+&lt;/header&gt;
+&lt;!-- header end --&gt;
+
+&lt;!-- main start 模板 --&gt;<span style="color: #000000;">
+{</span>% block main_start %<span style="color: #000000;">}
+</span>&lt;main id=<span style="color: #800000;">"</span><span style="color: #800000;">main</span><span style="color: #800000;">"</span>&gt;
+  &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">w1200 clearfix</span><span style="color: #800000;">"</span>&gt;
+    &lt;!-- main-contain 模板  --&gt;<span style="color: #000000;">
+      {</span>% block main_contain %<span style="color: #000000;">}
+
+      {</span>% endblock main_contain %<span style="color: #000000;">}
+    </span>&lt;!-- main-contain  end --&gt;
+
+    &lt;!-- side start 模板 --&gt;<span style="color: #000000;">
+        {</span>% block side %<span style="color: #000000;">}
+      </span>&lt;aside <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">side</span><span style="color: #800000;">"</span>&gt;
+          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">side-activities</span><span style="color: #800000;">"</span>&gt;
+              &lt;h3 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">activities-title</span><span style="color: #800000;">"</span>&gt;在线课堂&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span>&gt;更多&lt;/a&gt;&lt;/h3&gt;
+              &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">activities-img</span><span style="color: #800000;">"</span>&gt;
+                  &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                      &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/english.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>&gt;
+                  &lt;/a&gt;
+                  &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">activities-tips</span><span style="color: #800000;">"</span>&gt;对话国外小姐姐&lt;/p&gt;
+              &lt;/div&gt;
+              &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">activities-list</span><span style="color: #800000;">"</span>&gt;
+                  &lt;li&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                          &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">active-status active-start</span><span style="color: #800000;">"</span>&gt;报名中&lt;/span&gt;
+                          &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">active-title</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                  href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span>&gt; Django 项目班&lt;/a&gt;&lt;/span&gt;
+                      &lt;/a&gt;
+                  &lt;/li&gt;
+                  &lt;li&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                          &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">active-status active-end</span><span style="color: #800000;">"</span>&gt;已结束&lt;/span&gt;
+                          &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">active-title</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                  href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2321</span><span style="color: #800000;">"</span>&gt;Python入门基础班&lt;/a&gt;&lt;/span&gt;
+                      &lt;/a&gt;
+                  &lt;/li&gt;
+              &lt;/ul&gt;
+          &lt;/div&gt;
+          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">side-attention clearfix</span><span style="color: #800000;">"</span>&gt;
+              &lt;h3 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">attention-title</span><span style="color: #800000;">"</span>&gt;关注我&lt;/h3&gt;
+              &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">side-attention-address</span><span style="color: #800000;">"</span>&gt;
+                  &lt;li&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-GitHub</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt;XinLan&lt;/a&gt;
+                  &lt;/li&gt;
+                  &lt;li&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-zhihu</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                                                                       style</span>=<span style="color: #800000;">"</span><span style="color: #800000;">color:rgb(0, 108, 226);</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt;XinLan&lt;/a&gt;
+                  &lt;/li&gt;
+                  &lt;li&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-weibo</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                                                                       style</span>=<span style="color: #800000;">"</span><span style="color: #800000;">color:rgb(245,92,110);</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt;XinLan&lt;/a&gt;
+                  &lt;/li&gt;
+              &lt;/ul&gt;
+              &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">side-attention-qr</span><span style="color: #800000;">"</span>&gt;
+                  &lt;p&gt;扫码关注&lt;/p&gt;
+              &lt;/div&gt;
+          &lt;/div&gt;
+            &lt;!-- 热门推荐 模板  --&gt;<span style="color: #000000;">
+          {</span>% block hot_recommend %<span style="color: #000000;">}
+          </span>&lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">side-hot-recommend</span><span style="color: #800000;">"</span>&gt;
+              &lt;h3 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">hot-recommend</span><span style="color: #800000;">"</span>&gt;热门推荐&lt;/h3&gt;
+              &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">hot-news-list</span><span style="color: #800000;">"</span>&gt;
+
+                  &lt;li&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">hot-news-contain clearfix</span><span style="color: #800000;">"</span>&gt;
+                          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">hot-news-thumbnail</span><span style="color: #800000;">"</span>&gt;
+                              &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/python_web.jpg' %}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                                   alt</span>=<span style="color: #800000;">""</span>&gt;
+                          &lt;/div&gt;
+                          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">hot-news-content</span><span style="color: #800000;">"</span>&gt;
+                              &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">hot-news-title</span><span style="color: #800000;">"</span>&gt;Django调试工具django-debug-toolbar安装使用教程&lt;/p&gt;
+                              &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">hot-news-other clearfix</span><span style="color: #800000;">"</span>&gt;
+                                  &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-type</span><span style="color: #800000;">"</span>&gt;python框架&lt;/span&gt;
+                                  &lt;!-- 自带的 --&gt;
+                                  &lt;time <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-pub-time</span><span style="color: #800000;">"</span>&gt;11月11日&lt;/time&gt;
+                                  &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-author</span><span style="color: #800000;">"</span>&gt;python&lt;/span&gt;
+                              &lt;/div&gt;
+                          &lt;/div&gt;
+                      &lt;/a&gt;
+                  &lt;/li&gt;
+
+              &lt;/ul&gt;
+          &lt;/div&gt;<span style="color: #000000;">
+          {</span>% endblock hot_recommend %<span style="color: #000000;">}
+            </span>&lt;!-- 热门推荐 模板 end --&gt;
+
+      &lt;/aside&gt;<span style="color: #000000;">
+        {</span>% endblock side %<span style="color: #000000;">}
+    </span>&lt;!-- side end --&gt;
+  &lt;/div&gt;
+&lt;/main&gt;<span style="color: #000000;">
+{</span>% endblock main_start %<span style="color: #000000;">}
+</span>&lt;!-- main 内容模板 end --&gt;
+
+&lt;!-- footer start --&gt;
+&lt;footer id=<span style="color: #800000;">"</span><span style="color: #800000;">footer</span><span style="color: #800000;">"</span>&gt;
+    &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">footer-box</span><span style="color: #800000;">"</span>&gt;
+        &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">footer-content</span><span style="color: #800000;">"</span>&gt;
+            &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">top-content</span><span style="color: #800000;">"</span>&gt;
+                    &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">link</span><span style="color: #800000;">"</span>&gt;
+                        &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span>&gt;关于Python&lt;/a&gt; |
+                        &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span>&gt;我就是我&lt;/a&gt; |
+                        &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span>&gt;人生苦短&lt;/a&gt; |
+                        &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span>&gt;我用Python&lt;/a&gt;
+                    &lt;/span&gt;
+                &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">about-me</span><span style="color: #800000;">"</span>&gt;关于我: &lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-wechat</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt; XinLan&lt;/span&gt;
+            &lt;/p&gt;
+            &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">bottom-content</span><span style="color: #800000;">"</span>&gt;
+                &lt;span&gt;地址： xxxx&lt;/span&gt;
+                &lt;span&gt;联系方式: &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">tel:400-1567-315</span><span style="color: #800000;">"</span>&gt;<span style="color: #800080;">400</span>-<span style="color: #800080;">1567</span>-<span style="color: #800080;">315</span>&lt;/a&gt; (24小时在线)&lt;/span&gt;
+            &lt;/p&gt;
+        &lt;/div&gt;
+        &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">copyright-desc</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+            Copyright </span>&amp;copy; <span style="color: #800080;">2008</span> - <span style="color: #800080;">2018</span><span style="color: #000000;"> xxx有限公司. All Rights Reserved
+        </span>&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/footer&gt;
+&lt;!-- footer end --&gt;
+&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">https://cdn.bootcss.com/jquery/3.3.1/jquery.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'js/base/common.js' %}</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+&lt;!-- 自定义js模板 --&gt;<span style="color: #000000;">
+{</span>% block script %<span style="color: #000000;">}
+{</span>% endblock script %<span style="color: #000000;">}
+</span>&lt;!-- 自定义js模板 end --&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">注意静态文件的引用。</span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.news模块index页面</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">news/index.html代码：</span></p>
+<div class="cnblogs_code">
+<pre><code>{% extends <span style="color: #800000;">'</span><span style="color: #800000;">base/base.html</span><span style="color: #800000;">'</span> %<span style="color: #000000;">}
+{</span>% load <span style="color: #0000ff;">static</span> %<span style="color: #000000;">}
+
+{</span>% block title %}首页{% endblock title %<span style="color: #000000;">}
+
+{</span>% block link %<span style="color: #000000;">}
+    </span>&lt;link rel=<span style="color: #800000;">"</span><span style="color: #800000;">stylesheet</span><span style="color: #800000;">"</span> href=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'css/news/index.css' %}</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+{</span>% endblock link %<span style="color: #000000;">}
+
+{</span>% block main_contain %<span style="color: #000000;">}
+</span>&lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">main-contain</span><span style="color: #800000;">"</span>&gt;
+      &lt;!-- banner start --&gt;
+        &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">banner</span><span style="color: #800000;">"</span>&gt;
+            &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">pic</span><span style="color: #800000;">"</span>&gt;
+                &lt;!--淡入淡出banner--&gt;
+
+
+                &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/linux.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span>&gt;&lt;/a&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/python_gui.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span>&gt;&lt;/a&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/python_function.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span>&gt;&lt;/a&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/python_advanced.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span>&gt;&lt;/a&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/jichujiaochen.jpeg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span>&gt;&lt;/a&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/python_web.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span>&gt;&lt;/a&gt;&lt;/li&gt;
+
+
+            &lt;/ul&gt;
+            &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">btn prev</span><span style="color: #800000;">"</span>&gt;
+                &lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-arrow-left</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt;&lt;/a&gt;
+            &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">btn next</span><span style="color: #800000;">"</span>&gt;
+                &lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">PyWhich py-arrow-right</span><span style="color: #800000;">"</span>&gt;&lt;/i&gt;&lt;/a&gt;
+            &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tab</span><span style="color: #800000;">"</span>&gt;
+                &lt;!-- 按钮数量必须和图片一致 --&gt;
+
+
+                &lt;li&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;/li&gt;
+
+
+                &lt;li&gt;&lt;/li&gt;
+
+
+            &lt;/ul&gt;
+        &lt;/div&gt;
+      &lt;!-- banner end --&gt;
+
+      &lt;!-- content start --&gt;
+      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">content</span><span style="color: #800000;">"</span>&gt;
+        &lt;!-- recommend-news start --&gt;
+          &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">recommend-news</span><span style="color: #800000;">"</span>&gt;
+              &lt;li&gt;
+                  &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">recommend-thumbnail</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/python_gui.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/div&gt;
+                      &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">info</span><span style="color: #800000;">"</span>&gt;Python GUI 教程 25行代码写一个小闹钟&lt;/p&gt;
+                  &lt;/a&gt;
+              &lt;/li&gt;
+
+              &lt;li&gt;
+                  &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">recommend-thumbnail</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/python_advanced.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/div&gt;
+                      &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">info</span><span style="color: #800000;">"</span>&gt;python高性能编程方法一&lt;/p&gt;
+                  &lt;/a&gt;
+              &lt;/li&gt;
+
+              &lt;li&gt;
+                  &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> target=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">recommend-thumbnail</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/jichujiaochen.jpeg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/div&gt;
+                      &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">info</span><span style="color: #800000;">"</span>&gt;python基础 split 和 join函数比较&lt;/p&gt;
+                  &lt;/a&gt;
+              &lt;/li&gt;
+          &lt;/ul&gt;
+        &lt;!-- recommend-news end --&gt;
+
+        &lt;!--  news-nav start--&gt;
+          &lt;nav <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-nav</span><span style="color: #800000;">"</span>&gt;
+              &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">clearfix</span><span style="color: #800000;">"</span>&gt;
+                  &lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">active</span><span style="color: #800000;">"</span>&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span>&gt;最新资讯&lt;/a&gt;&lt;/li&gt;
+
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>&gt;python框架&lt;/a&gt;
+                  &lt;/li&gt;
+
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">2</span><span style="color: #800000;">"</span>&gt;Python基础&lt;/a&gt;
+                  &lt;/li&gt;
+
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">3</span><span style="color: #800000;">"</span>&gt;Python高级&lt;/a&gt;
+                  &lt;/li&gt;
+
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">4</span><span style="color: #800000;">"</span>&gt;Python函数&lt;/a&gt;
+                  &lt;/li&gt;
+
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">5</span><span style="color: #800000;">"</span>&gt;PythonGUI&lt;/a&gt;
+                  &lt;/li&gt;
+
+                  &lt;li&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0)</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">6</span><span style="color: #800000;">"</span>&gt;Linux教程&lt;/a&gt;
+                  &lt;/li&gt;
+
+              &lt;/ul&gt;
+          &lt;/nav&gt;
+        &lt;!--  news-nav end --&gt;
+
+        &lt;!-- news-contain start --&gt;
+          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-contain</span><span style="color: #800000;">"</span>&gt;
+              &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-list</span><span style="color: #800000;">"</span>&gt;
+
+                  &lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-item</span><span style="color: #800000;">"</span>&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-thumbnail</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                         target</span>=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/linux.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">linux查找文件或目录命令</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                               title</span>=<span style="color: #800000;">"</span><span style="color: #800000;">linux查找文件或目录命令</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/a&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-content</span><span style="color: #800000;">"</span>&gt;
+                          &lt;h4 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-title</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                  href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">#</span><span style="color: #800000;">"</span>&gt;linux查找文件或目录命令&lt;/a&gt;
+                          &lt;/h4&gt;
+                          &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-details</span><span style="color: #800000;">"</span>&gt;linux查找文件或目录命令，前提：知道文件或者目录的具体名字，例如：sphinx.conffind 查找find / -<span style="color: #000000;">name
+                              dirname 查找目录find </span>-name...&lt;/p&gt;
+                          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-other</span><span style="color: #800000;">"</span>&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-type</span><span style="color: #800000;">"</span>&gt;Linux教程&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-time</span><span style="color: #800000;">"</span>&gt;<span style="color: #800080;">11</span>/<span style="color: #800080;">11</span> <span style="color: #800080;">18</span>:<span style="color: #800080;">24</span>&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-author</span><span style="color: #800000;">"</span>&gt;python&lt;/span&gt;
+                          &lt;/div&gt;
+                      &lt;/div&gt;
+                  &lt;/li&gt;
+
+                  &lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-item</span><span style="color: #800000;">"</span>&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-thumbnail</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                         target</span>=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/linux.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">linux下svn命令的使用</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                               title</span>=<span style="color: #800000;">"</span><span style="color: #800000;">linux下svn命令的使用</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/a&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-content</span><span style="color: #800000;">"</span>&gt;
+                          &lt;h4 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-title</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                  href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432/887</span><span style="color: #800000;">"</span>&gt;linux下svn命令的使用&lt;/a&gt;
+                          &lt;/h4&gt;
+                          &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-details</span><span style="color: #800000;">"</span>&gt;<span style="color: #800080;">1</span><span style="color: #000000;">、将文件checkout到本地目录svn checkout path（path是服务器上的目录） 例如：svn checkout
+                              svn:</span><span style="color: #008000;">//</span><span style="color: #008000;">192.168.1.1/pro/domain 简写：svn co2、往版本库中添加新的文件 svn addfile 例如：svn add te...&lt;/p&gt;</span>
+                          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-other</span><span style="color: #800000;">"</span>&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-type</span><span style="color: #800000;">"</span>&gt;Linux教程&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-time</span><span style="color: #800000;">"</span>&gt;<span style="color: #800080;">11</span>/<span style="color: #800080;">11</span> <span style="color: #800080;">18</span>:<span style="color: #800080;">24</span>&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-author</span><span style="color: #800000;">"</span>&gt;python&lt;/span&gt;
+                          &lt;/div&gt;
+                      &lt;/div&gt;
+                  &lt;/li&gt;
+
+                  &lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-item</span><span style="color: #800000;">"</span>&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-thumbnail</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                         target</span>=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/linux.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">实现linux和windows文件传输</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                               title</span>=<span style="color: #800000;">"</span><span style="color: #800000;">实现linux和windows文件传输</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/a&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-content</span><span style="color: #800000;">"</span>&gt;
+                          &lt;h4 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-title</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                  href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432/886</span><span style="color: #800000;">"</span>&gt;实现linux和windows文件传输&lt;/a&gt;
+                          &lt;/h4&gt;
+                          &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-details</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+                              其实这个题目有点大，这里介绍的只是linux和windows文件传输中的一种，但是这种方法却非常实用，那就是：ZModem协议具体是linux命令是：rz...</span>&lt;/p&gt;
+                          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-other</span><span style="color: #800000;">"</span>&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-type</span><span style="color: #800000;">"</span>&gt;Linux教程&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-time</span><span style="color: #800000;">"</span>&gt;<span style="color: #800080;">11</span>/<span style="color: #800080;">11</span> <span style="color: #800080;">18</span>:<span style="color: #800080;">24</span>&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-author</span><span style="color: #800000;">"</span>&gt;python&lt;/span&gt;
+                          &lt;/div&gt;
+                      &lt;/div&gt;
+                  &lt;/li&gt;
+
+                  &lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-item</span><span style="color: #800000;">"</span>&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-thumbnail</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                         target</span>=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/linux.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">.htaccess配置详解</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                               title</span>=<span style="color: #800000;">"</span><span style="color: #800000;">.htaccess配置详解</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/a&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-content</span><span style="color: #800000;">"</span>&gt;
+                          &lt;h4 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-title</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                  href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span>&gt;.htaccess配置详解&lt;/a&gt;
+                          &lt;/h4&gt;
+                          &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-details</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">　　.htaccess文件设置基础教程 如果你设置好了比如常用的404页面 301重定向 页面还有500页面等会设置了
+                              无非对你的seo技术有很大帮助那么 .htaccess文件到底怎么设置呢　　</span>- .htaccess 文件(或者&amp;quot;分布式...&lt;/p&gt;
+                          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-other</span><span style="color: #800000;">"</span>&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-type</span><span style="color: #800000;">"</span>&gt;Linux教程&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-time</span><span style="color: #800000;">"</span>&gt;<span style="color: #800080;">11</span>/<span style="color: #800080;">11</span> <span style="color: #800080;">18</span>:<span style="color: #800080;">24</span>&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-author</span><span style="color: #800000;">"</span>&gt;python&lt;/span&gt;
+                          &lt;/div&gt;
+                      &lt;/div&gt;
+                  &lt;/li&gt;
+
+                  &lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-item</span><span style="color: #800000;">"</span>&gt;
+                      &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-thumbnail</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                         target</span>=<span style="color: #800000;">"</span><span style="color: #800000;">_blank</span><span style="color: #800000;">"</span>&gt;
+                          &lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'images/linux.jpg' %}</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">"</span><span style="color: #800000;">使用nohup命令让linux程序后台运行</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                               title</span>=<span style="color: #800000;">"</span><span style="color: #800000;">使用nohup命令让linux程序后台运行</span><span style="color: #800000;">"</span>&gt;
+                      &lt;/a&gt;
+                      &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-content</span><span style="color: #800000;">"</span>&gt;
+                          &lt;h4 <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-title</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                  href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">https://www.shiguangkey.com/course/2432</span><span style="color: #800000;">"</span>&gt;使用nohup命令让linux程序后台运行&lt;/a&gt;
+                          &lt;/h4&gt;
+                          &lt;p <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-details</span><span style="color: #800000;">"</span>&gt;使用nohup让程序永远后台运行Unix/Linux下一般比如想让某个程序在后台运行，很多都是使用 &amp;<span style="color: #000000;">amp;
+                              在程序结尾来让程序自动运行。比如我们要运行mysql在后台：</span>/usr/local/mysql/bin/mysqld_safe --user=mysql &amp;amp;但是...&lt;/p&gt;
+                          &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-other</span><span style="color: #800000;">"</span>&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-type</span><span style="color: #800000;">"</span>&gt;Linux教程&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-time</span><span style="color: #800000;">"</span>&gt;<span style="color: #800080;">11</span>/<span style="color: #800080;">11</span> <span style="color: #800080;">18</span>:<span style="color: #800080;">24</span>&lt;/span&gt;
+                              &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">news-author</span><span style="color: #800000;">"</span>&gt;python&lt;/span&gt;
+                          &lt;/div&gt;
+                      &lt;/div&gt;
+                  &lt;/li&gt;
+
+              &lt;/ul&gt;
+          &lt;/div&gt;
+        &lt;!-- news-contain end --&gt;
+
+        &lt;!-- btn-more start --&gt;
+        &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:void(0);</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">btn-more</span><span style="color: #800000;">"</span>&gt;加载更多&lt;/a&gt;
+        &lt;!-- btn-more end --&gt;
+      &lt;/div&gt;
+      &lt;!-- content end --&gt;
+    &lt;/div&gt;<span style="color: #000000;">
+{</span>% endblock main_contain %<span style="color: #000000;">}
+
+{</span>% block script %<span style="color: #000000;">}
+    </span>&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">{% static 'js/news/index.js' %}</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;<span style="color: #000000;">
+{</span>% endblock script %}</pre>
+</div>
+<p>news/views.py代码(视图代码)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span><span style="color: #000000;"> django.shortcuts import render
+
+
+def index(request):
+    </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">news/index.html</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>news/urls.py代码(路由配置)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span><span style="color: #000000;"> django.urls import path
+</span><span style="color: #0000ff;">from</span><span style="color: #000000;"> . import views
+# url的命名空间
+app_name </span>= <span style="color: #800000;">'</span><span style="color: #800000;">news</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+urlpatterns </span>=<span style="color: #000000;"> [
+    path(</span><span style="color: #800000;">''</span>, views.index, name=<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span><span style="color: #000000;">),    # 将这条路由命名为index
+]</span></pre>
+</div>
+<p>这会还得在主项目下配置分路由代码(根urls.py代码)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span><span style="color: #000000;"> django.urls import path, include
+
+urlpatterns </span>=<span style="color: #000000;"> [<br />　　# 配置分路由用include
+    path(</span><span style="color: #800000;">''</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">news.urls</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+]</span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

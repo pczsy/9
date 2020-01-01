@@ -1,0 +1,60 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Redis Cluster原理' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Redis Cluster原理</center></div><div class='banquan'>原文出处:本文由博客园博主超级小小黑提供。<br/>
+原文连接:https://www.cnblogs.com/hello-shf/p/12080123.html</div><br>
+    <p>Redis专题地址：<a href="https://www.cnblogs.com/hello-shf/category/1615909.html">https://www.cnblogs.com/hello-shf/category/1615909.html</a></p>
+<p>SpringBoot读源码系列：<a href="https://www.cnblogs.com/hello-shf/category/1456313.html">https://www.cnblogs.com/hello-shf/category/1456313.html</a></p>
+<p>Elasticsearch系列：<a href="https://www.cnblogs.com/hello-shf/category/1550315.html">https://www.cnblogs.com/hello-shf/category/1550315.html</a></p>
+<p>数据结构系列：<a href="https://www.cnblogs.com/hello-shf/category/1519192.html">https://www.cnblogs.com/hello-shf/category/1519192.html</a></p>
+<h1>一、redis cluster</h1>
+<p>在redis3.0之前，如果想搭建一个集群架构还是挺复杂的，就算是基于一些第三方的中间件搭建的集群总感觉有那么点差强人意。或者基于sentinel哨兵搭建的主从架构在高可用上表现又不是很好，尤其是当数据量越来越大，单纯主从结构无法满足对性能的需求时，矛盾便产生了。<br />随着redis cluster的推出，这种海量数据+高并发+高可用的场景真正从根本上得到了有效的支持。</p>
+<h1>二、集群内部通信</h1>
+<p>在redis cluster集群内部通过gossip协议进行通信，集群元数据分散的存在于各个节点，通过gossip进行元数据的交换。<br />不同于zookeeper分布式协调中间件，采用集中式的集群元数据存储。redis cluster采用分布式的元数据管理，优缺点还是比较明显的。<br />在redis中集中式的元数据管理类似sentinel主从架构模式。集中式有点在于元数据更新实效性更高，但容错性不如分布式管理。gossip协议优点在于大大增强集群容错性。<br />redis cluster集群中单节点一般配置两个端口，一个端口如6379对外提供api，另一个一般是加1w，比如16379进行节点间的元数据交换即用于gossip协议通讯。<br />gossip协议包含多种消息，如ping pong，meet，fail等。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #000000;">meet：集群中节点通过向新加入节点发送meet消息，将新节点加入集群。
+</span><span style="color: #008080;">2</span> <span style="color: #000000;">ping：节点间通过ping命令交换元数据。
+</span><span style="color: #008080;">3</span> <span style="color: #000000;">pong：响应ping。
+</span><span style="color: #008080;">4</span> fail：某个节点主观认为某个节点宕机，会向其他节点发送fail消息，进行客观宕机判定。</pre>
+</div>
+<p>&nbsp;</p>
+<h1>三、集群高可用和主备切换</h1>
+<p><strong>主观宕机和客观宕机：</strong><br />某个节点会周期性的向其他节点发送ping消息，当在一定时间内未收到pong消息会主观认为该节点宕机，即主观宕机。然后该节点向其他节点发送fail消息，其他超过半数节点也确认该节点宕机，即客观宕机。十分类似sentinel的sdown和odown。<br />客观宕机确认后进入主备切换阶段及从节点选举。<br /><strong>节点选举：</strong><br />检查每个 slave node 与 master node 断开连接的时间，如果超过了 cluster-node-timeout * cluster-slave-validity-factor，那么就没有资格切换成 master。<br />每个从节点，都根据自己对 master 复制数据的 offset，来设置一个选举时间，offset 越大（复制数据越多）的从节点，选举时间越靠前，优先进行选举。<br />所有的 master node 开始 slave 选举投票，给要进行选举的 slave 进行投票，如果大部分 master node（N/2 + 1）都投票给了某个从节点，那么选举通过，那个从节点可以切换成 master。<br />从节点执行主备切换，从节点切换为主节点。</p>
+<h1>四、分片和寻址算法</h1>
+<p>hash slot即hash槽。redis cluster采用的正式这种hash槽算法实现的寻址。<br />在redis cluster中固定的存在<strong>16384</strong>个hash slot。</p>
+<div class="cnblogs_code">
+<pre><code>hash slot = CRC16（key）%16384；</pre>
+</div>
+<p>&nbsp;#CRC16算法可以简单的理解为一种hash算法。详见度娘。<br />这样我们就能找到key对应的hash slot。其实按照我的理解，hash slot就是在寻址和节点间加了一层映射关系。当节点动态变化，只需要改变hash slot ==&gt; 节点的映射，然后只需要迁移指定slot到新添加的节点即可。既减少了hash寻址带来的数据全量迁移问题，相对一致性hash也使得负载均衡效果更加明显。</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Redis Cluster原理0.png" alt="" width="648" height="380" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;如上图，如果我们有三个节点。redis cluster初始化时会自动均分给每个节点16384个slot。<br />当增加一个节点4，只需要将原来node1~node3节点部分slot上的数据迁移到节点4即可。在redis cluster中数据迁移并不会阻塞主进程。对性能影响是十分有限的。总结一句话就是hash slot算法有效的减少了当节点发生变化导致的数据漂移带来的性能开销。</p>
+<p>更多分布式寻址算法可参考：<a href="https://www.cnblogs.com/hello-shf/p/12079986.html">https://www.cnblogs.com/hello-shf/p/12079986.html</a></p>
+<h1>五、对比sentinel</h1>
+<p>相比Sentinel主从架构，redis cluster中各个节点是对等的，类似elasticsearch的节点对等原理。<br />节点对等是我从elasticsearch copy过来的概念，但是用在这里还是很合理的。<br />Sentinel主从架构我们都知道只能搭建出来一个主从的架构（当然从还可以作为其它从的主），比较适合读写分离，原则上没有实现海量数据的分片。而Redis正是弥补了Sentinel无法实现海量数据的高可用，Redis cluster通过分片实现海量数据+高可用的高并发架构。<br />假如有100个数据，在sentinel中主节点完全存储100条数据，而在Redis cluster中通过hash slot将数据分片，平均分布在多个节点上，实现了海量数据的分片。原则上来说，Redis cluster才是真正的分布式架构。</p>
+<p>有关Sentinel可参考：<a href="https://www.cnblogs.com/hello-shf/p/12072330.html">https://www.cnblogs.com/hello-shf/p/12072330.html</a></p>
+<p>&nbsp;</p>
+<p>　　如有错误的地方还请留言指正。<br />　　原创不易，转载请注明原文地址：<a class="ng-star-inserted" href="https://www.cnblogs.com/hello-shf/p/12080123.html" target="_blank">https://www.cnblogs.com/hello-shf/p/12080123.html</a></p>
+<p>&nbsp;</p>
+<p>　　参考文献：<br />　　https://github.com/hello-shf/advanced-java</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

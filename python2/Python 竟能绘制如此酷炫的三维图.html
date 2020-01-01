@@ -1,0 +1,80 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 竟能绘制如此酷炫的三维图' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 竟能绘制如此酷炫的三维图</center></div><div class='banquan'>原文出处:本文由博客园博主wade1900提供。<br/>
+原文连接:https://www.cnblogs.com/suke1900/p/11176117.html</div><br>
+    <p>通常我们用 Python 绘制的都是二维平面图，但有时也需要绘制三维场景图，比如像下面这样的：</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图0.png" /></p>
+<p>这些图怎么做出来呢？今天就来分享下如何一步步绘制出三维矢量（SVG）图。</p>
+<h2 id="八面体">八面体</h2>
+<p>我们先以下面这个八面体为例。</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图1.png" /></p>
+<h3 id="安装相关包">1 安装相关包</h3>
+<p>首先安装两个必备包：</p>
+<pre><code><code>import pyrr # NumPy 的 3D 函数库
+import svgwrite # svg图形处理库</code></pre>
+<h3 id="定义-3d-图生成环境">2 定义 3D 图生成环境</h3>
+<p>接下来定义几个类设置好 3 维图基础环境：</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图2.png" /></p>
+<blockquote>
+<p>viewport ：矩形图范围</p>
+<p>camera：包括视图矩阵和投影矩阵</p>
+<p>mesh：svg 矢量图所需的网格表面矩阵、着色器和样式字典</p>
+</blockquote>
+<h3 id="生成八面体数据">3 生成八面体数据</h3>
+<p>然后生成八面体每个定点的数据：</p>
+<pre><code><code>def octahedron():
+    &quot;&quot;&quot;Construct an eight-sided polyhedron&quot;&quot;&quot;
+    f =  sqrt(2.0) / 2.0
+    verts = numpy.float32([ ( 0, -1,  0), (-f,  0,  f), ( f,  0,  f), ( f,  0, -f), (-f,  0, -f), ( 0,  1,  0) ])
+    triangles = numpy.int32([ (0, 2, 1), (0, 3, 2), (0, 4, 3), (0, 1, 4), (5, 1, 2), (5, 2, 3), (5, 3, 4), (5, 4, 1) ])
+    return verts[triangles]</code></pre>
+<h3 id="pyrr-包渲染">4 pyrr 包渲染</h3>
+<p>接下来利用 pyrr 3维库渲染上面的原始数据，最后生成 svg 矢量图。</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图3.png" /></p>
+<h3 id="生成-svg">5 生成 svg</h3>
+<p>上面最后一步生成 svg 图形，需要调用下面的 Engine 函数，略微有些复杂：</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图4.png" /></p>
+<p>以上代码全部封装到类中调用，就可以生成八面体图形。</p>
+<p>除了八面体还可以生成很多其他图形。</p>
+<h2 id="球体和-klein-瓶">球体和 Klein 瓶</h2>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图5.png" /></p>
+<p>代码如下：</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图6.png" /></p>
+<h2 id="多面球体">多面球体</h2>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图7.png" /></p>
+<p>代码如下：</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图8.png" /></p>
+<h2 id="发光的球体">发光的球体</h2>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图9.png" /></p>
+<p>代码实现：</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图10.png" /></p>
+<h2 id="还可以绘制这种曲面体">还可以绘制这种曲面体</h2>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图11.png" /></p>
+<p>代码实现如下：</p>
+<p><img src="./images/Python 竟能绘制如此酷炫的三维图12.png" /></p>
+<p>END.</p>
+<p>作者： <a href="https://jalammar.github.io/">Jay Alammar</a></p>
+<p>链接：<a href="https://jalammar.github.io/visual-numpy/" class="uri">https://jalammar.github.io/visual-numpy/</a></p>
+<p>本文版权归作者和博客园共有，欢迎转载（个人微信：qqguai001），但未经作者同意必须保留此段声明，且在文章页面明显位置给出原文连接，否则保留追究法律责任的权利。（尊重别人就是尊重自己，尊重笔者的劳动哦，转载请说明出处哦，商用请征得作者本人同意，谢谢！！！）</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

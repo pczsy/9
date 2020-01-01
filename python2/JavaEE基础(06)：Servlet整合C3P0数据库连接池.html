@@ -1,0 +1,210 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修JavaEE基础(06)：Servlet整合C3P0数据库连接池' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>JavaEE基础(06)：Servlet整合C3P0数据库连接池</center></div><div class='banquan'>原文出处:本文由博客园博主知了一笑提供。<br/>
+原文连接:https://www.cnblogs.com/cicada-smile/p/12071198.html</div><br>
+    <blockquote>
+<p>本文源码：<a href="https://github.com/cicadasmile/java-base-parent">GitHub·点这里</a> || <a href="https://gitee.com/cicadasmile/java-base-parent">GitEE·点这里</a></p>
+</blockquote>
+<h1 id="一c3p0连接池">一、C3P0连接池</h1>
+<h2 id="c3p0简介">1、C3P0简介</h2>
+<p>C3P0是一个开源的JDBC连接池，应用程序根据C3P0配置来初始化数据库连接，可以自动回收空闲连接的功能。</p>
+<h2 id="核心依赖">2、核心依赖</h2>
+<pre><code><code>&lt;dependency&gt;
+    &lt;groupId&gt;mysql&lt;/groupId&gt;
+    &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+    &lt;version&gt;${mysql.version}&lt;/version&gt;
+&lt;/dependency&gt;
+&lt;dependency&gt;
+    &lt;groupId&gt;com.mchange&lt;/groupId&gt;
+    &lt;artifactId&gt;c3p0&lt;/artifactId&gt;
+    &lt;version&gt;${c3p0.version}&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<h2 id="配置文件">3、配置文件</h2>
+<p>配置文件位置：放在<code>resources</code>目录下，这样C3P0组件会自动加载该配置。</p>
+<pre><code><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;c3p0-config&gt;
+    &lt;default-config&gt;
+        &lt;!-- 核心参数配置 --&gt;
+        &lt;property name=&quot;jdbcUrl&quot;&gt;jdbc:mysql://localhost:3306/servlet-jdbc&lt;/property&gt;
+        &lt;property name=&quot;driverClass&quot;&gt;com.mysql.jdbc.Driver&lt;/property&gt;
+        &lt;property name=&quot;user&quot;&gt;root&lt;/property&gt;
+        &lt;property name=&quot;password&quot;&gt;123&lt;/property&gt;
+        &lt;!-- 池参数配置 --&gt;
+        &lt;property name=&quot;acquireIncrement&quot;&gt;3&lt;/property&gt;
+        &lt;property name=&quot;initialPoolSize&quot;&gt;10&lt;/property&gt;
+        &lt;property name=&quot;minPoolSize&quot;&gt;2&lt;/property&gt;
+        &lt;property name=&quot;maxPoolSize&quot;&gt;10&lt;/property&gt;
+    &lt;/default-config&gt;
+&lt;/c3p0-config&gt;</code></pre>
+<h2 id="编写工具类">4、编写工具类</h2>
+<p>该工具类用来获取数据库连接，和释放相关连接。</p>
+<pre class="java"><code>public class C3P0Pool {
+    private static DataSource dataSource = new ComboPooledDataSource();
+    public static DataSource getDataSource() {
+        return dataSource ;
+    }
+    /**
+     * 获取连接
+     */
+    public static Connection getConnection() throws SQLException {
+        return dataSource.getConnection();
+    }
+    /**
+     * 释放连接
+     */
+    public static void close(ResultSet resultSet, PreparedStatement pst, Connection connection) {
+        if (resultSet != null) {
+            try {
+                resultSet.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if (pst != null) {
+            try {
+                pst.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+        if (connection != null) {
+            try {
+                connection.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}</code></pre>
+<h1 id="二数据操作封装">二、数据操作封装</h1>
+<h2 id="新增数据">1、新增数据</h2>
+<pre class="java"><code>public class UserJdbcInsert {
+    public static void insertUser (UserInfo userInfo){
+        try {
+            Connection connection = C3P0Pool.getConnection();
+            String sql = &quot;INSERT INTO user_info (user_name,user_age) VALUES (?,?)&quot; ;
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1,userInfo.getUserName());
+            statement.setString(2,userInfo.getUserAge().toString());
+            statement.execute() ;
+            C3P0Pool.close(null, statement, connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+    public static void batchInsertUser (List&lt;UserInfo&gt; userInfoList){
+        try {
+            Connection connection = C3P0Pool.getConnection();
+            String sql = &quot;INSERT INTO user_info (user_name,user_age) VALUES (?,?)&quot; ;
+            PreparedStatement statement = connection.prepareStatement(sql);
+            for (UserInfo userInfo:userInfoList){
+                statement.setString(1,userInfo.getUserName());
+                statement.setString(2,userInfo.getUserAge().toString());
+                statement.addBatch();
+            }
+            statement.executeBatch() ;
+            C3P0Pool.close(null, statement, connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+<h2 id="查询数据">2、查询数据</h2>
+<pre class="java"><code>public class UserJdbcQuery {
+    public static UserInfo queryUser (String userName){
+        UserInfo userInfo = null ;
+        try {
+            Connection connection = C3P0Pool.getConnection();
+            String sql = &quot;SELECT * FROM user_info WHERE user_name=?&quot; ;
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1,userName);
+            ResultSet resultSet = statement.executeQuery() ;
+            while (resultSet.next()){
+                int id = resultSet.getInt(&quot;id&quot;);
+                String name = resultSet.getString(&quot;user_name&quot;);
+                int age = resultSet.getInt(&quot;user_age&quot;);
+                System.out.println(&quot;ID:&quot;+id+&quot;;name:&quot;+name+&quot;;age:&quot;+age);
+                userInfo = new UserInfo(name,age) ;
+            }
+            C3P0Pool.close(resultSet, statement, connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return userInfo ;
+    }
+}</code></pre>
+<h2 id="更新数据">3、更新数据</h2>
+<pre class="java"><code>public class UserJdbcUpdate {
+    public static void updateUser (String name,Integer age,Integer id){
+        try {
+            Connection connection = C3P0Pool.getConnection();
+            String sql = &quot;UPDATE user_info SET user_name=?,user_age=? WHERE id=?&quot; ;
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setString(1,name);
+            statement.setInt(2,age);
+            statement.setInt(3,id);
+            statement.executeUpdate() ;
+            C3P0Pool.close(null, statement, connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+<h2 id="删除数据">4、删除数据</h2>
+<pre class="java"><code>public class UserJdbcDelete {
+    public static void deleteUser (Integer id){
+        try {
+            Connection connection = C3P0Pool.getConnection();
+            String sql = &quot;DELETE FROM user_info WHERE id=?&quot; ;
+            PreparedStatement statement = connection.prepareStatement(sql);
+            statement.setInt(1,id);
+            statement.executeUpdate() ;
+            C3P0Pool.close(null, statement, connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+}</code></pre>
+<h1 id="三servlet接口">三、Servlet接口</h1>
+<pre class="java"><code>public class JdbcServletImpl extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        String userName = request.getParameter(&quot;userName&quot;) ;
+        UserInfo userInfo = UserJdbcQuery.queryUser(userName) ;
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        response.getWriter().print(&quot;用户信息:&quot;+userInfo);
+    }
+}</code></pre>
+<p>测试访问：</p>
+<p><code>http://localhost:6003/jdbcServletImpl?userName=LiSi</code></p>
+<p>页面打印：</p>
+<p>用户信息:<code>UserInfo{userName='LiSi', userAge=22}</code></p>
+<h1 id="四源代码地址">四、源代码地址</h1>
+<pre><code><code>GitHub·地址
+https://github.com/cicadasmile/java-base-parent
+GitEE·地址
+https://gitee.com/cicadasmile/java-base-parent</code></pre>
+<p><img src="./images/JavaEE基础(06)：Servlet整合C3P0数据库连接池0.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,51 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修时间复杂度————被list.insert坑了' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>时间复杂度————被list.insert坑了</center></div><div class='banquan'>原文出处:本文由博客园博主嗨哥-higer提供。<br/>
+原文连接:https://www.cnblogs.com/higer666/p/11688865.html</div><br>
+    <p>今天被一个很简单的坑到了，还想了很长时间，insert 函数，真的知道它内部执行的操作吗？</p>
+<p>开始其实是在看一本算法的书，书里面给了两段工作内容差不多的伪代码</p>
+<p>第一段如下：</p>
+<div class="cnblogs_Highlighter">
+<pre><code>data = []
+while 还有数据:
+    x = 下一数据
+    data .insert(0,x) # 把新数据加到表的最前面
+</pre>
+</div>
+<p>第二段如下：</p>
+<div class="cnblogs_Highlighter">
+<pre><code>data = []
+while 还有数据:
+    x = 下一数据
+    data.insert(len(data),x)  # 新数据加在最后
+</pre>
+</div>
+<p>　最开始感觉第二中代码中计算量不是应该比第一段多了一个计算长度的部分吗？应该是最二种时间花费更多，事实上len(data)消耗的时间或者说时间复杂度是一个常量级别的，几乎可以忽略</p>
+<p>这个地方问题点不是在len(data)上，而是在insert 的执行上，insert 如果从使用上，作用上来思考，超级简单，就是一个插入，但是这个方法中间的执行，却不是一个常量级的时间复杂度，</p>
+<p>是一个线性关系，根据插入的位置和data的大小来确定，但是上面列举的第一种代码，插入的位置刚好是头部，也就是最前面，简单思考一下如果做一个插入操作，不用insert方法，自己写一个插入的方法，</p>
+<p>就会是把从插入位置到最后一个元素全部向后挪动一位，这个时候时间可以看出来时间花费还是很大的，insert(0,x) 时间复杂度是O(n),而insert (-1,x)时间复杂度是O(l)</p>
+<p>第二种代码时间复杂度计算是O(n)，第一种代码时间复杂度计算是O(n^2)，</p>
+<p>&nbsp;</p>
+<p>总结一下，其实这个坑是因为忘记了insert操作其实也是一种遍历操作，需要花费的时间不是常量级，而是线性级</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

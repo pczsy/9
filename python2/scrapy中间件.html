@@ -1,0 +1,68 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修scrapy中间件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>scrapy中间件</center></div><div class='banquan'>原文出处:本文由博客园博主爱吃猫的鱼i提供。<br/>
+原文连接:https://www.cnblogs.com/zwp-627/p/11295848.html</div><br>
+    <h2>&nbsp;</h2>
+<h2>scrapy中间件分下载器中间件和爬虫中间件</h2>
+<h4>下载器中间件（downloader middlewares）:主要处理request请求发出去和response响应返回的一些回调。</h4>
+<p>方法：</p>
+<p>　　process_request(self,request,spider)：</p>
+<h5>　　　　当request请求经过下载器中间件的时候调用</h5>
+<p>　　　　返回为None：继续请求</p>
+<p>　　　　返回为Request对象，把request对象交给调度器，进行后续请求</p>
+<p>　　　　返回为Response对象，不再请求，response交给引擎然后给爬虫</p>
+<h5>　　这个方法可以给request请求增加代理ip，cookie，user-agent，还可以集成selenium，返回HtmlResponse(url,body=,request=,encoding=)</h5>
+<p>&nbsp;</p>
+<p>　　process_response(self,request,response,spider)：</p>
+<h5>　　　　下载器完成http请求，返回responser给引擎时调用</h5>
+<p>　　　　返回为Request对象，交给调度器继续请求</p>
+<p>　　　　返回为Response对象，交给下一个process_response处理</p>
+<h5>　　这个方法，可以进行cookie池的维护，或者对response进行MD5加密，判断页面是否变化</h5>
+<p>&nbsp;</p>
+<p>　　process_exception(request,exception,spider)：</p>
+<h5>　　　　当下载处理区或者process_request抛出异常时，scrapy框架调用process_exception处理，但是不处理process_response抛出的异常，此异常调用requst的errback(Request.errback)处理</h5>
+<p>　　　　返回为None，调用其他process_exception方法继续处理，直到所有中间件调用完毕，调用默认的异常处理</p>
+<p>　　　　返回为Response对象，异常纠正，交给下一个process_response处理</p>
+<p>　　　　返回为Request对象，交给调度器继续请求</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h4>爬虫中间件（spider middlewares）:处理解析数据(item)的相关逻辑修正，比如数据不完整添加默认、增加其他额外信息。（处理输入response的跨域或robots拦截，输出item或request）</h4>
+<p>　　方法：</p>
+<p>　　process_spider_input(self,response,spider)：</p>
+<h5>　　　　response通过中间件，该方法调用</h5>
+<p>　　　　返回None，交给下一个process_spider_input处理</p>
+<p>&nbsp;</p>
+<p>　　process_spider_output(self,response,result,spider)：</p>
+<h5>　　　　当spider处理response返回reult，该方法调用</h5>
+<p>　　　　该方法必须返回包含requset或item对象的可迭代对象iterable</p>
+<p>　　</p>
+<p>　　process_spider_exception(response,exception,spider)：</p>
+<h5>　　　　当spider或process_spider_input抛出异常时，该方法调用</h5>
+<p>　　　　返回为None，交给其他process_spider_exception继续处理</p>
+<p>　　　　返回一个包含responser或item对象的可迭代对象(iterable)，交给其process_spider_output方法</p>
+<p>　　　　</p>
+<p>　　　process_start_request(start_request,spider)：</p>
+<h5>　　　　spider启动start_requests() 时调用</h5>
+<p>　　　　接受一个可迭代对象(start_request参数)且必须返回一个包含Request对象的可迭代对象</p>
+<p>　　</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

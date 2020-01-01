@@ -1,0 +1,819 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修8. SOFAJRaft源码分析— JRaft是如何实现日志复制的？' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>8. SOFAJRaft源码分析— JRaft是如何实现日志复制的？</center></div><div class='banquan'>原文出处:本文由博客园博主luozhiyun提供。<br/>
+原文连接:https://www.cnblogs.com/luozhiyun/p/12005975.html</div><br>
+    <h2 id="前言">前言</h2>
+<p>前几天和腾讯的大佬一起吃饭聊天，说起我对SOFAJRaft的理解，我自然以为我是很懂了的，但是大佬问起了我那SOFAJRaft集群之间的日志是怎么复制的？<br />
+我当时哑口无言，说不出是怎么实现的，所以这次来分析一下SOFAJRaft中日志复制是怎么做的。</p>
+<h2 id="leader发送探针获取follower的lastlogindex">Leader发送探针获取Follower的LastLogIndex</h2>
+<p>Leader 节点在通过 Replicator 和 Follower 建立连接之后，要发送一个 Probe 类型的探针请求，目的是知道 Follower 已经拥有的的日志位置，以便于向 Follower 发送后续的日志。</p>
+<p>大致的流程如下：</p>
+<pre><code><code>NodeImpl#becomeLeader-&gt;replicatorGroup#addReplicator-&gt;Replicator#start-&gt;Replicator#sendEmptyEntries</code></pre>
+<p>最后会通过调用Replicator的sendEmptyEntries方法来发送探针来获取Follower的LastLogIndex</p>
+<p><strong>Replicator#sendEmptyEntries</strong></p>
+<pre class="java"><code>private void sendEmptyEntries(final boolean isHeartbeat,
+                              final RpcResponseClosure&lt;AppendEntriesResponse&gt; heartBeatClosure) {
+    final AppendEntriesRequest.Builder rb = AppendEntriesRequest.newBuilder();
+    //将集群配置设置到rb中，例如Term，GroupId，ServerId等
+    if (!fillCommonFields(rb, this.nextIndex - 1, isHeartbeat)) {
+        // id is unlock in installSnapshot
+        installSnapshot();
+        if (isHeartbeat &amp;&amp; heartBeatClosure != null) {
+            Utils.runClosureInThread(heartBeatClosure, new Status(RaftError.EAGAIN,
+                &quot;Fail to send heartbeat to peer %s&quot;, this.options.getPeerId()));
+        }
+        return;
+    }
+    try {
+        final long monotonicSendTimeMs = Utils.monotonicMs();
+        final AppendEntriesRequest request = rb.build();
+
+        if (isHeartbeat) {
+            ....//省略心跳代码
+        } else {
+            //statInfo这个类没看到哪里有用到，
+            // Sending a probe request.
+            //leader发送探针获取Follower的LastLogIndex
+            this.statInfo.runningState = RunningState.APPENDING_ENTRIES;
+            //将lastLogIndex设置为比firstLogIndex小1
+            this.statInfo.firstLogIndex = this.nextIndex;
+            this.statInfo.lastLogIndex = this.nextIndex - 1;
+            this.appendEntriesCounter++;
+            //设置当前Replicator为发送探针
+            this.state = State.Probe;
+            final int stateVersion = this.version;
+            //返回reqSeq，并将reqSeq加一
+            final int seq = getAndIncrementReqSeq();
+            final Future&lt;Message&gt; rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(),
+                request, -1, new RpcResponseClosureAdapter&lt;AppendEntriesResponse&gt;() {
+
+                    @Override
+                    public void run(final Status status) {
+                        onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request,
+                            getResponse(), seq, stateVersion, monotonicSendTimeMs);
+                    }
+
+                });
+            //Inflight 是对批量发送出去的 logEntry 的一种抽象，他表示哪些 logEntry 已经被封装成日志复制 request 发送出去了
+            //这里是将logEntry封装到Inflight中
+            addInflight(RequestType.AppendEntries, this.nextIndex, 0, 0, seq, rpcFuture);
+        }
+        LOG.debug(&quot;Node {} send HeartbeatRequest to {} term {} lastCommittedIndex {}&quot;, this.options.getNode()
+            .getNodeId(), this.options.getPeerId(), this.options.getTerm(), request.getCommittedIndex());
+    } finally {
+        this.id.unlock();
+    }
+}</code></pre>
+<p>在调用sendEmptyEntries方法的时候，会传入isHeartbeat为false和heartBeatClosure为null，因为我们这个方法主要是发送探针获取Follower的位移。<br />
+首先调用fillCommonFields方法，将任期，groupId，ServerId，PeerIdLogIndex等设置到rb中，如：</p>
+<pre class="java"><code>private boolean fillCommonFields(final AppendEntriesRequest.Builder rb, long prevLogIndex, final boolean isHeartbeat) {
+    final long prevLogTerm = this.options.getLogManager().getTerm(prevLogIndex);
+    ....
+    rb.setTerm(this.options.getTerm());
+    rb.setGroupId(this.options.getGroupId());
+    rb.setServerId(this.options.getServerId().toString());
+    rb.setPeerId(this.options.getPeerId().toString());
+    rb.setPrevLogIndex(prevLogIndex);
+    rb.setPrevLogTerm(prevLogTerm);
+    rb.setCommittedIndex(this.options.getBallotBox().getLastCommittedIndex());
+    return true;
+}</code></pre>
+<p>注意prevLogIndex是nextIndex-1，表示当前的index<br />
+继续往下走，会设置statInfo实例里面的属性，但是statInfo这个对象我没看到哪里有用到过。<br />
+然后向该Follower发送一个AppendEntriesRequest请求，onRpcReturned负责响应请求。<br />
+发送完请求后调用addInflight初始化一个Inflight实例，加入到inflights集合中，如下：</p>
+<pre class="java"><code>private void addInflight(final RequestType reqType, final long startIndex, final int count, final int size,
+                         final int seq, final Future&lt;Message&gt; rpcInfly) {
+    this.rpcInFly = new Inflight(reqType, startIndex, count, size, seq, rpcInfly);
+    this.inflights.add(this.rpcInFly);
+    this.nodeMetrics.recordSize(&quot;replicate-inflights-count&quot;, this.inflights.size());
+}</code></pre>
+<p>Inflight 是对批量发送出去的 logEntry 的一种抽象，他表示哪些 logEntry 已经被封装成日志复制 request 发送出去了，这里是将logEntry封装到Inflight中。</p>
+<h2 id="leader批量的发送日志给follower">Leader批量的发送日志给Follower</h2>
+<p><strong>Replicator#sendEntries</strong></p>
+<pre class="java"><code>private boolean sendEntries(final long nextSendingIndex) {
+    final AppendEntriesRequest.Builder rb = AppendEntriesRequest.newBuilder();
+    //填写当前Replicator的配置信息到rb中
+    if (!fillCommonFields(rb, nextSendingIndex - 1, false)) {
+        // unlock id in installSnapshot
+        installSnapshot();
+        return false;
+    }
+
+    ByteBufferCollector dataBuf = null;
+    //获取最大的size为1024
+    final int maxEntriesSize = this.raftOptions.getMaxEntriesSize();
+
+    //这里使用了类似对象池的技术，避免重复创建对象
+    final RecyclableByteBufferList byteBufList = RecyclableByteBufferList.newInstance();
+    try {
+        //循环遍历出所有的logEntry封装到byteBufList和emb中
+        for (int i = 0; i &lt; maxEntriesSize; i++) {
+            final RaftOutter.EntryMeta.Builder emb = RaftOutter.EntryMeta.newBuilder();
+            //nextSendingIndex代表下一个要发送的index，i代表偏移量
+            if (!prepareEntry(nextSendingIndex, i, emb, byteBufList)) {
+                break;
+            }
+            rb.addEntries(emb.build());
+        }
+        //如果EntriesCount为0的话，说明LogManager里暂时没有新数据
+        if (rb.getEntriesCount() == 0) {
+            if (nextSendingIndex &lt; this.options.getLogManager().getFirstLogIndex()) {
+                installSnapshot();
+                return false;
+            }
+            // _id is unlock in _wait_more
+            waitMoreEntries(nextSendingIndex);
+            return false;
+        }
+        //将byteBufList里面的数据放入到rb中
+        if (byteBufList.getCapacity() &gt; 0) {
+            dataBuf = ByteBufferCollector.allocateByRecyclers(byteBufList.getCapacity());
+            for (final ByteBuffer b : byteBufList) {
+                dataBuf.put(b);
+            }
+            final ByteBuffer buf = dataBuf.getBuffer();
+            buf.flip();
+            rb.setData(ZeroByteStringHelper.wrap(buf));
+        }
+    } finally {
+        //回收一下byteBufList
+        RecycleUtil.recycle(byteBufList);
+    }
+
+    final AppendEntriesRequest request = rb.build();
+    if (LOG.isDebugEnabled()) {
+        LOG.debug(
+            &quot;Node {} send AppendEntriesRequest to {} term {} lastCommittedIndex {} prevLogIndex {} prevLogTerm {} logIndex {} count {}&quot;,
+            this.options.getNode().getNodeId(), this.options.getPeerId(), this.options.getTerm(),
+            request.getCommittedIndex(), request.getPrevLogIndex(), request.getPrevLogTerm(), nextSendingIndex,
+            request.getEntriesCount());
+    }
+    //statInfo没找到哪里有用到过
+    this.statInfo.runningState = RunningState.APPENDING_ENTRIES;
+    this.statInfo.firstLogIndex = rb.getPrevLogIndex() + 1;
+    this.statInfo.lastLogIndex = rb.getPrevLogIndex() + rb.getEntriesCount();
+
+    final Recyclable recyclable = dataBuf;
+    final int v = this.version;
+    final long monotonicSendTimeMs = Utils.monotonicMs();
+    final int seq = getAndIncrementReqSeq();
+    final Future&lt;Message&gt; rpcFuture = this.rpcService.appendEntries(this.options.getPeerId().getEndpoint(),
+        request, -1, new RpcResponseClosureAdapter&lt;AppendEntriesResponse&gt;() {
+
+            @Override
+            public void run(final Status status) {
+                //回收资源
+                RecycleUtil.recycle(recyclable);
+                onRpcReturned(Replicator.this.id, RequestType.AppendEntries, status, request, getResponse(), seq,
+                    v, monotonicSendTimeMs);
+            }
+
+        });
+    //添加Inflight
+    addInflight(RequestType.AppendEntries, nextSendingIndex, request.getEntriesCount(), request.getData().size(),
+        seq, rpcFuture);
+    return true;
+
+}</code></pre>
+<ol>
+<li>首先会调用fillCommonFields方法，填写当前Replicator的配置信息到rb中；</li>
+<li>调用prepareEntry，根据当前的I和nextSendingIndex计算出当前的偏移量，然后去LogManager找到对应的LogEntry，再把LogEntry里面的属性设置到emb中，并把LogEntry里面的数据加入到RecyclableByteBufferList中；</li>
+<li>如果LogEntry里面没有新的数据，那么EntriesCount会为0，那么就返回；</li>
+<li>遍历byteBufList里面的数据，将数据添加到rb中，这样rb里面的数据就是前面是任期、类型、数据长度等信息，rb后面就是真正的数据；</li>
+<li>新建AppendEntriesRequest实例发送请求；</li>
+<li>添加 Inflight 到队列中。Leader 维护一个 queue，每发出一批 logEntry 就向 queue 中 添加一个代表这一批 logEntry 的 Inflight，这样当它知道某一批 logEntry 复制失败之后，就可以依赖 queue 中的 Inflight 把该批次 logEntry 以及后续的所有日志重新复制给 follower。既保证日志复制能够完成，又保证了复制日志的顺序不变</li>
+</ol>
+<p>其中RecyclableByteBufferList采用对象池进行实例化，对象池的相关信息可以看我这篇：<a href="https://www.cnblogs.com/luozhiyun/p/11924850.html">7. SOFAJRaft源码分析—如何实现一个轻量级的对象池？</a></p>
+<p>下面我们详解一下sendEntries里面的具体方法。</p>
+<h3 id="prepareentry填充emb属性">prepareEntry填充emb属性</h3>
+<p><strong>Replicator#prepareEntry</strong></p>
+<pre class="java"><code>boolean prepareEntry(final long nextSendingIndex, final int offset, final RaftOutter.EntryMeta.Builder emb,
+                     final RecyclableByteBufferList dateBuffer) {
+    if (dateBuffer.getCapacity() &gt;= this.raftOptions.getMaxBodySize()) {
+        return false;
+    }
+    //设置当前要发送的index
+    final long logIndex = nextSendingIndex + offset;
+    //如果这个index已经在LogManager中找不到了，那么直接返回
+    final LogEntry entry = this.options.getLogManager().getEntry(logIndex);
+    if (entry == null) {
+        return false;
+    }
+    //下面就是把LogEntry里面的属性设置到emb中
+    emb.setTerm(entry.getId().getTerm());
+    if (entry.hasChecksum()) {
+        emb.setChecksum(entry.getChecksum()); //since 1.2.6
+    }
+    emb.setType(entry.getType());
+    if (entry.getPeers() != null) {
+        Requires.requireTrue(!entry.getPeers().isEmpty(), &quot;Empty peers at logIndex=%d&quot;, logIndex);
+        for (final PeerId peer : entry.getPeers()) {
+            emb.addPeers(peer.toString());
+        }
+        if (entry.getOldPeers() != null) {
+            for (final PeerId peer : entry.getOldPeers()) {
+                emb.addOldPeers(peer.toString());
+            }
+        }
+    } else {
+        Requires.requireTrue(entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION,
+            &quot;Empty peers but is ENTRY_TYPE_CONFIGURATION type at logIndex=%d&quot;, logIndex);
+    }
+    final int remaining = entry.getData() != null ? entry.getData().remaining() : 0;
+    emb.setDataLen(remaining);
+    //把LogEntry里面的数据放入到dateBuffer中
+    if (entry.getData() != null) {
+        // should slice entry data
+        dateBuffer.add(entry.getData().slice());
+    }
+    return true;
+}</code></pre>
+<ol>
+<li>对比一下传入的dateBuffer的容量是否已经超过了系统设置的容量（512 * 1024），如果超过了则返回false</li>
+<li>根据给定的起始的index和偏移量offset计算logIndex，然后去LogManager里面根据index获取LogEntry，如果返回的为则说明找不到了，那么就直接返回false，外层的if判断会执行break跳出循环</li>
+<li>然后将LogEntry里面的属性设置到emb对象中，最后将LogEntry里面的数据添加到dateBuffer，这里要做到数据和属性分离</li>
+</ol>
+<h2 id="follower处理leader发送的日志复制请求">Follower处理Leader发送的日志复制请求</h2>
+<p>在leader发送完AppendEntriesRequest请求之后，请求的数据会在Follower中被AppendEntriesRequestProcessor所处理</p>
+<p>具体的处理方法是processRequest0</p>
+<pre class="java"><code>public Message processRequest0(final RaftServerService service, final AppendEntriesRequest request,
+                               final RpcRequestClosure done) {
+
+    final Node node = (Node) service;
+
+    //默认使用pipeline
+    if (node.getRaftOptions().isReplicatorPipeline()) {
+        final String groupId = request.getGroupId();
+        final String peerId = request.getPeerId();
+        //获取请求的次数，以groupId+peerId为一个维度
+        final int reqSequence = getAndIncrementSequence(groupId, peerId, done.getBizContext().getConnection());
+        //Follower处理leader发过来的日志请求
+        final Message response = service.handleAppendEntriesRequest(request, new SequenceRpcRequestClosure(done,
+            reqSequence, groupId, peerId));
+        //正常的数据只返回null，异常的数据会返回response
+        if (response != null) {
+            sendSequenceResponse(groupId, peerId, reqSequence, done.getAsyncContext(), done.getBizContext(),
+                response);
+        }
+        return null;
+    } else {
+        return service.handleAppendEntriesRequest(request, done);
+    }
+}</code></pre>
+<p>调用service的handleAppendEntriesRequest会调用到NodeIml的handleAppendEntriesRequest方法中，handleAppendEntriesRequest方法只是异常情况和leader没有发送数据时才会返回，正常情况是返回null</p>
+<h3 id="处理响应日志复制请求">处理响应日志复制请求</h3>
+<p><strong>NodeIml#handleAppendEntriesRequest</strong></p>
+<pre class="java"><code>public Message handleAppendEntriesRequest(final AppendEntriesRequest request, final RpcRequestClosure done) {
+    boolean doUnlock = true;
+    final long startMs = Utils.monotonicMs();
+    this.writeLock.lock();
+    //获取entryLog个数
+    final int entriesCount = request.getEntriesCount();
+    try {
+        //校验当前节点是否活跃
+        if (!this.state.isActive()) {
+            LOG.warn(&quot;Node {} is not in active state, currTerm={}.&quot;, getNodeId(), this.currTerm);
+            return RpcResponseFactory.newResponse(RaftError.EINVAL, &quot;Node %s is not in active state, state %s.&quot;,
+                getNodeId(), this.state.name());
+        }
+        //校验传入的serverId是否能被正常解析
+        final PeerId serverId = new PeerId();
+        if (!serverId.parse(request.getServerId())) {
+            LOG.warn(&quot;Node {} received AppendEntriesRequest from {} serverId bad format.&quot;, getNodeId(),
+                request.getServerId());
+            return RpcResponseFactory.newResponse(RaftError.EINVAL, &quot;Parse serverId failed: %s.&quot;,
+                request.getServerId());
+        }
+        //校验任期
+        // Check stale term
+        if (request.getTerm() &lt; this.currTerm) {
+            LOG.warn(&quot;Node {} ignore stale AppendEntriesRequest from {}, term={}, currTerm={}.&quot;, getNodeId(),
+                request.getServerId(), request.getTerm(), this.currTerm);
+            return AppendEntriesResponse.newBuilder() //
+                .setSuccess(false) //
+                .setTerm(this.currTerm) //
+                .build();
+        }
+
+        // Check term and state to step down
+        //当前节点如果不是Follower节点的话要执行StepDown操作
+        checkStepDown(request.getTerm(), serverId);
+        //这说明请求的节点不是当前节点的leader
+        if (!serverId.equals(this.leaderId)) {
+            LOG.error(&quot;Another peer {} declares that it is the leader at term {} which was occupied by leader {}.&quot;,
+                serverId, this.currTerm, this.leaderId);
+            // Increase the term by 1 and make both leaders step down to minimize the
+            // loss of split brain
+            stepDown(request.getTerm() + 1, false, new Status(RaftError.ELEADERCONFLICT,
+                &quot;More than one leader in the same term.&quot;));
+            return AppendEntriesResponse.newBuilder() //
+                .setSuccess(false) //
+                .setTerm(request.getTerm() + 1) //
+                .build();
+        }
+
+        updateLastLeaderTimestamp(Utils.monotonicMs());
+
+        //校验是否正在生成快照
+        if (entriesCount &gt; 0 &amp;&amp; this.snapshotExecutor != null &amp;&amp; this.snapshotExecutor.isInstallingSnapshot()) {
+            LOG.warn(&quot;Node {} received AppendEntriesRequest while installing snapshot.&quot;, getNodeId());
+            return RpcResponseFactory.newResponse(RaftError.EBUSY, &quot;Node %s:%s is installing snapshot.&quot;,
+                this.groupId, this.serverId);
+        }
+        //传入的是发起请求节点的nextIndex-1
+        final long prevLogIndex = request.getPrevLogIndex();
+        final long prevLogTerm = request.getPrevLogTerm();
+        final long localPrevLogTerm = this.logManager.getTerm(prevLogIndex);
+        //发起请求的节点prevLogIndex对应的任期和当前节点的index所对应的任期不匹配
+        if (localPrevLogTerm != prevLogTerm) {
+            final long lastLogIndex = this.logManager.getLastLogIndex();
+
+            LOG.warn(
+                &quot;Node {} reject term_unmatched AppendEntriesRequest from {}, term={}, prevLogIndex={}, prevLogTerm={}, localPrevLogTerm={}, lastLogIndex={}, entriesSize={}.&quot;,
+                getNodeId(), request.getServerId(), request.getTerm(), prevLogIndex, prevLogTerm, localPrevLogTerm,
+                lastLogIndex, entriesCount);
+
+            return AppendEntriesResponse.newBuilder() //
+                .setSuccess(false) //
+                .setTerm(this.currTerm) //
+                .setLastLogIndex(lastLogIndex) //
+                .build();
+        }
+        //响应心跳或者发送的是sendEmptyEntry
+        if (entriesCount == 0) {
+            // heartbeat
+            final AppendEntriesResponse.Builder respBuilder = AppendEntriesResponse.newBuilder() //
+                .setSuccess(true) //
+                .setTerm(this.currTerm)
+                //  返回当前节点的最新的index
+                .setLastLogIndex(this.logManager.getLastLogIndex());
+            doUnlock = false;
+            this.writeLock.unlock();
+            // see the comments at FollowerStableClosure#run()
+            this.ballotBox.setLastCommittedIndex(Math.min(request.getCommittedIndex(), prevLogIndex));
+            return respBuilder.build();
+        }
+
+        // Parse request
+        long index = prevLogIndex;
+        final List&lt;LogEntry&gt; entries = new ArrayList&lt;&gt;(entriesCount);
+        ByteBuffer allData = null;
+        if (request.hasData()) {
+            allData = request.getData().asReadOnlyByteBuffer();
+        }
+        //获取所有数据
+        final List&lt;RaftOutter.EntryMeta&gt; entriesList = request.getEntriesList();
+        for (int i = 0; i &lt; entriesCount; i++) {
+            final RaftOutter.EntryMeta entry = entriesList.get(i);
+            index++;
+            if (entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_UNKNOWN) {
+                //给logEntry属性设值
+                final LogEntry logEntry = new LogEntry();
+                logEntry.setId(new LogId(index, entry.getTerm()));
+                logEntry.setType(entry.getType());
+                if (entry.hasChecksum()) {
+                    logEntry.setChecksum(entry.getChecksum()); // since 1.2.6
+                }
+                //将数据填充到logEntry
+                final long dataLen = entry.getDataLen();
+                if (dataLen &gt; 0) {
+                    final byte[] bs = new byte[(int) dataLen];
+                    assert allData != null;
+                    allData.get(bs, 0, bs.length);
+                    logEntry.setData(ByteBuffer.wrap(bs));
+                }
+
+                if (entry.getPeersCount() &gt; 0) {
+                    //只有配置类型的entry才有多个Peer
+                    if (entry.getType() != EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
+                        throw new IllegalStateException(
+                                &quot;Invalid log entry that contains peers but is not ENTRY_TYPE_CONFIGURATION type: &quot;
+                                        + entry.getType());
+                    }
+
+                    final List&lt;PeerId&gt; peers = new ArrayList&lt;&gt;(entry.getPeersCount());
+                    for (final String peerStr : entry.getPeersList()) {
+                        final PeerId peer = new PeerId();
+                        peer.parse(peerStr);
+                        peers.add(peer);
+                    }
+                    logEntry.setPeers(peers);
+
+                    if (entry.getOldPeersCount() &gt; 0) {
+                        final List&lt;PeerId&gt; oldPeers = new ArrayList&lt;&gt;(entry.getOldPeersCount());
+                        for (final String peerStr : entry.getOldPeersList()) {
+                            final PeerId peer = new PeerId();
+                            peer.parse(peerStr);
+                            oldPeers.add(peer);
+                        }
+                        logEntry.setOldPeers(oldPeers);
+                    }
+                } else if (entry.getType() == EnumOutter.EntryType.ENTRY_TYPE_CONFIGURATION) {
+                    throw new IllegalStateException(
+                            &quot;Invalid log entry that contains zero peers but is ENTRY_TYPE_CONFIGURATION type&quot;);
+                }
+
+                // Validate checksum
+                if (this.raftOptions.isEnableLogEntryChecksum() &amp;&amp; logEntry.isCorrupted()) {
+                    long realChecksum = logEntry.checksum();
+                    LOG.error(
+                            &quot;Corrupted log entry received from leader, index={}, term={}, expectedChecksum={}, &quot; +
+                             &quot;realChecksum={}&quot;,
+                            logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
+                            realChecksum);
+                    return RpcResponseFactory.newResponse(RaftError.EINVAL,
+                            &quot;The log entry is corrupted, index=%d, term=%d, expectedChecksum=%d, realChecksum=%d&quot;,
+                            logEntry.getId().getIndex(), logEntry.getId().getTerm(), logEntry.getChecksum(),
+                            realChecksum);
+                }
+
+                entries.add(logEntry);
+            }
+        }
+        //存储日志，并回调返回response
+        final FollowerStableClosure closure = new FollowerStableClosure(request, AppendEntriesResponse.newBuilder()
+            .setTerm(this.currTerm), this, done, this.currTerm);
+        this.logManager.appendEntries(entries, closure);
+        // update configuration after _log_manager updated its memory status
+        this.conf = this.logManager.checkAndSetConfiguration(this.conf);
+        return null;
+    } finally {
+        if (doUnlock) {
+            this.writeLock.unlock();
+        }
+        this.metrics.recordLatency(&quot;handle-append-entries&quot;, Utils.monotonicMs() - startMs);
+        this.metrics.recordSize(&quot;handle-append-entries-count&quot;, entriesCount);
+    }
+}</code></pre>
+<p>handleAppendEntriesRequest方法写的很长，但是实际上做了很多校验的事情，具体的处理逻辑不多</p>
+<ol>
+<li>校验当前的Node节点是否还处于活跃状态，如果不是的话，那么直接返回一个error的response</li>
+<li>校验请求的serverId的格式是否正确，不正确则返回一个error的response</li>
+<li>校验请求的任期是否小于当前的任期，如果是那么返回一个AppendEntriesResponse类型的response</li>
+<li>调用checkStepDown方法检测当前节点的任期，以及状态，是否有leader等</li>
+<li>如果请求的serverId和当前节点的leaderId是不是同一个，用来校验是不是leader发起的请求，如果不是返回一个AppendEntriesResponse</li>
+<li>校验是否正在生成快照</li>
+<li>获取请求的Index在当前节点中对应的LogEntry的任期是不是和请求传入的任期相同，不同的话则返回AppendEntriesResponse</li>
+<li>如果传入的entriesCount为零，那么leader发送的可能是心跳或者发送的是sendEmptyEntry，返回AppendEntriesResponse，并将当前任期和最新index封装返回</li>
+<li>请求的数据不为空，那么遍历所有的数据</li>
+<li>实例化一个logEntry，并且将数据和属性设置到logEntry实例中，最后将logEntry放入到entries集合中</li>
+<li>调用logManager将数据批量提交日志写入 RocksDB</li>
+</ol>
+<h3 id="发送响应给leader">发送响应给leader</h3>
+<p>最终发送给leader的响应是通过AppendEntriesRequestProcessor的sendSequenceResponse来发送的</p>
+<pre class="java"><code>void sendSequenceResponse(final String groupId, final String peerId, final int seq,
+                          final AsyncContext asyncContext, final BizContext bizContext, final Message msg) {
+    final Connection connection = bizContext.getConnection();
+    //获取context，维度是groupId和peerId
+    final PeerRequestContext ctx = getPeerRequestContext(groupId, peerId, connection);
+    final PriorityQueue&lt;SequenceMessage&gt; respQueue = ctx.responseQueue;
+    assert (respQueue != null);
+
+    synchronized (Utils.withLockObject(respQueue)) {
+        //将要响应的数据放入到优先队列中
+        respQueue.add(new SequenceMessage(asyncContext, msg, seq));
+        //校验队列里面的数据是否超过了256
+        if (!ctx.hasTooManyPendingResponses()) {
+            while (!respQueue.isEmpty()) {
+                final SequenceMessage queuedPipelinedResponse = respQueue.peek();
+                //如果序列对应不上，那么就不发送响应
+                if (queuedPipelinedResponse.sequence != getNextRequiredSequence(groupId, peerId, connection)) {
+                    // sequence mismatch, waiting for next response.
+                    break;
+                }
+                respQueue.remove();
+                try {
+                    //发送响应
+                    queuedPipelinedResponse.sendResponse();
+                } finally {
+                    //序列加一
+                    getAndIncrementNextRequiredSequence(groupId, peerId, connection);
+                }
+            }
+        } else {
+            LOG.warn(&quot;Closed connection to peer {}/{}, because of too many pending responses, queued={}, max={}&quot;,
+                ctx.groupId, peerId, respQueue.size(), ctx.maxPendingResponses);
+            connection.close();
+            // Close the connection if there are too many pending responses in queue.
+            removePeerRequestContext(groupId, peerId);
+        }
+    }
+}</code></pre>
+<p>这个方法会将要发送的数据依次压入到PriorityQueue优先队列中进行排序，然后获取序列号最小的元素和nextRequiredSequence比较，如果不相等，那么则是出现了乱序的情况，那么就不发送请求</p>
+<h2 id="leader处理日志复制的response">Leader处理日志复制的Response</h2>
+<p>Leader收到Follower发过来的Response响应之后会调用Replicator的onRpcReturned方法</p>
+<pre class="java"><code>static void onRpcReturned(final ThreadId id, final RequestType reqType, final Status status, final Message request,
+                          final Message response, final int seq, final int stateVersion, final long rpcSendTime) {
+    if (id == null) {
+        return;
+    }
+    final long startTimeMs = Utils.nowMs();
+    Replicator r;
+    if ((r = (Replicator) id.lock()) == null) {
+        return;
+    }
+    //检查版本号，因为每次resetInflights都会让version加一，所以检查一下
+    if (stateVersion != r.version) {
+        LOG.debug(
+            &quot;Replicator {} ignored old version response {}, current version is {}, request is {}\n, and response is {}\n, status is {}.&quot;,
+            r, stateVersion, r.version, request, response, status);
+        id.unlock();
+        return;
+    }
+    //使用优先队列按seq排序,最小的会在第一个
+    final PriorityQueue&lt;RpcResponse&gt; holdingQueue = r.pendingResponses;
+    //这里用一个优先队列是因为响应是异步的，seq小的可能响应比seq大慢
+    holdingQueue.add(new RpcResponse(reqType, seq, status, request, response, rpcSendTime));
+    //默认holdingQueue队列里面的数量不能超过256
+    if (holdingQueue.size() &gt; r.raftOptions.getMaxReplicatorInflightMsgs()) {
+        LOG.warn(&quot;Too many pending responses {} for replicator {}, maxReplicatorInflightMsgs={}&quot;,
+            holdingQueue.size(), r.options.getPeerId(), r.raftOptions.getMaxReplicatorInflightMsgs());
+        //重新发送探针
+        //清空数据
+        r.resetInflights();
+        r.state = State.Probe;
+        r.sendEmptyEntries(false);
+        return;
+    }
+
+    boolean continueSendEntries = false;
+
+    final boolean isLogDebugEnabled = LOG.isDebugEnabled();
+    StringBuilder sb = null;
+    if (isLogDebugEnabled) {
+        sb = new StringBuilder(&quot;Replicator &quot;).append(r).append(&quot; is processing RPC responses,&quot;);
+    }
+    try {
+        int processed = 0;
+        while (!holdingQueue.isEmpty()) {
+            //取出holdingQueue里seq最小的数据
+            final RpcResponse queuedPipelinedResponse = holdingQueue.peek();
+
+            //如果Follower没有响应的话就会出现次序对不上的情况，那么就不往下走了
+            //sequence mismatch, waiting for next response.
+            if (queuedPipelinedResponse.seq != r.requiredNextSeq) {
+                // 如果之前存在处理，则到此直接break循环
+                if (processed &gt; 0) {
+                    if (isLogDebugEnabled) {
+                        sb.append(&quot;has processed &quot;).append(processed).append(&quot; responses,&quot;);
+                    }
+                    break;
+                } else {
+                    //Do not processed any responses, UNLOCK id and return.
+                    continueSendEntries = false;
+                    id.unlock();
+                    return;
+                }
+            }
+            //走到这里说明seq对的上，那么就移除优先队列里面seq最小的数据
+            holdingQueue.remove();
+            processed++;
+            //获取inflights队列里的第一个元素
+            final Inflight inflight = r.pollInflight();
+            //发起一个请求的时候会将inflight放入到队列中
+            //如果为空，那么就忽略
+            if (inflight == null) {
+                // The previous in-flight requests were cleared.
+                if (isLogDebugEnabled) {
+                    sb.append(&quot;ignore response because request not found:&quot;).append(queuedPipelinedResponse)
+                        .append(&quot;,\n&quot;);
+                }
+                continue;
+            }
+            //seq没有对上，说明顺序乱了，重置状态
+            if (inflight.seq != queuedPipelinedResponse.seq) {
+                // reset state
+                LOG.warn(
+                    &quot;Replicator {} response sequence out of order, expect {}, but it is {}, reset state to try again.&quot;,
+                    r, inflight.seq, queuedPipelinedResponse.seq);
+                r.resetInflights();
+                r.state = State.Probe;
+                continueSendEntries = false;
+                // 锁住节点，根据错误类别等待一段时间
+                r.block(Utils.nowMs(), RaftError.EREQUEST.getNumber());
+                return;
+            }
+            try {
+                switch (queuedPipelinedResponse.requestType) {
+                    case AppendEntries:
+                        //处理日志复制的response
+                        continueSendEntries = onAppendEntriesReturned(id, inflight, queuedPipelinedResponse.status,
+                            (AppendEntriesRequest) queuedPipelinedResponse.request,
+                            (AppendEntriesResponse) queuedPipelinedResponse.response, rpcSendTime, startTimeMs, r);
+                        break;
+                    case Snapshot:
+                        //处理快照的response
+                        continueSendEntries = onInstallSnapshotReturned(id, r, queuedPipelinedResponse.status,
+                            (InstallSnapshotRequest) queuedPipelinedResponse.request,
+                            (InstallSnapshotResponse) queuedPipelinedResponse.response);
+                        break;
+                }
+            } finally {
+                if (continueSendEntries) {
+                    // Success, increase the response sequence.
+                    r.getAndIncrementRequiredNextSeq();
+                } else {
+                    // The id is already unlocked in onAppendEntriesReturned/onInstallSnapshotReturned, we SHOULD break out.
+                    break;
+                }
+            }
+        }
+    } finally {
+        if (isLogDebugEnabled) {
+            sb.append(&quot;, after processed, continue to send entries: &quot;).append(continueSendEntries);
+            LOG.debug(sb.toString());
+        }
+        if (continueSendEntries) {
+            // unlock in sendEntries.
+            r.sendEntries();
+        }
+    }
+}</code></pre>
+<ol>
+<li>检查版本号，因为每次resetInflights都会让version加一，所以检查一下是不是同一批的数据</li>
+<li>获取Replicator的pendingResponses队列，然后将当前响应的数据封装成RpcResponse实例加入到队列中</li>
+<li>校验队列里面的元素是否大于256，大于256则清空数据重新同步</li>
+<li>校验holdingQueue队列里面的seq最小的序列数据序列和当前的requiredNextSeq是否相同，不同的话如果是刚进入循环那么直接break退出循环</li>
+<li>获取inflights队列中第一个元素，如果seq没有对上，说明顺序乱了，重置状态</li>
+<li>调用onAppendEntriesReturned方法处理日志复制的response</li>
+<li>如果处理成功，那么则调用sendEntries继续发送复制日志到Follower</li>
+</ol>
+<p><strong>Replicator#onAppendEntriesReturned</strong></p>
+<pre class="java"><code>private static boolean onAppendEntriesReturned(final ThreadId id, final Inflight inflight, final Status status,
+                                               final AppendEntriesRequest request,
+                                               final AppendEntriesResponse response, final long rpcSendTime,
+                                               final long startTimeMs, final Replicator r) {
+    //校验数据序列有没有错
+    if (inflight.startIndex != request.getPrevLogIndex() + 1) {
+        LOG.warn(
+            &quot;Replicator {} received invalid AppendEntriesResponse, in-flight startIndex={}, request prevLogIndex={}, reset the replicator state and probe again.&quot;,
+            r, inflight.startIndex, request.getPrevLogIndex());
+        r.resetInflights();
+        r.state = State.Probe;
+        // unlock id in sendEmptyEntries
+        r.sendEmptyEntries(false);
+        return false;
+    }
+    //度量
+    // record metrics
+    if (request.getEntriesCount() &gt; 0) {
+        r.nodeMetrics.recordLatency(&quot;replicate-entries&quot;, Utils.monotonicMs() - rpcSendTime);
+        r.nodeMetrics.recordSize(&quot;replicate-entries-count&quot;, request.getEntriesCount());
+        r.nodeMetrics.recordSize(&quot;replicate-entries-bytes&quot;, request.getData() != null ? request.getData().size()
+            : 0);
+    }
+
+    final boolean isLogDebugEnabled = LOG.isDebugEnabled();
+    StringBuilder sb = null;
+    if (isLogDebugEnabled) {
+        sb = new StringBuilder(&quot;Node &quot;). //
+            append(r.options.getGroupId()).append(&quot;:&quot;).append(r.options.getServerId()). //
+            append(&quot; received AppendEntriesResponse from &quot;). //
+            append(r.options.getPeerId()). //
+            append(&quot; prevLogIndex=&quot;).append(request.getPrevLogIndex()). //
+            append(&quot; prevLogTerm=&quot;).append(request.getPrevLogTerm()). //
+            append(&quot; count=&quot;).append(request.getEntriesCount());
+    }
+    //如果follower因为崩溃，RPC调用失败等原因没有收到成功响应
+    //那么需要阻塞一段时间再进行调用
+    if (!status.isOk()) {
+        // If the follower crashes, any RPC to the follower fails immediately,
+        // so we need to block the follower for a while instead of looping until
+        // it comes back or be removed
+        // dummy_id is unlock in block
+        if (isLogDebugEnabled) {
+            sb.append(&quot; fail, sleep.&quot;);
+            LOG.debug(sb.toString());
+        }
+        //如果注册了Replicator状态监听器，那么通知所有监听器
+        notifyReplicatorStatusListener(r, ReplicatorEvent.ERROR, status);
+        if (++r.consecutiveErrorTimes % 10 == 0) {
+            LOG.warn(&quot;Fail to issue RPC to {}, consecutiveErrorTimes={}, error={}&quot;, r.options.getPeerId(),
+                r.consecutiveErrorTimes, status);
+        }
+        r.resetInflights();
+        r.state = State.Probe;
+        // unlock in in block
+        r.block(startTimeMs, status.getCode());
+        return false;
+    }
+    r.consecutiveErrorTimes = 0;
+    //响应失败
+    if (!response.getSuccess()) {
+        // Leader 的切换，表明可能出现过一次网络分区，从新跟随新的 Leader
+        if (response.getTerm() &gt; r.options.getTerm()) {
+            if (isLogDebugEnabled) {
+                sb.append(&quot; fail, greater term &quot;).append(response.getTerm()).append(&quot; expect term &quot;)
+                    .append(r.options.getTerm());
+                LOG.debug(sb.toString());
+            }
+            // 获取当前本节点的表示对象——NodeImpl
+            final NodeImpl node = r.options.getNode();
+            r.notifyOnCaughtUp(RaftError.EPERM.getNumber(), true);
+            r.destroy();
+            // 调整自己的 term 任期值
+            node.increaseTermTo(response.getTerm(), new Status(RaftError.EHIGHERTERMRESPONSE,
+                &quot;Leader receives higher term heartbeat_response from peer:%s&quot;, r.options.getPeerId()));
+            return false;
+        }
+        if (isLogDebugEnabled) {
+            sb.append(&quot; fail, find nextIndex remote lastLogIndex &quot;).append(response.getLastLogIndex())
+                .append(&quot; local nextIndex &quot;).append(r.nextIndex);
+            LOG.debug(sb.toString());
+        }
+        if (rpcSendTime &gt; r.lastRpcSendTimestamp) {
+            r.lastRpcSendTimestamp = rpcSendTime;
+        }
+        // Fail, reset the state to try again from nextIndex.
+        r.resetInflights();
+        //如果Follower最新的index小于下次要发送的index，那么设置为Follower响应的index
+        // prev_log_index and prev_log_term doesn&#39;t match
+        if (response.getLastLogIndex() + 1 &lt; r.nextIndex) {
+            LOG.debug(&quot;LastLogIndex at peer={} is {}&quot;, r.options.getPeerId(), response.getLastLogIndex());
+            // The peer contains less logs than leader
+            r.nextIndex = response.getLastLogIndex() + 1;
+        } else {
+            // The peer contains logs from old term which should be truncated,
+            // decrease _last_log_at_peer by one to test the right index to keep
+            if (r.nextIndex &gt; 1) {
+                LOG.debug(&quot;logIndex={} dismatch&quot;, r.nextIndex);
+                r.nextIndex--;
+            } else {
+                LOG.error(&quot;Peer={} declares that log at index=0 doesn&#39;t match, which is not supposed to happen&quot;,
+                    r.options.getPeerId());
+            }
+        }
+        //响应失败需要重新获取Follower的日志信息，用来重新同步
+        // dummy_id is unlock in _send_heartbeat
+        r.sendEmptyEntries(false);
+        return false;
+    }
+    if (isLogDebugEnabled) {
+        sb.append(&quot;, success&quot;);
+        LOG.debug(sb.toString());
+    }
+    // success
+    //响应成功检查任期
+    if (response.getTerm() != r.options.getTerm()) {
+        r.resetInflights();
+        r.state = State.Probe;
+        LOG.error(&quot;Fail, response term {} dismatch, expect term {}&quot;, response.getTerm(), r.options.getTerm());
+        id.unlock();
+        return false;
+    }
+    if (rpcSendTime &gt; r.lastRpcSendTimestamp) {
+        r.lastRpcSendTimestamp = rpcSendTime;
+    }
+    // 本次提交的日志数量
+    final int entriesSize = request.getEntriesCount();
+    if (entriesSize &gt; 0) {
+        // 节点确认提交
+        r.options.getBallotBox().commitAt(r.nextIndex, r.nextIndex + entriesSize - 1, r.options.getPeerId());
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(&quot;Replicated logs in [{}, {}] to peer {}&quot;, r.nextIndex, r.nextIndex + entriesSize - 1,
+                r.options.getPeerId());
+        }
+    } else {
+        // The request is probe request, change the state into Replicate.
+        r.state = State.Replicate;
+    }
+    r.nextIndex += entriesSize;
+    r.hasSucceeded = true;
+    r.notifyOnCaughtUp(RaftError.SUCCESS.getNumber(), false);
+    // dummy_id is unlock in _send_entries
+    if (r.timeoutNowIndex &gt; 0 &amp;&amp; r.timeoutNowIndex &lt; r.nextIndex) {
+        r.sendTimeoutNow(false, false);
+    }
+    return true;
+}</code></pre>
+<p>onAppendEntriesReturned方法也非常的长，但是我们要有点耐心往下看</p>
+<ol>
+<li>校验数据序列有没有错</li>
+<li>进行度量和拼接日志操作</li>
+<li>判断一下返回的状态如果不是正常的，那么就通知监听器，进行重置操作并阻塞一定时间后再发送</li>
+<li>如果返回Success状态为false，那么校验一下任期，因为Leader 的切换，表明可能出现过一次网络分区，需要重新跟随新的 Leader；如果任期没有问题那么就进行重置操作,并根据Follower返回的最新的index来重新设值nextIndex</li>
+<li>如果各种校验都没有问题的话，那么进行日志提交确认，更新最新的日志提交位置索引</li>
+</ol>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

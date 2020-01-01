@@ -1,0 +1,273 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python3 多进程编程 - 学习笔记' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python3 多进程编程 - 学习笔记</center></div><div class='banquan'>原文出处:本文由博客园博主阿盾提供。<br/>
+原文连接:https://www.cnblogs.com/aduner/p/11688879.html</div><br>
+    <ul>
+<li><a href="#python3-%e5%a4%9a%e8%bf%9b%e7%a8%8b%e7%bc%96%e7%a8%8bmultiprocess-programming">Python3 多进程编程(Multiprocess programming)</a>
+<ul>
+<li><a href="#%e4%b8%ba%e4%bb%80%e4%b9%88%e4%bd%bf%e7%94%a8%e5%a4%9a%e8%bf%9b%e7%a8%8b">为什么使用多进程</a></li>
+<li><a href="#%e5%85%b7%e4%bd%93%e7%94%a8%e6%b3%95">具体用法</a></li>
+</ul></li>
+<li><a href="#python%e5%a4%9a%e7%ba%bf%e7%a8%8b%e7%9a%84%e9%80%9a%e4%bf%a1">Python多线程的通信</a>
+<ul>
+<li><a href="#%e8%bf%9b%e7%a8%8b%e5%af%b9%e5%88%97queue">进程对列Queue</a>
+<ul>
+<li><a href="#%e7%94%9f%e4%ba%a7%e8%80%85%e6%b6%88%e8%b4%b9%e8%80%85%e9%97%ae%e9%a2%98">生产者消费者问题</a></li>
+<li><a href="#joinablequeue">JoinableQueue</a></li>
+<li><a href="#queue%e5%ae%9e%e4%be%8b">Queue实例</a></li>
+</ul></li>
+<li><p><a href="#%e7%ae%a1%e9%81%93pipe">管道Pipe</a></p>
+<h1 id="python3-多进程编程multiprocess-programming">Python3 多进程编程(Multiprocess programming)</h1>
+<h2 id="为什么使用多进程">为什么使用多进程</h2></li>
+</ul></li>
+</ul>
+<p>  python中的多线程其实并不是真正的多线程，不能充分地使用多核CPU的资源，此时需要使用需要使用多进程解决问题。</p>
+<h2 id="具体用法">具体用法</h2>
+<p>  Python中的多进程是通过<code>multiprocessing</code>模块来实现的，和多线程的<code>threading.Thread</code>类似，利用<code>multiprocessing.Process</code>来创建一个进程对象。进程对象的方法和线程对象的方法类似，也有start(), join()等。</p>
+<ul>
+<li><p><strong>直接启用</strong></p>
+<p><details><br />
+<summary>代码实例</summary></p>
+<pre><code><code>import multiprocessing
+from time import sleep
+
+def clock(interval):
+    i = 0
+    while i&lt;5:
+        i += 1
+        print(f&quot;Run &gt;&gt;&gt; {i}&quot;)
+        sleep(interval)
+    print(&quot;Ending!&quot;)
+
+
+if __name__ == &#39;__main__&#39;:
+    p = multiprocessing.Process(target = clock, args = (1,))
+    p.start()
+    p.join()
+</code></pre>
+<p></details></p>
+<p><details><br />
+<summary>运行结果</summary></p>
+<pre><code><code>Run &gt;&gt;&gt; 1
+Run &gt;&gt;&gt; 2
+Run &gt;&gt;&gt; 3
+Run &gt;&gt;&gt; 4
+Run &gt;&gt;&gt; 5
+Ending!</code></pre>
+<p></details></p></li>
+<li><p><strong>继承自<code>multiprocessing.Process</code>调用</strong></p>
+<p>与多线程使用方法类似</p>
+<ul>
+<li>直接继承Process</li>
+<li>重写run函数</li>
+<li>类实例可以直接运行</li>
+</ul>
+<p><details><br />
+<summary>代码实例</summary></p>
+<pre><code><code>import multiprocessing
+from time import sleep
+
+class ClockProcess(multiprocessing.Process): 
+    def __init__(self, interval):
+        super().__init__()
+        self.interval = interval
+
+    def run(self):
+        i = 0
+        while i&lt;5:
+            i += 1
+            print(f&quot;Run &gt;&gt;&gt; {i}&quot;)
+            sleep(self.interval)
+        print(&quot;Ending!&quot;)
+
+
+if __name__ == &#39;__main__&#39;:
+    p = ClockProcess(1)
+    p.start()
+    p.join()
+</code></pre>
+<p></details></p>
+<p><details><br />
+<summary>运行结果</summary></p>
+<pre><code><code>    Run &gt;&gt;&gt; 1
+    Run &gt;&gt;&gt; 2
+    Run &gt;&gt;&gt; 3
+    Run &gt;&gt;&gt; 4
+    Run &gt;&gt;&gt; 5
+    Ending!</code></pre>
+<p></details></p></li>
+<li><p><strong>守护进程</strong></p>
+<ul>
+<li>设置该进程为守护进程，即认为此进程不重要，主进程结束后，该进程随即结束。</li>
+<li>用法<code>Process.daemon = Ture</code></li>
+</ul>
+<p><details><br />
+<summary>未使用守护进程</summary></p>
+<pre><code><code>import multiprocessing
+from time import sleep
+
+def clock(interval):
+    i = 0
+    while i&lt;5:
+        i += 1
+        print(f&quot;Run &gt;&gt;&gt; {i}&quot;)
+        sleep(interval)
+    print(&quot;Ending!&quot;)
+
+def run():
+    p = multiprocessing.Process(target = clock, args = (1,))
+    p.start()
+
+if __name__ == &#39;__main__&#39;:
+    run()
+    sleep(2)
+    print(&quot;ENDING!&quot;)</code></pre>
+<p></details></p>
+<p><details><br />
+<summary>运行结果</summary></p>
+<pre><code><code>Run &gt;&gt;&gt; 1
+Run &gt;&gt;&gt; 2
+ENDING!
+Run &gt;&gt;&gt; 3
+Run &gt;&gt;&gt; 4
+Run &gt;&gt;&gt; 5
+Ending!</code></pre>
+<p></details></p>
+<p><details><br />
+<summary>使用守护进程</summary></p>
+<pre><code><code>import multiprocessing
+from time import sleep
+
+def clock(interval):
+    i = 0
+    while i&lt;5:
+        i += 1
+        print(f&quot;Run &gt;&gt;&gt; {i}&quot;)
+        sleep(interval)
+    print(&quot;Ending!&quot;)
+
+def run():
+    p = multiprocessing.Process(target = clock, args = (1,))
+    p.daemon = True
+    p.start()
+
+if __name__ == &#39;__main__&#39;:
+    run()
+    sleep(2)
+    print(&quot;ENDING!&quot;)</code></pre>
+<p></details></p>
+<p><details><br />
+<summary>运行结果</summary></p>
+<pre><code><code>Run &gt;&gt;&gt; 1
+Run &gt;&gt;&gt; 2
+ENDING!</code></pre>
+<p></details></p></li>
+</ul>
+<h1 id="python多线程的通信">Python多线程的通信</h1>
+<p>  进程是系统独立调度核分配系统资源的基本单位，进程之间是相互独立的，进程之间的数据也不能共享，这是多进程在使用中与多线程最明显的区别。<br><br />
+  所以要使用多进程来弥补Python中多线程的不足，解决多进程之间的通信时关键。</p>
+<h2 id="进程对列queue">进程对列Queue</h2>
+<p>  在python多进程中，Queue其实就是进程之间的数据管道，实现进程通信。</p>
+<h3 id="生产者消费者问题">生产者消费者问题</h3>
+<ul>
+<li><p>仓库(固定大小的中间缓冲区)</p></li>
+<li><p>生产者</p>
+<p>持续生产数据传入仓库</p></li>
+<li><p>消费者</p>
+<p>持续从仓库总提取数据</p></li>
+</ul>
+<p>  在实际运行时会产设的问题。生产者的主要作用是生成一定量的数据放到仓库中，然后重复此过程。<br><br />
+  与此同时，消费者也在仓库消耗这些数据。该问题的关键就是要保证生产者不会在仓库满时加入数据，消费者也不会在仓库空时消耗数据。</p>
+<h3 id="joinablequeue">JoinableQueue</h3>
+<ul>
+<li><p>JoinableQueue同样通过multiprocessing使用。</p></li>
+<li><p>JoinableQueue([maxsize])：就是一个Queue对象，但允许项目的使用者通知生成者项目已经被成功处理。</p></li>
+<li><p>maxsize是队列中允许最大项数，省略则无大小限制。</p></li>
+<li><p>方法介绍：</p>
+<p>JoinableQueue与Queue对象的方法一致，且之外还具有：</p>
+<ul>
+<li><code>JoinableQueue.task_done()</code>：使用者使用此方法发出信号，表示q.get()的返回项目已经被处理。如果调用此方法的次数大于从队列中删除项目的数量，将引发ValueError异常。</li>
+<li><code>JoinableQueue.join()</code>:生产者调用此方法进行阻塞，直到队列中所有的项目均被处理。阻塞将持续到队列中的每个项目均调用<code>JoinableQueue.task_done()</code>方法为止。</li>
+</ul></li>
+</ul>
+<h3 id="queue实例">Queue实例</h3>
+<ul>
+<li><p>使用JoinableQueue实现生产者消费者模型<br />
+<details><br />
+<summary>代码</summary></p>
+<pre><code><code>
+import multiprocessing
+from time import ctime,sleep
+
+def consumer(input_q):
+    print(&quot;消费开始:&quot;, ctime())
+    while True:
+        # 处理项
+        item = input_q.get()
+        print (&quot;消费 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&quot;, item) # 此处替换为有用的工作
+        input_q.task_done() # 发出信号通知任务完成
+        sleep(1)
+    print (&quot;消费结束:&quot;, ctime()) ##此句未执行，因为q.join()收集到四个task_done()信号后，主进程启动，未等到print此句完成，程序就结束了
+
+
+def producer(sequence, output_q):
+    print (&quot;生产开始:&quot;, ctime())
+    for item in sequence:
+        output_q.put(item)
+        print (&quot;生产 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&quot;, item)
+        sleep(1)
+    print (&quot;生产结束:&quot;, ctime())
+
+if __name__ == &#39;__main__&#39;:
+    q = multiprocessing.JoinableQueue()
+    # 运行消费者进程
+    cons_p = multiprocessing.Process (target = consumer, args = (q,))
+    cons_p.daemon = True
+    cons_p.start()
+
+    # 生产多个项，sequence代表要发送给消费者的项序列
+    # 在实践中，这可能是生成器的输出或通过一些其他方式生产出来
+    sequence = [1,2,3,4]
+    producer(sequence, q)
+    # 等待所有项被处理
+    q.join()</code></pre>
+<p></details></p>
+<p><details><br />
+<summary>运行结果</summary></p>
+<pre><code><code>生产开始: Wed Oct 16 22:06:11 2019
+生产 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 1
+消费开始: Wed Oct 16 22:06:11 2019
+消费 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 1
+生产 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 2
+消费 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 2
+生产 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 3
+消费 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 3
+生产 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 4
+消费 &gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt;&gt; 4
+生产结束: Wed Oct 16 22:06:15 2019</code></pre>
+<p></details></p></li>
+</ul>
+<h2 id="管道pipe">管道Pipe</h2>
+<p>待续</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

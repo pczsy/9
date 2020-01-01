@@ -1,0 +1,365 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python基础（十三）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python基础（十三）</center></div><div class='banquan'>原文出处:本文由博客园博主天狼大大提供。<br/>
+原文连接:https://www.cnblogs.com/tianlangdada/p/11616788.html</div><br>
+    <h1 id="今日主要内容">今日主要内容</h1>
+<ul>
+<li>闭包</li>
+<li>装饰器初识</li>
+<li>标准装饰器</li>
+</ul>
+<h1 id="一闭包">一、闭包</h1>
+<h2 id="一什么是闭包">（一）什么是闭包</h2>
+<ol>
+<li><p>闭包：内层函数调用外层函数的变量就是闭包（不能是全局变量）</p>
+<pre><code><code>def func1():
+ a = 10
+ def func2():
+     print(a)  # 内层函数调用外层函数的变量，这就是一个闭包
+
+func1()</code></pre></li>
+<li><p>检测闭包的方法</p>
+<ul>
+<li><code>函数名.__closure__</code></li>
+<li>若返回对象地址就是一个闭包，返回None就不是一个闭包</li>
+<li>注意：<code>.__closure__</code>检测的是<strong>函数名</strong>，判断这个函数是否是闭包</li>
+</ul>
+<pre><code><code>def func1():
+ a = 10
+ def func2():
+     print(a)  # 调用外层变量a，是闭包
+ print(func2.__closure__)  # 判断func2是否是闭包
+
+func1()
+
+运行结果：
+(&lt;cell at 0x00000230F21874F8: int object at 0x0000000063258190&gt;,)</code></pre>
+<pre><code><code>def func1():
+    a = 10
+    def func2():
+        a = 10
+        print(a)  # 使用自身函数变量a，不是闭包
+    print(func2.__closure__)
+
+func1()
+
+运行结果：
+None</code></pre></li>
+<li><p>如何在全局空间中调用内部函数</p>
+<ul>
+<li>外层函数返回内层函数的函数名（内存地址），就可在全局空间中调用内部函数</li>
+</ul>
+<pre><code><code>def func1():
+ a = 10
+ def func2():
+     print(a)
+ return func2  # 返回内层函数的函数名
+
+f = func1()  # 此时f就是func2
+f()  # 调用内层函数func2
+print(f.__closure__)
+
+运行结果：
+10
+(&lt;cell at 0x00000280A87574F8: int object at 0x0000000063258190&gt;,)</code></pre></li>
+</ol>
+<h2 id="二闭包的作用">（二）闭包的作用</h2>
+<ol>
+<li>保护数据安全</li>
+</ol>
+<ul>
+<li>说白话一点，如果数据放在全局变量中（顶格写代码），数据的安全性很低，因为所有人都可以无意间修改它，想解决这个问题我们可以把数据放到函数中，只要不调用这个函数，我的数据就是安全的。但是有个问题，每次执行函数完，解释器就会自动清空此函数开辟的局部空间中所有内容（包括数据开辟的空间），所以每次调用完函数，我的数据就没了，此时就需要利用到了闭包。闭包可以在内层函数调用外层函数中的变量，而且内层函数如果调用了外层函数中的变量，那这个变量将不会消亡，将会常驻内存。所以，我们只需要在全局空间中调用这个闭包的内层函数，就可以使用我的数据了，而且数据的安全性也提高了。</li>
+</ul>
+<ol>
+<li><p>将变量常驻内存，供后续代码使用</p>
+<pre><code><code>def outer():
+ lst = [1,2,3,4,5]
+ def inner():
+     return lst
+ return inner
+
+f = outer()
+f_lst = f()
+print(f_lst)
+
+运行结果：
+[1,2,3,4,5]</code></pre></li>
+</ol>
+<h2 id="三闭包的应用">（三）闭包的应用</h2>
+<ul>
+<li>防止数据被误修改</li>
+<li>装饰器（与闭包格式相同）</li>
+</ul>
+<h1 id="二装饰器初识">二、装饰器初识</h1>
+<h2 id="一软件开发的六大原则了解">（一）软件开发的六大原则（了解）</h2>
+<ol>
+<li><strong>开闭原则（Open Close Principle）</strong>——装饰器依据</li>
+<li>里氏代换原则（Liskov Substitution Principle）</li>
+<li>依赖倒转原则（Dependence Inversion Principle）</li>
+<li>接口隔离原则（Interface Segregation Principle）</li>
+<li>迪米特法则（最少知道原则）（Demeter Principle）</li>
+<li>合成复用原则（Composite Reuse Principle）</li>
+</ol>
+<h2 id="二装饰器依据开闭原则">（二）装饰器依据——开闭原则</h2>
+<ul>
+<li><strong>开放封闭原则：</strong>
+<ul>
+<li><strong>对功能扩展开放</strong></li>
+<li><strong>对源码修改封闭</strong></li>
+</ul></li>
+</ul>
+<h2 id="三装饰器引入">（三）装饰器引入</h2>
+<ul>
+<li><h4 id="相信大多数人都玩lol我们模拟一次游戏过程">相信大多数人都玩LOL，我们模拟一次游戏过程：</h4>
+<ul>
+<li>向平常一样的流程，十连跪...</li>
+</ul>
+<pre><code><code>def play_lol():
+  print(&quot;登陆游戏&quot;)
+  print(&quot;开始排位...&quot;)
+  print(&quot;游戏中...&quot;)
+  print(&quot;失败...&quot;)
+  print(&quot;结束游戏&quot;)
+
+play_lol()
+
+运行结果：
+登陆游戏
+开始排位...
+游戏中...
+Virtory
+结束游戏</code></pre>
+<ul>
+<li>受不了了，开一个外挂吧，此时我的函数需要扩展，在前后添加开启关闭外挂的功能</li>
+</ul>
+<pre><code><code>def play_lol():
+  print(&quot;开启外挂！&quot;)  # 添加开启外挂功能
+  print(&quot;登陆游戏&quot;)
+  print(&quot;开始排位...&quot;)
+  print(&quot;游戏中...&quot;)
+  print(&quot;胜利！！！&quot;)
+  print(&quot;结束游戏&quot;)
+  print(&quot;关闭外挂！&quot;)  # 添加关闭外挂功能
+
+play_lol()
+
+运行结果：
+开启外挂！
+登陆游戏
+开始排位...
+游戏中...
+胜利！！！
+结束游戏
+关闭外挂！</code></pre>
+<ul>
+<li>但此时，违背了开闭原则，对源代码进行了修改。想一个方法，对源代码进行前后包装，不改变源码</li>
+</ul>
+<pre><code><code>def play_lol():
+  print(&quot;登陆游戏&quot;)
+  print(&quot;开始排位...&quot;)
+  print(&quot;游戏中...&quot;)
+  print(&quot;胜利！！！&quot;)
+  print(&quot;结束游戏&quot;)
+
+def new_play():  # 将上面代码前后包装成了一个新的函数，没有改变源码
+  print(&quot;开启外挂！&quot;)
+  play_lol()
+  print(&quot;关闭外挂！&quot;)
+
+new_play()
+
+运行结果：
+开启外挂！
+登陆游戏
+开始排位...
+游戏中...
+胜利！！！
+结束游戏
+关闭外挂！</code></pre>
+<ul>
+<li>功能实现了，而且还没有改变源码，但是有一个问题，我们之前访问调用的是<code>play_lol</code>这个函数，但此时我们访问调用的是<code>new_play()</code>这个函数，相当于改变了调用，还是违背了开闭原则，没有达到扩展的效果，此时我们就需要对这段代码稍作变化</li>
+</ul>
+<pre><code><code>def play_lol():
+  print(&quot;登陆游戏&quot;)
+  print(&quot;开始排位...&quot;)
+  print(&quot;游戏中...&quot;)
+  print(&quot;胜利！！！&quot;)
+  print(&quot;结束游戏&quot;)
+
+def wrapper(fn):    # 装饰器雏形
+  def inner():
+      print(&quot;开启外挂！&quot;)
+      fn()
+      print(&quot;关闭外挂！&quot;)
+  return inner
+
+func = wrapper(play_lol)  # 调用装饰器函数将我基础函数传入进去包装
+play_lol = func  # 返回的是包装函数，将包装函数重命名成我原来的函数
+play_lol()  # 调用此函数
+
+运行结果：
+开启外挂！
+登陆游戏
+开始排位...
+游戏中...
+胜利！！！
+结束游戏
+关闭外挂！</code></pre>
+<ul>
+<li>上述代码就引出了装饰器的雏形，刨析一下:
+<ul>
+<li>装饰器雏形：与闭包的格式相同，两层函数构成：
+<ul>
+<li>内层函数就是我的包装函数，将扩展的功能和原函数包在一起组成一个函数</li>
+<li>外层函数的作用就是给内层函数传参用的，传入的是我原函数的函数名，在内层调用</li>
+</ul></li>
+<li>装饰器的返回值 <code>return inner</code>：装饰器的返回值是内层函数的函数名，真正进行包装扩展的是内层函数</li>
+<li>将返回值重命名成原函数名：将返回值重命名成原来的函数名，其实就是把真正作用的包装函数重命名成原来的函数名，所以就解决了调用新函数的问题，真正遵循了开闭原则，再次调用原来的函数其实真正运行的是装饰器内部的inner函数</li>
+</ul></li>
+</ul>
+<pre><code><code>def wrapper(fn):    # 装饰器雏形
+  def inner():
+      print(&quot;开启外挂！&quot;)
+      fn()
+      print(&quot;关闭外挂！&quot;)
+  return inner
+
+func = wrapper(play_lol)  # 调用装饰器函数将我基础函数传入进去包装
+play_lol = func  # 返回的是包装函数，将包赚函数重命名成我原来的函数
+play_lol()  # 调用此函数</code></pre>
+<ul>
+<li><p>利用语法糖装饰</p>
+<ul>
+<li>使用装饰器的两行代码可以转换成语法糖</li>
+</ul>
+<pre><code><code>func = wrapper(play_lol)  # 调用装饰器函数将我基础函数传入进去包装
+play_lol = func  # 返回的是包装函数，将包赚函数重命名成我原来的函数</code></pre>
+<ul>
+<li>语法糖</li>
+</ul>
+<pre><code><code>@wrapper  # 语法糖
+def play_lol():
+    print(&quot;登陆游戏&quot;)
+    print(&quot;开始排位...&quot;)
+    print(&quot;游戏中...&quot;)
+    print(&quot;胜利！！！&quot;)
+    print(&quot;结束游戏&quot;)</code></pre></li>
+<li><p>此时，装饰器的雏形就出来了</p></li>
+</ul></li>
+<li><h4 id="装饰器雏形">装饰器雏形</h4>
+<pre><code><code>def wrapper(fn):
+  def inner():
+      &quot;&quot;&quot;扩展功能&quot;&quot;&quot;
+      fn()
+      &quot;&quot;&quot;扩展功能&quot;&quot;&quot;
+  return inner
+
+@wrapper
+def func():
+  pass
+
+func()</code></pre></li>
+<li><h4 id="游戏模拟继续进行">游戏模拟继续进行</h4>
+<ul>
+<li>就算开挂，我们也得选完英雄，才能进入游戏，所以我们给基础函数传个参数，但是我们真正执行的是装饰器内部的inner包装函数，所以也要给inner传入参数</li>
+</ul>
+<pre><code><code>def wrapper(fn):    # 装饰器雏形
+  def inner(hero):  # 套到装饰器中内层包装函数参数
+      print(&quot;开启外挂！&quot;)
+      fn(hero)  # 基础函数参数
+      print(&quot;关闭外挂！&quot;)
+  return inner
+
+@wrapper
+def play_lol(hero):  # 基础函数参数
+  print(&quot;登陆游戏&quot;)
+  print(&quot;开始排位...&quot;)
+  print(f&quot;选择英雄:{hero}&quot;)
+  print(&quot;游戏中...&quot;)
+  print(&quot;胜利！！！&quot;)
+  print(&quot;结束游戏&quot;)
+
+play_lol(&quot;盖伦&quot;)
+
+运行结果：
+开启外挂！
+登陆游戏
+开始排位...
+选择英雄:盖伦  # 传入的参数
+游戏中...
+胜利！！！
+结束游戏
+关闭外挂！</code></pre>
+<ul>
+<li>虽然开挂了，但是还是会遇到巨坑无敌坑的队友，我们得把他记下来举报他，所以要给基础函数填写返回值，同时给真正执行的inner函数填写返回值</li>
+</ul>
+<pre><code><code>def wrapper(fn):    # 装饰器雏形
+  def inner(hero):  
+      print(&quot;开启外挂！&quot;)
+      ret = fn(hero)  # 接收基础函数的返回值
+      print(&quot;关闭外挂！&quot;)
+      return ret  # 返回包装后的函数的返回值
+  return inner
+
+@wrapper
+def play_lol(hero):  # 基础函数参数
+  print(&quot;登陆游戏&quot;)
+  print(&quot;开始排位...&quot;)
+  print(f&quot;选择英雄:{hero}&quot;)
+  print(&quot;游戏中...&quot;)
+  print(&quot;胜利！！！&quot;)
+  print(&quot;结束游戏&quot;)
+  return &quot;坑比队友:xxx&quot;  # 基础函数返回值
+
+print(play_lol(&quot;盖伦&quot;))
+
+运行结果：
+开启外挂！
+登陆游戏
+开始排位...
+选择英雄:盖伦
+游戏中...
+胜利！！！
+结束游戏
+关闭外挂！
+坑比队友:xxx  # 返回值</code></pre>
+<ul>
+<li>到此，我们装饰器标准模式也就出来了</li>
+</ul></li>
+<li><h4 id="装饰器标准模式非常重要">装饰器标准模式（非常重要）</h4>
+<pre><code><code>def wrapper(fn):
+  def inner(*args, **kwargs):
+      &quot;&quot;&quot;扩展功能&quot;&quot;&quot;
+      ret = fn(*args, **kwargs)
+      &quot;&quot;&quot;扩展功能&quot;&quot;&quot;
+      return ret
+  return inner
+
+@wrapper
+def func():
+  pass
+
+func()</code></pre></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

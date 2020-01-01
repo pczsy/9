@@ -1,0 +1,80 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修短信验证功能实现' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>短信验证功能实现</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11505748.html</div><br>
+    <h1 id="自我总结">0911自我总结</h1>
+<h1 id="短信验证功能实现">短信验证功能实现</h1>
+<p><code>基于腾讯云里面的短信服务来完成</code></p>
+<h3 id="选择功能">1.选择功能</h3>
+<p><img src="./images/短信验证功能实现0.png" /></p>
+<h3 id="免费领取短信">2.免费领取短信</h3>
+<h3 id="添加应用内容和简介随意">3.添加应用<code>内容和简介随意</code></h3>
+<h3 id="点击进入你创建的应用">4.点击进入你创建的应用</h3>
+<h3 id="选择你要的项目">5.选择你要的项目</h3>
+<p><img src="./images/短信验证功能实现1.png" /></p>
+<h3 id="创建签名以及短信格式">6.创建签名以及短信格式</h3>
+<p>创建签名时候看他需要你提供给他什么资料你就提交什么资料,一般<code>弄个公众号</code>截图管理员页面即可通过审核</p>
+<p><img src="./images/短信验证功能实现2.png" /></p>
+<h3 id="使用">7.使用</h3>
+<p><code>需要登入查看</code></p>
+<p>参考的官方文档:<a href="https://console.cloud.tencent.com/sms/sdkAPI" class="uri">https://console.cloud.tencent.com/sms/sdkAPI</a></p>
+<p><code>不需要登入查看</code></p>
+<p><code>python</code>:<a href="https://github.com/qcloudsms/qcloudsms_py" class="uri">https://github.com/qcloudsms/qcloudsms_py</a></p>
+<p><code>java</code>:<a href="https://github.com/qcloudsms/qcloudsms_java" class="uri">https://github.com/qcloudsms/qcloudsms_java</a></p>
+<p><code>php</code>:<a href="https://github.com/qcloudsms/qcloudsms_php" class="uri">https://github.com/qcloudsms/qcloudsms_php</a></p>
+<p><code>c#</code>:<a href="https://github.com/qcloudsms/qcloudsms/tree/master/demo/csharp" class="uri">https://github.com/qcloudsms/qcloudsms/tree/master/demo/csharp</a></p>
+<p><code>node</code>:<a href="https://github.com/qcloudsms/qcloudsms_js" class="uri">https://github.com/qcloudsms/qcloudsms_js</a></p>
+<p>对应编程语言进入对应官方文档中</p>
+<p>对于官方文档中的补充点<code>只针对python</code></p>
+<pre><code><code>from qcloudsms_py import SmsSingleSender
+from qcloudsms_py.httpclient import HTTPError
+# 短信应用SDK AppID
+appid = XXXXXX  # SDK AppID是1400开头必须为数字类型
+
+# 短信应用SDK AppKey
+appkey =&quot;XXXXXX&quot; #SDK AppKey必须是字符串格式
+
+# 需要发送短信的手机号码
+phone_numbers = [&quot;xxxxx&quot;,] #电话号码必须是字符串格式
+template_id = xxx #短信正文模板的id必须为数字类型
+
+sms_sign=&#39;测试&#39; #自定义在模板正文基础上开头加[测试].........
+
+sms_type = 0  # Enum{0: 普通短信, 1: 营销短信}
+
+ssender = SmsSingleSender(appid, appkey)
+
+params=[&#39;2&#39;,&#39;4&#39;]  #这里是根据你短信模板正文设置内容{1},{2}....按着顺序一一对应传参
+try:
+    result = ssender.send_with_param(86, phone_numbers[0],
+        template_id, params,sign=sms_sign, extend=&quot;&quot;, ext=&quot;&quot;)  # 签名参数未提供或者为空时，会使用默认签名发送短信
+ #sign可以不用写
+#template_id里面如果有放置需传参的{1},{2}...必须在params一一对应进行传参,如果没有params参数可以不写
+except HTTPError as e:
+    print(e)
+except Exception as e:
+    print(e)
+
+print(result)</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

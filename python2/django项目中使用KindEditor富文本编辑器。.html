@@ -1,0 +1,133 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修django项目中使用KindEditor富文本编辑器。' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>django项目中使用KindEditor富文本编辑器。</center></div><div class='banquan'>原文出处:本文由博客园博主记住我忘记我提供。<br/>
+原文连接:https://www.cnblogs.com/nmsghgnv/p/11366183.html</div><br>
+    <p>先从<a href="http://kindeditor.net/doc.php" target="_blank">官网</a>下载插件，放在static文件下</p>
+<p>前端引入</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script type=<span style="color: #800000;">"</span><span style="color: #800000;">text/javascript</span><span style="color: #800000;">"</span> src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/back/kindeditor/kindeditor-all.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+
+
+&lt;script&gt;<span style="color: #000000;">
+        KindEditor.ready(function (K) {
+            
+            window.editor </span>= K.create(<span style="color: #800000;">'</span><span style="color: #800000;">#content</span><span style="color: #800000;">'</span><span style="color: #000000;">, {
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">                加上这句话可以使jquery能获取到富文本编辑器的内容#}</span>
+<span style="color: #000000;">                afterBlur: function(){this.sync();},
+                width: </span><span style="color: #800000;">"</span><span style="color: #800000;">800</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                height: </span><span style="color: #800000;">"</span><span style="color: #800000;">600</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                resizeType: 0,
+                uploadJson: </span><span style="color: #800000;">"</span><span style="color: #800000;">/back/article/upload/</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+                extraFileUploadParams: {
+                    csrfmiddlewaretoken: </span><span style="color: #800000;">"</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                },
+                filePostName: </span><span style="color: #800000;">"</span><span style="color: #800000;">upload_img</span><span style="color: #800000;">"</span>//<span style="color: #000000;">上传图片的名称
+            });
+        });
+    </span>&lt;/script&gt;</pre>
+</div>
+<p>定义富文本编辑器在页面中的位置</p>
+<div class="cnblogs_code">
+<pre><code>&lt;textarea id=<span style="color: #800000;">"</span><span style="color: #800000;">content</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">content</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">width:700px;height:250px;</span><span style="color: #800000;">"</span>&gt;&lt;/textarea&gt;</pre>
+</div>
+<p>ajax提交</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">提交按钮</span>
+&lt;input name=<span style="color: #800000;">"</span><span style="color: #800000;">dosubmit</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">dosubmit</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">btn</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">马上发布</span><span style="color: #800000;">"</span>&gt;
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 提交富文本编辑器的内容</span>
+&lt;script&gt;<span style="color: #000000;">
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">    提交文章#}</span>
+    $(<span style="color: #800000;">'</span><span style="color: #800000;">#dosubmit</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+        $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/back_add/</span><span style="color: #800000;">'</span>,$(<span style="color: #800000;">'</span><span style="color: #800000;">form</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(),function (data) {
+            </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>]==<span style="color: #000000;">0){
+                layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                {</span><span style="color: #008000;">#</span><span style="color: #008000;">location.href="/back/index/index/"#}</span>
+            }<span style="color: #0000ff;">else</span><span style="color: #000000;">{
+                layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+            }
+        },</span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    })
+</span>&lt;/script&gt;</pre>
+</div>
+<p>路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 富文本编辑器</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/upload/</span><span style="color: #800000;">'</span>, article.upload, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/upload/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 接受form表单内容添加文章</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/add/</span><span style="color: #800000;">'</span>, article.add, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/add/</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>后台接收图片方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">富文本编辑器里上传图片</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> upload(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    编辑器上传文件接受视图函数
+    :param request:
+    :return:
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> print(request.FILES)</span>
+    img_obj=request.FILES.get(<span style="color: #800000;">"</span><span style="color: #800000;">upload_img</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(img_obj.name)</span>
+    path=os.path.join(settings.MEDIA_ROOT,<span style="color: #800000;">"</span><span style="color: #800000;">add_article_img</span><span style="color: #800000;">"</span><span style="color: #000000;">,img_obj.name)
+    with open(path,</span><span style="color: #800000;">"</span><span style="color: #800000;">wb</span><span style="color: #800000;">"</span><span style="color: #000000;">) as f:
+        </span><span style="color: #0000ff;">for</span> line <span style="color: #0000ff;">in</span><span style="color: #000000;"> img_obj:
+            f.write(line)
+    response</span>=<span style="color: #000000;">{
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">error</span><span style="color: #800000;">"</span><span style="color: #000000;">:0,
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">url</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">/media/add_article_img/%s</span><span style="color: #800000;">"</span>%<span style="color: #000000;">img_obj.name
+    }
+    </span><span style="color: #0000ff;">return</span> HttpResponse(json.dumps(response))</pre>
+</div>
+<p>后台接收内容方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> add(request):
+    member_obj</span>=<span style="color: #000000;">Member.objects.all()
+    member_id </span>= request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">member_id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    member_name</span>=request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">member_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">if</span> request.method == <span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        title </span>= request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">title</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        description </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">description</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        content </span>= request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">content</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        addtime</span>=time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y-%m-%d</span><span style="color: #800000;">'</span><span style="color: #000000;">,time.localtime())
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 防止xss攻击,过滤script标签</span>
+        soup=BeautifulSoup(content,<span style="color: #800000;">"</span><span style="color: #800000;">html.parser</span><span style="color: #800000;">"</span>)<span style="color: #008000;">#</span><span style="color: #008000;">通过字符串创建BeautifulSoup对象，即将字符串转为对象，然后调用对象里的相关方法</span>
+        <span style="color: #0000ff;">print</span>(soup.find_all())<span style="color: #008000;">#</span><span style="color: #008000;">[&lt;img alt="" src="/media/add_article_img/hand.png"/&gt;, &lt;script charset="utf-8" src="/static/blog/kindeditor/kindeditor-all.js"&gt;&lt;/script&gt;,&lt;img src="/media/add_article_img/thumb_50_img1.jpg" alt="" /&gt;]</span>
+        <span style="color: #0000ff;">for</span> tag <span style="color: #0000ff;">in</span><span style="color: #000000;"> soup.find_all():
+
+            </span><span style="color: #0000ff;">print</span>(tag.name)<span style="color: #008000;">#</span><span style="color: #008000;">img   script</span>
+            <span style="color: #0000ff;">if</span> tag.name==<span style="color: #800000;">"</span><span style="color: #800000;">script</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+                tag.decompose()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">     # 构建摘要数据,获取标签字符串的文本前150个符号</span>
+        desc = soup.text[0:150] + <span style="color: #800000;">"</span><span style="color: #800000;">...</span><span style="color: #800000;">"</span><span style="color: #000000;">
+        obj</span>=Article.objects.create(article_title=title,article_description=desc,article_content=str(content),member_id=member_id,article_addtime=str(addtime).replace(<span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">-</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> obj:
+            </span><span style="color: #0000ff;">return</span> redirect(<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/add/</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/add.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>页面效果</p>
+<p><img src="./images/django项目中使用KindEditor富文本编辑器。0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>done。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

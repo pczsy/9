@@ -1,0 +1,186 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python中使用moviepy进行视频分割' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python中使用moviepy进行视频分割</center></div><div class='banquan'>原文出处:本文由博客园博主霸道流氓提供。<br/>
+原文连接:https://www.cnblogs.com/badaoliumangqizhi/p/11523908.html</div><br>
+    <h1>场景</h1>
+<p>moviepy官网：</p>
+<p><a href="https://pypi.org/project/moviepy/">https://pypi.org/project/moviepy/</a></p>
+<p>是一个用于视频编辑的Python库：切割、连接、标题插入、视频合成、非线性编辑，视频处理和定制效果的创建。</p>
+<p>Github:</p>
+<p><a href="https://github.com/Zulko/moviepy">https://github.com/Zulko/moviepy</a></p>
+<h1>实现</h1>
+<p>首先你需要安装moviepy</p>
+<p>打开cmd输入:</p>
+<div class="cnblogs_code">
+<pre><code>pip install moviepy</pre>
+</div>
+<p><img src="./images/Python中使用moviepy进行视频分割0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img alt="" /></p>
+<p>其次需要安装ffmpeg,因为网络问题，这里使用豆瓣镜像</p>
+<div class="cnblogs_code">
+<pre><code>pip install imageio-ffmpeg -i http:<span style="color: #008000;">//</span><span style="color: #008000;">pypi.douban.com/simple --trusted-host pypi.douban.com</span></pre>
+</div>
+<p><img src="./images/Python中使用moviepy进行视频分割2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img alt="" /></p>
+<p>如果之前那么没有安装过PyQt5,你还需要：</p>
+<div class="cnblogs_code">
+<pre><code>pip install PyQt5 -i http:<span style="color: #008000;">//</span><span style="color: #008000;">pypi.douban.com/simple --trusted-host pypi.douban.com</span></pre>
+</div>
+<p>&nbsp;然后新建python文件，输入代码</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">import imageio
+imageio.plugins.ffmpeg.download()
+import win_unicode_console
+win_unicode_console.enable()
+import sys,os
+</span><span style="color: #0000ff;">from</span> PyQt5.QtCore import *
+<span style="color: #0000ff;">from</span><span style="color: #000000;"> PyQt5.QtWidgets import (QWidget, QPushButton, QLineEdit,QLabel,
+                              QApplication,QFileDialog)
+</span><span style="color: #0000ff;">from</span><span style="color: #000000;"> moviepy.video.io.VideoFileClip  import VideoFileClip
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> login(QWidget):
+    def __init__(self):
+        super(login,self).__init__()
+        self.initUI()
+
+    def initUI(self):
+        #源文件选择按钮和选择编辑框
+        self.source_btn </span>= QPushButton(<span style="color: #800000;">'</span><span style="color: #800000;">源文件</span><span style="color: #800000;">'</span><span style="color: #000000;">, self)
+        self.source_btn.move(</span><span style="color: #800080;">30</span>, <span style="color: #800080;">30</span><span style="color: #000000;">)
+        self.source_btn.resize(</span><span style="color: #800080;">60</span>,<span style="color: #800080;">30</span><span style="color: #000000;">)
+        self.source_btn.clicked.connect(self.select_source)
+        self.source_le </span>=<span style="color: #000000;"> QLineEdit(self)
+        self.source_le.move(</span><span style="color: #800080;">120</span>, <span style="color: #800080;">30</span><span style="color: #000000;">)
+        self.source_le.resize(</span><span style="color: #800080;">250</span>,<span style="color: #800080;">30</span><span style="color: #000000;">)
+
+        # 存储文件选择按钮和选择编辑框
+        self.target_btn </span>= QPushButton(<span style="color: #800000;">'</span><span style="color: #800000;">目标路径</span><span style="color: #800000;">'</span><span style="color: #000000;">, self)
+        self.target_btn.move(</span><span style="color: #800080;">30</span>, <span style="color: #800080;">90</span><span style="color: #000000;">)
+        self.target_btn.resize(</span><span style="color: #800080;">60</span>, <span style="color: #800080;">30</span><span style="color: #000000;">)
+        self.target_btn.clicked.connect(self.select_target)
+        self.target_le </span>=<span style="color: #000000;"> QLineEdit(self)
+        self.target_le.move(</span><span style="color: #800080;">120</span>, <span style="color: #800080;">90</span><span style="color: #000000;">)
+        self.target_le.resize(</span><span style="color: #800080;">250</span>, <span style="color: #800080;">30</span><span style="color: #000000;">)
+
+        #截切开始时间输入框和提示
+        self.startLabel </span>=<span style="color: #000000;"> QLabel(self)
+        self.startLabel.move(</span><span style="color: #800080;">30</span>, <span style="color: #800080;">150</span><span style="color: #000000;">)
+        self.startLabel.resize(</span><span style="color: #800080;">60</span>,<span style="color: #800080;">30</span><span style="color: #000000;">)
+        self.startLabel.setText(</span><span style="color: #800000;">"</span><span style="color: #800000;">开始秒</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self.start_le </span>=<span style="color: #000000;"> QLineEdit(self)
+        self.start_le.move(</span><span style="color: #800080;">120</span>,<span style="color: #800080;">150</span><span style="color: #000000;">)
+        self.start_le.resize(</span><span style="color: #800080;">50</span>,<span style="color: #800080;">30</span><span style="color: #000000;">)
+
+        # 截切结束时间输入框和提示
+        self.stopLabel </span>=<span style="color: #000000;"> QLabel(self)
+        self.stopLabel.move(</span><span style="color: #800080;">230</span>, <span style="color: #800080;">150</span><span style="color: #000000;">)
+        self.stopLabel.resize(</span><span style="color: #800080;">60</span>,<span style="color: #800080;">30</span><span style="color: #000000;">)
+        self.stopLabel.setText(</span><span style="color: #800000;">"</span><span style="color: #800000;">结束秒</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self.stop_le </span>=<span style="color: #000000;"> QLineEdit(self)
+        self.stop_le.move(</span><span style="color: #800080;">320</span>,<span style="color: #800080;">150</span><span style="color: #000000;">)
+        self.stop_le.resize(</span><span style="color: #800080;">50</span>,<span style="color: #800080;">30</span><span style="color: #000000;">)
+
+        #保存按钮，调取数据增加函数等
+        self.save_btn </span>= QPushButton(<span style="color: #800000;">'</span><span style="color: #800000;">开始</span><span style="color: #800000;">'</span><span style="color: #000000;">,self)
+        self.save_btn.move(</span><span style="color: #800080;">30</span>, <span style="color: #800080;">210</span><span style="color: #000000;">)
+        self.save_btn.resize(</span><span style="color: #800080;">140</span>, <span style="color: #800080;">30</span><span style="color: #000000;">)
+        self.save_btn.clicked.connect(self.addNum)
+
+ 
+
+        #执行成功返回值显示位置设置
+        self.result_le </span>=<span style="color: #000000;"> QLabel(self)
+        self.result_le.move(</span><span style="color: #800080;">30</span>, <span style="color: #800080;">270</span><span style="color: #000000;">)
+        self.result_le.resize(</span><span style="color: #800080;">340</span>, <span style="color: #800080;">30</span><span style="color: #000000;">)
+
+
+        #整体界面设置
+        self.setGeometry(</span><span style="color: #800080;">400</span>, <span style="color: #800080;">400</span>, <span style="color: #800080;">400</span>, <span style="color: #800080;">400</span><span style="color: #000000;">)
+        self.setWindowTitle(</span><span style="color: #800000;">'</span><span style="color: #800000;">视频剪切</span><span style="color: #800000;">'</span><span style="color: #000000;">)#设置界面标题名
+        self.show()
+
+    # 打开的视频文件名称
+    def select_source(self):
+        target,fileType </span>= QFileDialog.getOpenFileName(self, <span style="color: #800000;">"</span><span style="color: #800000;">选择源文件</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">C:/</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self.source_le.setText(str(target))
+    #保存的视频文件名称，要写上后缀名
+    def select_target(self):
+        target,fileType </span>= QFileDialog.getSaveFileName(self, <span style="color: #800000;">"</span><span style="color: #800000;">选择保存路径</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">C:/</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self.target_le.setText(str(target))
+
+
+    def addNum(self):
+        source </span>=<span style="color: #000000;"> self.source_le.text().strip()#获取需要剪切的文件
+        target </span>=<span style="color: #000000;"> self.target_le.text().strip()#获取剪切后视频保存的文件
+        start_time </span>=<span style="color: #000000;"> self.start_le.text().strip()#获取开始剪切时间
+        stop_time </span>=<span style="color: #000000;"> self.stop_le.text().strip()#获取剪切的结束时间
+        video </span>=<span style="color: #000000;"> VideoFileClip(source)#视频文件加载
+        video </span>= video.subclip(<span style="color: #0000ff;">int</span>(start_time), <span style="color: #0000ff;">int</span><span style="color: #000000;">(stop_time))#执行剪切操作
+        video.to_videofile(target, fps</span>=<span style="color: #800080;">20</span>, remove_temp=<span style="color: #000000;">True)#输出文件
+        self.result_le.setText(</span><span style="color: #800000;">"</span><span style="color: #800000;">ok!</span><span style="color: #800000;">"</span><span style="color: #000000;">)#输出文件后界面返回OK
+        self.result_le.setStyleSheet(</span><span style="color: #800000;">"</span><span style="color: #800000;">color:red;font-size:40px</span><span style="color: #800000;">"</span><span style="color: #000000;">)#设置OK颜色为红色，大小为四十像素
+        self.result_le.setAlignment(Qt.AlignCenter)#OK在指定框内居中
+
+</span><span style="color: #0000ff;">if</span> __name__==<span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    app </span>=<span style="color: #000000;"> QApplication(sys.argv)
+    ex </span>=<span style="color: #000000;"> login()
+    sys.exit(app.exec_())</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>效果</h2>
+<p><img alt="" /></p>
+<p><br />&nbsp;<img src="./images/Python中使用moviepy进行视频分割5.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>选择要分割的视频以及目标路径(带后缀)，然后设置开始与结束时间，单位为秒。</p>
+<p><img src="./images/Python中使用moviepy进行视频分割6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img alt="" /></p>
+<p>点击开始</p>
+<p><img src="./images/Python中使用moviepy进行视频分割8.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img alt="" /></p>
+<p>完成之后，找到设置的目标路径<br /><img alt="" /></p>
+<p>可能出现的问题：</p>
+<p>Python中使用pip安装库时提示：远程主机强迫关闭了一个现有的连接：</p>
+<p><a href="https://blog.csdn.net/BADAO_LIUMANG_QIZHI/article/details/100851841">https://blog.csdn.net/BADAO_LIUMANG_QIZHI/article/details/100851841</a></p>
+<p>imageio.ffmpeg.download() has been deprecated. Use 'pip 
+install im ageio-ffmpeg' instead.'：</p>
+<p><a href="https://blog.csdn.net/BADAO_LIUMANG_QIZHI/article/details/100853266">https://blog.csdn.net/BADAO_LIUMANG_QIZHI/article/details/100853266</a></p>
+<p><span style="text-decoration: underline;"><span style="color: #0066cc;">Imageio: 
+'ffmpeg-win32-v3.2.4.exe' was not found on your computer; downloading it 
+now.：</span></span></p>
+<p><a href="https://blog.csdn.net/BADAO_LIUMANG_QIZHI/article/details/100857437">https://blog.csdn.net/BADAO_LIUMANG_QIZHI/article/details/100857437</a></p>
+<p><span style="text-decoration: underline;"><span style="color: #0066cc;">ffmpeg-win32-v3.2.4exe.zip：</span></span></p>
+<p><a href="https://download.csdn.net/download/badao_liumang_qizhi/11747539">https://download.csdn.net/download/badao_liumang_qizhi/11747539</a></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,189 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python高级编程——网络编程（三）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python高级编程——网络编程（三）</center></div><div class='banquan'>原文出处:本文由博客园博主呱唧_T_呱唧提供。<br/>
+原文连接:https://www.cnblogs.com/aitiknowledge/p/11435261.html</div><br>
+    <h1>TCP和并发服务器</h1>
+<p>与UDP不同的是，他是一个面向连接的，可靠的数据传输协议</p>
+<p>TCP通信比较复杂</p>
+<p>先写一个TCP服务器，一般步骤如下：</p>
+<p>1、首先是要创建一个socket套接字：socket()</p>
+<p>2、服务器一般是需要一个固定的IP地址和固定端口号，服务器就要绑定这个IP地址和端口号：bind()</p>
+<p>3、客户端连接服务器是是有一定的数量（允许最大连接数）的，而这个数量是服务器设定的：listen()</p>
+<p>4、上面3步是做被连接的准备，这一步是来接受客户端的数据，在接受数据之前，服务器还是需要接受客户端的socket套接字和IP地址：accept()</p>
+<p>5、只有服务器和客户端绑定相同的IP地址，服务器和客户端才可以互相接收数据和发送数据，常理来想，服务器是一只被开启的，也是一直接受数据，所以在接受数据的过程中，我们需要无限循环:recv()</p>
+<p>6、如果我们要发送数据给客户端,客户端也需要绑定上面的地址，然后需要调用相应的函数send()</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> TCP</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 创建一个服务器socket套接字</span>
+server_socket =<span style="color: #000000;"> socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器的IP地址和端口号</span>
+address = (<span style="color: #800000;">"</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">"</span>, 9999<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器绑定地址</span>
+<span style="color: #000000;">server_socket.bind(address)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置服务器的最大连接数</span>
+server_socket.listen(1<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个等待连接的客户端socket套接字，accept()函数会返回两个值，可以自行打印</span>
+client_socket, address =<span style="color: #000000;"> server_socket.accept()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器需要不停的接受客户端的发来的数据</span>
+<span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    以防客户端连接失败，需要检测异常
+    无论是接受数据还是发送数据，我们需要将数据统一编码和解码
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        data </span>= client_socket.recv(2048).decode(<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 数据处理</span>
+        <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">服务器接受的数据：</span><span style="color: #800000;">"</span><span style="color: #000000;">, data)   # 服务器接受的数据:我是一个客户端
+        client_socket.send(</span><span style="color: #800000;">"</span><span style="color: #800000;">我是一个服务器</span><span style="color: #800000;">"</span>.encode(<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">break</span></pre>
+</div>
+<p>再写一个TCP客户端，一般步骤如下：</p>
+<p>1、首先是要创建一个socket套接字：socket()</p>
+<p>2、客户端一般是不需要一个固定的IP地址和固定端口号，连接服务器的时候系统会自动分配端口号</p>
+<p>3、客户端连接服务器必须先知道服务器的IP地址和端口号,然后在连接服务器：connect()</p>
+<p>4、上面3步是做连接的准备，这一步是来发送客户端的数据:send()</p>
+<p>5、客户端也可以一直接受服务器发来的数据，所以在接受数据的过程中，我们需要无限循环:recv()</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 客户端需要创建一个套接字</span>
+client_socket =<span style="color: #000000;"> socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 客户端需要连接服务器，必须先知道服务器的IP地址和端口号</span>
+address = (<span style="color: #800000;">"</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">"</span>, 9999<span style="color: #000000;">)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 连接服务器</span>
+<span style="color: #000000;">client_socket.connect(address)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 这个数据是将要发送的数据</span>
+data = <span style="color: #800000;">"</span><span style="color: #800000;">我是一个客户端</span><span style="color: #800000;">"</span><span style="color: #000000;">
+client_socket.send(data.encode(</span><span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    以防服务器中断退出，需要检测异常
+    无论是接受数据还是发送数据，我们需要将数据统一编码和解码
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        data </span>= client_socket.recv(2048).decode(<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 数据处理，这里打印出来并且将数据发回客户端</span>
+        <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">客户端接受的数据：</span><span style="color: #800000;">"</span><span style="color: #000000;">, data)
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">break</span></pre>
+</div>
+<p>&nbsp;并发服务器,这里我只介绍多线程服务器,进程和线程是差不多的)</p>
+<p>　　在TCP服务器的原有基础上增加一个线程,再将监听数增加为5,就可以允许5个客户端线程同时访问,并且可同时发送和接受数据</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #0000ff;">from</span> threading <span style="color: #0000ff;">import</span><span style="color: #000000;"> Thread
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> TCP</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 创建一个服务器socket套接字</span>
+server_socket =<span style="color: #000000;"> socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器的IP地址和端口号</span>
+address = (<span style="color: #800000;">"</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">"</span>, 9999<span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> net_connect():
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器绑定地址</span>
+<span style="color: #000000;">        server_socket.bind(address)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置服务器的最大连接数</span>
+        server_socket.listen(5<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 创建线程</span>
+    th = Thread(target=<span style="color: #000000;">recv_data)
+    th.start()
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> recv_data():
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器需要不停的接受客户端的发来的数据</span>
+    <span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        以防客户端连接失败，需要检测异常
+        无论是接受数据还是发送数据，我们需要将数据统一编码和解码
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个等待连接的客户端socket套接字，accept()函数会返回两个值，可以自行打印</span>
+        client_socket, address =<span style="color: #000000;"> server_socket.accept()</span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            data </span>= client_socket.recv(2048).decode(<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 数据处理</span>
+            <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">服务器接受的数据：</span><span style="color: #800000;">"</span><span style="color: #000000;">, data)
+            client_socket.send(</span><span style="color: #800000;">"</span><span style="color: #800000;">我是一个服务器</span><span style="color: #800000;">"</span>.encode(<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;">
+
+
+net_connect()</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>在TCP客户端上也增加一个线程,然后同时运行多次这个客户端程序:</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 客户端需要创建一个套接字</span>
+<span style="color: #0000ff;">from</span> threading <span style="color: #0000ff;">import</span><span style="color: #000000;"> Thread
+
+client_socket </span>=<span style="color: #000000;"> socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 客户端需要连接服务器，必须先知道服务器的IP地址和端口号</span>
+address = (<span style="color: #800000;">"</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">"</span>, 9999<span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> net_connect():
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 连接服务器</span>
+<span style="color: #000000;">        client_socket.connect(address)
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+    th </span>= Thread(target=<span style="color: #000000;">recv_data)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> th.setDaemon(True)</span>
+<span style="color: #000000;">    th.start()
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> recv_data():
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 这个数据是将要发送的数据</span>
+    data = <span style="color: #800000;">"</span><span style="color: #800000;">我是一个客户端</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    client_socket.send(data.encode(</span><span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        以防服务器中断退出，需要检测异常
+        无论是接受数据还是发送数据，我们需要将数据统一编码和解码
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            data </span>= client_socket.recv(2048).decode(<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 数据处理，这里打印出来并且将数据发回客户端</span>
+            <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">客户端接受的数据：</span><span style="color: #800000;">"</span><span style="color: #000000;">, data)
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;">
+
+
+net_connect()</span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

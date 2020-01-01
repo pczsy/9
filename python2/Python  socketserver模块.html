@@ -1,0 +1,61 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python  socketserver模块' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python  socketserver模块</center></div><div class='banquan'>原文出处:本文由博客园博主Hyyyy提供。<br/>
+原文连接:https://www.cnblogs.com/Hybb/p/11495680.html</div><br>
+    <h1 id="socketserver模块">socketserver模块</h1>
+<p>简介：socketserver模块是Python内置模块，我们在自己使用socket构建服务端的时候，需要一些设置：</p>
+<p>例如代码如下：</p>
+<pre><code><code>import socket
+sk = socket.socket()
+sk.bind((&#39;127.0.0.1&#39;,9001))
+sk.listen()
+sk.accept()
+  # 逻辑区域
+sk.close()</code></pre>
+<p>但是这种代码的服务端，只能同时帮我们连接一个客户端，也就是说，如果你是一个多个客户端同时连接服务端的程序，这种不支持并发的服务端，肯定是不行的</p>
+<p>所以socketserver在内部帮我们封装了支持并发的的服务端构建：</p>
+<ul>
+<li>ForkingTCPServer（多进程TCP协议服务端）</li>
+<li>ForkingUDPServer （多进程UDP协议服务端）</li>
+<li>ThreadingTCPServer（多线程TCP协议服务端）</li>
+<li>ThreadingUDPServer（多线程UDP协议服务端）</li>
+</ul>
+<p>默认情况下我们使用最多的就是<code>ThreadingTCPServer</code></p>
+<h2 id="socketserver基本框架">socketserver基本框架</h2>
+<p>默认情况下，我们使用的socketserver的框架也都是基本一样的</p>
+<p>代码：</p>
+<pre><code><code>import socketserver 
+
+class Myserver(socketserver.BaseRequestHandler): # 继承socketserver.BaseRequestHandler
+    def handle(self):  # 必须是handle，socketserver源码里写死的
+        self.request # 想到与conn
+        pass
+
+if __name__ == &#39;__main__&#39;:
+    # 这里使用的是 多线程tcp服务端 模块,必须要传的参数是元组式的IP 端口，以及上面的类
+    # 这里真正的作用是：socket.socket(),socket.bind(ip 端口),socket.listen()
+    server = socketserver.ThreadingTCPServer((&#39;127.0.0.1&#39;,9001),Myserver)
+    # 这里的作用相当于多线程的accept()，等待连接
+    server.serve_forever()</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

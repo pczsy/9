@@ -1,0 +1,139 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python正则-re的使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python正则-re的使用</center></div><div class='banquan'>原文出处:本文由博客园博主浩然haoran提供。<br/>
+原文连接:https://www.cnblogs.com/dongyangblog/p/11257023.html</div><br>
+    <p>今天在刷题的时候用到了正则，用的过程中就感觉有点不太熟练了，很久没有用正则都有点忘了。所以现在呢，我们就一起来review一下python中正则模块re的用法吧。</p>
+<p>今天是review，所以一些基础的概念就不做介绍了，先来看正则中的修饰符以及它的功能：</p>
+<h2 id="修饰符">修饰符</h2>
+<ul>
+<li>re.I 使匹配对大小写不敏感</li>
+<li>re.L 做本地化识别匹配</li>
+<li>re.M 多行匹配,影响^和$</li>
+<li>re.S 使.匹配包括换行在内的所有字符</li>
+<li>re.U 根据Unicode字符集解析字符.这个标志影响\w \W \b \B</li>
+<li>re.X 该标志通过给予你更灵活的格式以便你将正则表达式写的更易于理解.</li>
+</ul>
+<h2 id="模式">模式</h2>
+<ul>
+<li>^ 匹配字符串开头</li>
+<li>$ 匹配字符串结尾</li>
+<li>. 匹配人以字符,除了换行符号.当re.DOTAALL标记被指定时,则可以匹配包括换行符的任意字符.</li>
+<li>[...] 用来表示一组字符,单独列出:[amk]匹配a,m或k</li>
+<li>[^...] 不在[]中的字符:[^amk]匹配除amk之外的字符</li>
+<li>re* 匹配0个或多个的表达式</li>
+<li>re+ 匹配1个或多个的表达式</li>
+<li>re? 匹配0个或1个由前面的正则表达式定义的片段,非贪婪方式.</li>
+<li>re{n} 精准匹配n个前面表达式</li>
+<li>re{n,} 匹配大于等于n个前面表达式</li>
+<li>re{n,m} 匹配n到m个前面的表达式定义的片段,贪婪方式</li>
+<li>a|b 匹配a或b</li>
+<li>(re) 对正则表达式分组,并记住匹配的文本</li>
+<li>(?imx) 正则表达式包含三种可选标志,imx,只影响括号中的区域.</li>
+<li>(?-imx) 正则表达式关闭imx可选标志,只影响括号中的区域.</li>
+<li>(?:re) 类似(...)但不表示一个组</li>
+<li>(?imx:re) 在括号中使用imx可选标志</li>
+<li>(?-imx:re) 在括号中不是用imx可选标志</li>
+<li>(?#...) 注释</li>
+<li>(?=re) 前向肯定界定符.如果所含正则表达式,以...表示,在当前位置成功匹配时成功,否则失败.但一旦所含表达式已经尝试,匹配引擎根本没有提高,模式的剩余部分还要尝试界定符右边.</li>
+<li>(?!re) 前向否定界定符.与肯定界定符相反;当所含的表达式不能在字符串当前位置匹配成功时成功.</li>
+<li>(?&gt;re) 匹配的独立模式,省去回朔.</li>
+<li>\w 匹配字符数字以及下划线</li>
+<li>\W 匹配非字母数字下划线</li>
+<li>\s 匹配任意空白字符,等价于[\t\n\r\f]</li>
+<li>\S 匹配任意非空白字符</li>
+<li>\d 匹配任意数字</li>
+<li>\D 匹配任意非数字</li>
+<li>\A 匹配字符串开始</li>
+<li>\Z 匹配字符串结束,如果是存在换行,只匹配到换行前的结束字符串.</li>
+<li>\z 匹配字符串结束</li>
+<li>\G 匹配最后匹配完成的位置</li>
+<li>\b 匹配一个单词边界,也就是指单词和空格之间的位置</li>
+<li>\B 匹配非单词边界</li>
+<li>\n \t 匹配一个换行符,一个制表符</li>
+<li>\1...\9 匹配第n个分组的内容</li>
+</ul>
+<p>上面这些呢，是我们会用到的一些模式，这里面绝大部分都是应该熟记于心的。</p>
+<p>接下来我们看re的一些方法：</p>
+<h3 id="re.compile">re.compile</h3>
+<p>这个方法会生成一个正则对象，他的第一个参数是正则字符串，第二个参数是修饰符，就是 re.I, re.S 这些。</p>
+<p>生成的这个正则对象呢，它还有一些方法，比如match、findall、finditer、search等等，这些方法的用法请往下看。</p>
+<h3 id="re.match">re.match</h3>
+<p>match方法是从给定字符串的开头开始进行匹配，并且只匹配一次。也就是说如果字符串和正则的第一个字母就对不上那就匹配失败了。</p>
+<p>ta的参数是pettern，string，flags</p>
+<ul>
+<li><p>pettern 就是正则字符串，如果是通过re.compile方法生成的正则对象.match来调用的话，就不需要这个参数了，因为正则对象本身就代表了一个正则匹配模式。</p></li>
+<li><p>string 就是要进行匹配的目标字符串</p></li>
+<li><p>flags 就是正则的修饰符，比如 re.I</p></li>
+</ul>
+<p>match 如果匹配失败返回None，匹配惩罚返回的则是一个match对象。</p>
+<p>match对象有一些方法，比较常用的有：span、group、groups等等</p>
+<ul>
+<li>span 方法返回的一个二元组，分别表示匹配字符串在目标字符串中的起始下标和结束下标</li>
+<li>group 函数有一个int类型的参数，参数为0表示返回正则匹配的字符串，参数为1返回正则中第一个组匹配的内容，2返回第二组的内容一次类推</li>
+<li>groups 函数是所有group函数结果组成一个元组。</li>
+</ul>
+<h3 id="re.search">re.search</h3>
+<p>search 函数和 match 函数是类似的，区别在于match方法是只在目标函数开头匹配一次；search函数是在整个目标函数上匹配一次，一次匹配成功后不再进行匹配。</p>
+<p>同样search方法返回的也是一个match对象，用法和match方法返回的结果一样。</p>
+<h3 id="re.split">re.split</h3>
+<p>split 函数是用来分割字符串的一个函数。它的功能就是根据匹配的字符串对目标字符串进行分割，返回的结果是一个列表。</p>
+<p>需要注意的是，如果正则中有组，组内的字符在结果列表中也会保留，不是组内的字符在结果列表中不会被保留。什么意思呢？通过一个例子来看一下：</p>
+<pre><code><code>st = &#39;www.baidu.com www.taobao.com&#39;
+result = re.split(&#39;bai(du)&#39;, st)
+
+print(result)</code></pre>
+<p>结果：<code>['www.', 'du', '.com www.taobao.com']</code></p>
+<p>可以看到，字符串‘du’是被括号括起来的，所以在结果中也有'du'这个元素，而'bai'没有被括号括起来，在结果中就不会有‘bai’这个元素。</p>
+<h3 id="re.findall">re.findall</h3>
+<p>这个函数是我在爬虫项目中用的最多的一个函数了，它可以把所有匹配的结果以列表的形式返回，而不是像match和search一样只匹配一个结果。我们来试一下：</p>
+<pre><code><code>st = &#39;www.baidu.com www.taobao.com&#39;
+result = re.findall(r&#39;www\.(\w*)\.(com)&#39;, st)
+print(result)</code></pre>
+<p><code>[('baidu', 'com'), ('taobao', 'com')]</code></p>
+<h3 id="re.finditer">re.finditer</h3>
+<p>这个函数和findall的功能一样。不同之处在于这个函数返回的结果是一个生成器，而生成器中的每一项是一个match对象，我们一起来看一下：</p>
+<pre><code><code>st = &#39;www.baidu.com www.taobao.com&#39;
+result = re.finditer(r&#39;www\.(\w*)\.(com)&#39;, st)
+print(result.__next__().group(0, 1, 2))
+print(next(result).groups(2))</code></pre>
+<pre><code><code>(&#39;www.baidu.com&#39;, &#39;baidu&#39;, &#39;com&#39;)
+(&#39;taobao&#39;, &#39;com&#39;)</code></pre>
+<h3 id="re.sub">re.sub</h3>
+<p>这个函数是用来替换字符串的。可以将匹配的字符串替换成指定的字符串，我们来看一下：</p>
+<pre><code><code>st = &#39;www.111.com www.222.com&#39;
+result = re.sub(r&#39;\d+&#39;, &#39;OK&#39;, st)
+print(result)</code></pre>
+<p>结果：<code>www.OK.com www.OK.com</code></p>
+<p>我们的第二个参数除了可以是一个给定的字符串还可以是一个函数：</p>
+<pre><code><code>def toOK(matched):
+    value = matched.group()
+    return str(int(value)*2)
+
+
+st = &#39;www.111.com www.222.com&#39;
+result = re.sub(r&#39;\d+&#39;, toOK, st)
+print(result)</code></pre>
+<p>结果：<code>www.222.com www.444.com</code></p>
+<p>好，我们今天的review就到这里了，你掌握了吗？对于正则你还知道哪些更高级的用法呢，留言告诉我吧。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

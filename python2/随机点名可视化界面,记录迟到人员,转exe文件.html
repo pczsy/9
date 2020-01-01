@@ -1,0 +1,178 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修随机点名可视化界面,记录迟到人员,转exe文件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>随机点名可视化界面,记录迟到人员,转exe文件</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11213818.html</div><br>
+    <h1 id="随机点名可视化界面记录迟到人员转exe文件">随机点名可视化界面,记录迟到人员,转exe文件</h1>
+<h2 id="一.介绍">一.介绍</h2>
+<p>对于人员采取随机点名</p>
+<h2 id="二.代码">二.代码</h2>
+<pre><code><code>import datetime
+import random
+from tkinter import *
+from tkinter.filedialog import *
+
+name_lis = []
+print(name_lis)
+root_1 = Tk()
+e = StringVar()
+x = StringVar()
+root_1.title(&#39;随机点名&#39;)
+
+count = Label(root_1, text=&#39;输入点名的人数按回车确定&#39;)
+count.grid(row=0, column=0)
+
+enter_1 = Entry(root_1, state=&#39;normal&#39;, textvariable=e)
+enter_1.grid(row=0, column=1)
+
+enter_1.delete(0, END)
+
+# 初始显示
+Window_1 = Listbox(root_1)
+Window_1.insert(0, &#39;请载入人员名单&#39;)
+Window_1.grid(row=1, column=0, sticky=N + S)
+
+Window_2 = Listbox(root_1)
+for name in [&#39;人员名单格式&#39;, &#39;请载入人员名单&#39;, &#39;一个人员为一行&#39;, &#39;文本为TXT格式&#39;]:
+    Window_2.insert(0, name)
+Window_2.grid(row=1, column=1, sticky=N + S)
+print(name_lis)
+
+
+def enter_chiose(a, enter=enter_1):
+    text = enter.get()  # type:str
+    if text.isdigit():
+        if int(text) &lt;= len(name_lis):
+            count_lis = [&#39;点名人数:&#39;, f&#39;{text}人&#39;]
+            Window_1 = Listbox(root_1)
+            Window_1.insert(0, count_lis)
+            Window_1.grid(row=1, column=0, sticky=N + S)
+
+            print(text)
+            print(type(text))
+            num = int(text)
+            a = random.sample(name_lis, num)
+            names_lis = [&#39;点名名单&#39;]
+            print(a)
+            if a:
+                names_lis.extend(a)
+            Window_2 = Listbox(root_1)
+            Window_2.grid(row=1, column=1, sticky=N + S)
+            for data in names_lis:
+                Window_2.insert(1, data)
+        else:
+            lis_1 = [&#39;选择人数超过范围&#39;]
+            lis_2 = [&#39;选择人数超过范围&#39;]
+            Window_1 = Listbox(root_1)
+            Window_1.insert(0, lis_1)
+            Window_1.grid(row=1, column=0, sticky=N + S)
+            Window_2 = Listbox(root_1)
+            Window_2.insert(0, lis_2)
+            Window_2.grid(row=1, column=1, sticky=N + S)
+
+    else:
+        lis_1 = [&#39;请输入数字&#39;]
+        lis_2 = [&#39;请输入数字&#39;]
+        Window_1 = Listbox(root_1)
+        Window_1.insert(0, lis_1)
+        Window_1.grid(row=1, column=0, sticky=N + S)
+        Window_2 = Listbox(root_1)
+        Window_2.insert(0, lis_2)
+        Window_2.grid(row=1, column=1, sticky=N + S)
+
+    enter_1.delete(0, &#39;end&#39;)
+
+
+count_2 = Label(root_1, text=&#39;未点到人员记事本&#39;)
+count_2.grid(row=0, column=2)
+
+enter_2 = Entry(root_1, state=&#39;normal&#39;, textvariable=x)
+enter_2.grid(row=1, column=2, sticky=N + S + E + W)
+enter_2.delete(0, END)
+
+
+def b_save(enter=enter_2):
+    text = enter.get()
+    time = datetime.datetime.now()
+    time = str(time).split(&#39;.&#39;)[0]
+    enter.delete(0, &#39;end&#39;)
+    data = Label(enter, text=f&#39;上次保存内容\n{time}\n{text}&#39;)
+    with open(&#39;迟到人员.txt&#39;, &#39;a&#39;, encoding=&#39;utf8&#39;) as fa:
+        fa.write(f&#39;{time}\n{text}\n&#39;)
+    data.grid(row=0, column=0, sticky=N + S + E + W)
+
+
+save_b = Button(root_1, text=&#39;保存&#39;, command=b_save)
+save_b.grid(row=2, column=2)
+
+enter_1.bind(&#39;&lt;Return&gt;&#39;, enter_chiose)
+
+
+def b_load():
+    fd = LoadFileDialog(root_1)  # 创建打开文件对话框
+    filename = fd.go()  # 显示打开文件对话框，并获取选择的文件名称
+    if filename:
+        try:
+            with open(filename, &#39;r&#39;, encoding=&#39;utf8&#39;) as fr:
+                name_lis.clear()
+                for name in fr:
+                    name = name.strip()
+                    name_lis.append(name)
+        except:
+            with open(filename, &#39;r&#39;, encoding=&#39;gbk&#39;) as fr:
+                name_lis.clear()
+                for name in fr:
+                    name = name.strip()
+                    name_lis.append(name)
+
+        Window_1 = Listbox(root_1)
+        Window_1.insert(0, &#39;人员名单&#39;)
+        Window_1.grid(row=1, column=0, sticky=N + S)
+
+        Window_2 = Listbox(root_1)
+        for name in name_lis:
+            Window_2.insert(0, name)
+        Window_2.grid(row=1, column=1, sticky=N + S)
+        print(name_lis)
+
+
+load_b = Button(root_1, text=&#39;载入人员名单&#39;, command=b_load)
+load_b.grid(row=2, column=0)
+
+root_1.mainloop()</code></pre>
+<h2 id="三.exe程序">三.EXE程序</h2>
+<p>压缩文件下载链接:<a href="https://github.com/a568972484/Random_roll_call" class="uri">https://github.com/a568972484/Random_roll_call</a></p>
+<p>exe程序在压缩文件中dist文件中</p>
+<h2 id="四.相关实用文档">四.相关实用文档</h2>
+<pre><code><code>https://blog.csdn.net/weifuliu/article/details/82826643 #生成exe文件
+
+https://www.cnblogs.com/ruo-li-suo-yi/p/7425307.html #grid设置位置参照
+
+https://www.runoob.com/python/python-gui-tkinter.html #菜鸟变成关于tkinter概述
+
+https://www.cnblogs.com/jxxclj/p/9572919.html #参考案例
+
+https://blog.csdn.net/ppdyhappy/article/details/52129612 #打开文件
+
+https://blog.csdn.net/qq_37235798/article/details/82349223 #控件</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

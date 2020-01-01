@@ -1,0 +1,277 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修你的SpringBoot应用真的部署更新成功了吗' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>你的SpringBoot应用真的部署更新成功了吗</center></div><div class='banquan'>原文出处:本文由博客园博主throwable提供。<br/>
+原文连接:https://www.cnblogs.com/throwable/p/12014491.html</div><br>
+    <h2 id="前提">前提</h2>
+<p>当我们在生产环境部署了<code>SpringBoot</code>应用的时候，虽然可以通过<code>Jenkins</code>的构建状态和<code>Linux</code>的<code>ps</code>命令去感知应用是否在新的一次发布中部署和启动成功，但是这种监控手段是运维层面的。那么，可以提供一种手段能够在应用层面感知服务在新的一次发布中的构建部署和启动是否成功吗？这个问题笔者花了一点时间想通了这个问题，通过这篇文章提供一个简单的实现思路。</p>
+<!-- more -->
+<h2 id="基本思路">基本思路</h2>
+<p>其实基本思路很简单，一般<code>SpringBoot</code>应用会使用<code>Maven</code>插件打包（笔者不熟悉<code>Gradle</code>，所以暂时不对<code>Gradle</code>做分析），所以可以这样考虑：</p>
+<ol>
+<li><code>Maven</code>插件打包的时候，把<strong>构建时间</strong>和<code>pom</code>文件中的版本号都写到<code>jar</code>包的描述文件中，正确来说就是<code>MANIFEST.MF</code>文件中。</li>
+<li>引入<code>spring-boot-starter-actuator</code>，通过<code>/actuator/info</code>端点去暴露应用的信息（最好控制网络访问权限为只允许内网访问）。</li>
+<li>把第1步中打包到<code>jar</code>包中的<code>MANIFEST.MF</code>文件的内容读取并且加载到<code>SpringBoot</code>环境属性中的<code>info.*</code>属性中，以便可以通过<code>/actuator/info</code>访问。</li>
+</ol>
+<p>思路定好了，那么下面开始实施编码。</p>
+<h2 id="编码实现">编码实现</h2>
+<p>最近刚好在调研蚂蚁金服的<code>SofaStack</code>体系，这里引入<code>SofaBoot</code>编写示例。<code>pom</code>文件如下：</p>
+<pre><code><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+         xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+    &lt;groupId&gt;club.throwable&lt;/groupId&gt;
+    &lt;artifactId&gt;sofa-boot-sample&lt;/artifactId&gt;
+    &lt;version&gt;1.0-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;jar&lt;/packaging&gt;
+    &lt;name&gt;sofa-boot-sample&lt;/name&gt;
+    &lt;properties&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+        &lt;maven.compiler.source&gt;1.8&lt;/maven.compiler.source&gt;
+        &lt;maven.compiler.target&gt;1.8&lt;/maven.compiler.target&gt;
+        &lt;sofa.boot.version&gt;3.2.0&lt;/sofa.boot.version&gt;
+        &lt;spring.boot.version&gt;2.1.0.RELEASE&lt;/spring.boot.version&gt;
+        &lt;maven.build.timestamp.format&gt;yyyy-MM-dd HH:mm:ss.SSS&lt;/maven.build.timestamp.format&gt;
+    &lt;/properties&gt;
+    &lt;dependencyManagement&gt;
+        &lt;dependencies&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-dependencies&lt;/artifactId&gt;
+                &lt;version&gt;${spring.boot.version}&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+            &lt;dependency&gt;
+                &lt;groupId&gt;com.alipay.sofa&lt;/groupId&gt;
+                &lt;artifactId&gt;sofaboot-dependencies&lt;/artifactId&gt;
+                &lt;version&gt;${sofa.boot.version}&lt;/version&gt;
+                &lt;type&gt;pom&lt;/type&gt;
+                &lt;scope&gt;import&lt;/scope&gt;
+            &lt;/dependency&gt;
+        &lt;/dependencies&gt;
+    &lt;/dependencyManagement&gt;
+
+    &lt;dependencies&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;junit&lt;/groupId&gt;
+            &lt;artifactId&gt;junit&lt;/artifactId&gt;
+            &lt;version&gt;4.12&lt;/version&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;com.alipay.sofa&lt;/groupId&gt;
+            &lt;artifactId&gt;healthcheck-sofa-boot-starter&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;finalName&gt;sofa-boot-sample&lt;/finalName&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;artifactId&gt;maven-compiler-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.8.1&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;source&gt;${maven.compiler.source}&lt;/source&gt;
+                    &lt;target&gt;${maven.compiler.target}&lt;/target&gt;
+                    &lt;encoding&gt;${project.build.sourceEncoding}&lt;/encoding&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+                &lt;version&gt;${spring.boot.version}&lt;/version&gt;
+                &lt;executions&gt;
+                    &lt;execution&gt;
+                        &lt;goals&gt;
+                            &lt;goal&gt;repackage&lt;/goal&gt;
+                        &lt;/goals&gt;
+                    &lt;/execution&gt;
+                &lt;/executions&gt;
+            &lt;/plugin&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.apache.maven.plugins&lt;/groupId&gt;
+                &lt;artifactId&gt;maven-jar-plugin&lt;/artifactId&gt;
+                &lt;version&gt;3.2.0&lt;/version&gt;
+                &lt;configuration&gt;
+                    &lt;archive&gt;
+                        &lt;manifest&gt;
+                            &lt;addBuildEnvironmentEntries&gt;true&lt;/addBuildEnvironmentEntries&gt;
+                        &lt;/manifest&gt;
+                        &lt;manifestEntries&gt;
+                            &lt;Application-Name&gt;${project.groupId}:${project.artifactId}:${project.version}&lt;/Application-Name&gt;
+                            &lt;Build-Timestamp&gt;${maven.build.timestamp}&lt;/Build-Timestamp&gt;
+                        &lt;/manifestEntries&gt;
+                    &lt;/archive&gt;
+                &lt;/configuration&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+&lt;/project&gt;
+</code></pre>
+<p><code>pom</code>文件中一些属性和占位符的设置，可以参考一下这两个链接：<a href="http://maven.apache.org/shared/maven-archiver/index.html">Maven-Archiver</a>和<a href="http://maven.apache.org/guides/introduction/introduction-to-the-pom.html#Available_Variables">Available Variables</a>。<code>SpringBoot</code>的配置文件<code>application.yaml</code>如下：</p>
+<pre class="yaml"><code>server:
+  port: 9091
+management:
+  server:
+    port: 10091
+  endpoints:
+    enabled-by-default: false
+    web:
+      exposure:
+        include: info
+  endpoint:
+    info:
+      enabled: true
+spring:
+  application:
+    name: sofa-boot-sample</code></pre>
+<p><strong>这里要注意一点</strong>：<code>SpringBoot</code>应用通过其<code>Maven</code>插件打出来的<code>jar</code>包解压后的目录如下：</p>
+<pre class="shell"><code>sofa-boot-sample.jar
+  - META-INF
+    - MANIFEST.MF
+    - maven ...
+  - org
+    - springframework 
+      - boot ...
+  - BOOT-INF
+    - classes ...
+    - lib ...    </code></pre>
+<p>了解此解压目录是我们编写<code>MANIFEST.MF</code>文件的解析实现过程的前提。编写<code>MANIFEST.MF</code>文件的解析类：</p>
+<pre class="java"><code>@SuppressWarnings(&quot;ConstantConditions&quot;)
+public enum ManiFestFileExtractUtils {
+
+
+    /**
+     * 单例
+     */
+    X;
+
+    private static Map&lt;String, String&gt; RESULT = new HashMap&lt;&gt;(16);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ManiFestFileExtractUtils.class);
+
+    static {
+        String jarFilePath = ClassUtils.getDefaultClassLoader().getResource(&quot;&quot;).getPath().replace(&quot;!/BOOT-INF/classes!/&quot;, &quot;&quot;);
+        if (jarFilePath.startsWith(&quot;file&quot;)) {
+            jarFilePath = jarFilePath.substring(5);
+        }
+        LOGGER.info(&quot;读取的Jar路径为:{}&quot;, jarFilePath);
+        try (JarFile jarFile = new JarFile(jarFilePath)) {
+            JarEntry entry = jarFile.getJarEntry(&quot;META-INF/MANIFEST.MF&quot;);
+            if (null != entry) {
+                BufferedReader reader = new BufferedReader(new InputStreamReader(jarFile.getInputStream(entry), StandardCharsets.UTF_8));
+                String line;
+                while (null != (line = reader.readLine())) {
+                    LOGGER.info(&quot;读取到行:{}&quot;, line);
+                    int i = line.indexOf(&quot;:&quot;);
+                    if (i &gt; -1) {
+                        String key = line.substring(0, i).trim();
+                        String value = line.substring(i + 1).trim();
+                        RESULT.put(key, value);
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.warn(&quot;解析MANIFEST.MF文件异常&quot;, e);
+        }
+    }
+
+    public Map&lt;String, String&gt; extract() {
+        return RESULT;
+    }
+}
+</code></pre>
+<p>可以通过一个<code>CommandLineRunner</code>的实现把<code>MANIFEST.MF</code>文件的内容写到<code>Environment</code>实例中：</p>
+<pre class="java"><code>@Component
+public class SofaBootSampleRunner implements CommandLineRunner {
+
+    @Autowired
+    private ConfigurableEnvironment configurableEnvironment;
+
+    @Override
+    public void run(String... args) throws Exception {
+        MutablePropertySources propertySources = configurableEnvironment.getPropertySources();
+        Map&lt;String, String&gt; result = ManiFestFileExtractUtils.X.extract();
+        Properties properties = new Properties();
+        for (Map.Entry&lt;String, String&gt; entry : result.entrySet()) {
+            String key = &quot;info.&quot; + entry.getKey();
+            properties.setProperty(key, entry.getValue());
+        }
+        if (!properties.isEmpty()) {
+            propertySources.addFirst(new PropertiesPropertySource(&quot;infoProperties&quot;, properties));
+        }
+    }
+}</code></pre>
+<p>启动类如下：</p>
+<pre class="java"><code>@SpringBootApplication
+public class SofaBootSampleApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SofaBootSampleApplication.class, args);
+    }
+}</code></pre>
+<h2 id="最终效果">最终效果</h2>
+<p>在项目的根目录使用命令<code>mvn package</code>，打出<code>jar</code>包后直接启动：</p>
+<pre class="shell"><code>cd Jar包的目录
+java -jar sofa-boot-sample.jar</code></pre>
+<p>调用<code>http://localhost:10091/actuator/info</code>接口输出如下：</p>
+<pre class="json"><code>{
+    &quot;Spring-Boot-Version&quot;: &quot;2.1.0.RELEASE&quot;,
+    &quot;Start-Class&quot;: &quot;club.throwable.sofa.SofaBootSampleApplication&quot;,
+    &quot;Main-Class&quot;: &quot;org.springframework.boot.loader.JarLauncher&quot;,
+    &quot;Manifest-Version&quot;: &quot;1.0&quot;,
+    &quot;Build-Jdk-Spec&quot;: &quot;1.8&quot;,
+    &quot;Spring-Boot-Classes&quot;: &quot;BOOT-INF/classes/&quot;,
+    &quot;Created-By&quot;: &quot;Maven Jar Plugin 3.2.0&quot;,
+    &quot;Build-Timestamp&quot;: &quot;2019-12-08 17:41:21.844&quot;,
+    &quot;Spring-Boot-Lib&quot;: &quot;BOOT-INF/lib/&quot;,
+    &quot;Application-Name&quot;: &quot;club.throwable:sofa-boot-sample:1.0-SNAPSHOT&quot;
+}</code></pre>
+<p>改变<code>pom</code>文件中的版本标签<code>&lt;version&gt;</code>为<code>1.0.0</code>，再次打包并且启动成功后调用<code>http://localhost:10091/actuator/info</code>接口输出如下：</p>
+<pre class="json"><code>{
+    &quot;Spring-Boot-Version&quot;: &quot;2.1.0.RELEASE&quot;,
+    &quot;Start-Class&quot;: &quot;club.throwable.sofa.SofaBootSampleApplication&quot;,
+    &quot;Main-Class&quot;: &quot;org.springframework.boot.loader.JarLauncher&quot;,
+    &quot;Manifest-Version&quot;: &quot;1.0&quot;,
+    &quot;Build-Jdk-Spec&quot;: &quot;1.8&quot;,
+    &quot;Spring-Boot-Classes&quot;: &quot;BOOT-INF/classes/&quot;,
+    &quot;Created-By&quot;: &quot;Maven Jar Plugin 3.2.0&quot;,
+    &quot;Build-Timestamp&quot;: &quot;2019-12-08 17:42:07.273&quot;,
+    &quot;Spring-Boot-Lib&quot;: &quot;BOOT-INF/lib/&quot;,
+    &quot;Application-Name&quot;: &quot;club.throwable:sofa-boot-sample:1.0.0&quot;
+}</code></pre>
+<p>可见构建时间戳<code>Build-Timestamp</code>和服务名<code>Application-Name</code>都发生了变化，达到了监控服务是否正常部署和启动的目的。如果有多个服务节点，可以添加一个<code>ip</code>属性加以区分。</p>
+<h2 id="小结">小结</h2>
+<p>这篇文章通过<code>SpringBoot</code>一些实用技巧实现了应用层面监控应用是否正常打包部署更新和启动成功的问题。</p>
+<h2 id="原文链接">原文链接</h2>
+<ul>
+<li>Github Page：http://throwable.club/2019/12/09/spring-boot-server-deploy-monitor</li>
+<li>Coding Page：http://throwable.coding.me/2019/12/09/spring-boot-server-deploy-monitor</li>
+</ul>
+<p>（本文完 e-a-20191209:1:39 c-1-d）</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,272 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修JavaEE基础(02)：Servlet核心API用法详解' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>JavaEE基础(02)：Servlet核心API用法详解</center></div><div class='banquan'>原文出处:本文由博客园博主知了一笑提供。<br/>
+原文连接:https://www.cnblogs.com/cicada-smile/p/12020195.html</div><br>
+    <blockquote>
+<p>本文源码：<a href="https://github.com/cicadasmile/java-base-parent">GitHub·点这里</a> || <a href="https://gitee.com/cicadasmile/java-base-parent">GitEE·点这里</a></p>
+</blockquote>
+<h1 id="一核心api简介">一、核心API简介</h1>
+<h2 id="servlet执行流程">1、Servlet执行流程</h2>
+<p>Servlet是JavaWeb的三大组件之一（Servlet、Filter、Listener），它属于动态资源。Servlet的作用是处理请求，服务器会把接收到的请求交给Servlet来处理，在Servlet中通常需要：接收请求数据；处理请求；完成响应。</p>
+<h2 id="核心api简介">2、核心API简介</h2>
+<table>
+<thead>
+<tr class="header">
+<th>API</th>
+<th>作用描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ServletConfig</td>
+<td>获取servlet初始化参数和servletContext对象。</td>
+</tr>
+<tr class="even">
+<td>ServletContext</td>
+<td>在整个Web应用的动态资源之间共享数据。</td>
+</tr>
+<tr class="odd">
+<td>ServletRequest</td>
+<td>封装Http请求信息，在请求时创建。</td>
+</tr>
+<tr class="even">
+<td>ServletResponse</td>
+<td>封装Http响应信息，在请求时创建。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="二servletconfig接口">二、ServletConfig接口</h1>
+<h2 id="接口简介">1、接口简介</h2>
+<p>容器在初始化servlet时，为该servlet创建一个servletConfig对象，并将这个对象通过init()方法来传递并保存在此Servlet对象中。核心作用：1.获取初始化信息;2.获取ServletContext对象。</p>
+<h2 id="代码案例">2、代码案例</h2>
+<ul>
+<li>配置文件</li>
+</ul>
+<pre><code><code>&lt;servlet&gt;
+    &lt;init-param&gt;
+        &lt;param-name&gt;my-name&lt;/param-name&gt;
+        &lt;param-value&gt;cicada&lt;/param-value&gt;
+    &lt;/init-param&gt;
+    &lt;servlet-name&gt;servletOneImpl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;com.node02.servlet.impl.ServletOneImpl&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;servletOneImpl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/servletOneImpl&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</code></pre>
+<ul>
+<li>API用法</li>
+</ul>
+<pre class="java"><code>public class ServletOneImpl implements Servlet {
+
+    @Override
+    public void init(ServletConfig servletConfig) throws ServletException {
+        String servletName = servletConfig.getServletName() ;
+        System.out.println(&quot;servletName=&quot;+servletName);
+        String myName = servletConfig.getInitParameter(&quot;my-name&quot;) ;
+        System.out.println(&quot;myName=&quot;+myName);
+        Enumeration paramNames = servletConfig.getInitParameterNames() ;
+        while (paramNames.hasMoreElements()){
+            String paramKey = String.valueOf(paramNames.nextElement()) ;
+            String paramValue = servletConfig.getInitParameter(paramKey) ;
+            System.out.println(&quot;paramKey=&quot;+paramKey+&quot;;paramValue=&quot;+paramValue);
+        }
+        ServletContext servletContext = servletConfig.getServletContext() ;
+        servletContext.setAttribute(&quot;cicada&quot;,&quot;smile&quot;);
+    }
+}</code></pre>
+<h1 id="三servletcontext接口">三、ServletContext接口</h1>
+<h2 id="接口简介-1">1、接口简介</h2>
+<p>一个项目只有一个ServletContext对象，可以在多个Servlet中来获取这个对象，使用它可以给多个Servlet传递数据，该对象在Tomcat启动时就创建，在Tomcat关闭时才会销毁！作用是在整个Web应用的动态资源之间共享数据。</p>
+<ul>
+<li>获取方式</li>
+</ul>
+<pre><code><code>1、ServletConfig#getServletContext()；
+2、GenericServlet#getServletContext();
+3、HttpSession#getServletContext()
+4、ServletContextEvent#getServletContext()</code></pre>
+<h2 id="四大域对象">2、四大域对象</h2>
+<p>ServletContext是JavaWeb四大域对象之一：</p>
+<pre><code><code>1、PageContext；
+2、ServletRequest；
+3、HttpSession；
+4、ServletContext；</code></pre>
+<p>所有域对象都有存取数据的功能，因为域对象内部有一个Map，用来存储数据。</p>
+<h2 id="代码案例-1">3、代码案例</h2>
+<ul>
+<li>配置文件</li>
+</ul>
+<pre><code><code>&lt;context-param&gt;
+    &lt;param-name&gt;my-blog&lt;/param-name&gt;
+    &lt;param-value&gt;2019-11-19&lt;/param-value&gt;
+&lt;/context-param&gt;
+&lt;servlet&gt;
+    &lt;servlet-name&gt;servletTwoImpl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;com.node02.servlet.impl.ServletTwoImpl&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;servletTwoImpl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/servletTwoImpl&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</code></pre>
+<ul>
+<li>API用法</li>
+</ul>
+<pre class="java"><code>public class ServletTwoImpl extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        // 1、参数传递
+        ServletContext servletContext = this.getServletContext() ;
+        String value = String.valueOf(servletContext.getAttribute(&quot;cicada&quot;)) ;
+        System.out.println(&quot;value=&quot;+value);
+        // 2、获取初始化参数
+        String myBlog = servletContext.getInitParameter(&quot;my-blog&quot;) ;
+        System.out.println(&quot;myBlog=&quot;+myBlog);
+        // 3、获取应用信息
+        String servletContextName = servletContext.getServletContextName() ;
+        System.out.println(&quot;servletContextName=&quot;+servletContextName);
+        // 4、获取路径
+        String pathOne = servletContext.getRealPath(&quot;/&quot;) ;
+        String pathTwo = servletContext.getRealPath(&quot;/WEB-INF/&quot;) ;
+        System.out.println(&quot;pathOne=&quot;+pathOne+&quot;;pathTwo=&quot;+pathTwo);
+        response.getWriter().print(&quot;执行：doGet; value：&quot;+value);
+    }
+}</code></pre>
+<h1 id="四servletrequest接口">四、ServletRequest接口</h1>
+<h2 id="接口简介-2">1、接口简介</h2>
+<p>HttpServletRequest接口继承ServletRequest接口，用于封装请求信息，该对象在用户每次请求servlet时创建并传入servlet的service()方法，在该方法中，传入的servletRequest将会被强制转化为HttpservletRequest对象来进行HTTP请求信息的处理。核心作用：1.获取请求报文信息;2.获取网络连接信息;3.获取请求域属性信息。</p>
+<h2 id="代码案例-2">2、代码案例</h2>
+<ul>
+<li>配置文件</li>
+</ul>
+<pre><code><code>&lt;servlet&gt;
+    &lt;servlet-name&gt;servletThreeImpl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;com.node02.servlet.impl.ServletThreeImpl&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;servletThreeImpl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/servletThreeImpl&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</code></pre>
+<ul>
+<li>API用法</li>
+</ul>
+<pre class="java"><code>public class ServletThreeImpl extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // http://localhost:6003/servletThreeImpl?myName=cicada
+        String method = request.getMethod();
+        System.out.println(&quot;method=&quot;+method); // GET
+        String requestURL = request.getRequestURL().toString();
+        // http://localhost:6003/servletThreeImpl
+        System.out.println(&quot;requestURL=&quot;+requestURL);
+        String requestURI = request.getRequestURI();
+        System.out.println(&quot;requestURI=&quot;+requestURI); // /servletThreeImpl
+        String queryString = request.getQueryString() ;
+        System.out.println(&quot;queryString=&quot;+queryString); // myName=cicada
+        String myName = request.getParameter(&quot;myName&quot;);
+        System.out.println(&quot;myName=&quot;+myName); // cicada
+    }
+}</code></pre>
+<h1 id="五servletresponse接口">五、ServletResponse接口</h1>
+<h2 id="接口简介-3">1、接口简介</h2>
+<p>HttpServletResponse继承自ServletResponse，封装了Http响应信息。客户端每个请求，服务器都会创建一个response对象，并传入给Servlet.service()方法。核心作用：1.设置响应头信息;2.发送状态码;3.设置响应正文;4.重定向；</p>
+<h2 id="代码案例-3">2、代码案例</h2>
+<ul>
+<li>配置文件</li>
+</ul>
+<pre><code><code>&lt;servlet&gt;
+    &lt;servlet-name&gt;servletFourImpl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;com.node02.servlet.impl.ServletFourImpl&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;servletFourImpl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/servletFourImpl&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</code></pre>
+<ul>
+<li>API用法</li>
+</ul>
+<pre><code><code>public class ServletFourImpl extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType(&quot;text/html;charset=utf-8&quot;) ;
+        response.setCharacterEncoding(&quot;UTF-8&quot;);
+        response.setStatus(200) ;
+        response.getWriter().print(&quot;Hello,知了&quot;);
+    }
+}</code></pre>
+<h2 id="转发和重定向">3、转发和重定向</h2>
+<ul>
+<li>转发</li>
+</ul>
+<p>服务器端进行的页面跳转的控制 ;</p>
+<pre><code><code>request.getRequestDispatcher(&quot;/转发地址&quot;).forward(request, response);</code></pre>
+<ul>
+<li>重定向</li>
+</ul>
+<p>服务端响应跳转信息，浏览器端进行的页面跳转 ;</p>
+<pre><code><code>response.sendRedirect(&quot;重定向地址&quot;);</code></pre>
+<ul>
+<li>转发和重定向对比</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th>区别</th>
+<th>转发</th>
+<th>重定向</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>地址栏</td>
+<td>不变</td>
+<td>变化</td>
+</tr>
+<tr class="even">
+<td>跳转</td>
+<td>服务端跳转</td>
+<td>浏览器端跳转</td>
+</tr>
+<tr class="odd">
+<td>请求次数</td>
+<td>一次</td>
+<td>两次</td>
+</tr>
+<tr class="even">
+<td>域中数据</td>
+<td>不会丢失</td>
+<td>丢失</td>
+</tr>
+</tbody>
+</table>
+<h1 id="六源代码地址">六、源代码地址</h1>
+<pre><code><code>GitHub·地址
+https://github.com/cicadasmile/java-base-parent
+GitEE·地址
+https://gitee.com/cicadasmile/java-base-parent</code></pre>
+<p><img src="./images/JavaEE基础(02)：Servlet核心API用法详解0.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

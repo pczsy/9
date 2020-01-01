@@ -1,0 +1,110 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 爬取陈都灵百度图片' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 爬取陈都灵百度图片</center></div><div class='banquan'>原文出处:本文由博客园博主夜空守望者Z提供。<br/>
+原文连接:https://www.cnblogs.com/starstrrys/p/11196944.html</div><br>
+    <h1 id="python-爬取陈都灵百度图片">Python 爬取陈都灵百度图片</h1>
+<p>标签（空格分隔）： 随笔</p>
+<hr />
+<p>今天意外发现了自己以前写的一篇爬虫脚本，爬取的是我的女神陈都灵，尝试运行了一下发现居然还能用。故把脚本贴出来分享一下。</p>
+<pre><code><code>import requests
+import os
+import json
+#import random
+
+#firsturl=&#39;https://image.baidu.com/search/acjson?&#39;
+#header={&#39;User-Agent&#39;:&#39;Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36&#39;}
+def get_chenduling(le):
+    header = {&#39;User-Agent&#39;: &#39;Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36&#39;}
+
+    url = &#39;https://image.baidu.com/search/acjson?&#39;
+    data={&#39;tn&#39;:&#39;resultjson_com&#39;,
+    &#39;ipn&#39;:&#39;rj&#39;,
+    &#39;ct&#39;:&#39;201326592&#39;,
+    &#39;is&#39;:&#39;&#39;,
+    &#39;fp&#39;:&#39;result&#39;,
+    &#39;queryWord&#39;:&#39;陈都灵&#39;,
+    &#39;cl&#39;:&#39;2&#39;,
+    &#39;lm&#39;:&#39;-1&#39;,
+    &#39;ie&#39;:&#39;utf-8&#39;,
+    &#39;oe&#39;:&#39;utf-8&#39;,
+    &#39;adpicid&#39;:&#39;&#39;,
+    &#39;st&#39;:&#39;&#39;,
+    &#39;z&#39;:&#39;&#39;,
+    &#39;ic&#39;:&#39;&#39;,
+    &#39;word&#39;:&#39;陈都灵&#39;,
+    &#39;s&#39;:&#39;&#39;,
+    &#39;se&#39;:&#39;&#39;,
+    &#39;tab&#39;:&#39;&#39;,
+    &#39;width&#39;:&#39;&#39;,
+    &#39;height&#39;:&#39;&#39;,
+    &#39;face&#39;:&#39;&#39;,
+    &#39;istype&#39;:&#39;&#39;,
+    &#39;qc&#39;:&#39;&#39;,
+    &#39;nc&#39;:&#39;&#39;,
+    &#39;fr&#39;:&#39;&#39;,
+    &#39;cg&#39;:&#39;star&#39;,
+    &#39;pn&#39;:&#39;30&#39;,
+    &#39;rn&#39;:&#39;30&#39;,
+    &#39;gsm&#39;:le,
+    }
+    response=requests.get(url,params=data,headers=header)
+    #print(response.text[:3000])
+    chen=json.loads(response.text)
+   #
+    if chen and &#39;data&#39; in chen:
+        for item in chen.get(&#39;data&#39;):
+            newurl=item.get(&#39;middleURL&#39;)
+            #print(newurl)
+            if newurl:
+                dd=savechen(newurl,header)
+                resave(newurl,dd)
+    nextle=chen.get(&#39;gsm&#39;)
+    #print(nextle)
+    get_chenduling(nextle)
+def savechen(item,header):
+    try:
+        dudu=requests.get(item,headers=header)
+        dudu.raise_for_status()
+        #fpath=&#39;{0}.{1}.{2}&#39;.format(&#39;d:\chenduling\\&#39;,item.split(&#39;.&#39;)[-2],&#39;jpg&#39;)
+        return dudu.content
+    except:
+        print(&#39;有毛病。。。。&#39;)
+def resave(item,html):
+    fpath = &#39;{0}.{1}&#39;.format(&#39;d:\chenduling&#39;, item.split(&#39;,&#39;)[-1])
+    if not os.path.exists(fpath):
+
+        with open (fpath,&#39;wb&#39;) as ff:
+            print(&#39;downloading.....{0}&#39;.format(item))
+            ff.write(html)
+
+
+def main():
+    le=&#39;le&#39;
+    #firsturl = &#39;https://image.baidu.com/search/acjson?&#39;
+    #header = {&#39;User-Agent&#39;: &#39;Mozilla/5.0 (Windows NT 6.3; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/63.0.3239.132 Safari/537.36&#39;}
+    get_chenduling(le)
+if __name__ ==&#39;__main__&#39;:
+    main()</code></pre>
+<p>运行了一下，一点问题都没有，图片都存放到D盘了，拓展到其他图片估计也没问题，至于le这个参数干嘛的，我也记不清了。隐约记得有一个请求头部包含一串数字，但是这串数字并没有卵用。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

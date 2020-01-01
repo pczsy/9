@@ -1,0 +1,319 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python 手机app数据爬取' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python 手机app数据爬取</center></div><div class='banquan'>原文出处:本文由博客园博主一只帅气的IT小昂提供。<br/>
+原文连接:https://www.cnblogs.com/ITXiaoAng/p/11777060.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#一爬取主要流程简述">一：爬取主要流程简述</a></li>
+        <li><a href="#二抓包工具charles">二：抓包工具Charles</a><ul>
+        <li><a href="#charles的使用">1.Charles的使用</a></li>
+        <li><a href="#安装">2.安装</a><ul>
+        <li><a href="#安装链接">(1)安装链接</a></li>
+        <li><a href="#须知">(2)须知</a></li>
+        <li><a href="#安装后">(3)安装后</a></li>
+        </ul></li>
+        <li><a href="#证书配置">3.证书配置</a><ul>
+        <li><a href="#证书配置说明">(1)证书配置说明</a></li>
+        <li><a href="#windows系统安装证书配置">(2)windows系统安装证书配置</a></li>
+        <li><a href="#android手机安装证书配置">(3)Android手机安装证书配置</a></li>
+        </ul></li>
+        <li><a href="#开启ssl监听">4.开启SSL监听</a></li>
+        <li><a href="#原理">5.原理</a></li>
+        <li><a href="#抓包">6.抓包</a></li>
+        </ul></li>
+        <li><a href="#三抓包工具mitmproxy免费的">三：抓包工具mitmproxy(免费的)</a><ul>
+        <li><a href="#简介">1.简介</a></li>
+        <li><a href="#关联组件">2.关联组件</a></li>
+        <li><a href="#安装和证书配置">3.安装和证书配置</a><ul>
+        <li><a href="#用pip安装">(1)用pip安装</a></li>
+        <li><a href="#在github或官网上安装">(2)在GitHub或官网上安装</a></li>
+        </ul></li>
+        <li><a href="#证书配置-1">3.证书配置</a><ul>
+        <li><a href="#产生ca证书">(1) 产生CA证书</a></li>
+        </ul></li>
+        <li><a href="#抓包原理">4.抓包原理</a></li>
+        <li><a href="#设置代理">5.设置代理</a><ul>
+        <li><a href="#启动代理服务">(1)启动代理服务</a></li>
+        <li><a href="#设置当前代理">(2)设置当前代理</a></li>
+        </ul></li>
+        <li><a href="#抓包-1">6.抓包</a></li>
+        <li><a href="#mitmproxy的高级功能mitmdump">7.mitmproxy的高级功能mitmdump</a><ul>
+        <li><a href="#简单获取数据随便一个app">(1)简单获取数据(随便一个app)</a></li>
+        <li><a href="#可以指定一个脚本来处理截获的数据">(2)可以指定一个脚本来处理截获的数据：</a></li>
+        <li><a href="#日志输出">(3)日志输出</a></li>
+        <li><a href="#输出请求数据">(4)输出请求数据</a></li>
+        <li><a href="#获得响应">(5)获得响应</a></li>
+        </ul></li>
+        </ul></li>
+        <li><a href="#四利用mitmproxy进行app数据获取">四：利用mitmproxy进行app数据获取</a><ul>
+        <li><a href="#获取请求url">1.获取请求url</a></li>
+        <li><a href="#接口url文件">2.接口url文件</a></li>
+        <li><a href="#爬取json">3.爬取json</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<p>今天向大家介绍app爬取。<br />
+@</p>
+<h1 id="一爬取主要流程简述">一：爬取主要流程简述</h1>
+<p>1.APP的爬取比Web爬取更加容易，反爬虫没有那么强，且大部分数据是以JSON形式传输的，解析简单。</p>
+<p>2.在APP中想要查看请求与响应(类似浏览器的开发者工具监听到的各个网络请求和响应)，就需要借助抓包软件。</p>
+<p>3.在抓取之前，需要设置代理将手机处于抓包软件的监听下，就可以用同一网络进行监听，获得所有的网络和请求。</p>
+<p>4.如果是有规则的，就只需要分析即可；如果没有规律，就可以用另一个工具mitmdump对接Python脚本直接处理Response。</p>
+<p>5.抓取肯定不能由人手动完成，还需要做到自动化，还要对App进行自动化控制，可以用库Appium。<br />
+<br> <br></p>
+<h1 id="二抓包工具charles">二：抓包工具Charles</h1>
+<h2 id="charles的使用">1.Charles的使用</h2>
+<p>   Charles是一个网络抓包工具，比Fiddler功能更强大，可以进行分析移动App的数据包，获取所有的网络请求和网络内容<br />
+<br></p>
+<h2 id="安装">2.安装</h2>
+<h3 id="安装链接">(1)安装链接</h3>
+<p>   官网：https://www.charlesproxy.com</p>
+<h3 id="须知">(2)须知</h3>
+<p>   charles是收费软件，但可以免费试用30天。试用期过了，还可以试用，不过每次试用不能超过30分钟，启动有10秒的延迟，但大部分还可以使用。</p>
+<h3 id="安装后">(3)安装后</h3>
+<p><img src="./images/python 手机app数据爬取0.png" alt="在这里插入图片描述" /><br />
+<br></p>
+<h2 id="证书配置">3.证书配置</h2>
+<h3 id="证书配置说明">(1)证书配置说明</h3>
+<p>   现在很多网页都在向HTTPS(超文本传输协议的加密版，即HTTP加入SSL层)，经过SSL加密更加安全，真实，大部分都由CA机构颁发安全签章(12306不是CA机构颁发，但不被信任)。现在应用HTTPS协议的App通信数据都会是加密的，常规的截包方法是无法识别请求内部的数据的。<br />
+   要抓取APP端的数据，要在PC和手机端都安装证书。</p>
+<h3 id="windows系统安装证书配置">(2)windows系统安装证书配置</h3>
+<p>   打开Charles，点击Help-&gt;SSL Proxying-&gt;Install Charles Root Certificate，进入证书的安装页面：<br />
+<img src="./images/python 手机app数据爬取1.png" alt="在这里插入图片描述" /><br />
+   点击安装证书，就会打开证书安装向导，然后点击下一步，此时需要选择证书的存储区域，选择第二个选项”将所有证书放入下列存储”：<br />
+<img src="./images/python 手机app数据爬取2.png" alt="在这里插入图片描述" /><br />
+   然后点击浏览，选择证书存储位置为”受信任的根证书颁发机构”，点击确认并进入下一步：<br />
+<img src="./images/python 手机app数据爬取3.png" alt="在这里插入图片描述" /></p>
+<h3 id="android手机安装证书配置">(3)Android手机安装证书配置</h3>
+<p>手机与电脑连接同一个WiFi。<br />
+设置如下：<br />
+可以用操作系统命令ipconfig查看PC端ip：</p>
+<p><img src="./images/python 手机app数据爬取4.png" alt="在这里插入图片描述" /><br />
+   为10.61.131.172，默认代理端口号为8888。之后代理服务器为电脑的IP地址。端口为8888。设置如下：<br />
+<img src="./images/python 手机app数据爬取5.png" alt="在这里插入图片描述" /><br />
+会发现360手机的标志<br />
+<img src="./images/python 手机app数据爬取6.png" alt="在这里插入图片描述" /><br />
+接下来对手机下载证书：<br />
+访问手机访问 chls.pro/ssl ,下载证书：<br />
+<img src="./images/python 手机app数据爬取7.png" alt="在这里插入图片描述" /><br />
+   此时下载的是个.pem 格式的。需要手动更改为.crt 格式，最后随便放进某个文件夹即可：<br />
+<img src="./images/python 手机app数据爬取8.png" alt="在这里插入图片描述" /><br />
+用手机(我用的360手机)设置里的安全，找到从存储设备安装找到该crt文件进行配置：<br />
+<img src="./images/python 手机app数据爬取9.png" alt="在这里插入图片描述" /><br />
+此时需要设置锁屏：<br />
+<img src="./images/python 手机app数据爬取10.png" alt="在这里插入图片描述" /><br />
+就可以完成证书的安装。<br />
+<br></p>
+<h2 id="开启ssl监听">4.开启SSL监听</h2>
+<p>   点击Proxy-&gt;SSLProxying Settings，在弹出的窗口中点击Add按钮，添加需要监听的地址和端口号。需要监听所有的HTTPS请求，可以直接将地址和端口设置为<em>，即添加</em>:*设置，就可以抓取所有的HTTPS请求包；如果不配置，抓取的HTTPS请求包状态可能是unknown。<br />
+<img src="./images/python 手机app数据爬取11.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取12.png" alt="在这里插入图片描述" /><br />
+这样就指定只监听我们需要的ip和端口的请求和响应。<br />
+<br></p>
+<h2 id="原理">5.原理</h2>
+<p>   Charles运行时会在PC端的8888开启一个代理服务，实际上是一个HTTP/HTTPS的代理。<br />
+   可以是用手机通过相同的无线网络连接(这里用的是校园网)，设置手机代理为Charles的代理地址，这样手机访问互联网的数据就会经过Charles抓包工具，Charles转发这些数据到真实的服务器，再转发到手机中。这样抓包工具(Charles)就起到了中间人的作用，还有权对请求和响应进行修改。<br />
+<br></p>
+<h2 id="抓包">6.抓包</h2>
+<p>   我们可以看到我们已经请求了很多数据了，点击左上角的扫帚按钮即可清空捕获到的所有请求，然后点击第二个监听按钮，表明Charles正在监听App的网络数据流。如下：<br />
+<img src="./images/python 手机app数据爬取13.png" alt="在这里插入图片描述" /><br />
+抓包后可以看到音乐：<br />
+<img src="./images/python 手机app数据爬取14.png" alt="在这里插入图片描述" /><br />
+   可以通过分析不同的URL请求，获得数据，也可以通过修改数据，得到那些参数是需要的。<br />
+<img src="./images/python 手机app数据爬取15.png" alt="在这里插入图片描述" /><br />
+   这是有规则的，无规则的如果没有规律的url，就可以用另一个工具mitmdump对接Python脚本直接处理Response。<br />
+<br><br />
+<br></p>
+<h1 id="三抓包工具mitmproxy免费的">三：抓包工具mitmproxy(免费的)</h1>
+<h2 id="简介">1.简介</h2>
+<p>   mitmproxy是一个支持HTTP和HTTPS的抓包程序，有类似Fiddler和Charles的功能，但它是一个控制台的形式操作。<br />
+<br></p>
+<h2 id="关联组件">2.关联组件</h2>
+<p>   mirmproxy还有两个关联组件。一个是mitmdump，是命令行接口，可以对接Python脚本，用Python处理数据；另一个是mitmweb，是一个web程序，可以清楚地查看mitmproxy捕获的请求。<br />
+<br></p>
+<h2 id="安装和证书配置">3.安装和证书配置</h2>
+<h3 id="用pip安装">(1)用pip安装</h3>
+<p>   这个是安装python后就有的安装方法，也是最简单的安装方法，在控制台输入<br />
+   Pip install mitmproxy即可,会自动安装mitmdump和mitmweb组件：<br />
+<img src="./images/python 手机app数据爬取16.png" alt="在这里插入图片描述" /><br />
+但是到最后安装会失败：<br />
+<img src="./images/python 手机app数据爬取17.png" alt="在这里插入图片描述" /><br />
+   是因为安装这个包的 window 系统需要首先安装 Microsoft Visual C++ V14.0以上 才行。<br />
+   可以在<a href="https://visualstudio.microsoft.com/downloads/" class="uri">https://visualstudio.microsoft.com/downloads/</a><br />
+直接下载即可，安装之后需要c++的库之类的东西都安装了，然后再在命令行进行安装 mitmproxy即可：<br />
+<img src="./images/python 手机app数据爬取18.png" alt="在这里插入图片描述" /><br />
+然后进入安装目录,我们选择第三个：<br />
+<img src="./images/python 手机app数据爬取19.png" alt="在这里插入图片描述" /><br />
+在“安装 Visual Studio”屏幕中找到所需的工作负载，选择&quot;使用的桌面开发C++&quot;工作负荷：<br />
+注：这里的文件太大，我直接安装到E盘。<br />
+<img src="./images/python 手机app数据爬取20.png" alt="在这里插入图片描述" /><br />
+之后再安装就可以安装成功了：<br />
+<img src="./images/python 手机app数据爬取21.png" alt="在这里插入图片描述" /></p>
+<h3 id="在github或官网上安装">(2)在GitHub或官网上安装</h3>
+<p>GitHub：https://github.com/mitmproxy/mitmproxy<br />
+官网：https://mitmproxy.org<br />
+下载地址：https://github.com/mitmproxy/mitmproxy/releases<br />
+<br></p>
+<h2 id="证书配置-1">3.证书配置</h2>
+<h3 id="产生ca证书">(1) 产生CA证书</h3>
+<p>   对于mitmproxy来说，如果想要截获HTTPS请求，也需要设置证书。它在安装后会提供一套CA证书，只要客户端信任了mitmproxy的证书，就可以通过mitmproxy获取HTTPS请求的具体内容，否则无法解析HTTPS请求。<br />
+   在cmd中输入命令行接口命令mitmdump，产生CA证书，在用户目录找到CA证书：<br />
+<img src="./images/python 手机app数据爬取22.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取23.png" alt="在这里插入图片描述" /><br />
+这里的目录可以自行指定，但必须是在第一次运行mimdump时。<br />
+(2)PC端安装<br />
+   电脑是Window系统，因此用mitmproxy-ca.p12,双击后出现导入证书的引导页：<br />
+<img src="./images/python 手机app数据爬取24.png" alt="在这里插入图片描述" /><br />
+点击下一步，不需要设置密码：<br />
+<img src="./images/python 手机app数据爬取25.png" alt="在这里插入图片描述" /><br />
+接下来点击下一步，需要选择证书的存储区域，和配置Charles一样：<br />
+<img src="./images/python 手机app数据爬取26.png" alt="在这里插入图片描述" /><br />
+最后会有警告，选择是即可，证书就安装到我们的电脑上了：<br />
+<img src="./images/python 手机app数据爬取27.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取28.png" alt="在这里插入图片描述" /><br />
+(3)手机端安装<br />
+   我的手机是Android系统，直接把mitmproxy-ca.pem文件发送到手机上即可。<br />
+   配置方法和Charles类似。HTTPS请求。<br />
+   手动更改为.crt 格式，最后随便放进某个文件夹即可，用手机(我用的360手机)设置里的安全，找到从存储设备安装找到该crt文件进行配置：<br />
+<img src="./images/python 手机app数据爬取29.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取30.png" alt="在这里插入图片描述" /><br />
+<br></p>
+<h2 id="抓包原理">4.抓包原理</h2>
+<p>   在mitmproxy中，会在PC端的8080端口运行，然后开启一个代理服务，就是一个HTTP/HTTPS代理，类似ip代理。<br />
+   手机和PC在同一局域网内，设置代理为mitmproxy的代理地址，抓包工具mitmproxy就相当于中间人的作用，数据就会流经抓包工具。这个过程还可以对接mitmdump，抓取到的请求和响应都可以直接用Python来处理，然后分析，存到本地，或存到数据库。<br />
+<br></p>
+<h2 id="设置代理">5.设置代理</h2>
+<p>   在抓包前需要先设手机局域网置代理为抓包工具mitmproxy代理。</p>
+<h3 id="启动代理服务">(1)启动代理服务</h3>
+<p>   在cmd中输入mitmproxy，会在8080端口运行一个代理服务，由于该命令不支持Windows系统，因此在Windows系统中用mitmdump命令：<br />
+<img src="./images/python 手机app数据爬取31.png" alt="在这里插入图片描述" /><br />
+用mitmdump启动代理服务，监听8080端口：<br />
+<img src="./images/python 手机app数据爬取32.png" alt="在这里插入图片描述" /></p>
+<h3 id="设置当前代理">(2)设置当前代理</h3>
+<p>   将手机和电脑连到同一局域网下，先用操作系统命令ipconfig查看PC端当前局域网的ip：<br />
+<img src="./images/python 手机app数据爬取33.png" alt="在这里插入图片描述" /><br />
+为10.61.131.172，在手机端设置代理如下：<br />
+<img src="./images/python 手机app数据爬取34.png" alt="在这里插入图片描述" /><br />
+这样就配置好了mitmproxy的代理。<br />
+<br></p>
+<h2 id="抓包-1">6.抓包</h2>
+<p>   运行mitmweb(由于mitmproxy不能用)，就可以看到手机上的所有请求：<br />
+<img src="./images/python 手机app数据爬取35.png" alt="在这里插入图片描述" /><br />
+网页呈现如下：<br />
+<img src="./images/python 手机app数据爬取36.png" alt="在这里插入图片描述" /><br />
+   随便打开一条网络请求，发现和在网页的开发者工具下，监听到的一样：<br />
+<img src="./images/python 手机app数据爬取37.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取38.png" alt="在这里插入图片描述" /><br />
+<br></p>
+<h2 id="mitmproxy的高级功能mitmdump">7.mitmproxy的高级功能mitmdump</h2>
+<p>   上面的功能与方法在Fiddler和Charles中也有，那么mitmproxy的优势何在？<br />
+   在mitmproxy中它的强大体现到mitmdump工具，可以对接Python对数据请求进行处理。<br />
+   它是mitmproxy的命令行接口，可以对接python程序对请求进行处理，不需要手动截取和分析HTTP请求和响应，进行数据存储和解析都可以通过Python来完成。</p>
+<h3 id="简单获取数据随便一个app">(1)简单获取数据(随便一个app)</h3>
+<p>我们先创建一个文件夹：<br />
+<img src="./images/python 手机app数据爬取39.png" alt="在这里插入图片描述" /><br />
+然后打开转到该文件夹下：<br />
+<img src="./images/python 手机app数据爬取40.png" alt="在这里插入图片描述" /><br />
+   输入mitmdump -w outfile(outfile名称和扩展名可以自定义，文件放到当前cmd打开目录下，也可以用绝对相对路径，但比较麻烦)：<br />
+截取广播页面：<br />
+<img src="./images/python 手机app数据爬取41.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取42.png" alt="在这里插入图片描述" /><br />
+之后把截获的数据保存到文件夹下：<br />
+<img src="./images/python 手机app数据爬取43.png" alt="在这里插入图片描述" /><br />
+打开文件，发现好多乱码：<br />
+<img src="./images/python 手机app数据爬取44.png" alt="在这里插入图片描述" /><br />
+下面会对其进行处理。</p>
+<h3 id="可以指定一个脚本来处理截获的数据">(2)可以指定一个脚本来处理截获的数据：</h3>
+<p>   Mitmdump -s script.py(脚本名字可以自定义)，需要放在cmd当前目录下，也可以用绝对相对路径，但比较麻烦。<br />
+写入如下代码：<br />
+<img src="./images/python 手机app数据爬取45.png" alt="在这里插入图片描述" /><br />
+   就是定义了一个request()方法，参数为url，其实是一个HTTPFlow对象，通过request属性即可获取到当前请求对象。然后打印出请求头，将User-Agent(用户代理，简称 UA，它是一个特殊字符串头，使得服务器能够识别客户使用的操作系统及版本、CPU 类型、浏览器及版本、浏览器渲染引擎、浏览器语言浏览器插件等)修改为MitmProxy。<br />
+运行之后手机端访问http://httpbin.org/get，可以看到请求头：<br />
+<img src="./images/python 手机app数据爬取46.png" alt="在这里插入图片描述" /><br />
+PC端如下：<br />
+<img src="./images/python 手机app数据爬取47.png" alt="在这里插入图片描述" /><br />
+   手机端请求的Headers实际上就是请求的Headers，User-Agent被修改成了mitmproxy(防反爬)，PC端显示修改后的Headers内容，其User-Agent正是MitProxy。<br />
+   这样就可以让服务器识别不出我们的是爬虫程序了。</p>
+<h3 id="日志输出">(3)日志输出</h3>
+<p>   mitmdump提供了专门的日志输出功能，就是设定输出到控制台的颜色，可以分别为不同级别配置不同的颜色，更加直观：<br />
+<img src="./images/python 手机app数据爬取48.png" alt="在这里插入图片描述" /><br />
+效果如下：<br />
+<img src="./images/python 手机app数据爬取49.png" alt="在这里插入图片描述" /></p>
+<h3 id="输出请求数据">(4)输出请求数据</h3>
+<p>   可以输出一些请求信息，比如请求连接(url)，请求头(headers)，请求Cookies(cookies)，请求Host(host)，请求方法(method)，请求端口(port)，请求协议(scheme)等。<br />
+   还可以把这些请求的信息进行修改后，再发送到服务器中，这样，服务器返回的可能不是app想请求的网页，这就是为什么一些app打开后却访问到了其他网址的原因。<br />
+   也可以通过该用法，通过修改Cookies，添加代理等方式来尽可能避免反爬。<br />
+这里就先进行略过。</p>
+<h3 id="获得响应">(5)获得响应</h3>
+<p>   响应就是请求后服务器返回的信息，也就是我们需要的，大部分是json格式文件。<br />
+   对于json格式文件，mitmdump也提供了对应的处理接口，就是response()方法。<br />
+   我们可以打印各个http/https请求的响应内容，不过text才是我们想要的json格式文件，也可以用content，不过返回的是二进制文件。<br />
+代码如下：<br />
+<img src="./images/python 手机app数据爬取50.png" alt="在这里插入图片描述" /><br />
+我们先试一下：<br />
+<img src="./images/python 手机app数据爬取51.png" alt="在这里插入图片描述" /><br />
+内容有些乱，接下来我们就进行分析得到我们需要的数据。<br />
+<br><br />
+<br></p>
+<h1 id="四利用mitmproxy进行app数据获取">四：利用mitmproxy进行app数据获取</h1>
+<h2 id="获取请求url">1.获取请求url</h2>
+<p>获取http/https请求url，也可以认为是接口：<br />
+修改python文件，获得请求的url：<br />
+<img src="./images/python 手机app数据爬取52.png" alt="在这里插入图片描述" /><br />
+然后停留在该页面：<br />
+<img src="./images/python 手机app数据爬取53.png" alt="在这里插入图片描述" /><br />
+会发现出现了好多url：<br />
+<img src="./images/python 手机app数据爬取54.png" alt="在这里插入图片描述" /><br />
+我们一一分析一下，发现接口信息分别是：<br />
+这个接口<br />
+https://images.sanmaoyou.com/img/new_images/5ac83890033ec.jpg<br />
+是GET请求获取文件：<br />
+<img src="./images/python 手机app数据爬取55.png" alt="在这里插入图片描述" /><br />
+这个接口的为json文件，为GET获取方式：<br />
+<img src="./images/python 手机app数据爬取56.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取57.png" alt="在这里插入图片描述" /><br />
+这个接口<br />
+https://images.sanmaoyou.com/audio/library/2018-04/5ac83887c5263.mp3<br />
+是下载音乐，为GET获取方式：<br />
+<img src="./images/python 手机app数据爬取58.png" alt="在这里插入图片描述" /><br />
+这个接口<br />
+http://sdk-open-phone.getui.com/api.php?format=json&amp;t=1&amp;d=76060FDC1EFFF74C1956225F1DBEE6AF006578C33658C4AF90D802512BF321C8&amp;k=2是POST方式，是传文件。<br />
+我们在向右点击下一个广播，进行验证：<br />
+<img src="./images/python 手机app数据爬取59.png" alt="在这里插入图片描述" /><br />
+   发现基本上，新打开一个广播后，会加载mp3文件，图片文件，比较长的接口就返回json文件：<br />
+<img src="./images/python 手机app数据爬取60.png" alt="在这里插入图片描述" /><br />
+<br></p>
+<h2 id="接口url文件">2.接口url文件</h2>
+<p>把接口保存到txt文件中：<br />
+<img src="./images/python 手机app数据爬取61.png" alt="在这里插入图片描述" /><br />
+发现只有很长的接口才返回json文件。因此下面就需要对这些接口进行筛选。<br />
+<br></p>
+<h2 id="爬取json">3.爬取json</h2>
+<p>代码在pa_qu_json.py文件中，需要先创建一个json爬取数据文件夹，爬取后的结果如下：<br />
+<img src="./images/python 手机app数据爬取62.png" alt="在这里插入图片描述" /><br />
+<img src="./images/python 手机app数据爬取63.png" alt="在这里插入图片描述" /></p>
+<p>接下来用Python处理即可，这里只是简单爬取。在实际应用中，不是人工的，是用代码自动化进行分析各个请求和响应进行爬取。这里有个跨平台的移动端自动化测试工具，可以很方便地进行自动化爬取，在下一个爬虫博客中会详细讲到，希望大家把宝贵意见提出来一起学习进步。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

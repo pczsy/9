@@ -1,0 +1,90 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修.NetCore部署到CentOS' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>.NetCore部署到CentOS</center></div><div class='banquan'>原文出处:本文由博客园博主未闻&#183;Yokeqi提供。<br/>
+原文连接:https://www.cnblogs.com/yokeqi/p/12033797.html</div><br>
+    <p>&ldquo;天下熙熙，皆为利来；天下攘攘，皆为利往。&rdquo;，越来越多的人涌入IT这个行业，使得技术发展日新月异之外，也会无情淘汰跟不上潮流的人，所以作为IT从业人员，一定要时刻关注前沿技术，免得有朝一日被拍在沙滩上。</p>
+<p>附上TIOBE 2019.12编程语言排行前10</p>
+<p>&nbsp;<img src="./images/.NetCore部署到CentOS0.png" alt="" /></p>
+<p><img src="./images/.NetCore部署到CentOS1.png" alt="" /></p>
+<p><strong>==========&nbsp;&nbsp;<a href="https://www.cnblogs.com/yokeqi/p/11025879.html" target="_blank"><strong>原创作品</strong><strong><strong>&nbsp; &nbsp;&nbsp;</strong></strong>作者：未闻&nbsp; &nbsp; 出处：博客园</a>&nbsp; ==========</strong></p>
+<p>先看看最后实现的效果：</p>
+<p><img src="./images/.NetCore部署到CentOS2.png" alt="" /></p>
+<p><strong>一、事前准备，这个要看一下，避免后面浪费时间重来</strong></p>
+<p>1. CentOS系统：.NET Core2.2最小支持<strong>CentOS 7</strong>，我用了6.4版本装半天各种组件缺失，浪费了很多时间。</p>
+<p>具体参考下微软官方文档：<a href="https://docs.microsoft.com/zh-cn/dotnet/core/install/dependencies?pivots=os-linux&amp;tabs=netcore31" target="_blank">支持的操作系统和依赖项</a></p>
+<p>2. CentOS 7系统<a href="https://blog.csdn.net/qq_44714603/article/details/88829423" target="_blank">安装教程</a></p>
+<p>3. 测试并发布.NET Core网站，用于出现问题时排查是Linux系统问题还是程序本身问题。</p>
+<p>4. Linux系统我是最小版本无桌面安装，<strong>远程工具用Xshell，FTP工具用WinSCP</strong>。这个可以按自己熟悉的来就好。</p>
+<p><strong>二、部署步骤</strong></p>
+<p>1. 先按下面这篇文章部署，但可能会有点问题，如果继续不下去了可以再跳回来看看，也可以参考<a href="https://docs.microsoft.com/zh-cn/aspnet/core/host-and-deploy/linux-nginx?view=aspnetcore-2.2" target="_blank">微软官方文档</a>。</p>
+<p><a href="https://www.cnblogs.com/smiler/p/10149603.html" target="_blank">Asp.NetCore程序发布到CentOs(含安装部署netcore)--最佳实践（一）</a></p>
+<p>2. 步骤简要说明，具体内容上面文章已经说明很清楚，就不重复造轮子了。</p>
+<p><strong>step 1. 安装.NET Core SDK</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;"># 安装libicu依赖
+</span><span style="color: #0000ff;">yum</span> <span style="color: #0000ff;">install</span><span style="color: #000000;"> libunwind libicu
+
+# 注册Microsoft签名密钥
+</span><span style="color: #0000ff;">sudo</span> rpm -Uvh https:<span style="color: #008000;">//</span><span style="color: #008000;">packages.microsoft.com/config/rhel/7/packages-microsoft-prod.rpm</span>
+<span style="color: #000000;">
+#安装
+</span><span style="color: #0000ff;">sudo</span> <span style="color: #0000ff;">yum</span><span style="color: #000000;"> update
+</span><span style="color: #0000ff;">sudo</span> <span style="color: #0000ff;">yum</span> <span style="color: #0000ff;">install</span> dotnet-sdk-<span style="color: #800080;">2.2</span><span style="color: #000000;">
+
+# 安装完成
+dotnet </span>--<span style="color: #0000ff;">info</span></pre>
+</div>
+<p><strong>step 2. 拷贝发布的网站到CentOS上</strong></p>
+<p>&gt; 用ftp工具在 root 目录下新建文件夹 netcore。</p>
+<p>&gt; 把网站文件上传到netcore文件夹下</p>
+<p>&gt; 切换到Xshell，使用命令&nbsp;<strong>cd netcore</strong> 进入netcore目录，当前目录会变成如<strong> [root@localhost netcore]#</strong></p>
+<p><strong>&nbsp;step 3. 查看防火墙状态，要关闭</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">#查看服务状态
+systemctl status firewalld
+
+# 查看状态
+firewall</span>-cmd --<span style="color: #000000;">state
+
+# 开启
+service firewalld start
+# 重启
+service firewalld restart
+# 关闭
+service firewalld stop</span></pre>
+</div>
+<p><strong>step 4. 启动服务</strong></p>
+<p>这里按照教程的话只能访问localhost的5000端口，可以用*来支持局域网访问</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;"># 启动.NET Core网站（要先 cd 到网站目录）
+dotnet LinHomeCloud.dll </span>--server.urls=<span style="color: #800000;">"</span><span style="color: #800000;">http://*:5000</span><span style="color: #800000;">"</span></pre>
+</div>
+<p>三、参考资料</p>
+<ul>
+<li><a href="https://docs.microsoft.com/zh-cn/aspnet/core/host-and-deploy/?view=aspnetcore-2.2" target="_blank">微软官方文档</a></li>
+<li><a href="https://www.tiobe.com/tiobe-index/" target="_blank">TIOBE Index</a></li>
+<li><a href="https://www.cnblogs.com/knowledgesea/p/5199046.html" target="_blank">负载均衡：Nginx</a></li>
+<li><a href="https://www.cnblogs.com/stulzq/p/9201830.html" target="_blank">容器：Docker</a></li>
+<li><a href="https://www.cnblogs.com/savorboard/p/dotnetcore-supervisor.html" target="_blank">守护进程：Supervisor</a></li>
+</ul>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,477 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修流式计算（三）-Flink Stream 篇一' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>流式计算（三）-Flink Stream 篇一</center></div><div class='banquan'>原文出处:本文由博客园博主甲由崽提供。<br/>
+原文连接:https://www.cnblogs.com/xxbiao/p/12100654.html</div><br>
+    <p>​流的世界，有点乱，群雄逐鹿，流实在太多，看完这个马上又冒出一个，也不知哪个才是真正的牛，据说Flink是位重量级选手，能流计算，还能批处理，和其他伙伴关系也融洽的很，与HDFS/File/SQL/MQ往来都不在话下，今天我们就来实战一把。</p>
+<p><strong>环境</strong>：Idea2019.03/Gradle6.0.1/JDK11.0.4/Lambda/RHEL8.0/VMWare15.5/Springboot2.2.1.RELEASE/Mysql8.0.11/Kafka2.3.1/ShadowJar5.0/Flink1.9.1/Zookeeper3.5.5</p>
+<p><strong>难度：</strong>新手--战士--<span style="color: #ff0000;">老兵</span>--大师</p>
+<p><strong>目标：</strong></p>
+<ol class=" list-paddingleft-2">
+<li>Zookeeper集群部署</li>
+<li>Kafka集群部署及AdminClient使用</li>
+<li>Flink Standalone集群部署</li>
+<li>Flink流计算程序设计</li>
+</ol>
+<p><strong>说明：</strong></p>
+<p><strong>为了遇见各种问题，同时保持时效性，我尽量使用最新的软件版本。同时代码中大量使用注释，并尽量使用非链式写法，层次清晰。</strong></p>
+<p><strong>代码地址：<span style="color: #ff0000;">其中的day24，https://github.com/xiexiaobiao/dubbo-project.git</span></strong></p>
+<p>&nbsp;</p>
+<p><span style="color: #ff0000;">第一部分 部署图</span></p>
+<p>1.1 整体部署图，注意本次我没使用Flink的HA模式，故只有一个Master节点：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一0.png" alt="" /></p>
+<p>本次实现的整体逻辑：Java应用产生流数据，用kafka进行传输，在Flink中进行流计算，最后存储到文件和Mysql中：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><span style="color: #ff0000;">第二部分 zk集群</span></p>
+<p>2.1 Zookeeper(简写ZK)集群安装：我分别部署ZK到192.168.1.221，192.168.1.222，192.168.1.223 linux虚机上，这里只说一台，其他类似，下载<code>apache-zookeeper-3.5.5-bin.tar.gz</code>，解压到目录<code>/usr/zookeeper3.5/apache-zookeeper-3.5.5-bin/</code>修改ZK配置文件：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~]# vim /usr/zookeeper3.<span style="color: #800080;">5</span>/apache-zookeeper-<span style="color: #800080;">3.5</span>.<span style="color: #800080;">5</span>-bin/conf/zoo.cfg</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>dataDir=/usr/zookeeper3.<span style="color: #800080;">5</span>/<span style="color: #000000;">data
+dataLogDir</span>=/usr/zookeeper3.<span style="color: #800080;">5</span>/<span style="color: #000000;">logs
+#added </span><span style="color: #0000ff;">for</span><span style="color: #000000;"> ZK cluster
+server.</span><span style="color: #800080;">1</span>=<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.221</span>:<span style="color: #800080;">2888</span>:<span style="color: #800080;">3888</span><span style="color: #000000;">
+server.</span><span style="color: #800080;">2</span>=<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.222</span>:<span style="color: #800080;">2888</span>:<span style="color: #800080;">3888</span><span style="color: #000000;">
+server.</span><span style="color: #800080;">3</span>=<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.223</span>:<span style="color: #800080;">2888</span>:<span style="color: #800080;">3888</span></pre>
+</div>
+<p>zk的配置说明：（LF指Leader/Follower）</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一2.png" alt="" /></p>
+<p>打开firewall端口：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost zookeeper3.<span style="color: #800080;">5</span>]# firewall-cmd --permanent --add-port=<span style="color: #800080;">2181</span>/<span style="color: #000000;">tcp
+[root@localhost zookeeper3.</span><span style="color: #800080;">5</span>]# firewall-cmd --permanent --add-port=<span style="color: #800080;">2888</span>/<span style="color: #000000;">tcp
+[root@localhost zookeeper3.</span><span style="color: #800080;">5</span>]# firewall-cmd --permanent --add-port=<span style="color: #800080;">3888</span>/<span style="color: #000000;">tcp
+[root@localhost zookeeper3.</span><span style="color: #800080;">5</span>]# firewall-cmd &ndash;reload</pre>
+</div>
+<p>创建myid文件，也可使用touch或vim创建：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~]# <span style="color: #0000ff;">echo</span> <span style="color: #800000;">"</span><span style="color: #800000;">2</span><span style="color: #800000;">"</span> &gt; /usr/zookeeper3.<span style="color: #800080;">5</span>/data/myid</pre>
+</div>
+<p>启动：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~]# <span style="color: #0000ff;">sh</span> /usr/zookeeper3.<span style="color: #800080;">5</span>/apache-zookeeper-<span style="color: #800080;">3.5</span>.<span style="color: #800080;">5</span>-bin/bin/zkServer.<span style="color: #0000ff;">sh</span> start</pre>
+</div>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一3.png" alt="" /></p>
+<p>查看节点角色：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~]# <span style="color: #0000ff;">sh</span> $ZOOKEEPER_HOME/bin/zkServer.<span style="color: #0000ff;">sh</span> status</pre>
+</div>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一4.png" alt="" /></p>
+<p>说明：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一5.png" alt="" /></p>
+<p>使用zkCli测试节点间连接，我在192.168.1.221上访问192.168.1.222：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><span style="color: #ff0000;">第三部分 Kafka集群</span></p>
+<p>3.1 Kafka集群，参考上一篇，这里以192.168.1.223为例，其他类似，修改/usr/kafka2.3/kafka_2.12-2.3.1/config/server.properties：</p>
+<div class="cnblogs_code">
+<pre><code>broker.<span style="color: #0000ff;">id</span>=<span style="color: #800080;">2</span><span style="color: #000000;"> #集群内此编号必须唯一
+listeners</span>=PLAINTEXT:<span style="color: #008000;">//</span><span style="color: #008000;">192.168.1.223:9092 #Socket监听地址，没写hostname/IP即为listen所有IP</span>
+log.dirs=/usr/kafka2.<span style="color: #800080;">3</span>/kafka-<span style="color: #000000;">logs  #kafka保存log目录
+zookeeper.connect</span>=<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.221</span>:<span style="color: #800080;">2181</span>,<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.222</span>:<span style="color: #800080;">2181</span>,<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.223</span>:<span style="color: #800080;">2181</span> #ZK注册地址</pre>
+</div>
+<p>注意开启kafka的访问端口，否则APP无法访问：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~]# firewall-cmd --permanent --add-port=<span style="color: #800080;">9092</span>/<span style="color: #000000;">tcp
+[root@localhost </span>~]# firewall-cmd &ndash;reload</pre>
+</div>
+<pre class="custom"><span style="font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px;"><br />再分别启动kafka：</span></pre>
+<div class="cnblogs_code">
+<pre><code>[root@server223 kafka_2.<span style="color: #800080;">12</span>-<span style="color: #800080;">2.3</span>.<span style="color: #800080;">1</span>]# ./bin/kafka-server-start.<span style="color: #0000ff;">sh</span> config/server.properties</pre>
+</div>
+<pre class="custom"><span style="font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px;"><br /><span style="color: #ff0000;">第四部分 Flink集群</span><br /></span></pre>
+<p>4.1 Flink基础知识，因篇幅原因，略！</p>
+<p>4.2 Flink Standalone集群(一个master多个worker)部署：<code>必须先安装SSH，使得各集群节点机器间无密码进行SSH访问，并必须使用相同的flink安装目录结构</code>，因master节点通过SSH使用脚本控制worker节点。Flink集群还有HA模式，即多个Master节点和多个worker节点，Master节点中一个为leader，其他Master节点为standby，故障时standby就转换为leader角色。</p>
+<p>4.3 SSH开通：</p>
+<p>我这里192.168.1.222为master，192.168.1.221/223为worker， 222到223的SSH，222到221的SSH类似，如linux上没有SSH，需先安装该service。以下为222到221的SSH开通，在222上：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~]# <span style="color: #0000ff;">ssh-keygen</span><span style="color: #000000;">
+[root@localhost </span>~]# <span style="color: #0000ff;">ssh</span>-copy-<span style="color: #0000ff;">id</span> <span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.221</span><span style="color: #000000;">
+[root@localhost </span>~]# vim /etc/<span style="color: #0000ff;">ssh</span>/<span style="color: #000000;">sshd_config
+PasswordAuthentication no
+[root@localhost </span>~<span style="color: #000000;">]# systemctl restart sshd
+[root@localhost </span>~]# <span style="color: #0000ff;">ssh</span> <span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.221</span><span style="color: #000000;">
+[root@localhost </span>~<span style="color: #000000;">]# exit
+logout
+Connection to </span><span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.221</span> closed.</pre>
+</div>
+<p>&nbsp;</p>
+<p>4.4 Flink安装：我下载的是编译后版本：flink-1.9.1-bin-scala_2.12.tgz，解压后在<code>/usr/flink1.9/flink-1.9.1</code>目录， 集群配置：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost flink-<span style="color: #800080;">1.9</span>.<span style="color: #800080;">1</span>]# vim conf/flink-<span style="color: #000000;">conf.yaml
+#jobmanager.rpc.address key to point to your master node
+jobmanager.rpc.address: </span><span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.222</span><span style="color: #000000;">
+#The number of task slots that each TaskManager offers. Each slot runs one parallel pipeline.
+conf</span>/flink-conf.yaml  taskmanager.numberOfTaskSlots: <span style="color: #800080;">2</span><span style="color: #000000;">
+#java_home
+</span><span style="color: #0000ff;">env</span>.java.home: /usr/jdk11/jdk-<span style="color: #800080;">11.0</span>.<span style="color: #800080;">4</span>/</pre>
+</div>
+<p>&nbsp;</p>
+<p>worker节点配置：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost flink-<span style="color: #800080;">1.9</span>.<span style="color: #800080;">1</span>]# vim conf/<span style="color: #000000;">slaves
+#all nodes </span><span style="color: #0000ff;">in</span> your cluster <span style="color: #0000ff;">which</span><span style="color: #000000;"> shall be used as worker nodes
+</span><span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.221</span>
+<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.223</span></pre>
+</div>
+<pre class="custom"><code class="hljs"><span class="hljs-meta"><span class="bash"><span class="hljs-keyword"><span class="hljs-built_in">&nbsp;</span></span></span></span></code></pre>
+<p>复制flink文件目录到各worker集群节点，这样flink目录结构确定一致：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost flink-<span style="color: #800080;">1.9</span>.<span style="color: #800080;">1</span>]# <span style="color: #0000ff;">scp</span> -r /usr/flink1.<span style="color: #800080;">9</span>  root@<span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.223</span>:/usr/flink1.<span style="color: #800080;">9</span></pre>
+</div>
+<pre class="custom"><code class="hljs">&nbsp;</code></pre>
+<p>4.5 启动集群，这里只需在master节点上操作，flink会通过SSH自动启动worker上的taskmanager：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost flink-<span style="color: #800080;">1.9</span>.<span style="color: #800080;">1</span>]# ./bin/start-cluster.<span style="color: #0000ff;">sh</span></pre>
+</div>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一7.png" alt="" /></p>
+<p>显示如上因我设置了hostname分别为192.168.1.221 -&gt; server221/ 192.168.1.222 -&gt; server222/ 192.168.1.223 -&gt; server223，可以看到221/223的worker节点<code>被动</code>启动了。</p>
+<p>4.6 关闭集群：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost flink-<span style="color: #800080;">1.9</span>.<span style="color: #800080;">1</span>]# ./bin/stop-cluster.<span style="color: #0000ff;">sh</span></pre>
+</div>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一8.png" alt="" /></p>
+<p>4.7 启动或关闭另一个jobmanager实例：</p>
+<div class="cnblogs_code">
+<pre><code>[root@server222 flink-<span style="color: #800080;">1.9</span>.<span style="color: #800080;">1</span>]# ./bin/jobmanager.<span style="color: #0000ff;">sh</span> stop-all</pre>
+</div>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一9.png" alt="" /></p>
+<div class="cnblogs_code">
+<pre><code>[root@server222 flink-<span style="color: #800080;">1.9</span>.<span style="color: #800080;">1</span>]# ./bin/jobmanager.<span style="color: #0000ff;">sh</span> start <span style="color: #800080;">192.168</span>.<span style="color: #800080;">1.222</span>:<span style="color: #800080;">8081</span></pre>
+</div>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一10.png" alt="" /></p>
+<p>4.8 Web访问，先在222上开通端口号：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~]# firewall-cmd --permanent --add-port=<span style="color: #800080;">8081</span>/<span style="color: #000000;">tcp
+[root@localhost </span>~]# firewall-cmd &ndash;reload</pre>
+</div>
+<p>Windows上访问web UI：<code>http://192.168.1.222:8081/</code></p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一11.png" alt="" width="1514" height="747" /></p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一12.png" alt="" width="1511" height="646" /></p>
+<p>4.9 写flink处理逻辑：</p>
+<p>建立Gradle项目，模拟车流处理，结构如下：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一13.png" alt="" /></p>
+<pre class="custom"></pre>
+<p>依赖，再次建议按需逐步加入，了解各依赖的作用：</p>
+<div class="cnblogs_code">
+<pre><code>    flinkShadowJar group: 'org.apache.flink', name: 'flink-core', version: '1.9.1'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.apache.flink', name: 'flink-streaming-java_2.12', version: '1.9.1'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.apache.flink', name: 'flink-clients_2.12', version: '1.9.1'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.apache.flink', name: 'flink-java', version: '1.9.1'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.projectlombok', name: 'lombok', version: '1.18.10'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.apache.flink', name: 'flink-connector-kafka_2.12', version: '1.9.1'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.apache.kafka', name: 'kafka-streams', version: '2.3.1'<span style="color: #000000;">
+    flinkShadowJar group: </span>'com.alibaba', name: 'fastjson', version: '1.2.62'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.springframework.kafka', name: 'spring-kafka', version: '2.3.3.RELEASE'<span style="color: #000000;">
+    flinkShadowJar group: </span>'org.springframework.boot', name: 'spring-boot-starter', version: '2.2.1.RELEASE'<span style="color: #000000;">
+    flinkShadowJar group: </span>'com.alibaba', name: 'druid', version: '1.1.21'<span style="color: #000000;">
+    flinkShadowJar group: </span>'mysql', name: 'mysql-connector-java', version: '8.0.18'</pre>
+</div>
+<pre class="custom"><code class="hljs"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string">&nbsp;</span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>车流当然得有车，先建个POJO类com.biao.flink.Vehicle，</p>
+<pre class="custom"></pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Data
+@Getter
+@Setter
+publicclass Vehicle {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 类型：car/truck/suv/pickup/other</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> String type;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 车牌号：随机6位数字</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> Integer plate;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> yellow/red/white/black</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> String color;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 车重: 1.5-2.5</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> Float weight;
+    ...
+}</span></pre>
+</div>
+<pre class="custom"></pre>
+<p>com.biao.flink.Producer用于产生车流：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Component
+</span><span style="color: #008000;">//</span><span style="color: #008000;">@Slf4j</span>
+<span style="color: #000000;">publicclass Producer {
+    @Autowired
+    </span><span style="color: #0000ff;">private</span> KafkaTemplate&lt;String,String&gt;<span style="color: #000000;"> kafkaTemplate;
+
+    </span><span style="color: #0000ff;">private</span> Logger log = LoggerFactory.getLogger(Producer.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+    </span><span style="color: #0000ff;">private</span> String time =<span style="color: #000000;"> LocalDateTime.now().toString();
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> send() {
+        log.info(</span>"send elements to kafka started at :{}"<span style="color: #000000;">,time);
+        Random random </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Random();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> kafkaTemplate.sendDefault() 为异步方法，返回 ListenerFuture&lt;T&gt;，
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 如果运行到此前没有显示创建topic：vehicle，send方法会缺省创建复制因子为1的topic</span>
+        <span style="color: #0000ff;">this</span><span style="color: #000000;">.getVehicles()
+                .forEach(item </span>-&gt; kafkaTemplate.send("vehicle",String.valueOf(random.nextInt(10<span style="color: #000000;">)), JSON.toJSONString(item)));
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 使用随机方法产生车辆流</span>
+    <span style="color: #0000ff;">public</span> Stream&lt;Vehicle&gt;<span style="color: #000000;"> getVehicles(){
+        List</span>&lt;Vehicle&gt; vehicleList = <span style="color: #0000ff;">new</span> ArrayList&lt;&gt;(75<span style="color: #000000;">);
+        Random random </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Random();
+        List</span>&lt;String&gt; colors = Arrays.asList("red","yellow","black","white"<span style="color: #000000;">);
+        List</span>&lt;String&gt; types = Arrays.asList("car","truck","suv","pickup","other"<span style="color: #000000;">);
+        List</span>&lt;Float&gt; weights = Arrays.asList(1.0f,1.5f,2.0f,2.5f<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 使用Random生成IntStream流</span>
+        IntStream intStream1 = random.ints(25,100000,999999<span style="color: #000000;">);
+        intStream1.limit(</span>25<span style="color: #000000;">)
+                .forEach(num </span>-&gt; {vehicleList.add(<span style="color: #0000ff;">new</span> Vehicle(types.get(random.nextInt(5<span style="color: #000000;">)),num,
+                        colors.get(random.nextInt(</span>4)),weights.get(random.nextInt(4<span style="color: #000000;">))));});
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 使用 IntStream静态方法生成流</span>
+        IntStream intStream2 = IntStream.rangeClosed(100000,999999<span style="color: #000000;">);
+        intStream2.limit(</span>25<span style="color: #000000;">)
+                .forEach(num </span>-&gt; {vehicleList.add(<span style="color: #0000ff;">new</span> Vehicle(types.get(random.nextInt(5<span style="color: #000000;">)),num,
+                        colors.get(random.nextInt(</span>4)),weights.get(random.nextInt(4<span style="color: #000000;">))));});
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 使用Stream静态迭代器方法生成流</span>
+        Stream&lt;Integer&gt; intStream3 = Stream.iterate(100000, n-&gt;n+3<span style="color: #000000;">);
+        intStream3.limit(</span>25<span style="color: #000000;">)
+                .forEach( t </span>-&gt; {vehicleList.add(<span style="color: #0000ff;">new</span> Vehicle(types.get(random.nextInt(5<span style="color: #000000;">)),t,
+                        colors.get(random.nextInt(</span>4)),weights.get(random.nextInt(4<span style="color: #000000;">))));});
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 用于输出测试
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> vehicleList.stream().forEach(System.out::println);</span>
+        <span style="color: #0000ff;">return</span><span style="color: #000000;"> vehicleList.stream();
+    }
+}</span></pre>
+</div>
+<p>以上代码核心点：1.getVehicles生产车流，里面使用了3种模式生成java stream：Random类生成的无限IntStream；IntStream.rangeClosed静态方法生成范围流；Stream.iterate静态迭代器方法生成无限流。再结合随机Vehicle属性，最终生成Stream(Vehicle)流。2.Send方法中使用KafkaTemplate向Kafka集群发送流数据，但注意转为了String流。这里我也出个考题：String.valueof(Object) 和 Object.toString()，有何不同呢？检验下功力几层。</p>
+<p>com.biao.flink.KafkaConfig配置类：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Configuration
+publicclass KafkaConfig {
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 通过bean注入可以直接创建一个topic并指定topic的属性,也可使用AdminClient来创建</span>
+<span style="color: #000000;">    @Bean
+    NewTopic topic(){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> NewTopic(String name, int numPartitions, short replicationFactor)</span>
+        returnnew NewTopic("vehicle",3,(<span style="color: #0000ff;">short</span>) 3<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 使用AdminClient的静态create方法创建一个管理端，用于管理topic</span>
+    @Bean(name = "adminClient"<span style="color: #000000;">)
+    AdminClient adminClient(){
+        Properties properties </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Properties();
+        properties.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG,</span>"192.168.1.221:9092,192.168.1.222:9092,192.168.1.223:9092"<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> AdminClient.create(properties);
+    }
+}</span></pre>
+</div>
+<p>以上代码通过Springboot DI生成kafka的topic和AdminClient，为什么要这么生成topic？因为这种方式可以很好的指定replicationFactor，即partition的复制因子，虽然也可使用AdminClient来创建topic，但不可修改复制因子属性。另请注意，com.biao.flink.Producer中的send方法也能缺省创建numPartitions和replicationFactor为1的topic，这里就说了3中创建topic的方法了！</p>
+<p>com.biao.flink.KafkaMain是Kafka应用入口类，也是记录发送者：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@SpringBootApplication
+publicclass KafkaMain {
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] args) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> ExecutionException, InterruptedException {
+        System.out.println(</span>"Flink Application starting ........."<span style="color: #000000;">);
+        ConfigurableApplicationContext context </span>= SpringApplication.run(KafkaMain.<span style="color: #0000ff;">class</span><span style="color: #000000;">,args);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 使用kafka AdminClient示例</span>
+        AdminClient adminClient = (AdminClient) context.getBean("adminClient"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 批量创建kafka topic
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> adminClient.createTopics(...);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 打印输出所有的topic</span>
+<span style="color: #000000;">        adminClient.listTopics().names().get().forEach(System.out::println);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 打印vehicle的topic信息</span>
+        System.out.println("info&gt;&gt;&gt;" + adminClient.describeTopics(Collections.singletonList("vehicle"<span style="color: #000000;">)).values());
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 删除vehicle2的topic，注意删除前要关闭所有consumer</span>
+        System.out.println("delete&gt;&gt;&gt;" +adminClient.deleteTopics(Collections.singletonList("vehicle2"<span style="color: #000000;">)).values());
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 修改partitions属性,仅对新Partitions起作用，原有Partitions状态不变，且replicationFactor不能修改
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 以下例子设定原vehicle已有3个Partitions，replicationFactor为3，现增加到4个Partitions</span>
+        List&lt;List&lt;Integer&gt;&gt; lists = <span style="color: #0000ff;">new</span> ArrayList&lt;&gt;<span style="color: #000000;">(Collections.emptyList());
+        lists.add(Arrays.asList(</span>0,1,2<span style="color: #000000;">));
+        NewPartitions newPartitions </span>= NewPartitions.increaseTo(4<span style="color: #000000;">,lists);
+        Map</span>&lt;String, NewPartitions&gt; map = <span style="color: #0000ff;">new</span> HashMap&lt;&gt;<span style="color: #000000;">(Collections.emptyMap());
+        map.put(</span>"vehicle"<span style="color: #000000;">,newPartitions);
+        adminClient.createPartitions(map);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> kafka生产者进行发送记录</span>
+        Producer producer = context.getBean(Producer.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+        producer.send();
+    }
+}</span></pre>
+</div>
+<p>以上代码重点是学习AdminClient，它来管理kafka的topic，可以批量创建createTopics、打印输出listTopics、删除deleteTopics和修改createPartitions。但修改numPartitions属性,仅对新Partitions起作用，原有Partitions状态不变，且replicationFactor不能修改。而且我使用发现createPartitions方法使用晦涩难懂，不推荐使用！</p>
+<p>最后是com.biao.flink.FlinkMain ，flink的入口类，也是Flink的流计算逻辑实现：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">publicclass FlinkMain {
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span> main(String[] args) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 流式执行上下文，还有非流式的ExecutionEnvironment，缺省为Local模式，
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 远程的使用RemoteStreamEnvironment可在远程Flink集群上运行jar
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> RemoteStreamEnvironment remoteStreamEnv = new RemoteStreamEnvironment(String host, int port, String... jarFiles);</span>
+        <span style="color: #0000ff;">final</span> StreamExecutionEnvironment environment =<span style="color: #000000;"> StreamExecutionEnvironment.getExecutionEnvironment();
+        Properties props </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Properties();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> StreamsConfig已经预定义了很多参数名称，运行时console会输出所有StreamsConfig values</span>
+        props.put(StreamsConfig.APPLICATION_ID_CONFIG,"Flink Application"<span style="color: #000000;">);
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG,</span>"192.168.1.221:9092,192.168.1.222:9092,192.168.1.223:9092"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> kafka流都是byte[],必须有序列化，不同的对象使用不同的序列化器</span>
+<span style="color: #000000;">        props.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.String().getClass());
+        props.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG,Serdes.String().getClass());
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 构造一个KafkaConsumer，使用kafka topic做源头
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> FlinkKafkaConsumer(topic,DeserializationSchema,properties),其中的DeserializationSchema可以自定义反序列化模式，但
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 强烈建议使用通用序列化，自定义序列化迁移和维护困难</span>
+        FlinkKafkaConsumer&lt;String&gt; flinkKafkaConsumer = <span style="color: #0000ff;">new</span> FlinkKafkaConsumer&lt;&gt;("vehicle",<span style="color: #0000ff;">new</span><span style="color: #000000;"> SimpleStringSchema(),props);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> flink连接Kafka数据源，并生成流
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 使用map计算将每个string元素转换为Vehicle对象，JSON -&gt; Vehicle</span>
+        DataStream&lt;Vehicle&gt; stream =<span style="color: #000000;"> environment.addSource(flinkKafkaConsumer)
+                .map(str </span>-&gt; JSONObject.parseObject(str,Vehicle.<span style="color: #0000ff;">class</span><span style="color: #000000;">))
+                .setParallelism(</span>2<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 保存到文件测试，写入mysql前可以用来测试数据,本地windows运行和上传到linux上运行，注意文件路径写法不用
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> stream.writeAsText("D:/flinkOutput01", FileSystem.WriteMode.OVERWRITE);</span>
+        stream.writeAsText("/usr/flink1.9/fileOutPut01"<span style="color: #000000;">, FileSystem.WriteMode.OVERWRITE);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 保存到mysql测试</span>
+        stream.addSink(<span style="color: #0000ff;">new</span><span style="color: #000000;"> Sink2Mysql());
+        </span><span style="color: #008000;">/**</span><span style="color: #008000;">计数式滑动窗口测试：countWindowAll(windowSize,slideSize)，以下窗口大小10个记录，窗口一次滑动5个记录位置
+         * ，特别注意 -&gt; countWindowAll模式无法并行，因所有记录均需通过一个窗口</span><span style="color: #008000;">*/</span><span style="color: #000000;">
+        SingleOutputStreamOperator</span>&lt;Vehicle&gt; operator =<span style="color: #000000;"> stream
+                .keyBy(</span>"type"<span style="color: #000000;">)
+                .countWindowAll(</span>5L,10L<span style="color: #000000;">)
+                .sum(</span>"weight"<span style="color: #000000;">);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> operator.writeAsText("D:/flinkOutput02", FileSystem.WriteMode.OVERWRITE);</span>
+        operator.writeAsText("/usr/flink1.9/fileOutPut02"<span style="color: #000000;">, FileSystem.WriteMode.OVERWRITE);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> Triggers the program execution.</span>
+<span style="color: #000000;">        environment.execute();
+    }
+}</span></pre>
+</div>
+<p>以上代码中，重点关注StreamExecutionEnvironment，它是Flink运行的流式执行上下文，可以指定全局时间处理特性，还有并行度(下篇再述)。还有非流式的ExecutionEnvironment，缺省为Local模式，远程的使用RemoteStreamEnvironment可在指定远程Flink集群上运行jar文件，每个flink pipeline代码最后都要environment.execute()来触发执行！</p>
+<p>FlinkKafkaConsumer则构造一个KafkaConsumer，使用kafka topic做源头，注意序列化器的指定。然后就是对DataStream(Vehicle)流的系列操作了，其中涉及到了窗口(window)对象，因为流处理一般要处理无穷多个对象，不可能一次全处理完，如何每次选取一些想要的？那就是一个window框，要么框住一定数量的，要么框住一定时间段内的，然后再处理。Window的概念还是非常重要的！我后续再讲，或者看官君查查资料，此篇不展开。</p>
+<p>com.biao.flink.Sink2Mysql存数据到mysql逻辑：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;"> 也可使用顶级接口 SinkFunction，RichSinkFunction也实现了SinkFunction</span>
+publicclass Sink2Mysql <span style="color: #0000ff;">extends</span> RichSinkFunction&lt;Vehicle&gt;<span style="color: #000000;"> {
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> PreparedStatement preparedStatement;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> DruidDataSource dataSource;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Connection connection;
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> Initialization method for the function.</span>
+<span style="color: #000000;">    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> open(Configuration parameters) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">.open(parameters);
+        dataSource </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> DruidDataSource();
+        dataSource.setDriverClassName(</span>"com.mysql.jdbc.Driver"<span style="color: #000000;">);
+        dataSource.setUsername(</span>"root"<span style="color: #000000;">);
+        dataSource.setPassword(</span>"123456"<span style="color: #000000;">);
+        dataSource.setUrl(</span>"jdbc:mysql://192.168.1.107:3306/data_center?characterEncoding=UTF-8&amp;serverTimezone=UTC"<span style="color: #000000;">);
+        connection </span>=<span style="color: #000000;"> dataSource.getConnection();
+        preparedStatement </span>= connection.prepareStatement("insert into vehicle(type, plate, color, weight) values(?, ?, ?, ?);"<span style="color: #000000;">);
+
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> Tear-down method for the user code. It is called after the last call to the main working methods</span>
+<span style="color: #000000;">    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> close() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">.close();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 需try-catch，我直接简写了</span>
+<span style="color: #000000;">        preparedStatement.close();
+        connection.close();
+        dataSource.close();
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> Writes the given value to the sink. This function is called for every record.</span>
+<span style="color: #000000;">    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> invoke(Vehicle value, Context context) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        preparedStatement.setString(</span>1<span style="color: #000000;">,value.getType());
+        preparedStatement.setInt(</span>2<span style="color: #000000;">,value.getPlate());
+        preparedStatement.setString(</span>3<span style="color: #000000;">,value.getColor());
+        preparedStatement.setFloat(</span>4<span style="color: #000000;">,value.getWeight());
+        </span><span style="color: #0000ff;">boolean</span> result =<span style="color: #000000;"> preparedStatement.execute();
+        System.out.println(</span>"DB saved record success &gt;&gt;&gt;&gt;&gt; "<span style="color: #000000;"> );
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;">preparedStatement.addBatch();
+        int[] updateNums = preparedStatement.executeBatch();
+        System.out.println("DB saved items &gt;&gt;&gt;&gt;&gt; " + updateNums.length);</span><span style="color: #008000;">*/</span><span style="color: #000000;">
+    }
+}</span></pre>
+</div>
+<p>以上就是保存到Mysql的方法单独实现：使用DruidDataSource来了一套JDBC标准写法。</p>
+<p>&nbsp;</p>
+<p><span style="color: #ff0000;">第五部分 运行部署</span></p>
+<p>5.1 本地运行：</p>
+<ul class=" list-paddingleft-2">
+<li>启动各linux上的zookeeper和Kafka，</li>
+<li>先运行com.biao.flink.FlinkMain，注意本地要修改下文件保存路径的String，</li>
+<li>再运行com.biao.flink.KafkaMain，即可查看文件和Mysql的写入情况：</li>
+</ul>
+<p>贴图略！略！略！可参考5.2的图。</p>
+<p>5.2 部署到Flink上运行：</p>
+<p>启动各linux上的zookeeper和Kafka，</p>
+<p>使用shadowJar插件打包jar文件，这里需要注意下build.gradle文件的编写，特别是shadowJar如何打包依赖。注意指定jar内main函数入口。</p>
+<p>Gradle命令：<code>gradle clean shadowJar</code></p>
+<p>&nbsp;然后通过web UI可以上传jar包运行，或者在flink server中使用命令行，或者还可以使用Rest API方式，我这里使用web UI上传，最后submit一下：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一14.png" alt="" width="1081" height="319" /></p>
+<p>点击plan，可以看到我们的前面代码的Flink计算逻辑数据流向图：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一15.png" alt="" /></p>
+<p>然后运行com.biao.flink.KafkaMain产生流，再去文件和Mysql查看下数据写入情况。可以验证KafkaMain每运行一次，车流有75辆，多次则为75*N辆：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一16.png" alt="" width="1279" height="247" /></p>
+<p>文件写入情况，这里以sum sink的结果output02为例：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一17.png" alt="" /></p>
+<p>Mysql写入情况：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一18.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><span style="color: #ff0000;">总结：</span></p>
+<p>Java Stream，Kafka Stream和 Flink Stream各有特点，应注意区分和理解，Java Stream侧重在对集合类数据局部处理，Kafka Stream流则可在流传输过程中做轻量级预处理，而Flink Stream则是重量级流计算框架，需依照业务需求量体裁衣。</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一19.png" alt="" /></p>
+<p><span style="color: #ff0000;">问题解决：</span></p>
+<p>1.RHEL8.0设置静态和临时主机名，主机名分为三类：静态static、个性pretty和临时transient：</p>
+<div class="cnblogs_code">
+<pre><code>[root@localhost ~<span style="color: #000000;">]# hostnamectl status
+[root@localhost </span>~]# hostnamectl set-hostname "Your Pretty HostName" --<span style="color: #000000;">pretty
+[root@localhost </span>~]# hostnamectl set-hostname host.example.com --<span style="color: #0000ff;">static</span><span style="color: #000000;">
+[root@localhost </span>~]# hostnamectl set-hostname host.example.com --<span style="color: #0000ff;">transient</span><span style="color: #000000;">
+[root@localhost </span>~]# hostnamectl</pre>
+</div>
+<pre class="custom"><code class="hljs">&nbsp;</code></pre>
+<p>2.Build后找不到jar文件，确认项目文件显示选项开启：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一20.png" alt="" /></p>
+<p>3.Springboot和shadowJar打包模式的区别：compile语句是springboot打包fatJar用的，flinkShadowJar语句是shadow打包进fatJar用的，而且shadowJar打包是将其他依赖jar拆分成类文件放入fatJar，而springboot是直接引入依赖jar。</p>
+<p>4.Flink的窗口：基于时间的tumbling time windows(翻滚时间窗口) 和 sliding time windows(滑动时间窗口)，还有基于count/session 的窗口，当然还可以自定义窗口。</p>
+<p>5.每个流元素都有三个不同的时间概念，即 processing time被处理时刻戳, event time元素自带事件时间戳 和 ingestion time进入Flink的时间戳，Flink可以通过StreamExecutionEnvironment设置按照哪个timestamp处理。</p>
+<p>6.submit任务后，出现异常：org.apache.flink.runtime.jobmanager.scheduler.NoResourceAvailableException: No pooled slot available 这是因为worker的Task Slots数量不够，可以通过加大修改conf/flink-conf.yaml的参数taskmanager.numberOfTaskSlots来满足，一般设置为cpu核心整数倍。</p>
+<p>7.mysql写入失败，检查DB：mysql中User表的网络访问权限设置，localhost表示只能本地访问，连接串中是"jdbc:mysql://192.168.1.107:3306/&hellip;"，flink运行时是从其他linux IP访问107:3306，所以要改为接受全部的 &ldquo; % &rdquo;，记得再重启mysql服务才能生效！</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一21.png" alt="" /></p>
+<p>8.文件可以写入但mysql未写入，查看日志：Caused by: com.mysql.cj.exceptions.CJCommunicationsException: Communications link failure 研究得出是windows防火墙阻止3306端口访问，新建一个入口规则可搞定：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一22.png" alt="" /></p>
+<p>9.Task Managers下面没有全部的worker节点，且Overview中Available Task Slots一直是0，即standalone集群部署失败，解决办法，此问题我研究了整整一天才解决，因为没报任何错误，且每个节点可独立启动，只能全部重装加删日志试出来的：</p>
+<p><img src="./images/流式计算（三）-Flink Stream 篇一23.png" alt="" /></p>
+<p>上述问题药方：把222 master节点上/usr/flink1.9/flink-1.9.1/log目录下文件全部删掉！再重启集群即可。</p>
+<p>10.运行集群模式时查看Running job的详细信息，很久后还一直转圈，flink的 log 日志显示：<code>java.net.NoRouteToHostException: No route to host</code>&nbsp;，请关闭linux的防火墙！</p>
+<div class="cnblogs_code">
+<pre><code>[root@server221 ~<span style="color: #000000;">]# systemctl stop firewalld
+[root@server221 </span>~]# systemctl status firewalld</pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="color: #ff0000; font-size: 18px;">个人原创文章，未经本人同意，禁止转载，否则追究法律责任！</span></p>
+<p>&nbsp;</p>
+<p>我的往期文章：</p>
+<ol class=" list-paddingleft-2">
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247484048&amp;idx=1&amp;sn=79e3a70140b4665012d3dd1de1c33cd5&amp;chksm=eb9e60ebdce9e9fd516d4a1abb6691e896e102c7157bb1e264789919c83aa20cea327600dd82&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">流式计算（二）-Kafka Stream</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247484047&amp;idx=1&amp;sn=da0f5b15cb4164529ce48584fa2151f6&amp;chksm=eb9e60f4dce9e9e2f28aaf331813cd7605fb1374d26684d9f4b3bff450f35a220cdacfac649b&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">流式计算（一）-Java8Stream</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247484023&amp;idx=1&amp;sn=ae8bd1e2309dbda69bc7a9c169a1ac38&amp;chksm=eb9e600cdce9e91a9b7b6956c0377f63fbd958894b11d267b2dbf1eba1c31da5db5586d98289&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之十六（ELK海量日志分析）</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247484018&amp;idx=1&amp;sn=9f6b55b3a009985646b5059854379617&amp;chksm=eb9e6009dce9e91f6e91a50e4165ced2ad5da9d6bd8dce5f4f8ddbe6524bdb1b1e7a1e698891&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Linux下Redis集群</a></li>
+<li><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247484012&amp;idx=1&amp;sn=b397803bc8b64c4093452c0281f4e2b8&amp;chksm=eb9e6017dce9e901dcf1604f3835c25fa4690f65f729521a401622c99e059302d9b95ca7240f&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之十五（Seata分布式事务方案TCC模式）</a></li>
+</ol>
+<pre class="custom"><code class="hljs">&nbsp;<img src="./images/流式计算（三）-Flink Stream 篇一24.png" alt="" /></code></pre>
+<p>此篇完！</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

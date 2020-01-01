@@ -1,0 +1,431 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修使用SQL计算宝宝每次吃奶的时间间隔(续)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>使用SQL计算宝宝每次吃奶的时间间隔(续)</center></div><div class='banquan'>原文出处:本文由博客园博主AlfredZhao提供。<br/>
+原文连接:https://www.cnblogs.com/jyzhao/p/12046838.html</div><br>
+    <p>本文是《<a href="https://www.cnblogs.com/jyzhao/p/12036186.html">使用SQL计算宝宝每次吃奶的时间间隔</a>》的续篇，因为我工作繁忙，时常不能及时帮助媳妇儿记录，为了让不懂数据库的媳妇儿也可以自己用手机熟练操作。我继续做了一些修正和封装：</p>
+<ul>
+<li>1.给媳妇儿的手机下载一个terminal终端软件termius，实现只需打开app就可以连接到环境；</li>
+<li>2.跟媳妇儿进一步沟通需求，按她能够接受的使用习惯来修正并封装程序，原则是尽可能的简化操作。</li>
+</ul>
+<p>先来看下改进后最终的使用效果：</p>
+<pre><code><code>--1.手机上打开termius软件，点击进入到终端，输入 h 可以看到所有命令的说明：
+[oracle@jystdrac1 ~]$ h
+**Command for Baby&#39;s feed_time:**
+Usage:
+ v                      - View Today&#39;s Result.
+ vv &lt;&#39;mmdd&#39;&gt;            - View one day&#39;s Result.
+ i                      - Insert a row using current time.
+ ii &lt;&#39;mmdd hh24:mi&#39;&gt;    - Insert a row using input time.
+ d &lt;id&gt;                 - Delete a mistake row by id. 
+ u &lt;label&gt; &lt;id&gt;         - Update a mistake row by id.
+ h                      - Help
+
+--2.输入 v 可以看到今天的喂奶时间和间隔：
+[oracle@jystdrac1 ~]$ v
+View Today&#39;s Result:
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        53 12-15 01:00 N        140       2.33
+        54 12-15 04:08 N        188       3.13
+        55 12-15 07:35 N        207       3.45
+        56 12-15 10:40 N        185       3.08
+        69 12-15 13:16 N        156        2.6
+        70 12-15 14:32 N         76       1.27
+        82 12-15 17:14 N        163       2.71
+        83 12-15 19:15 N        121       2.01
+
+8 rows selected.
+
+--3.输入 i 可以直接以当前系统时间插入一条数据，并显示插入后的结果：
+[oracle@jystdrac1 ~]$ i
+Insert a row using current time:
+
+1 row created.
+
+
+Commit complete.
+
+View Today&#39;s Result:
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        53 12-15 01:00 N        140       2.33
+        54 12-15 04:08 N        188       3.13
+        55 12-15 07:35 N        207       3.45
+        56 12-15 10:40 N        185       3.08
+        69 12-15 13:16 N        156        2.6
+        70 12-15 14:32 N         76       1.27
+        82 12-15 17:14 N        163       2.71
+        83 12-15 19:15 N        121       2.01
+        94 12-15 23:02 N        227       3.78
+
+9 rows selected.
+
+--4.输入 d &lt;id&gt; 可以删除id对应的那行记录，并显示删除后的结果：
+[oracle@jystdrac1 ~]$ d 94
+Delete a mistake row by id:
+Enter value for id: old   1: delete from t_baby where id = &amp;id
+new   1: delete from t_baby where id = 94
+
+1 row deleted.
+
+
+Commit complete.
+
+View Today&#39;s Result:
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        53 12-15 01:00 N        140       2.33
+        54 12-15 04:08 N        188       3.13
+        55 12-15 07:35 N        207       3.45
+        56 12-15 10:40 N        185       3.08
+        69 12-15 13:16 N        156        2.6
+        70 12-15 14:32 N         76       1.27
+        82 12-15 17:14 N        163       2.71
+        83 12-15 19:15 N        121       2.01
+
+8 rows selected.
+
+--5.输入 u &lt;label&gt; &lt;id&gt; 可以更新指定id的label值，比如将id=55的记录label值修改为&#39;L&#39;，代表这次喂奶量很少，不参与计算
+[oracle@jystdrac1 ~]$ u l 55
+Update a mistake row by id:
+Enter value for label: Enter value for id: old   1: update t_baby set label = upper(&#39;&amp;label&#39;) where id = &amp;id
+new   1: update t_baby set label = upper(&#39;l&#39;) where id = 55
+
+1 row updated.
+
+
+Commit complete.
+
+View Today&#39;s Result:
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        53 12-15 01:00 N        140       2.33
+        54 12-15 04:08 N        188       3.13
+        56 12-15 10:40 N        392       6.53
+        69 12-15 13:16 N        156        2.6
+        70 12-15 14:32 N         76       1.27
+        82 12-15 17:14 N        163       2.71
+        83 12-15 19:15 N        121       2.01
+
+7 rows selected.
+
+--6.输入 u &lt;label&gt; &lt;id&gt; 可以更新指定id的label值，比如将id=55的记录label值修改回&#39;N&#39;,代表这次喂奶量正常，参与计算
+[oracle@jystdrac1 ~]$ u n 55
+Update a mistake row by id:
+Enter value for label: Enter value for id: old   1: update t_baby set label = upper(&#39;&amp;label&#39;) where id = &amp;id
+new   1: update t_baby set label = upper(&#39;n&#39;) where id = 55
+
+1 row updated.
+
+
+Commit complete.
+
+View Today&#39;s Result:
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        53 12-15 01:00 N        140       2.33
+        54 12-15 04:08 N        188       3.13
+        55 12-15 07:35 N        207       3.45
+        56 12-15 10:40 N        185       3.08
+        69 12-15 13:16 N        156        2.6
+        70 12-15 14:32 N         76       1.27
+        82 12-15 17:14 N        163       2.71
+        83 12-15 19:15 N        121       2.01
+
+8 rows selected.
+
+--7.输入 ii &lt;&#39;mmdd hh24:mi&#39;&gt; 可以插入指定日期和时间
+[oracle@jystdrac1 ~]$ ii &#39;1215 23:00&#39;
+Insert a row using input time(mmdd mi:ss) eg: 1215 10:00
+Enter value for feed_time: old   1: insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;&amp;feed_time&#39;,&#39;mmdd hh24:mi&#39;))
+new   1: insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;1215 23:00&#39;,&#39;mmdd hh24:mi&#39;))
+
+1 row created.
+
+
+Commit complete.
+
+View Today&#39;s Result:
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        53 12-15 01:00 N        140       2.33
+        54 12-15 04:08 N        188       3.13
+        55 12-15 07:35 N        207       3.45
+        56 12-15 10:40 N        185       3.08
+        69 12-15 13:16 N        156        2.6
+        70 12-15 14:32 N         76       1.27
+        82 12-15 17:14 N        163       2.71
+        83 12-15 19:15 N        121       2.01
+        95 12-15 23:00 N        225       3.74
+
+9 rows selected.
+
+--8.删除id=95的这条测试记录
+[oracle@jystdrac1 ~]$ d 95
+Delete a mistake row by id:
+Enter value for id: old   1: delete from t_baby where id = &amp;id
+new   1: delete from t_baby where id = 95
+
+1 row deleted.
+
+
+Commit complete.
+
+View Today&#39;s Result:
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        53 12-15 01:00 N        140       2.33
+        54 12-15 04:08 N        188       3.13
+        55 12-15 07:35 N        207       3.45
+        56 12-15 10:40 N        185       3.08
+        69 12-15 13:16 N        156        2.6
+        70 12-15 14:32 N         76       1.27
+        82 12-15 17:14 N        163       2.71
+        83 12-15 19:15 N        121       2.01
+
+8 rows selected.
+
+--9.使用 vv &#39;mmdd&#39; 可以显示指定日期的喂奶间隔情况：
+[oracle@jystdrac1 ~]$ vv 1214
+View Today&#39;s Result:
+Enter value for feed_time: Enter value for feed_time: old   2: from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t where label &lt;&gt; &#39;L&#39;) where feed_time &gt;= to_date(&#39;&amp;feed_time&#39;,&#39;mmdd&#39;) and feed_time &lt; to_date(&#39;&amp;feed_time&#39;,&#39;mmdd&#39;) + 1
+new   2: from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t where label &lt;&gt; &#39;L&#39;) where feed_time &gt;= to_date(&#39;1214&#39;,&#39;mmdd&#39;) and feed_time &lt; to_date(&#39;1214&#39;,&#39;mmdd&#39;) + 1
+
+        ID FEED_TIME   L   LAG(min)     LAG(h)
+---------- ----------- - ---------- ----------
+        41 12-14 01:55 N        265       4.42
+        42 12-14 04:58 N        183       3.05
+        43 12-14 08:25 N        207       3.45
+        44 12-14 11:23 N        178       2.97
+        45 12-14 12:23 N         60          1
+        46 12-14 15:00 N        157       2.62
+        47 12-14 17:22 N        142       2.37
+        48 12-14 18:45 N         83       1.38
+        49 12-14 22:40 N        235       3.92
+
+9 rows selected.</code></pre>
+<p>经过一番演示，媳妇儿的反馈是非常满意的，实际她最常用的还是v和i，非常方便，其他命令偶尔使用，其实只需记住h可以获取到帮助即可。下面将本次的修正和封装过程记录一下：</p>
+<ul>
+<li><a href="#1">1.环境变量配置别名</a></li>
+<li><a href="#2">2.系统shell脚本</a></li>
+<li><a href="#3">3.底层SQL文本</a></li>
+</ul>
+<h1 id="1">1.环境变量配置别名</h1>
+<p>为了简化操作，我将环境变量设置一些别名。</p>
+<pre><code><code>[oracle@jystdrac1 ~]$ cat ~/.bash_profile 
+# 这里省略原有环境变量内容,下面为在源文件基础上追加的内容：
+# Alias for baby&#39;s feed_time:
+alias h=/home/oracle/baby_readme.sh
+alias v=/home/oracle/baby_view.sh
+alias i=/home/oracle/baby_insert.sh
+alias d=/home/oracle/baby_delete.sh
+alias u=/home/oracle/baby_update.sh
+alias ii=/home/oracle/baby_insert_diy.sh
+alias vv=/home/oracle/baby_view_diy.sh</code></pre>
+<h1 id="2">2.系统shell脚本</h1>
+<h2 id="baby_readme.sh">baby_readme.sh</h2>
+<p>vi baby_readme.sh</p>
+<pre><code><code>#!/bin/bash
+# script:baby_readme.sh
+# version:1.01
+#-------------------------------------------------------------
+echo &quot;**Command for Baby&#39;s feed_time:**&quot;
+echo &quot;Usage:&quot;
+echo &quot; v            - View Today&#39;s Result.&quot;
+echo &quot; vv &lt;&#39;mmdd&#39;&gt;      - View one day&#39;s Result.&quot;
+echo &quot; i            - Insert a row using current time.&quot;
+echo &quot; ii &lt;&#39;mmdd hh24:mi&#39;&gt;  - Insert a row using input time.&quot;
+echo &quot; d &lt;id&gt;       - Delete a mistake row by id.&quot;
+echo &quot; u &lt;label&gt; &lt;id&gt;   - Update a mistake row by id.&quot;
+echo &quot; h - Help&quot;
+#-------------------------------------------------------------</code></pre>
+<h2 id="baby_view.sh">baby_view.sh</h2>
+<p>vi baby_view.sh</p>
+<pre><code><code>#!/bin/bash
+# script:baby_view.sh
+# version:1.01
+#-------------------------------------------------------------
+sqlplus -S test/test &lt;&lt;EOF
+PROMPT View Today&#39;s Result:
+@v3
+
+EOF
+#-------------------------------------------------------------</code></pre>
+<h2 id="baby_insert.sh">baby_insert.sh</h2>
+<p>vi baby_insert.sh</p>
+<pre><code><code>#!/bin/bash
+# script:baby_insert.sh
+# version:1.01
+#-------------------------------------------------------------
+sqlplus -S test/test &lt;&lt;EOF
+PROMPT Insert a row using current time:
+@i1
+
+PROMPT View Today&#39;s Result:
+@v3
+
+EOF
+#-------------------------------------------------------------</code></pre>
+<h2 id="baby_delete.sh">baby_delete.sh</h2>
+<p>vi baby_delete.sh</p>
+<pre><code><code>#!/bin/bash
+# script:baby_delete.sh
+# version:1.01
+#-------------------------------------------------------------
+sqlplus -S test/test &lt;&lt;EOF
+PROMPT Delete a mistake row by id:
+@d1
+$1
+commit;
+
+PROMPT View Today&#39;s Result:
+@v3
+
+EOF
+#-------------------------------------------------------------</code></pre>
+<h2 id="baby_insert_diy.sh">baby_insert_diy.sh</h2>
+<p>vi baby_insert_diy.sh</p>
+<pre><code><code>#!/bin/bash
+# script:baby_insert_diy.sh
+# version:1.01
+#-------------------------------------------------------------
+sqlplus -S test/test &lt;&lt;EOF
+PROMPT Insert a row using input time(mmdd mi:ss) eg: 1215 10:00
+@i2
+$1
+commit;
+
+PROMPT View Today&#39;s Result:
+@v3
+
+EOF
+#-------------------------------------------------------------</code></pre>
+<h2 id="baby_update.sh">baby_update.sh</h2>
+<p>vi baby_update.sh</p>
+<pre><code><code>#!/bin/bash
+# script:baby_update.sh
+# version:1.01
+#-------------------------------------------------------------
+sqlplus -S test/test &lt;&lt;EOF
+PROMPT Update a mistake row by id:
+@u1
+$1
+$2
+commit;
+
+PROMPT View Today&#39;s Result:
+@v3
+
+EOF
+#-------------------------------------------------------------</code></pre>
+<h2 id="baby_view_diy.sh">baby_view_diy.sh</h2>
+<p>vi baby_view_diy.sh</p>
+<pre><code><code>#!/bin/bash
+# script:baby_view.sh
+# version:1.01
+#-------------------------------------------------------------
+sqlplus -S test/test &lt;&lt;EOF
+PROMPT View one day&#39;s Result:
+@v4
+$1
+$1
+
+EOF
+#-------------------------------------------------------------</code></pre>
+<h1 id="3">3.底层SQL文本</h1>
+<pre><code><code>--echo &quot;v - View Today&#39;s Result.&quot;
+[oracle@jystdrac1 ~]$ cat v3.sql
+SELECT
+    id,
+    to_char(feed_time, &#39;mm-dd hh24:mi&#39;) &quot;FEED_TIME&quot;,
+    label,
+    round((feed_time - l_time) * 24 * 60) &quot;LAG(min)&quot;,
+    round((feed_time - l_time) * 24, 2) &quot;LAG(h)&quot;
+FROM
+    (
+        SELECT
+            t.*,
+            LAG(feed_time) OVER(ORDER BY id) l_time
+        FROM
+            t_baby t
+        WHERE
+            label &lt;&gt; &#39;L&#39;
+    )
+WHERE
+    feed_time &gt;= trunc(sysdate)
+/
+
+-- echo &quot; vv &lt;&#39;mmdd&#39;&gt;       - View one day&#39;s Result.&quot;
+[oracle@jystdrac1 ~]$ cat v4.sql 
+SELECT
+    id,
+    to_char(feed_time, &#39;mm-dd hh24:mi&#39;) &quot;FEED_TIME&quot;,
+    label,
+    round((feed_time - l_time) * 24 * 60) &quot;LAG(min)&quot;,
+    round((feed_time - l_time) * 24, 2) &quot;LAG(h)&quot;
+FROM
+    (
+        SELECT
+            t.*,
+            LAG(feed_time) OVER(ORDER BY id) l_time
+        FROM
+            t_baby t
+        WHERE
+            label &lt;&gt; &#39;L&#39;
+    )
+WHERE
+    feed_time &gt;= TO_DATE(&#39;&amp;feed_time&#39;, &#39;mmdd&#39;)
+    AND feed_time &lt; TO_DATE(&#39;&amp;feed_time&#39;, &#39;mmdd&#39;) + 1
+/
+
+--echo &quot;i - Insert a row using current time.&quot;
+[oracle@jystdrac1 ~]$ cat i1.sql 
+insert into t_baby(id,feed_time) values(s1.nextval,sysdate)
+/
+commit
+/
+
+--echo &quot;ii - Insert a row using input time.&quot;
+[oracle@jystdrac1 ~]$ cat i2.sql 
+insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;&amp;feed_time&#39;,&#39;mmdd hh24:mi&#39;))
+/
+
+--echo &quot;d - Delete a mistake row by id. &quot;
+[oracle@jystdrac1 ~]$ cat d1.sql 
+delete from t_baby where id = &amp;id
+/
+
+--echo &quot;u - Update a mistake row by id.&quot;
+[oracle@jystdrac1 ~]$ cat u1.sql 
+update t_baby set label = upper(&#39;&amp;label&#39;) where id = &amp;id
+/</code></pre>
+<p>SQL文本独立出来也方便后续需求有变化时快速更改。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

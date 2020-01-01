@@ -1,0 +1,308 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修cookbook_类与对象' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>cookbook_类与对象</center></div><div class='banquan'>原文出处:本文由博客园博主克里夫妇提供。<br/>
+原文连接:https://www.cnblogs.com/jiaojianglong/p/11260151.html</div><br>
+    <h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">1修改实例的字符串表示</span></h2>
+<p class="ql-long-13739350"><span class="ql-author-13739350">可以通过定义__str__()和__repr__()方法来实现</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Pair:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,x,y):
+        self.x </span>=<span style="color: #000000;"> x
+        self.y </span>=<span style="color: #000000;"> y
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__str__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span><span style="color: #800000;">(%s,%s)</span><span style="color: #800000;">"</span>%<span style="color: #000000;">(self.x,self.y)
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__repr__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span><span style="color: #800000;">Pair(%s,%s)</span><span style="color: #800000;">"</span>%<span style="color: #000000;">(self.x,self.y)
+
+p </span>= Pair(2,5<span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(p)
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">p is {0!r}</span><span style="color: #800000;">"</span>.format(p))</pre>
+</div>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">对于__repr__(),标准的方法是让他产生的字符串文本能够满足eval(repr(x)) == x</span></p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">__str__()则产生一段有意义的文本</span></p>
+<p class="ql-authorBlock-13739350">&nbsp;</p>
+<h2 class="ql-long-13739350 ql-authorBlock-13739350" data-header="2"><span class="ql-author-13739350">2自定义字符串的输出格式</span></h2>
+<p class="ql-authorBlock-13739350">&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">我们想让对象通过format()函数和字符串方法来支持自定义的输出格式</span></p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">要自定义字符串的输出格式，可以在类中定义__format__()方法</span>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>_formats =<span style="color: #000000;"> {
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">ymd</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">{d.year}-{d.month}-{d.day}</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">mdy</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">{d.month}/{d.day}/{d.year}</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">dmy</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">{d.day}/{d.month}/{d.year}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+}
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Date:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,year,month,day):
+        self.year </span>=<span style="color: #000000;"> year
+        self.month </span>=<span style="color: #000000;"> month
+        self.day </span>=<span style="color: #000000;"> day
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__format__</span><span style="color: #000000;">(self,code):
+        </span><span style="color: #0000ff;">if</span> code == <span style="color: #800000;">""</span><span style="color: #000000;">:
+            code </span>= <span style="color: #800000;">"</span><span style="color: #800000;">ymd</span><span style="color: #800000;">"</span><span style="color: #000000;">
+        fmt </span>=<span style="color: #000000;"> _formats[code]
+        </span><span style="color: #0000ff;">return</span> fmt.format(d =<span style="color: #000000;"> self)
+
+d </span>= Date(2018,9,26<span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(format(d))
+</span><span style="color: #0000ff;">print</span>(format(d,<span style="color: #800000;">"</span><span style="color: #800000;">dmy</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">print</span>(format(d,<span style="color: #800000;">"</span><span style="color: #800000;">mdy</span><span style="color: #800000;">"</span>))</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">3让对象支持上下文管理协议</span></h2>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">我们想让对象支持上下文管理协议，即可以通过with语句触发。</span></p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">想让对象支持上下文管理协议，对象需实现__enter__()和__exit__()方法，比如实现网络连接的类。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span><span style="color: #000000;"> socket,AF_INET,SOCK_STREAM
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> LazyConnection:
+    
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self,address,family = AF_INET, type =<span style="color: #000000;"> SOCK_STREAM):
+        self.address </span>=<span style="color: #000000;"> address
+        self.family </span>=<span style="color: #000000;"> family
+        self.type </span>=<span style="color: #000000;"> type
+        self.sock </span>=<span style="color: #000000;"> None
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__enter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">if</span> self.sock <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">raise</span> RuntimeError(<span style="color: #800000;">"</span><span style="color: #800000;">Already connected</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self.sock </span>=<span style="color: #000000;"> socket(self.family,self.type)
+        self.sock.connect(self.address)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.sock
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__exit__</span><span style="color: #000000;">(self, exc_type, exc_val, exc_tb):
+        self.sock.close()
+        self.sock </span>=<span style="color: #000000;"> None
+
+conn </span>= LazyConnection(<span style="color: #800000;">"</span><span style="color: #800000;">www.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+with conn as s:
+    s.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">hahhahah</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">4当创建大量实例时如何节省内存</span></h2>
+<p class="ql-long-13739350"><span class="ql-author-13739350">当我们的程序需要创建大量的实例（百万级），这样会占用大量的内存。</span></p>
+<p class="ql-long-13739350 ql-authorBlock-13739350"><span class="ql-author-13739350">#对于那些主要用作简单数据结构的类，通常可以在类定义中增加__slot__属性，以此来大量减少对内存的使用。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Date:
+    </span><span style="color: #800080;">__slots__</span> = [<span style="color: #800000;">"</span><span style="color: #800000;">year</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">month</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">day</span><span style="color: #800000;">"</span><span style="color: #000000;">]
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,year,month,day):
+        self.year </span>=<span style="color: #000000;"> year
+        self.month </span>=<span style="color: #000000;"> month
+        self.day </span>= day</pre>
+</div>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">当定义了__slots__属性时，python会采用一种更加紧凑的内部表示，会将实例的属性添加到一个小型数组里，不再为每个实例创建__dict__。</span></p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">副作用是我们不能为实例添加新的属性。是一种优化手段</span></p>
+<p>&nbsp;</p>
+<h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">5将名称封装到类中</span></h2>
+<p class="ql-long-13739350"><span class="ql-author-13739350">在python中，以单下划线_开头的属性被认为是一种私有属性</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> A:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self._name </span>= <span style="color: #800000;">"</span><span style="color: #800000;">jiaojianglong</span><span style="color: #800000;">"</span><span style="color: #000000;">
+        self.age </span>= 24
+
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> _internal_method(self):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">i am a internal method</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+
+a </span>=<span style="color: #000000;"> A()
+</span><span style="color: #0000ff;">print</span>(a._name) <span style="color: #008000;">#</span><span style="color: #008000;">jiaojianglong</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">python并不会阻止访问属性，但编译器不会做提示。如果强行访问会被认为是粗鲁的。</span></p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">在类的定义中也见到过双下划线__开头的名称，以双下划线开头的名称会导致出现名称重组的行为</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> B:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        self.</span><span style="color: #800080;">__name</span> = <span style="color: #800000;">"</span><span style="color: #800000;">jiaojianglong</span><span style="color: #800000;">"</span><span style="color: #000000;">
+
+b </span>=<span style="color: #000000;"> B()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> print(b.__name)#AttributeError: 'B' object has no attribute '__name'</span>
+<span style="color: #0000ff;">print</span>(b._B__name)<span style="color: #008000;">#</span><span style="color: #008000;">jiaojianglong</span></pre>
+</div>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">这样的行为是为了继承，以双下划线开头的属性不会被子类通过继承而覆盖。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> C(B):
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+        super().</span><span style="color: #800080;">__init__</span><span style="color: #000000;">()
+
+c </span>=<span style="color: #000000;"> C()
+</span><span style="color: #0000ff;">print</span>(c._B__name)<span style="color: #008000;">#</span><span style="color: #008000;">jiaojianglong</span></pre>
+</div>
+<p>&nbsp;</p>
+<p class="ql-authorBlock-13739350">&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">大部分情况下我们使用单下划线，涉及到子类继承覆盖的问题时使用双下划线</span></p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">当我们想定义一个变量，但是名称可能会与保留字段冲突，基于此，我们在名称后加一个单下划线以示区别。lambda_</span></p>
+<p>&nbsp;</p>
+<h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">6创建可管理的属性</span></h2>
+<p class="ql-long-13739350"><span class="ql-author-13739350">#在对实例的获取和设定上，我们希望增加一些额外的处理过程。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Person:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,first_name):
+        self.first_name </span>=<span style="color: #000000;"> first_name
+
+    @property
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> first_name(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self._first_name
+
+    @first_name.setter
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> first_name(self,value):
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> isinstance(value,str):
+            </span><span style="color: #0000ff;">raise</span> TypeError(<span style="color: #800000;">"</span><span style="color: #800000;">Excepted a string</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self._first_name </span>=<span style="color: #000000;"> value
+
+
+
+p </span>= Person(<span style="color: #800000;">"</span><span style="color: #800000;">jiao</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(p.first_name)</pre>
+</div>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">在创建实例时，__inti__（）中我们将name赋值到self.first_name,实际会调用setter方法，所以name实际还是储存在self._first_name中</span></p>
+<p>&nbsp;</p>
+<h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">7调用父类中的方法</span></h2>
+<p class="ql-long-13739350"><span class="ql-author-13739350">#我们想调用一个父类中的方法，这个方法在子类中已经被覆盖了。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> A:
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> spam(self):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">A.spam</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> B(A):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> spam(self):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">B.spam</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        super().spam()
+
+b </span>= B().spam()<span style="color: #008000;">#</span><span style="color: #008000;">B.spam,A.spam</span>
+
+<span style="color: #0000ff;">print</span>(B.<span style="color: #800080;">__mro__</span>)<span style="color: #008000;">#</span><span style="color: #008000;">(&lt;class '__main__.B'&gt;, &lt;class '__main__.A'&gt;, &lt;class 'object'&gt;)</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">争对每一个类，python都会计算出一个称为方法解析顺序（MRO）的列表，MOR列表只是简单的对所有的基类进行线性排列。</span></p>
+<p class="ql-authorBlock-13739350">&nbsp;</p>
+<h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">8在子类中扩展属性</span></h2>
+<p class="ql-long-13739350"><span class="ql-author-13739350">我们想在子类中扩展某个属性的功能，而这个属性是在父类中定义的</span></p>
+<p>&nbsp;</p>
+<h2 class="ql-long-13739350" data-header="2"><span class="ql-author-13739350">9创建一种新形式的类属性或实例属性</span></h2>
+<p class="ql-long-13739350"><span class="ql-author-13739350">如果想定义一种新形式的实例属性，可以以描述符的形式定义其功能。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Integer():
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,name):
+        self.name </span>=<span style="color: #000000;"> name
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__get__</span><span style="color: #000000;">(self, instance, owner):
+        </span><span style="color: #0000ff;">if</span> instance <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span> instance.<span style="color: #800080;">__dict__</span><span style="color: #000000;">[self.name]
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__set__</span><span style="color: #000000;">(self, instance, value):
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> isinstance(value,int):
+            </span><span style="color: #0000ff;">raise</span> TypeError(<span style="color: #800000;">"</span><span style="color: #800000;">Expected an int</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        instance.</span><span style="color: #800080;">__dict__</span>[self.name] =<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__delete__</span><span style="color: #000000;">(self, instance):
+        </span><span style="color: #0000ff;">del</span> instance.<span style="color: #800080;">__dict__</span><span style="color: #000000;">[self.name]
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Point:
+    x </span>= Integer(<span style="color: #800000;">"</span><span style="color: #800000;">x</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    y </span>= Integer(<span style="color: #800000;">"</span><span style="color: #800000;">y</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,x,y):
+        self.x </span>=<span style="color: #000000;"> x
+        self.y </span>=<span style="color: #000000;"> y
+
+p </span>= Point(2,3<span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(p.x)<span style="color: #008000;">#</span><span style="color: #008000;">2</span>
+p.y = 5
+<span style="color: #0000ff;">print</span>(p.y)<span style="color: #008000;">#</span><span style="color: #008000;">5</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> p.x = "a"#TypeError: Expected an int</span>
+<span style="color: #0000ff;">print</span>(Point.x)<span style="color: #008000;">#</span><span style="color: #008000;">&lt;__main__.Integer object at 0x00000141E2ABB5F8&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">__get__()方法看起来有些复杂的原因是实例变量和类变量的区别，如果是类变量则简单的返回描述符本身，如果是实例变量返回定义的值</span></p>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">关于描述符，常容易困惑的地方就是他们只能在类的层次上定义，不能根据实例来产生，下面的代码是无法工作的</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Point:
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,x,y):
+        self.x </span>= Integer(<span style="color: #800000;">"</span><span style="color: #800000;">x</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self.y </span>= Integer(<span style="color: #800000;">"</span><span style="color: #800000;">y</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        self.x </span>=<span style="color: #000000;"> x
+        self.y </span>=<span style="color: #000000;"> y
+
+p </span>= Point(2,<span style="color: #800000;">"</span><span style="color: #800000;">c</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(p.x)<span style="color: #008000;">#</span><span style="color: #008000;">2</span>
+<span style="color: #0000ff;">print</span>(p.y)<span style="color: #008000;">#</span><span style="color: #008000;">c</span>
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Typed:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,name,expected_type):
+        self.name </span>=<span style="color: #000000;"> name
+        self.expected_type </span>=<span style="color: #000000;"> expected_type
+
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__get__</span><span style="color: #000000;">(self, instance, owner):
+        </span><span style="color: #0000ff;">if</span> instance <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span> instance.<span style="color: #800080;">__dict__</span><span style="color: #000000;">[self.name]
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__set__</span><span style="color: #000000;">(self, instance, value):
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> isinstance(value,self.expected_type):
+            </span><span style="color: #0000ff;">raise</span> TypeError(<span style="color: #800000;">"</span><span style="color: #800000;">Expected %s</span><span style="color: #800000;">"</span>%<span style="color: #000000;">self.expected_type)
+        instance.</span><span style="color: #800080;">__dict__</span>[self.name] =<span style="color: #000000;"> value
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__delete__</span><span style="color: #000000;">(self, instance):
+        </span><span style="color: #0000ff;">del</span> instance.<span style="color: #800080;">__dict__</span><span style="color: #000000;">[self.name]
+
+</span><span style="color: #0000ff;">def</span> typeassert(**<span style="color: #000000;">kwargs):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> decorate(cls):
+        </span><span style="color: #0000ff;">for</span> name,expected_type <span style="color: #0000ff;">in</span><span style="color: #000000;"> kwargs.items():
+            setattr(cls,name,Typed(name,expected_type))
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> cls
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> decorate
+
+@typeassert(name</span>=str,shares = int,price=<span style="color: #000000;">float)
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Stock:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,name,shares,price):
+        self.name </span>=<span style="color: #000000;"> name
+        self.shares </span>=<span style="color: #000000;"> shares
+        self.price </span>= price</pre>
+</div>
+<p>&nbsp;</p>
+<p class="ql-long-13739350"><span class="ql-author-13739350">对于少量的定制还是使用property简单些，如果是大量的定制则使用描述符要简单些</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

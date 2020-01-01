@@ -1,0 +1,151 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修ThreadLocal的进化——InheritableThreadLocal' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>ThreadLocal的进化——InheritableThreadLocal</center></div><div class='banquan'>原文出处:本文由博客园博主jianjianqq提供。<br/>
+原文连接:https://www.cnblogs.com/death00/p/12037594.html</div><br>
+    <p>之前有介绍过 ThreadLocal，JDK 后来针对此做了一个升级版本 InheritableThreadLocal，今天就来好好介绍下。<br />
+<!-- more --></p>
+<h2 id="为什么要升级">为什么要升级</h2>
+<p>首先我们来想想，为什么要升级？这就要说起 ThreadLocal 的功能了。</p>
+<p>我们知道，ThreadLocal 设计初衷是为了在多线程环境下，针对每一个线程能有一个自己的副本，这样可以在一定程度上解决多线程并发修改的问题。但是，我们可以在此基础上做一个拓展，比如<code>context</code>，我们可以利用 ThreadLocal 针对每一个线程都有一个自己的上下文，一般都是写成<code>ThreadLocal&lt;Context&gt;</code>，这样在这个线程上做的所有修改都可以被大家利用到。</p>
+<p>此时设想一下，假如我们新建一个子线程，那这个子线程可以获取到父线程的<code>context</code>吗？理论上希望可以达成这样的效果，实际上呢？让我们看看：</p>
+<pre><code><code>public class ThreadLocalContext {
+
+    private static ThreadLocal&lt;Context&gt; context = new ThreadLocal&lt;&gt;();
+
+    static class Context {
+
+        String name;
+
+        int value;
+    }
+
+    public static void main(String[] args) {
+        Context context = new Context();
+        context.name = &quot;mainName&quot;;
+        context.value = 10;
+        ThreadLocalContext.context.set(context);
+
+        Thread childThread = new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        Context childContext = ThreadLocalContext.context.get();
+                        System.out.println(childContext.name);
+                        System.out.println(childContext.value);
+                    }
+                }
+        );
+        childThread.start();
+    }
+}</code></pre>
+<p>运行 main 方法之后，直接在子线程中抛错，这样确实符合我们的预期，但如果我们想达到<code>子线程可以获取到父线程的 context</code>这样的效果该如何做呢？</p>
+<p>首先想到的就是在生成子线程的时候，将父线程 ThreadLocal 里的值传给子线程。这样做虽然能达到效果，但过程比较繁杂，且代码侵入性强。</p>
+<p>这个时候就可以用<code>InheritableThreadLocal</code>了。</p>
+<h2 id="什么是-inheritablethreadlocal">什么是 InheritableThreadLocal</h2>
+<h3 id="看源码">看源码</h3>
+<p>先让我们看看它的源码，大家不要怕，它的源码很少：</p>
+<pre><code><code>public class InheritableThreadLocal&lt;T&gt; extends ThreadLocal&lt;T&gt; {
+
+    protected T childValue(T parentValue) {
+        return parentValue;
+    }
+
+        ThreadLocalMap getMap(Thread t) {
+       return t.inheritableThreadLocals;
+    }
+
+    void createMap(Thread t, T firstValue) {
+        t.inheritableThreadLocals = new ThreadLocalMap(this, firstValue);
+    }
+}</code></pre>
+<p>首先它继承自 ThreadLocal，那么它其实就是 ThreadLocal 的一个拓展版本，接下来就是这三个方法，其实这三个方法在 ThreadLocal 都是有的，我们来看看：</p>
+<pre><code><code>    T childValue(T parentValue) {
+        throw new UnsupportedOperationException();
+    }
+
+    ThreadLocalMap getMap(Thread t) {
+        return t.threadLocals;
+    }
+
+    void createMap(Thread t, T firstValue) {
+        t.threadLocals = new ThreadLocalMap(this, firstValue);
+    }</code></pre>
+<p>除了<code>childValue</code>方法在 ThreadLocal 中是抛出异常的，其余两个方法在两个类中都几乎是一样，只是针对的对象不同而已，但<code>threadLocals</code>和<code>inheritableThreadLocals</code>都是<code>ThreadLocal.ThreadLocalMap</code>类型，这个在之前的文章中有说过，就是一个 key 为<code>弱引用</code>的 Entry，这个倒不是重点。</p>
+<p>我们再来看看 inheritableThreadLocals 是在何时被初始化的，从源码可以得知：</p>
+<pre><code><code>    private void init(ThreadGroup g, Runnable target, String name,
+                      long stackSize, AccessControlContext acc) {
+                // 省略无关代码
+                ...
+                Thread parent = currentThread();
+                ...
+                // 省略无关代码
+                ...
+        if (parent.inheritableThreadLocals != null)
+            this.inheritableThreadLocals =
+                ThreadLocal.createInheritedMap(parent.inheritableThreadLocals);
+                ...
+        }</code></pre>
+<p>当我们通过父线程调用 Thread 的构造方法生成一个子线程时，其构造方法最终会调用这个 init 方法。从这儿可以看出， inheritableThreadLocals 是来自于父线程的 inheritableThreadLocals，那这样也就解释了为什么 inheritableThreadLocals 支持在子线程中使用父线程中存储的变量。</p>
+<h3 id="如何使用">如何使用</h3>
+<p>让我们还是回到上文提到的 context 的例子，用 InheritableThreadLocal 进行改造：</p>
+<pre><code><code>public class ThreadLocalContext {
+
+    private static InheritableThreadLocal&lt;Context&gt; context = new InheritableThreadLocal&lt;&gt;();
+
+    static class Context {
+
+        String name;
+
+        int value;
+    }
+
+    public static void main(String[] args) {
+        Context context = new Context();
+        context.name = &quot;mainName&quot;;
+        context.value = 10;
+        ThreadLocalContext.context.set(context);
+
+        Thread childThread = new Thread(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        Context childContext = ThreadLocalContext.context.get();
+                        System.out.println(childContext.name);
+                        System.out.println(childContext.value);
+                    }
+                }
+        );
+        childThread.start();
+    }
+}</code></pre>
+<p>运行后，不仅没有抛出异常，而且在子线程中输出了父线程设置好的值。皆大欢喜！</p>
+<h2 id="总结">总结</h2>
+<p>今天分享了 InheritableThreadLocal，主要是因为周三在携程的分享会上听到了别人谈了这方面的分享，主讲人讲了一个更加普遍的问题，如果我们用线程池提交任务的话，线程池中的线程在执行任务时，如何能够获得提交任务的线程的 context，这时就要用到阿里的开源组件 TTL，我会在之后进行介绍。</p>
+<p>加入携程也有1个月了，虽然感受到大公司有不少的弊端，比如沟通难等，但也有不少的优点，比如技术分享会，虽然也是忙里偷闲去参加的，但有了更多和技术相关的可以学习和交流的机会，也挺好的。</p>
+<p>有兴趣的话可以访问我的博客或者关注我的公众号、头条号，说不定会有意外的惊喜。</p>
+<p><a href="https://death00.github.io/" class="uri">https://death00.github.io/</a></p>
+<p>公众号：健程之道</p>
+<p><img src="./images/ThreadLocal的进化——InheritableThreadLocal0.png" /></p>
+<p><img src="./images/ThreadLocal的进化——InheritableThreadLocal1.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,134 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修年会抽奖程序，开箱即用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>年会抽奖程序，开箱即用</center></div><div class='banquan'>原文出处:本文由博客园博主微人类提供。<br/>
+原文连接:https://www.cnblogs.com/liliangel/p/12079759.html</div><br>
+    <blockquote>
+<p>年底降至，各类年会都需用到抽奖，最近刚好写了一个抽奖程序，总结一下，也为了方便日后温故，也可给诸位一个开箱即用的抽奖demo参考</p>
+</blockquote>
+<h2 id="demo演示链接">demo演示链接</h2>
+<p>先睹为快，<a href="https://www.helijun.com.cn/demo/20191215/lottery/#/lottery-table">传送门</a></p>
+<h2 id="完整代码地址">完整代码地址</h2>
+<p><a href="https://github.com/helijun/lottery">传送门</a></p>
+<h2 id="流程图">流程图</h2>
+<p><img src="./images/年会抽奖程序，开箱即用0.png" alt="image" /></p>
+<h2 id="说明">说明</h2>
+<ol>
+<li>公平抽奖，没有暗箱操作，代码通过功能测试、压测，经过多人review，可放心开箱即用。</li>
+<li>这个抽奖程序是上周公司抽奖实际使用的，但是代码我隐去了跟公司相关的信息，所以UI上效果基本没有，但只要稍作修改，如设计一张背景图即可。</li>
+<li>分辨率1920*1080效果最佳，但需考虑实际使用地方的屏幕设备</li>
+<li>有抽奖中、中奖两个音乐，需要连接音频效果更佳</li>
+<li>奖品信息可以配置，一次抽奖可以分若干小次进行，这里抽奖暂时只按1桌/1次来，原因：删除/放回这里需要优化一下</li>
+<li>中奖后会将中奖人名单以及奖品信息写入中奖记录表，有页面可查看，方便后面兑奖</li>
+<li>暂时只放出抽桌号的代码，其实将桌号的图片换成员工头像效果会更好，原还有一个签到页面，可签到的人提前录入了user表，只有签到的人才在奖池中，这里还有一个nestjs写的后台，代码暂时没有放出来，可以私聊沟通。流程可以参考<br />
+<img src="./images/年会抽奖程序，开箱即用1.png" alt="image" /></li>
+</ol>
+<h2 id="核心代码">核心代码</h2>
+<p>关键节点有相应注释，请仔细阅读，欢迎指正不足</p>
+<pre><code><code>//生成从minNum到maxNum的随机数
+randomNum(minNum, maxNum){
+    return parseInt(Math.random()* (maxNum - minNum + 1) + minNum); 
+},
+
+//奖头像动起来
+doMove(start, end) {
+    console.log(&#39;start, end&#39;, start, end );
+
+    this.setIntervalFun = setInterval(() =&gt; {
+        for(let i = start; i &lt; end; i ++ ) {
+            this.$set(this.currentPrizeUsers, i, this.keepNoRepeat(this.currentPrizeUsers, this.moveUsers));
+        }
+    }, 80) 
+},
+
+//保证数字不重复
+keepNoRepeat(currentPrizeUsers, userNoPrize) {
+  let user = userNoPrize[this.randomNum(0, userNoPrize.length)];
+
+  //由于分多小次抽奖，抽奖完成后奖池人数才变化，所以可能存在取值越界
+  if(!user) {
+    return this.keepNoRepeat(currentPrizeUsers, userNoPrize);
+  }
+  if(currentPrizeUsers.filter(item =&gt; item.userid == user.userid).length &gt; 0) {
+    return this.keepNoRepeat(currentPrizeUsers, userNoPrize);
+  }else {
+    return user;
+  }
+},
+
+//停/继续/完成点击
+handlePrizeClick: throttle(function() {
+    //单次抽奖的最后一小次暂停
+    if(this.movePrizeNum == this.currentPrizeInfo.count) {
+        this.choujiangId.pause();
+        this.zhongjiangId.play();
+        clearInterval(this.setIntervalFun);
+        this.movePrizeStatus = 2;
+        this.movePrizeNum += 1;
+        this.doPrize(this.currentPrizeUsers.filter(item =&gt; item.userid).map(item =&gt; item.userid).join(&#39;,&#39;));
+        return;
+    }
+
+    if(this.movePrizeStatus == 2) {//显示状态-完成抽奖
+        this.choujiangId.pause();
+        this.zhongjiangId.pause();
+        this.dialogTableVisible = false;
+        this.movePrizeStatus = 0;
+    }else if(this.movePrizeStatus == 3) {//再次启动
+        this.choujiangId.play();
+        this.zhongjiangId.pause();
+        this.movePrizeStatus = 1;
+        this.doMove(this.movePrizeNum * this.currentPrizeInfo.everytime, this.currentPrizeInfo.everytime * (this.movePrizeNum + 1) );
+        this.movePrizeNum += 1;
+    }else if(this.movePrizeStatus == 1) {//暂停
+        this.choujiangId.pause();
+        this.zhongjiangId.play();
+        clearInterval(this.setIntervalFun);
+        this.movePrizeStatus = 3;
+        this.doPrize(this.currentPrizeUsers.filter(item =&gt; item.userid).map(item =&gt; item.userid).join(&#39;,&#39;));
+    }
+}, 1000),
+
+//洗牌
+randomUser() {
+    let randomUser = setInterval(() =&gt; {
+        this.moveUsers = this.moveUsers.sort((a, b) =&gt; Math.random() &gt; .5 ? -1 : 1);
+    }, 100)
+    setTimeout(() =&gt; {
+        clearInterval(randomUser);
+    }, 2000);
+}</code></pre>
+<h2 id="迭代思路不足之处">迭代思路（不足之处）</h2>
+<ol>
+<li>配置奖品信息应更丰富，单独做一个后台配置页面，支持配置奖品图片、抽奖个数、次数、音乐等等</li>
+<li>将奖品配置信息用数据表管理，而不是json</li>
+<li>抽奖历史记录应可以回看，可以删除（作废），同时删除中奖记录表</li>
+<li>如果奖池人数足够多（1w人以上），可能有性能问题，前端循环可以持续优化</li>
+<li>添加登录/接口权限控制</li>
+</ol>
+<h2 id="后续考虑">后续考虑</h2>
+<ol>
+<li>空格键按暂停可能会更好操作，但是声控呢？</li>
+<li>洗牌效果做得更炫酷一些</li>
+</ol>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

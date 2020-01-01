@@ -1,0 +1,131 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！</center></div><div class='banquan'>原文出处:本文由博客园博主北京-宏哥提供。<br/>
+原文连接:https://www.cnblogs.com/du-hong/p/12095160.html</div><br>
+    <h3>1. 简介</h3>
+<p>　　截止到上一篇文章为止，框架基本完全搭建完成。那么今天我们要做什么呢？？？？聪明如你的小伙伴或者是童鞋一定已经猜到了，都测试完了，当然是要生成一份高端大气上档次的测试报告了。没错的，今天宏哥就带领你们将这部分内容也集成到这个框架中。本文来介绍如何生成自动化测试报告，前面文章尾部提到了利用HTMLTestRunner.py来生成自动化测试报告。关于HTMLTestRunner不过多介绍，只需要知道是一个能生成一个HTML格式的网页报告就可以，其他的如果你特别感兴趣可以自己去搜索查询资料。我们需要在宏哥前边介绍的自动化框架里面继承一个报告输出，直接来看看效果。</p>
+<h3>2. 测试报告效果</h3>
+<h4>2.1 测试报告文件</h4>
+<p>　　我们从下图中，可以清楚地看到在test_report文件夹下生成的测试报告</p>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！0.png" alt="" /></p>
+<h4>2.2 浏览器预览效果</h4>
+<p>　　因为生成的是.html文件，所以这里用浏览器打开我们看一下效果如下图：</p>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！1.png" alt="" /></p>
+<h4>2.3 实现</h4>
+<p>　　这里我们报告输出代码写到了，负责执行测试套件TestRunner.py这个文件。相关代码如下：</p>
+<p><strong>TestRunner.py</strong></p>
+<h5>2.3.1 代码实现：</h5>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！2.png" alt="" /></p>
+<h5>2.3.2 参考代码：</h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-25
+@author: 北京-宏哥   QQ交流群：705269076
+Project: 《一头扎进》系列之Python+Selenium自动化测试框架实战篇7 - 年底了还没升职加薪，年终奖全靠它了！！！
+</span><span style="color: #800000;">'''</span>
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">from</span> automation_framework_demo.testsuits <span style="color: #0000ff;">import</span><span style="color: #000000;"> HTMLTestReportCN
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> unittest
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> automation_framework_demo.framework.SendEmail <span style="color: #0000ff;">import</span><span style="color: #000000;"> SendMail
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置报告文件保存路径</span>
+report_path = os.path.dirname(os.path.abspath(<span style="color: #800000;">'</span><span style="color: #800000;">.</span><span style="color: #800000;">'</span>)) + <span style="color: #800000;">'</span><span style="color: #800000;">/test_report/</span><span style="color: #800000;">'</span>
+
+<span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">report_path</span><span style="color: #800000;">'</span>+<span style="color: #000000;"> report_path)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取系统当前时间</span>
+now = time.strftime(<span style="color: #800000;">"</span><span style="color: #800000;">%Y-%m-%d-%H_%M_%S</span><span style="color: #800000;">"</span><span style="color: #000000;">, time.localtime(time.time()))
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置报告名称格式</span>
+HtmlFile = report_path + now + <span style="color: #800000;">"</span><span style="color: #800000;">HTMLtemplate.html</span><span style="color: #800000;">"</span>
+<span style="color: #008000;">#</span><span style="color: #008000;">fp = file(HtmlFile, "wb")</span>
+fp = open(HtmlFile, <span style="color: #800000;">"</span><span style="color: #800000;">wb</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">用例路径</span>
+case_path = os.path.join(os.getcwd(), <span style="color: #800000;">''</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">case_path</span><span style="color: #800000;">'</span><span style="color: #000000;">,case_path)
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 构建suite</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> suite = unittest.TestLoader().discover(case_path, "test_baidu_search.py", top_level_dir=None)</span>
+suite = unittest.TestLoader().discover(case_path, <span style="color: #800000;">"</span><span style="color: #800000;">baidu_search1.py</span><span style="color: #800000;">"</span>, top_level_dir=<span style="color: #000000;">None)
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">初始化一个HTMLTestRunner实例对象，用来生成报告</span>
+    runner = HTMLTestReportCN.HTMLTestRunner(stream=fp, title=u<span style="color: #800000;">"</span><span style="color: #800000;">Python+Selenium自动化测试框架实战篇7项目演示测试报告</span><span style="color: #800000;">"</span>, description=u<span style="color: #800000;">"</span><span style="color: #800000;">用例测试情况</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">开始执行测试套件</span>
+<span style="color: #000000;">    runner.run(suite)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> runner = unittest.TextTestRunner()</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> runner.run(suite)</span>
+    fp.close()</pre>
+</div>
+<h5>2.3.3 运行结果：</h5>
+<p>　　运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！3.png" alt="" /></p>
+<h5>2.3.4 测试报告预览</h5>
+<p>　　测试报告用浏览器打开截图，在你项目文件路径下，找到这个HTML的报告，用本地浏览器打开。</p>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！4.png" alt="" /></p>
+<p>　　如何生成自动化测试报告就介绍到这里。</p>
+<h3>3. 测试报告模板插件</h3>
+<p>　　宏哥这里为了方便，直接将测试报告的模板插件，直接放在了testsuits的文件下，如图：</p>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！5.png" alt="" /></p>
+<p>　　如果有洁癖的小伙伴或者童鞋们，可以自己建一个文件夹专门来存储这个模板插件也可以的，但是不要忘记了最重要的一条就是将其导入，否则可能会报找不到的错误哦！</p>
+<h3>4. 导入测试报告模板插件</h3>
+<p>　　如何导入？其实很简单的，就像python导入其他模块一样。例如宏哥这里的导入方法如下：</p>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！6.png" alt="" /></p>
+<p>　　宏哥总结如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span>  文件夹路径  <span style="color: #0000ff;">import</span> 插件名字.py</pre>
+</div>
+<h3>5. 执行所有测试用例</h3>
+<p>　　除了上一篇那种找到文件夹，执行所有测试用例，我们还有别的方法执行所有测试用例吗？当然有，但是对测试用例的名字的命名有要求，其实也不是硬性要求，只不过是为了后边我们的正则表达式好写，这里命名就规范一些。</p>
+<h4>5.1 命名规则：</h4>
+<p>　　所有测试用例的名字都以test开头，例如：test_login.py。</p>
+<h4>5.2 正则表达式：</h4>
+<p>　　正则表达式：test*.py</p>
+<h4>5.3 代码实现：</h4>
+<p><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！7.png" alt="" /></p>
+<h4>5.4 参考代码：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 构建suite</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> suite = unittest.TestLoader().discover(case_path, "test_baidu_search.py", top_level_dir=None)</span>
+suite = unittest.TestLoader().discover(case_path, <span style="color: #800000;">"</span><span style="color: #800000;">test*.py</span><span style="color: #800000;">"</span>, top_level_dir=None)</pre>
+</div>
+<h3>6. 小结</h3>
+<p>　　好了，今天的分享就到这里吧！！！谢谢各位的耐心阅读。有问题加群交流讨论！！！</p>
+<p><span style="font-size: 18px;"><strong><span style="color: #00ff00;">哎呀！！！忘记了，最后祝大家圣诞节快乐。。<span class="op_dict_text2"><span class="op_dict_text2">Merry Christmas！！！<br /></span></span></span></strong></span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p style="text-align: center;"><span style="font-size: 14pt;">您的肯定就是我进步的动力。如果你感觉还不错，就请鼓励一下吧！记得随手点波<strong>&nbsp;<span style="background-color: #ffffff; color: #ff0000; font-size: 18pt;">&nbsp;推荐</span>&nbsp;&nbsp;</strong>不要忘记哦！！！</span></p>
+<p style="text-align: center;"><span style="font-size: 14pt;">别忘了点&nbsp;<strong><span style="font-size: 18pt; color: #00ff00;">推荐</span>&nbsp;</strong>留下您来过的痕迹</span></p>
+<p style="text-align: center;"><span style="font-size: 14pt;">&nbsp;</span></p>
+<p style="text-align: center;"><span style="font-size: 14pt;"><img src="./images/《一头扎进》系列之Python+Selenium框架实战篇7 - 年底升职加薪，年终奖全靠它！8.png" alt="" /></span></p>
+<p style="text-align: center;">&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

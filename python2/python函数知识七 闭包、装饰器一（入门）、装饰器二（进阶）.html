@@ -1,0 +1,203 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python函数知识七 闭包、装饰器一（入门）、装饰器二（进阶）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python函数知识七 闭包、装饰器一（入门）、装饰器二（进阶）</center></div><div class='banquan'>原文出处:本文由博客园博主OnlyWang提供。<br/>
+原文连接:https://www.cnblogs.com/Onlywang/p/11241567.html</div><br>
+    <h2 id="闭包">21.闭包</h2>
+<ol>
+<li>闭包：在嵌套函数内，使用非全局变量(且不使用本层变量)</li>
+<li>闭包的作用：1.保证数据的安全性（纯洁度）。2.装饰器使用</li>
+<li>.__closure__判断是否是闭包</li>
+</ol>
+<pre><code><code>def func():
+    a = 1 
+    def foo():
+        print(a)
+    return foo
+ret = func()
+ret()
+#例子
+def func():
+    avg_lst = []
+    def foo(pirce):
+        avg_lst.append(pirce)
+        avg = sum(avg_lst) / len(avg_lst)
+        return avg
+    return foo
+ret = func()
+print(ret(1500))
+print(ret(1600))
+print(ret.__closure__)#结果：(&lt;cell at 0x000002095400B558: list object at 0x00000209540A5B48&gt;,)证明是闭包
+print(func.__closure__)#结果：None,不是闭包
+
+print(ret.__code__.co_freevars)#获取的是自由变量
+print(ret.__code__.co_varnames)#获取的是局部变量</code></pre>
+<h2 id="装饰器一入门">22.装饰器一（入门）</h2>
+<h5 id="一个装饰器装饰多个函数">1.一个装饰器装饰多个函数</h5>
+<p>开放封闭原则：扩展是开放的（增加新功能），源码是封闭的（修改已经实现的功能）</p>
+<p>作用：在不改变源代码及调用方式的基础下额外增加新功能。</p>
+<p>装饰器：用来装饰的工具</p>
+<h5 id="版一">2.版一：</h5>
+<pre><code><code>import time
+start_time = time.time
+def func():
+    time.sleep(2)#睡眠s模拟网络延时
+    print(&quot;我要飞&quot;)
+func()   
+print(time.time - start_time)
+#改变了源代码</code></pre>
+<h5 id="版二">3.版二：</h5>
+<pre><code><code>def times(f):
+    start_time = time.time()
+    f()
+    print(time.time() - start_time)
+def foo():
+    time.sleep(3)
+    print(&quot;我飞的比你高&quot;)
+#times(foo)#改变了调用方式
+s = foo
+foo = times
+foo(s)#不改变调用方式
+</code></pre>
+<h5 id="版三low版装饰器">4.版三：（low版装饰器）</h5>
+<pre><code><code>def times(f):
+    def inner():
+        start_time = time.time()
+        f()
+        print(time.time() - start_time)
+    return inner
+def foo():
+    time.sleep(3)
+    print(&quot;我飞的比你高&quot;)
+foo = times(foo)
+foo()</code></pre>
+<h5 id="版四">5.版四：</h5>
+<pre><code><code>def wrapper(f):
+    def inner(a):
+        start_time = time.time()
+        f(a)
+        print(time.time() - start_time)
+    return inner#切记不加括号
+
+def func(a):
+    print(f&quot;{a}你不行&quot;)
+func = wrapper(func)
+func(&quot;alex&quot;)
+#传输多个数据，用*args,**kwargs
+</code></pre>
+<h5 id="版五标准版装饰器">6.版五（标准版装饰器）：</h5>
+<p>@wrapper#语法糖：必须放在要装饰的函数的正上方</p>
+<pre><code><code>def wrapper(f):#f是要被装饰的函数名
+    def inner(*args,**kwargs):
+        &quot;被装饰前&quot;
+        start_time = time.time()
+        ret = f(*args,**kwargs)
+        print(time.time() - start_time)
+        &quot;被装饰后&quot;
+        return ret
+    return inner#切记不加括号
+@wrapper#语法糖 --&gt;func = wrapper(func)
+def func(*args,**kwargs):
+    print(f&quot;{a}你不行&quot;)
+    return &quot;我可以返回了&quot;
+#func = wrapper(func)#有语法糖不用多次赋值
+func(&quot;alex&quot;)</code></pre>
+<p>23.装饰器二（进阶）</p>
+<h3 id="有参装饰器">1.有参装饰器：</h3>
+<p>​ 有参装饰器：在基础装饰器的基础上再套一层函数</p>
+<pre><code><code>#有参装饰器实现登陆验证
+msg = &quot;&quot;&quot;
+QQ
+微信
+抖音
+请输入您要登录的的app:
+&quot;&quot;&quot;
+chose = input(msg).upper()
+dict_flag = {&#39;username&#39;:None,&#39;flag&#39;:False}
+def auth(a):
+    def wrapper(f):
+        def inner(*args,**kwargs):
+            if dic_flag[&#39;flag&#39;]:
+                fun(*args,**kwargs)
+            else:
+                if argv ==&quot;QQ&quot;:
+                    print(&quot;欢迎登陆QQ&quot;)
+                    user = intput(&quot;user:&quot;)
+                    pwd = input(&quot;passwd:&quot;)
+                    if user == &quot;alex&quot; and pwd == &quot;alex123&quot;:
+                        dict_flag[&quot;flag&quot;] = True
+                        dict_flag[&quot;username&quot;] = user
+                        foo(*args,**kwargs)
+                        
+                    else:
+                        print(&quot;用户名或密码错误！&quot;)
+        return inner
+    return wrapper
+@auth(chose)
+&quot;&quot;&quot;
+语法糖拆分：
+wrapper = auth（chose)
+foo = wrapper(foo)
+&quot;&quot;&quot;
+def foo():
+    print(&quot;这是被装饰的函数&quot;)
+foo()</code></pre>
+<h3 id="多个装饰器装饰一个函数">2.多个装饰器装饰一个函数：</h3>
+<p>​ 当被装饰的函数正上方有多个装饰器，先执行里被装饰函数最近的装饰器（小技巧：进入装饰器，从上往下，走到最后一个装饰器，执行被装饰的函数，退出装饰器从下往上）</p>
+<pre><code><code>def wrapper1(f):
+    def inner1(*args,**kwargs):
+        print(&quot;这是第一个装饰器开始&quot;)
+        f(*args,**kwargs)
+        print(&quot;这是第一个装饰器结束&quot;)
+        return 
+    return inner1
+
+def wrapper2(f):
+    def inner2(*args,**kwargs):
+        print(&quot;这是第二个装饰器开始&quot;)
+        f(*args,**kwargs)
+        print(&quot;这是第二个装饰器结束&quot;)
+        return 
+    return inner2
+
+@wrapper1
+@wrapper2
+&quot;&quot;&quot;
+两个语法糖等价于：
+foo = wrapper2(foo)#foo == inner2
+foo = wrapper1(foo)#foo = wrapper(inner2),foo == inner1
+foo()#--&gt;inner1()
+&quot;&quot;&quot;
+def foo():
+    print(&quot;这是被装饰的函数&quot;)
+foo()
+&#39;&#39;&#39;
+结果：
+这是第一个装饰器开始
+这是第二个装饰器开始
+这是被装饰的函数
+这是第二个装饰器结束
+这是第一个装饰器结束
+&#39;&#39;&#39;</code></pre>
+<h2 id="section"></h2>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,541 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修模块之 time datetime random json pickle os sys hashlib collections' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>模块之 time datetime random json pickle os sys hashlib collections</center></div><div class='banquan'>原文出处:本文由博客园博主626提供。<br/>
+原文连接:https://www.cnblogs.com/fengqiang626/p/11246286.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#time模块">1. time模块</a><ul>
+        <li><a href="#表示时间的几种方式">1.1表示时间的几种方式：</a></li>
+        <li><a href="#格式化字符串的时间格式">1.2格式化字符串的时间格式</a></li>
+        <li><a href="#不同格式时间的转换">1.3不同格式时间的转换</a></li>
+        </ul></li>
+        <li><a href="#datetim模块">2.datetim模块</a></li>
+        <li><a href="#random模块">3.random模块</a></li>
+        <li><a href="#json模块">4. json模块</a><ul>
+        <li><a href="#dumpsloads">4.1dumps、loads</a></li>
+        <li><a href="#dumpload">4.2dump、load</a></li>
+        <li><a href="#json序列化存储多个数据到同一个文件中">4.3json序列化存储多个数据到同一个文件中</a></li>
+        </ul></li>
+        <li><a href="#pickle模块">5. pickle模块</a><ul>
+        <li><a href="#dumpsloads-1">5.1dumps、loads</a></li>
+        <li><a href="#dumpload-1">5.2dump、load</a></li>
+        <li><a href="#pickle序列化存储多个数据到一个文件中">5.3pickle序列化存储多个数据到一个文件中</a></li>
+        </ul></li>
+        <li><a href="#os模块">6.os模块</a><ul>
+        <li><a href="#当前执行这个python文件的工作目录相关的工作路径">6.1当前执行这个python文件的工作目录相关的工作路径</a></li>
+        <li><a href="#文件夹相关">6.2文件夹相关</a></li>
+        <li><a href="#文件相关">6.3文件相关</a></li>
+        <li><a href="#路径相关">6.4路径相关</a></li>
+        <li><a href="#操作系统相关了解">6.5操作系统相关(了解)</a></li>
+        <li><a href="#os.statpathfilename-获取文件目录信息-的结构说明了解">6.6os.stat('path/filename') 获取文件/目录信息 的结构说明(了解)</a></li>
+        </ul></li>
+        <li><a href="#sys模块">7.sys模块</a></li>
+        <li><a href="#hashlib模块">8.hashlib模块</a><ul>
+        <li><a href="#hashlib的特征以及使用要点">8.1hashlib的特征以及使用要点：</a></li>
+        <li><a href="#普通加密">8.2普通加密：</a></li>
+        <li><a href="#加盐加密">8.3加盐加密</a></li>
+        <li><a href="#文件的一致性校验">8.4文件的一致性校验</a></li>
+        </ul></li>
+        <li><a href="#collections模块">9. collections模块</a><ul>
+        <li><a href="#namedtuple">9.1namedtuple</a></li>
+        <li><a href="#deque">9.2deque</a></li>
+        <li><a href="#ordereddict">9.3OrderedDict</a></li>
+        <li><a href="#defaultdict">9.4defaultdict</a></li>
+        <li><a href="#counter">9.5Counter</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h2 id="time模块">1. time模块</h2>
+<h3 id="表示时间的几种方式">1.1表示时间的几种方式：</h3>
+<ul>
+<li>时间戳(timestamp)：通常来说，时间戳表示的是从1970年1月1日00:00:00开始按秒计算的偏移量。我们运行“type(time.time())”，返回的是float类型。</li>
+<li>格式化的时间字符串(Format String)</li>
+<li>结构化的时间(struct_time)：struct_time元组共有9个元素共九个元素:(年，月，日，时，分，秒，一年中第几周，一年中第几天，夏令时)</li>
+</ul>
+<pre><code><code>import time
+#--------------------------我们先以当前时间为准,让大家快速认识三种形式的时间
+print(time.time()) # 时间戳:1487130156.419527
+print(time.strftime(&quot;%Y-%m-%d %X&quot;)) #格式化的时间字符串:&#39;2017-02-15 11:40:53&#39;
+
+print(time.localtime()) #本地时区的struct_time
+print(time.gmtime())    #UTC时区的struct_time</code></pre>
+<h3 id="格式化字符串的时间格式">1.2格式化字符串的时间格式</h3>
+<pre><code><code>%y 两位数的年份表示（00-99） 
+%Y 四位数的年份表示（000-9999） 
+%m 月份（01-12） 
+%d 月内中的一天（0-31） 
+%H 24小时制小时数（0-23） 
+%I 12小时制小时数（01-12） 
+%M 分钟数（00=59） 
+%S 秒（00-59） 
+%a 本地简化星期名称 
+%A 本地完整星期名称 
+%b 本地简化的月份名称 
+%B 本地完整的月份名称 
+%c 本地相应的日期表示和时间表示 
+%j 年内的一天（001-366） 
+%p 本地A.M.或P.M.的等价符 
+%U 一年中的星期数（00-53）星期天为星期的开始 
+%w 星期（0-6），星期天为星期的开始 
+%W 一年中的星期数（00-53）星期一为星期的开始 
+%x 本地相应的日期表示 
+%X 本地相应的时间表示 
+%Z 当前时区的名称 
+%% %号本身</code></pre>
+<h3 id="不同格式时间的转换">1.3不同格式时间的转换</h3>
+<p><strong>其中计算机认识的时间只能是'时间戳'格式，而程序员可处理的或者说人类能看懂的时间有: '格式化的时间字符串'，'结构化的时间' ，于是有了下图的转换关系</strong></p>
+<p><img src="./images/模块之 time datetime random json pickle os sys hashlib collections0.png" /></p>
+<pre><code><code># localtime([secs])
+# 将一个时间戳转换为当前时区的struct_time。secs参数未提供，则以当前时间为准。
+time.localtime()
+time.localtime(1473525444.037215)
+
+# gmtime([secs]) 和localtime()方法类似，gmtime()方法是将一个时间戳转换为UTC时区（0时区）的struct_time。
+
+# mktime(t) : 将一个struct_time转化为时间戳。
+print(time.mktime(time.localtime()))#1473525749.0
+
+
+# strftime(format[, t]) : 把一个代表时间的元组或者struct_time（如由time.localtime()和
+# time.gmtime()返回）转化为格式化的时间字符串。如果t未指定，将传入time.localtime()。如果元组中任何一个
+# 元素越界，ValueError的错误将会被抛出。
+print(time.strftime(&quot;%Y-%m-%d %X&quot;, time.localtime()))#2016-09-11 00:49:56
+
+# time.strptime(string[, format])
+# 把一个格式化时间字符串转化为struct_time。实际上它和strftime()是逆操作。
+print(time.strptime(&#39;2011-05-05 16:37:06&#39;, &#39;%Y-%m-%d %X&#39;))
+#time.struct_time(tm_year=2011, tm_mon=5, tm_mday=5, tm_hour=16, tm_min=37, tm_sec=6,
+# tm_wday=3, tm_yday=125, tm_isdst=-1)
+#在这个函数中，format默认为：&quot;%a %b %d %H:%M:%S %Y&quot;。</code></pre>
+<p><img src="./images/模块之 time datetime random json pickle os sys hashlib collections1.png" /></p>
+<pre><code><code># asctime([t]) : 把一个表示时间的元组或者struct_time表示为这种形式：&#39;Sun Jun 20 23:21:05 1993&#39;。
+# 如果没有参数，将会将time.localtime()作为参数传入。
+print(time.asctime())#Sun Sep 11 00:43:43 2016
+
+# ctime([secs]) : 把一个时间戳（按秒计算的浮点数）转化为time.asctime()的形式。如果参数未给或者为
+# None的时候，将会默认time.time()为参数。它的作用相当于time.asctime(time.localtime(secs))。
+print(time.ctime())  # Sun Sep 11 00:46:38 2016
+print(time.ctime(time.time()))  # Sun Sep 11 00:46:38 2016</code></pre>
+<pre><code><code># sleep(secs)
+# 线程推迟指定的时间运行，单位为秒。</code></pre>
+<h2 id="datetim模块">2.datetim模块</h2>
+<pre><code><code>#时间加减
+import datetime
+
+print(datetime.datetime.now()) #返回 2016-08-19 12:47:03.941925
+print(datetime.date.fromtimestamp(time.time()) )  # 时间戳直接转成日期格式 2016-08-19
+print(datetime.datetime.now() )
+print(datetime.datetime.now() + datetime.timedelta(3)) #当前时间+3天
+print(datetime.datetime.now() + datetime.timedelta(-3)) #当前时间-3天
+print(datetime.datetime.now() + datetime.timedelta(hours=3)) #当前时间+3小时
+print(datetime.datetime.now() + datetime.timedelta(minutes=30)) #当前时间+30分
+
+
+# c_time  = datetime.datetime.now()
+# print(c_time.replace(minute=3,hour=2)) #时间替换</code></pre>
+<h2 id="random模块">3.random模块</h2>
+<pre><code><code>import random
+
+print(random.random())#(0,1)----float    大于0且小于1之间的小数
+
+print(random.randint(1,3))  #[1,3]    大于等于1且小于等于3之间的整数
+
+print(random.randrange(1,3)) #[1,3)    大于等于1且小于3之间的整数
+ 
+print(random.choice([1,&#39;23&#39;,[4,5]]))#1或者23或者[4,5]
+
+print(random.sample([1,&#39;23&#39;,[4,5]],2))#列表元素任意2个组合
+
+print(random.uniform(1,3))#大于1小于3的小数，如1.927109612082716 
+
+item=[1,3,5,7,9]
+random.shuffle(item) #打乱item的顺序,相当于&quot;洗牌&quot;
+print(item)</code></pre>
+<h2 id="json模块">4. json模块</h2>
+<p><strong>json模块是将满足条件的数据结构转化成特殊的字符串，并且也可以反序列化还原回去。</strong></p>
+<p>json模块总共就有两对四个方法：</p>
+<p>​ <strong>用于网络传输：dumps、loads</strong></p>
+<p>​ <strong>用于文件写读：dump、load</strong></p>
+<h3 id="dumpsloads">4.1dumps、loads</h3>
+<p><strong>将字典类型转换成字符串类型</strong></p>
+<pre><code><code>import json
+dic = {&#39;k1&#39;:&#39;v1&#39;,&#39;k2&#39;:&#39;v2&#39;,&#39;k3&#39;:&#39;v3&#39;}
+str_dic = json.dumps(dic)  #序列化：将一个字典转换成一个字符串
+print(type(str_dic),str_dic)  #&lt;class &#39;str&#39;&gt; {&quot;k3&quot;: &quot;v3&quot;, &quot;k1&quot;: &quot;v1&quot;, &quot;k2&quot;: &quot;v2&quot;}
+#注意，json转换完的字符串类型的字典中的字符串是由&quot;&quot;表示的</code></pre>
+<p><strong>将字符串类型的字典转换成字典类型</strong></p>
+<pre><code><code>import json
+dic2 = json.loads(str_dic)  #反序列化：将一个字符串格式的字典转换成一个字典
+#注意，要用json的loads功能处理的字符串类型的字典中的字符串必须由&quot;&quot;表示
+print(type(dic2),dic2)  #&lt;class &#39;dict&#39;&gt; {&#39;k1&#39;: &#39;v1&#39;, &#39;k2&#39;: &#39;v2&#39;, &#39;k3&#39;: &#39;v3&#39;}</code></pre>
+<p><strong>还支持列表类型</strong></p>
+<pre><code><code>list_dic = [1,[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;],3,{&#39;k1&#39;:&#39;v1&#39;,&#39;k2&#39;:&#39;v2&#39;}]
+str_dic = json.dumps(list_dic) #也可以处理嵌套的数据类型 
+print(type(str_dic),str_dic) #&lt;class &#39;str&#39;&gt; [1, [&quot;a&quot;, &quot;b&quot;, &quot;c&quot;], 3, {&quot;k1&quot;: &quot;v1&quot;, &quot;k2&quot;: &quot;v2&quot;}]
+list_dic2 = json.loads(str_dic)
+print(type(list_dic2),list_dic2) #&lt;class &#39;list&#39;&gt; [1, [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;], 3, {&#39;k1&#39;: &#39;v1&#39;, &#39;k2&#39;: &#39;v2&#39;}]</code></pre>
+<h3 id="dumpload">4.2dump、load</h3>
+<p><strong>将对象转换成字符串写入到文件当中</strong></p>
+<pre><code><code>import json
+f = open(&#39;json_file.json&#39;,&#39;w&#39;)
+dic = {&#39;k1&#39;:&#39;v1&#39;,&#39;k2&#39;:&#39;v2&#39;,&#39;k3&#39;:&#39;v3&#39;}
+json.dump(dic,f)  #dump方法接收一个文件句柄，直接将字典转换成json字符串写入文件
+f.close()
+# json文件也是文件，就是专门存储json字符串的文件。</code></pre>
+<p><strong>将文件中的字符串类型的字典转换成字典</strong></p>
+<pre><code><code>import json
+f = open(&#39;json_file.json&#39;)
+dic2 = json.load(f)  #load方法接收一个文件句柄，直接将文件中的json字符串转换成数据结构返回
+f.close()
+print(type(dic2),dic2)</code></pre>
+<p><strong>其他参数说明</strong></p>
+<p><code>ensure_ascii</code>:，当它为True的时候，所有非ASCII码字符显示为\uXXXX序列，只需在dump时将ensure_ascii设置为False即可，此时存入json的中文即可正常显示。</p>
+<p><code>separators</code>：分隔符，实际上是(item_separator, dict_separator)的一个元组，默认的就是(,,:)；这表示dictionary内keys之间用“,”隔开，而KEY和value之间用“：”隔开。</p>
+<p><code>sort_keys</code>：将数据根据keys的值进行排序。 剩下的自己看源码研究</p>
+<h3 id="json序列化存储多个数据到同一个文件中">4.3json序列化存储多个数据到同一个文件中</h3>
+<p>对于json序列化，存储多个数据到一个文件中是有问题的，默认一个json文件只能存储一个json数据，但是也可以解决，举例说明：</p>
+<pre><code><code>对于json 存储多个数据到文件中
+dic1 = {&#39;name&#39;:&#39;oldboy1&#39;}
+dic2 = {&#39;name&#39;:&#39;oldboy2&#39;}
+dic3 = {&#39;name&#39;:&#39;oldboy3&#39;}
+f = open(&#39;序列化&#39;,encoding=&#39;utf-8&#39;,mode=&#39;a&#39;)
+json.dump(dic1,f)
+json.dump(dic2,f)
+json.dump(dic3,f)
+f.close()
+
+f = open(&#39;序列化&#39;,encoding=&#39;utf-8&#39;)
+ret = json.load(f)
+ret1 = json.load(f)
+ret2 = json.load(f)
+print(ret)</code></pre>
+<p>上边的代码会报错,解决方法:</p>
+<pre><code><code>dic1 = {&#39;name&#39;:&#39;oldboy1&#39;}
+dic2 = {&#39;name&#39;:&#39;oldboy2&#39;}
+dic3 = {&#39;name&#39;:&#39;oldboy3&#39;}
+f = open(&#39;序列化&#39;,encoding=&#39;utf-8&#39;,mode=&#39;a&#39;)
+str1 = json.dumps(dic1)
+f.write(str1+&#39;\n&#39;)
+str2 = json.dumps(dic2)
+f.write(str2+&#39;\n&#39;)
+str3 = json.dumps(dic3)
+f.write(str3+&#39;\n&#39;)
+f.close()
+
+f = open(&#39;序列化&#39;,encoding=&#39;utf-8&#39;)
+for line in f:
+    print(json.loads(line))</code></pre>
+<h2 id="pickle模块">5. pickle模块</h2>
+<p><strong>pickle模块是将Python所有的数据结构以及对象等转化成bytes类型，然后还可以反序列化还原回去。</strong></p>
+<p>​ 刚才也跟大家提到了pickle模块，pickle模块是只能Python语言识别的序列化模块。如果把序列化模块比喻成全世界公认的一种交流语言，也就是标准的话，json就是像是英语，全世界（python，java，php，C，等等）都遵循这个标准。而pickle就是中文，只有中国人（python）作为第一交流语言。</p>
+<p>​ 既然只是Python语言使用，那么它支持Python所有的数据类型包括后面我们要讲的实例化对象等，它能将这些所有的数据结构序列化成特殊的bytes，然后还可以反序列化还原。使用上与json几乎差不多，也是两对四个方法。</p>
+<p>​ <strong>用于网络传输：dumps、loads</strong></p>
+<p>​ <strong>用于文件写读：dump、load</strong></p>
+<h3 id="dumpsloads-1">5.1dumps、loads</h3>
+<pre><code><code>import pickle
+dic = {&#39;k1&#39;:&#39;v1&#39;,&#39;k2&#39;:&#39;v2&#39;,&#39;k3&#39;:&#39;v3&#39;}
+str_dic = pickle.dumps(dic)
+print(str_dic)  # bytes类型
+
+dic2 = pickle.loads(str_dic)
+print(dic2)    #字典
+# 还可以序列化对象
+import pickle
+def func():
+    print(666)
+
+ret = pickle.dumps(func)
+print(ret,type(ret))  # b&#39;\x80\x03c__main__\nfunc\nq\x00.&#39; &lt;class &#39;bytes&#39;&gt;
+f1 = pickle.loads(ret)  # f1得到 func函数的内存地址
+f1()  # 执行func函数</code></pre>
+<h3 id="dumpload-1">5.2dump、load</h3>
+<pre><code><code>dic = {(1,2):&#39;oldboy&#39;,1:True,&#39;set&#39;:{1,2,3}}
+f = open(&#39;pick序列化&#39;,mode=&#39;wb&#39;)
+pickle.dump(dic,f)
+f.close()
+with open(&#39;pick序列化&#39;,mode=&#39;wb&#39;) as f1:
+    pickle.dump(dic,f1)</code></pre>
+<h3 id="pickle序列化存储多个数据到一个文件中">5.3pickle序列化存储多个数据到一个文件中</h3>
+<pre><code><code>dic1 = {&#39;name&#39;:&#39;oldboy1&#39;}
+dic2 = {&#39;name&#39;:&#39;oldboy2&#39;}
+dic3 = {&#39;name&#39;:&#39;oldboy3&#39;}
+
+f = open(&#39;pick多数据&#39;,mode=&#39;wb&#39;)
+pickle.dump(dic1,f)
+pickle.dump(dic2,f)
+pickle.dump(dic3,f)
+f.close()
+
+f = open(&#39;pick多数据&#39;,mode=&#39;rb&#39;)
+while True:
+    try:
+        print(pickle.load(f))
+    except EOFError:
+        break
+f.close()</code></pre>
+<p>这时候机智的你又要说了，既然pickle如此强大，为什么还要学json呢？这里我们要说明一下，json是一种所有的语言都可以识别的数据结构。如果我们将一个字典或者序列化成了一个json存在文件里，那么java代码或者js代码也可以拿来用。但是如果我们用pickle进行序列化，其他语言就不能读懂这是什么了～所以，如果你序列化的内容是列表或者字典，我们非常推荐你使用json模块，但如果出于某种原因你不得不序列化其他的数据类型，而未来你还会用python对这个数据进行反序列化的话，那么就可以使用pickle。</p>
+<h2 id="os模块">6.os模块</h2>
+<p>os模块是与操作系统交互的一个接口,它提供的功能多与工作目录，路径，文件等相关。</p>
+<h3 id="当前执行这个python文件的工作目录相关的工作路径">6.1当前执行这个python文件的工作目录相关的工作路径</h3>
+<pre><code><code>os.getcwd() 获取当前工作目录，即当前python脚本工作的目录路径  ** 
+os.chdir(&quot;dirname&quot;)  改变当前脚本工作目录；相当于shell下cd  **
+os.curdir  返回当前目录: (&#39;.&#39;)  **
+os.pardir  获取当前目录的父目录字符串名：(&#39;..&#39;) **</code></pre>
+<h3 id="文件夹相关">6.2文件夹相关</h3>
+<pre><code><code>os.makedirs(&#39;dirname1/dirname2&#39;)    可生成多层递归目录  ***
+os.removedirs(&#39;dirname1&#39;) 若目录为空，则删除，并递归到上一级目录，如若也为空，则删除，依此类推 ***
+os.mkdir(&#39;dirname&#39;)    生成单级目录；相当于shell中mkdir dirname ***
+os.rmdir(&#39;dirname&#39;)    删除单级空目录，若目录不为空则无法删除，报错；相当于shell中rmdir dirname ***
+os.listdir(&#39;dirname&#39;)    列出指定目录下的所有文件和子目录，包括隐藏文件，并以列表方式打印 **</code></pre>
+<h3 id="文件相关">6.3文件相关</h3>
+<pre><code><code>os.remove()  删除一个文件  ***
+os.rename(&quot;oldname&quot;,&quot;newname&quot;)  重命名文件/目录  ***
+os.stat(&#39;path/filename&#39;)  获取文件/目录信息 **</code></pre>
+<h3 id="路径相关">6.4路径相关</h3>
+<pre><code><code>os.path.abspath(path) 返回path规范化的绝对路径  ***
+os.path.split(path) 将path分割成目录和文件名二元组返回 ***
+os.path.dirname(path) 返回path的目录。其实就是os.path.split(path)的第一个元素  **
+os.path.basename(path) 返回path最后的文件名。如何path以／或\结尾，那么就会返回空值，即os.path.split(path)的第二个元素。 **
+os.path.exists(path)  如果path存在，返回True；如果path不存在，返回False  ***
+os.path.isabs(path)  如果path是绝对路径，返回True  **
+os.path.isfile(path)  如果path是一个存在的文件，返回True。否则返回False  ***
+os.path.isdir(path)  如果path是一个存在的目录，则返回True。否则返回False  ***
+os.path.join(path1[, path2[, ...]])  将多个路径组合后返回，第一个绝对路径之前的参数将被忽略 ***
+os.path.getatime(path)  返回path所指向的文件或者目录的最后访问时间  **
+os.path.getmtime(path)  返回path所指向的文件或者目录的最后修改时间  **
+os.path.getsize(path) 返回path的大小 ***</code></pre>
+<h3 id="操作系统相关了解">6.5操作系统相关(了解)</h3>
+<pre><code><code>os.sep    输出操作系统特定的路径分隔符，win下为&quot;\\&quot;,Linux下为&quot;/&quot; *
+os.linesep    输出当前平台使用的行终止符，win下为&quot;\t\n&quot;,Linux下为&quot;\n&quot; 
+os.pathsep    输出用于分割文件路径的字符串 win下为;,Linux下为: *
+os.name    输出字符串指示当前使用平台。win-&gt;&#39;nt&#39;; Linux-&gt;&#39;posix&#39; *
+# 和执行系统命令相关
+os.system(&quot;bash command&quot;)  运行shell命令，直接显示  **
+os.popen(&quot;bash command).read()  运行shell命令，获取执行结果  **
+os.environ  获取系统环境变量  **</code></pre>
+<h3 id="os.statpathfilename-获取文件目录信息-的结构说明了解">6.6os.stat('path/filename') 获取文件/目录信息 的结构说明(了解)</h3>
+<pre><code><code>stat 结构:
+st_mode: inode 保护模式
+st_ino: inode 节点号。
+st_dev: inode 驻留的设备。
+st_nlink: inode 的链接数。
+st_uid: 所有者的用户ID。
+st_gid: 所有者的组ID。
+st_size: 普通文件以字节为单位的大小；包含等待某些特殊文件的数据。
+st_atime: 上次访问的时间。
+st_mtime: 最后一次修改的时间。
+st_ctime: 由操作系统报告的&quot;ctime&quot;。在某些系统上（如Unix）是最新的元数据更改的时间，在其它系统上（如Windows）是创建时间（详细信息参见平台的文档）。</code></pre>
+<h2 id="sys模块">7.sys模块</h2>
+<p>sys模块是与python解释器交互的一个接口</p>
+<pre><code><code># sys.argv           命令行参数List，第一个元素是程序本身路径
+# sys.exit(n)        退出程序，正常退出时exit(0),错误退出sys.exit(1)
+# sys.version        获取Python解释程序的版本信息
+# sys.path           返回模块的搜索路径，初始化时使用PYTHONPATH环境变量的值  ***
+# sys.platform       返回操作系统平台名称</code></pre>
+<h2 id="hashlib模块">8.hashlib模块</h2>
+<h3 id="hashlib的特征以及使用要点">8.1hashlib的特征以及使用要点：</h3>
+<ol>
+<li>bytes类型数据 ---&gt; 通过hashlib算法 ---&gt; 固定长度的字符串</li>
+<li>不同的bytes类型数据转化成的结果一定不同</li>
+<li>相同的bytes类型数据转化成的结果一定相同</li>
+<li>此转化过程不可逆</li>
+</ol>
+<p><strong>hashlib的主要用途有两个：</strong></p>
+<p>​ <strong>密码的加密。</strong></p>
+<p>​ <strong>文件一致性校验。</strong></p>
+<h3 id="普通加密">8.2普通加密：</h3>
+<p>我们以常见的摘要算法MD5为例，计算出一个字符串的MD5值：</p>
+<pre><code><code>import hashlib
+
+md5 = hashlib.md5()
+md5.update(&#39;123456&#39;.encode(&#39;utf-8&#39;)) # 必须是bytes类型才能够进行加密
+print(md5.hexdigest())
+
+# 计算结果如下：
+&#39;e10adc3949ba59abbe56e057f20f883e&#39;
+
+# 验证：相同的bytes数据转化的结果一定相同
+
+import hashlib
+md5 = hashlib.md5()
+md5.update(&#39;123456&#39;.encode(&#39;utf-8&#39;))
+print(md5.hexdigest())
+
+# 计算结果如下：
+&#39;e10adc3949ba59abbe56e057f20f883e&#39;
+
+# 验证：不相同的bytes数据转化的结果一定不相同
+import hashlib
+
+md5 = hashlib.md5()
+md5.update(&#39;12345&#39;.encode(&#39;utf-8&#39;))
+print(md5.hexdigest())
+
+# 计算结果如下：
+&#39;827ccb0eea8a706c4c34a16891f84e7b&#39;</code></pre>
+<h3 id="加盐加密">8.3加盐加密</h3>
+<p>其实代码非常简单：</p>
+<pre><code><code>ret = hashlib.md5(&#39;xx教育&#39;.encode(&#39;utf-8&#39;))  # xx教育就是固定的盐
+ret.update(&#39;a&#39;.encode(&#39;utf-8&#39;))
+print(ret.hexdigest())</code></pre>
+<p>上面的xx教育就是固定的盐，比如你在一家公司，公司会将你们所有的密码在md5之前增加一个固定的盐，这样提高了密码的安全性。但是如果黑客通过手段窃取到你这个固定的盐之后，也是可以破解出来的。所以，我们还可以加动态的盐。</p>
+<p><strong>动态的盐</strong></p>
+<pre><code><code>username = &#39;啦啦666&#39;
+ret = hashlib.md5(username[::2].encode(&#39;utf-8&#39;))  # 针对于每个账户，每个账户的盐都不一样
+ret.update(&#39;a&#39;.encode(&#39;utf-8&#39;))
+print(ret.hexdigest())</code></pre>
+<p>这样，安全性能就大大提高了。</p>
+<p>那么我们之前说了hahslib模块是一个算法集合，他里面包含很多种加密算法，刚才我们说的MD5算法是比较常用的一种加密算法，一般的企业用MD5就够用了。但是对安全要求比较高的企业，比如金融行业，MD5加密的方式就不够了，得需要加密方式更高的，比如sha系列，sha1,sha224,sha512等等，数字越大，加密的方法越复杂，安全性越高，但是效率就会越慢。</p>
+<pre><code><code>ret = hashlib.sha1()
+ret.update(&#39;guobaoyuan&#39;.encode(&#39;utf-8&#39;))
+print(ret.hexdigest())
+
+#也可加盐
+ret = hashlib.sha384(b&#39;asfdsa&#39;)
+ret.update(&#39;guobaoyuan&#39;.encode(&#39;utf-8&#39;))
+print(ret.hexdigest())
+
+# 也可以加动态的盐
+ret = hashlib.sha384(b&#39;asfdsa&#39;[::2])
+ret.update(&#39;guobaoyuan&#39;.encode(&#39;utf-8&#39;))
+print(ret.hexdigest())</code></pre>
+<p>不过一般我们用到MD5加密就可以了。</p>
+<h3 id="文件的一致性校验">8.4文件的一致性校验</h3>
+<p><strong>文件校验：</strong></p>
+<pre><code><code>def func(file):
+    with open(file,mode=&#39;rb&#39;) as f:
+        res = hashlib.md5()
+        for i in f:
+            res.update(i)
+        return res.hexdigest()
+
+print(func(&#39;hashlib_file1&#39;))</code></pre>
+<p><strong>hashlib还可以这样玩：</strong></p>
+<pre><code><code>import hashlib
+# 直接 update
+md5obj = hashlib.md5()
+md5obj.update(&#39;宝元 is a old driver&#39;.encode(&#39;utf-8&#39;))
+print(md5obj.hexdigest())  # da525c66739e6baa8729332f8bae8e0f
+
+# 分段update
+md5obj = hashlib.md5()
+md5obj.update(&#39;宝元 &#39;.encode(&#39;utf-8&#39;))
+md5obj.update(&#39;is &#39;.encode(&#39;utf-8&#39;))
+md5obj.update(&#39;a &#39;.encode(&#39;utf-8&#39;))
+md5obj.update(&#39;old &#39;.encode(&#39;utf-8&#39;))
+md5obj.update(&#39;driver&#39;.encode(&#39;utf-8&#39;))
+print(md5obj.hexdigest())  # da525c66739e6baa8729332f8bae8e0f
+# 结果相同</code></pre>
+<h2 id="collections模块">9. collections模块</h2>
+<p>在内置数据类型（dict、list、set、tuple）的基础上，collections模块还提供了几个额外的数据类型：Counter、deque、defaultdict、namedtuple和OrderedDict等。</p>
+<p>1.namedtuple: 生成可以使用名字来访问元素内容的tuple</p>
+<p>2.deque: 双端队列，可以快速的从另外一侧追加和推出对象</p>
+<p>3.Counter: 计数器，主要用来计数</p>
+<p>4.OrderedDict: 有序字典</p>
+<p>5.defaultdict: 带有默认值的字典</p>
+<h3 id="namedtuple">9.1namedtuple</h3>
+<p>我们知道tuple可以表示不变数据，例如，一个点的二维坐标就可以表示成：</p>
+<pre><code><code>p = (1, 2)</code></pre>
+<p>但是，看到(1, 2)，很难看出这个tuple是用来表示一个坐标的。</p>
+<p>这时，namedtuple就派上了用场：</p>
+<pre><code><code>from collections import namedtuple
+Point = namedtuple(&#39;Point&#39;, [&#39;x&#39;, &#39;y&#39;])
+p = Point(1, 2)
+print(p)
+# 结果：Point(x=1, y=2)</code></pre>
+<p>类似的，如果要用坐标和半径表示一个圆，也可以用namedtuple定义：</p>
+<pre><code><code>namedtuple(&#39;名称&#39;, [属性list]):
+Circle = namedtuple(&#39;Circle&#39;, [&#39;x&#39;, &#39;y&#39;, &#39;r&#39;])</code></pre>
+<h3 id="deque">9.2deque</h3>
+<p>使用list存储数据时，按索引访问元素很快，但是插入和删除元素就很慢了，因为list是线性存储，数据量大的时候，插入和删除效率很低。</p>
+<p>deque是为了高效实现插入和删除操作的双向列表，适合用于队列和栈：</p>
+<pre><code><code>from collections import deque
+q = deque([&#39;a&#39;, &#39;b&#39;, &#39;c&#39;])
+q.append(&#39;x&#39;)
+q.appendleft(&#39;y&#39;)
+print(q)
+# 输出: deque([&#39;y&#39;, &#39;a&#39;, &#39;b&#39;, &#39;c&#39;, &#39;x&#39;])</code></pre>
+<p>deque除了实现list的append()和pop()外，还支持appendleft()和popleft()，这样就可以非常高效地往头部添加或删除元素。</p>
+<h3 id="ordereddict">9.3OrderedDict</h3>
+<p>使用dict时，Key是无序的。在对dict做迭代时，我们无法确定Key的顺序。</p>
+<p>如果要保持Key的顺序，可以用OrderedDict：</p>
+<pre><code><code>from collections import OrderedDict
+d = dict([(&#39;a&#39;, 1), (&#39;b&#39;, 2), (&#39;c&#39;, 3)]) # 另一种定义字典的方式
+print(d)
+# 结果:
+{&#39;a&#39;: 1, &#39;c&#39;: 3, &#39;b&#39;: 2}
+
+od = OrderedDict([(&#39;a&#39;, 1), (&#39;b&#39;, 2), (&#39;c&#39;, 3)])
+print(od)
+# 结果:
+OrderedDict([(&#39;a&#39;, 1), (&#39;b&#39;, 2), (&#39;c&#39;, 3)])</code></pre>
+<p>注意，OrderedDict的Key会按照插入的顺序排列，不是Key本身排序：</p>
+<pre><code><code>&gt;&gt;&gt; od = OrderedDict()
+&gt;&gt;&gt; od[&#39;z&#39;] = 1
+&gt;&gt;&gt; od[&#39;y&#39;] = 2
+&gt;&gt;&gt; od[&#39;x&#39;] = 3
+&gt;&gt;&gt; od.keys() # 按照插入的Key的顺序返回
+[&#39;z&#39;, &#39;y&#39;, &#39;x&#39;]</code></pre>
+<h3 id="defaultdict">9.4defaultdict</h3>
+<p>有如下值集合 [11,22,33,44,55,66,77,88,99,90...]，将所有大于 66 的值保存至字典的第一个key中，将小于 66 的值保存至第二个key的值中。</p>
+<p>即： {'k1': 大于66 , 'k2': 小于66}</p>
+<pre><code><code>li = [11,22,33,44,55,77,88,99,90]
+result = {}
+for row in li:
+    if row &gt; 66:
+        if &#39;key1&#39; not in result:
+            result[&#39;key1&#39;] = []
+        result[&#39;key1&#39;].append(row)
+    else:
+        if &#39;key2&#39; not in result:
+            result[&#39;key2&#39;] = []
+        result[&#39;key2&#39;].append(row)
+print(result)
+
+
+from collections import defaultdict
+values = [11, 22, 33,44,55,66,77,88,99,90]
+my_dict = defaultdict(list)
+
+for value in  values:
+    if value&gt;66:
+        my_dict[&#39;k1&#39;].append(value)
+    else:
+        my_dict[&#39;k2&#39;].append(value)</code></pre>
+<p>使用dict时，如果引用的Key不存在，就会抛出KeyError。如果希望key不存在时，返回一个默认值，就可以用defaultdict：</p>
+<pre><code><code>from collections import defaultdict
+dd = defaultdict(lambda: &#39;N/A&#39;)
+dd[&#39;key1&#39;] = &#39;abc&#39;
+ # key1存在
+print(dd[&#39;key1&#39;])
+dd[&#39;key2&#39;] # key2不存在，返回默认值
+print(dd[&#39;key2&#39;])</code></pre>
+<h3 id="counter">9.5Counter</h3>
+<p>Counter类的目的是用来跟踪值出现的次数。它是一个无序的容器类型，以字典的键值对形式存储，其中元素作为key，其计数作为value。计数值可以是任意的Interger（包括0和负数）。Counter类和其他语言的bags或multisets很相似。</p>
+<pre><code><code>c = Counter(&#39;abcdeabcdabcaba&#39;)
+print(c)
+# 输出：Counter({&#39;a&#39;: 5, &#39;b&#39;: 4, &#39;c&#39;: 3, &#39;d&#39;: 2, &#39;e&#39;: 1})</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

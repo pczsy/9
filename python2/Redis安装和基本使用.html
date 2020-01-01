@@ -1,0 +1,866 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Redis安装和基本使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Redis安装和基本使用</center></div><div class='banquan'>原文出处:本文由博客园博主蔚蓝的爱提供。<br/>
+原文连接:https://www.cnblogs.com/Hades123/p/11747728.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#redis安装和基本使用">Redis安装和基本使用</a><ul>
+        <li><a href="#安装">安装</a></li>
+        <li><a href="#配置">配置</a></li>
+        <li><a href="#启动服务端">启动服务端</a></li>
+        <li><a href="#启动客户端">启动客户端</a></li>
+        </ul></li>
+        <li><a href="#redis键key">Redis键（key）</a><ul>
+        <li><a href="#与键相关的基本命令">与键相关的基本命令</a></li>
+        </ul></li>
+        <li><a href="#redis字符串">Redis字符串</a><ul>
+        <li><a href="#常用字符串命令">常用字符串命令：</a></li>
+        </ul></li>
+        <li><a href="#redis哈希">Redis哈希</a><ul>
+        <li><a href="#常用hash命令">常用Hash命令</a></li>
+        </ul></li>
+        <li><a href="#redis-列表list">Redis 列表(List)</a><ul>
+        <li><a href="#常用列表命令">常用列表命令</a></li>
+        </ul></li>
+        <li><a href="#redis-集合set">Redis 集合(Set)</a><ul>
+        <li><a href="#常用集合命令">常用集合命令</a></li>
+        </ul></li>
+        <li><a href="#redis-有序集合sorted-set">Redis 有序集合(sorted set)</a><ul>
+        <li><a href="#常用有序集合命令">常用有序集合命令</a></li>
+        </ul></li>
+        <li><a href="#redis-hyperloglog">Redis HyperLogLog</a><ul>
+        <li><a href="#什么是基数">什么是基数?</a></li>
+        <li><a href="#redis-hyperloglog-命令">Redis HyperLogLog 命令</a></li>
+        </ul></li>
+        <li><a href="#redis-发布订阅">Redis 发布订阅</a><ul>
+        <li><a href="#redis-发布订阅命令">Redis 发布订阅命令</a></li>
+        </ul></li>
+        <li><a href="#redis-事务">Redis 事务</a><ul>
+        <li><a href="#redis-事务命令">Redis 事务命令</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="redis安装和基本使用">Redis安装和基本使用</h1>
+<h3 id="安装">安装</h3>
+<pre><code><code>1. wget http://download.redis.io/releases/redis-3.0.6.tar.gz
+2. tar xzf redis-3.0.6.tar.gz
+3. cd redis-3.0.6
+4. make</code></pre>
+<h3 id="配置">配置</h3>
+<pre><code><code># 在环境变量中配置redis
+PATH中  D:\Program Files\Redis\</code></pre>
+<h3 id="启动服务端">启动服务端</h3>
+<pre><code><code>src/redis-server</code></pre>
+<h3 id="启动客户端">启动客户端</h3>
+<pre><code><code>redis-cli -h host -p port -a password
+127.0.0.1:6379&gt; set foo bar
+OK
+127.0.0.1:6379&gt; get foo
+&quot;bar&quot;</code></pre>
+<h1 id="redis键key">Redis键（key）</h1>
+<pre><code><code>redis 127.0.0.1:6379&gt; set runoobkey redis
+OK
+redis 127.0.0.1:6379&gt; sel runoobkey
+(integer) 1
+
+# 在以上实例中 DEL 是一个命令， runoobkey 是一个键。 如果键被删除成功，命令执行后输出 (integer) 1，否则将输出 (integer) 0</code></pre>
+<h3 id="与键相关的基本命令">与键相关的基本命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>del key</td>
+<td>用于在 key 存在时删除 key</td>
+</tr>
+<tr class="even">
+<td>dump key</td>
+<td>序列化给定 key ，并返回被序列化的值</td>
+</tr>
+<tr class="odd">
+<td>expire key seconds</td>
+<td>为给定 key 设置过期时间，以秒计</td>
+</tr>
+<tr class="even">
+<td>expireat key timestamp</td>
+<td>expireat的作用和 expire类似，都用于为 key 设置过期时间。 不同在于 expireat命令接受的时间参数是 UNIX 时间戳(unix timestamp)</td>
+</tr>
+<tr class="odd">
+<td>pexpire key milliseconds</td>
+<td>设置 key 的过期时间以毫秒计</td>
+</tr>
+<tr class="even">
+<td>pexpireat key milliseconds-timestamp</td>
+<td>key 过期时间的时间戳(unix timestamp) 以毫秒计</td>
+</tr>
+<tr class="odd">
+<td>keys pattern</td>
+<td>查找所有符合给定模式( pattern)的 key</td>
+</tr>
+<tr class="even">
+<td>move key db</td>
+<td>将当前数据库的 key 移动到给定的数据库 db 当中</td>
+</tr>
+<tr class="odd">
+<td>persist key</td>
+<td>移除 key 的过期时间，key 将持久保持</td>
+</tr>
+<tr class="even">
+<td>pttl key</td>
+<td>以毫秒为单位返回 key 的剩余的过期时间</td>
+</tr>
+<tr class="odd">
+<td>ttl key</td>
+<td>以秒为单位，返回给定 key 的剩余生存时间(TTL, time to live)</td>
+</tr>
+<tr class="even">
+<td>randomkey</td>
+<td>从当前数据库中随机返回一个 key</td>
+</tr>
+<tr class="odd">
+<td>rename key newkey</td>
+<td>修改 key 的名称</td>
+</tr>
+<tr class="even">
+<td>existe key</td>
+<td>检查给定 key 是否存在</td>
+</tr>
+<tr class="odd">
+<td>renamenx key newkey</td>
+<td>仅当 newkey 不存在时，将 key 改名为 newkey</td>
+</tr>
+<tr class="even">
+<td>type key</td>
+<td>返回 key 所储存的值的类型</td>
+</tr>
+</tbody>
+</table>
+<pre><code><code>redis&gt; SET mykey &quot;Hello&quot;
+&quot;OK&quot;
+redis&gt; PEXPIRE mykey 1500
+(integer) 1
+redis&gt; TTL mykey
+(integer) 1
+redis&gt; PTTL mykey
+(integer) 1498
+redis&gt; </code></pre>
+<h1 id="redis字符串">Redis字符串</h1>
+<pre><code><code># 设置
+redis 127.0.0.1:6379&gt; set runoobkey redis
+OK
+
+# 读取
+redis 127.0.0.1:6379&gt; get runoobkey
+&quot;redis&quot;
+
+# 数字加1
+redis&gt; set page_view 20
+OK
+
+redis&gt; incr page_view
+(integer) 21
+
+redis&gt; get page_view    # 数字值在 Redis 中以字符串的形式保存
+&quot;21&quot;
+
+# 数字减1
+redis&gt; decr page_view
+(integer) 20
+
+redis&gt; get page_view
+&quot;20&quot;
+
+# 追加
+redis&gt; append runoobkey &#39; ready&#39;
+redis&gt; get runoobkey
+&quot;redis ready&quot;</code></pre>
+<h3 id="常用字符串命令">常用字符串命令：</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>set key value</td>
+<td>设置指定 key 的值</td>
+</tr>
+<tr class="even">
+<td>get key</td>
+<td>获取指定 key 的值。</td>
+</tr>
+<tr class="odd">
+<td>getrange key start end</td>
+<td>返回 key 中字符串值的子字符</td>
+</tr>
+<tr class="even">
+<td>getset key value</td>
+<td>将给定 key 的值设为 value ，并返回 key 的旧值(old value)</td>
+</tr>
+<tr class="odd">
+<td>getbit key offset</td>
+<td>对 key 所储存的字符串值，获取指定偏移量上的位(bit)</td>
+</tr>
+<tr class="even">
+<td>mget key1 [key2...]</td>
+<td>获取所有(一个或多个)给定 key 的值</td>
+</tr>
+<tr class="odd">
+<td>setbit key offset value</td>
+<td>对 key 所储存的字符串值，设置或清除指定偏移量上的位(bit)</td>
+</tr>
+<tr class="even">
+<td>setex key seconds value</td>
+<td>将值 value 关联到 key ，并将 key 的过期时间设为 seconds (以秒为单位)</td>
+</tr>
+<tr class="odd">
+<td>setnx key value</td>
+<td>只有在 key 不存在时设置 key 的值</td>
+</tr>
+<tr class="even">
+<td>setrange key offset value</td>
+<td>用 value 参数覆写给定 key 所储存的字符串值，从偏移量 offset 开始</td>
+</tr>
+<tr class="odd">
+<td>strlen key</td>
+<td>返回 key 所储存的字符串值的长度</td>
+</tr>
+<tr class="even">
+<td>mset key value [key value...]</td>
+<td>同时设置一个或多个 key-value 对</td>
+</tr>
+<tr class="odd">
+<td>msetnx key value [key value...]</td>
+<td>时设置一个或多个 key-value 对，当且仅当所有给定 key 都不存在</td>
+</tr>
+<tr class="even">
+<td>psetex key milliseconds value</td>
+<td>这个命令和 SETEX 命令相似，但它以毫秒为单位设置 key 的生存时间，而不是像 SETEX 命令那样，以秒为单位</td>
+</tr>
+<tr class="odd">
+<td>incr key</td>
+<td>将 key 中储存的数字值增一</td>
+</tr>
+<tr class="even">
+<td>incrby key increment</td>
+<td>将 key 所储存的值加上给定的增量值（increment）</td>
+</tr>
+<tr class="odd">
+<td>incrbyfloat key increment</td>
+<td>将 key 所储存的值加上给定的浮点增量值（increment）</td>
+</tr>
+<tr class="even">
+<td>decr key</td>
+<td>将 key 中储存的数字值减一。</td>
+</tr>
+<tr class="odd">
+<td>decrby key increment</td>
+<td>key 所储存的值减去给定的减量值（decrement）</td>
+</tr>
+<tr class="even">
+<td>append key value</td>
+<td>如果 key 已经存在并且是一个字符串， APPEND 命令将指定的 value 追加到该 key 原来值（value）的末尾。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="redis哈希">Redis哈希</h1>
+<p>Redis hash 是一个 string 类型的 field 和 value 的映射表，hash 特别适合用于存储对象。</p>
+<p>Redis 中每个 hash 可以存储 2^32^ - 1 键值对（40多亿）</p>
+<pre><code><code># 同时设置多个field-value对
+127.0.0.1:6379&gt;  hmset runoobkey name &quot;redis tutorial&quot; description &quot;redis basic commands for caching&quot; likes 20 visitors 23000
+OK
+127.0.0.1:6379&gt;  hgetall runoobkey
+1) &quot;name&quot;
+2) &quot;redis tutorial&quot;
+3) &quot;description&quot;
+4) &quot;redis basic commands for caching&quot;
+5) &quot;likes&quot;
+6) &quot;20&quot;
+7) &quot;visitors&quot;
+8) &quot;23000&quot;</code></pre>
+<h3 id="常用hash命令">常用Hash命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>hdel key field1 [field2...]</td>
+<td>删除一个或多个哈希表字段</td>
+</tr>
+<tr class="even">
+<td>hexists key field</td>
+<td>查看哈希表 key 中，指定的字段是否存在</td>
+</tr>
+<tr class="odd">
+<td>hget key field</td>
+<td>获取存储在哈希表中指定字段的值</td>
+</tr>
+<tr class="even">
+<td>hgetall key</td>
+<td>获取在哈希表中指定 key 的所有字段和值</td>
+</tr>
+<tr class="odd">
+<td>hincrby key field increment</td>
+<td>为哈希表 key 中的指定字段的整数值加上增量 increment</td>
+</tr>
+<tr class="even">
+<td>hincrbyfloat key field increment</td>
+<td>为哈希表 key 中的指定字段的浮点数值加上增量 increment</td>
+</tr>
+<tr class="odd">
+<td>hkeys key</td>
+<td>获取所有哈希表中的字段</td>
+</tr>
+<tr class="even">
+<td>hlen key</td>
+<td>获取哈希表中字段的数量</td>
+</tr>
+<tr class="odd">
+<td>hmget key field1 [field2...]</td>
+<td>获取所有给定字段的值</td>
+</tr>
+<tr class="even">
+<td>hmset key field1 value1 [field2 value2..]</td>
+<td>同时将多个 field-value (域-值)对设置到哈希表 key 中</td>
+</tr>
+<tr class="odd">
+<td>hset key field value</td>
+<td>将哈希表 key 中的字段 field 的值设为 value</td>
+</tr>
+<tr class="even">
+<td>hsetnx key field value</td>
+<td>只有在字段 field 不存在时，设置哈希表字段的值</td>
+</tr>
+<tr class="odd">
+<td>hvals key</td>
+<td>获取哈希表中所有值</td>
+</tr>
+<tr class="even">
+<td>hscan key cursor [match pattern][count count]</td>
+<td>迭代哈希表中的键值对</td>
+</tr>
+</tbody>
+</table>
+<h1 id="redis-列表list">Redis 列表(List)</h1>
+<p>Redis列表是简单的字符串列表，按照插入顺序排序。你可以添加一个元素到列表的头部（左边）或者尾部（右边）</p>
+<p>一个列表最多可以包含 232 - 1 个元素 (4294967295, 每个列表超过40亿个元素)。</p>
+<p>示例：</p>
+<pre><code><code>redis 127.0.0.1:6379&gt; LPUSH runoobkey redis
+(integer) 1
+redis 127.0.0.1:6379&gt; LPUSH runoobkey mongodb
+(integer) 2
+redis 127.0.0.1:6379&gt; LPUSH runoobkey mysql
+(integer) 3
+redis 127.0.0.1:6379&gt; LRANGE runoobkey 0 10
+
+1) &quot;mysql&quot;
+2) &quot;mongodb&quot;
+3) &quot;redis&quot;</code></pre>
+<p>在以上实例中我们使用了 <strong>LPUSH</strong> 将三个值插入了名为 <strong>runoobkey</strong> 的列表当中。</p>
+<h3 id="常用列表命令">常用列表命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>blpop key1 [key2] timeout]</td>
+<td>移出并获取列表的第一个元素， 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止。</td>
+</tr>
+<tr class="even">
+<td>brpop key1 [key2] timeout]</td>
+<td>移出并获取列表的最后一个元素， 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止</td>
+</tr>
+<tr class="odd">
+<td>brpoplpush source destination timeout</td>
+<td>从列表中弹出一个值，将弹出的元素插入到另外一个列表中并返回它； 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止</td>
+</tr>
+<tr class="even">
+<td>lindex key index</td>
+<td>通过索引获取列表中的元素</td>
+</tr>
+<tr class="odd">
+<td>linsert key before/after pivot value</td>
+<td>在列表的元素前或者后插入元素</td>
+</tr>
+<tr class="even">
+<td>llen key</td>
+<td>获取列表长度</td>
+</tr>
+<tr class="odd">
+<td>lpop key</td>
+<td>移出并获取列表的第一个元素</td>
+</tr>
+<tr class="even">
+<td>lpush key value1 [value2]</td>
+<td>将一个或多个值插入到列表头部</td>
+</tr>
+<tr class="odd">
+<td>lpushx key value</td>
+<td>将一个值插入到已存在的列表头部</td>
+</tr>
+<tr class="even">
+<td>lrange key start stop</td>
+<td>获取列表指定范围内的元素</td>
+</tr>
+<tr class="odd">
+<td>lrem key count value</td>
+<td>移除列表元素</td>
+</tr>
+<tr class="even">
+<td>lset key index value</td>
+<td>通过索引设置列表元素的值</td>
+</tr>
+<tr class="odd">
+<td>ltrim key start stop</td>
+<td>对一个列表进行修剪(trim)，就是说，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除</td>
+</tr>
+<tr class="even">
+<td>rpop key</td>
+<td>移除列表的最后一个元素，返回值为移除的元素</td>
+</tr>
+<tr class="odd">
+<td>rpoplpush source destination</td>
+<td>移除列表的最后一个元素，并将该元素添加到另一个列表并返回</td>
+</tr>
+<tr class="even">
+<td>rpush key value1[value2...]</td>
+<td>在列表中添加一个或多个值</td>
+</tr>
+<tr class="odd">
+<td>rpushx key value</td>
+<td>为已存在的列表添加值</td>
+</tr>
+</tbody>
+</table>
+<h1 id="redis-集合set">Redis 集合(Set)</h1>
+<p>Redis 的 Set 是 String 类型的无序集合。集合成员是唯一的，这就意味着集合中不能出现重复的数据。</p>
+<p>Redis 中集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是 O(1)。</p>
+<p>集合中最大的成员数为 232 - 1 (4294967295, 每个集合可存储40多亿个成员)</p>
+<p>示例：</p>
+<pre><code><code>redis 127.0.0.1:6379&gt; SADD runoobkey redis
+(integer) 1
+redis 127.0.0.1:6379&gt; SADD runoobkey mongodb
+(integer) 1
+redis 127.0.0.1:6379&gt; SADD runoobkey mysql
+(integer) 1
+redis 127.0.0.1:6379&gt; SADD runoobkey mysql
+(integer) 0
+redis 127.0.0.1:6379&gt; SMEMBERS runoobkey
+
+1) &quot;mysql&quot;
+2) &quot;mongodb&quot;
+3) &quot;redis&quot;</code></pre>
+<p>在以上实例中我们通过 <strong>SADD</strong> 命令向名为 <strong>runoobkey</strong> 的集合插入的三个元素。</p>
+<h3 id="常用集合命令">常用集合命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>sadd key member1 [member2...]</td>
+<td>向集合添加一个或多个成员</td>
+</tr>
+<tr class="even">
+<td>scard key</td>
+<td>获取集合的成员数</td>
+</tr>
+<tr class="odd">
+<td>sdiff key1[key2...]</td>
+<td>返回给定所有集合的差集</td>
+</tr>
+<tr class="even">
+<td>sdiffstore destination key1 [key2]</td>
+<td>返回给定所有集合的差集并存储在 destination 中</td>
+</tr>
+<tr class="odd">
+<td>sinter key1[key2...]</td>
+<td>返回给定所有集合的交集</td>
+</tr>
+<tr class="even">
+<td>sinterstore destination key1 [key2]</td>
+<td>返回给定所有集合的交集并存储在 destination 中</td>
+</tr>
+<tr class="odd">
+<td>sismember key member</td>
+<td>判断 member 元素是否是集合 key 的成员</td>
+</tr>
+<tr class="even">
+<td>smembers key</td>
+<td>返回集合中的所有成员</td>
+</tr>
+<tr class="odd">
+<td>smove source destination member</td>
+<td>将 member 元素从 source 集合移动到 destination 集合</td>
+</tr>
+<tr class="even">
+<td>spop key</td>
+<td>移除并返回集合中的一个随机元素</td>
+</tr>
+<tr class="odd">
+<td>srandmember key [count]</td>
+<td>返回集合中一个或多个随机数</td>
+</tr>
+<tr class="even">
+<td>srem key memebr1 [member2..]</td>
+<td>移除集合中一个或多个成员</td>
+</tr>
+<tr class="odd">
+<td>sunion key1[key2...]</td>
+<td>返回所有给定集合的并集</td>
+</tr>
+<tr class="even">
+<td>sunionstore destination key1 [key2...]</td>
+<td>所有给定集合的并集存储在 destination 集合中</td>
+</tr>
+<tr class="odd">
+<td>sscan key cursor[match pattern][count count]</td>
+<td>迭代集合中的元素</td>
+</tr>
+</tbody>
+</table>
+<h1 id="redis-有序集合sorted-set">Redis 有序集合(sorted set)</h1>
+<p>Redis 有序集合和集合一样也是string类型元素的集合,且不允许重复的成员。</p>
+<p>不同的是每个元素都会关联一个double类型的分数。redis正是通过分数来为集合中的成员进行从小到大的排序。</p>
+<p>有序集合的成员是唯一的,但分数(score)却可以重复。</p>
+<p>集合是通过哈希表实现的，所以添加，删除，查找的复杂度都是O(1)。 集合中最大的成员数为 232 - 1 (4294967295, 每个集合可存储40多亿个成员)</p>
+<p>示例：</p>
+<pre><code><code>redis 127.0.0.1:6379&gt; ZADD runoobkey 1 redis
+(integer) 1
+redis 127.0.0.1:6379&gt; ZADD runoobkey 2 mongodb
+(integer) 1
+redis 127.0.0.1:6379&gt; ZADD runoobkey 3 mysql
+(integer) 1
+redis 127.0.0.1:6379&gt; ZADD runoobkey 3 mysql
+(integer) 0
+redis 127.0.0.1:6379&gt; ZADD runoobkey 4 mysql
+(integer) 0
+redis 127.0.0.1:6379&gt; ZRANGE runoobkey 0 10 WITHSCORES
+
+1) &quot;redis&quot;
+2) &quot;1&quot;
+3) &quot;mongodb&quot;
+4) &quot;2&quot;
+5) &quot;mysql&quot;
+6) &quot;4&quot;</code></pre>
+<p>在以上实例中我们通过命令 <strong>ZADD</strong> 向 redis 的有序集合中添加了三个值并关联上分数</p>
+<h3 id="常用有序集合命令">常用有序集合命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>zadd key score1 member1 [score2 member2]</td>
+<td>向有序集合添加一个或多个成员，或者更新已存在成员的分数</td>
+</tr>
+<tr class="even">
+<td>zcard key</td>
+<td>获取有序集合的成员数</td>
+</tr>
+<tr class="odd">
+<td>zcount key min max</td>
+<td>计算在有序集合中指定区间分数的成员数</td>
+</tr>
+<tr class="even">
+<td>zincrby key increment member</td>
+<td>有序集合中对指定成员的分数加上增量 increment</td>
+</tr>
+<tr class="odd">
+<td>zincrstore destination numkeys key [key ...]</td>
+<td>计算给定的一个或多个有序集的交集并将结果集存储在新的有序集合 key 中</td>
+</tr>
+<tr class="even">
+<td>zlexcount key min max</td>
+<td>在有序集合中计算指定字典区间内成员数量</td>
+</tr>
+<tr class="odd">
+<td>zrange key start stop [withscores]</td>
+<td>通过索引区间返回有序集合指定区间内的成员</td>
+</tr>
+<tr class="even">
+<td>zrangebylex key min max [limit offset count]</td>
+<td>通过字典区间返回有序集合的成员</td>
+</tr>
+<tr class="odd">
+<td>zrangebyscore key min max [withscores] [limit]</td>
+<td>通过分数返回有序集合指定区间内的成员</td>
+</tr>
+<tr class="even">
+<td>zrank key member</td>
+<td>返回有序集合中指定成员的索引</td>
+</tr>
+<tr class="odd">
+<td>zrem key member [member ...]</td>
+<td>移除有序集合中的一个或多个成员</td>
+</tr>
+<tr class="even">
+<td>zremrangebylex key min max</td>
+<td>移除有序集合中给定的字典区间的所有成员</td>
+</tr>
+<tr class="odd">
+<td>zremrangebyrank key start stop</td>
+<td>移除有序集合中给定的排名区间的所有成员</td>
+</tr>
+<tr class="even">
+<td>zremrangebyscore key min max</td>
+<td>移除有序集合中给定的分数区间的所有成员</td>
+</tr>
+<tr class="odd">
+<td>zrevrange key start stop [withscores]</td>
+<td>返回有序集中指定区间内的成员，通过索引，分数从高到低</td>
+</tr>
+<tr class="even">
+<td>zrevrangebyscorekey max min [withscores]</td>
+<td>返回有序集中指定分数区间内的成员，分数从高到低排序</td>
+</tr>
+<tr class="odd">
+<td>zrevrank key member</td>
+<td>返回有序集合中指定成员的排名，有序集成员按分数值递减(从大到小)排序</td>
+</tr>
+<tr class="even">
+<td>zscore key member</td>
+<td>返回有序集中，成员的分数值</td>
+</tr>
+<tr class="odd">
+<td>zunionstore destination numkeys key [key ...]</td>
+<td>计算给定的一个或多个有序集的并集，并存储在新的 key 中</td>
+</tr>
+<tr class="even">
+<td>zscan key cursor [matvh pattern] [count count]</td>
+<td>迭代有序集合中的元素（包括元素成员和元素分值）</td>
+</tr>
+</tbody>
+</table>
+<h1 id="redis-hyperloglog">Redis HyperLogLog</h1>
+<p>Redis 在 2.8.9 版本添加了 HyperLogLog 结构。</p>
+<p>Redis HyperLogLog 是用来做基数统计的算法，HyperLogLog 的优点是，在输入元素的数量或者体积非常非常大时，计算基数所需的空间总是固定 的、并且是很小的。</p>
+<p>在 Redis 里面，每个 HyperLogLog 键只需要花费 12 KB 内存，就可以计算接近 2^64 个不同元素的基 数。这和计算基数时，元素越多耗费内存就越多的集合形成鲜明对比。</p>
+<p>但是，因为 HyperLogLog 只会根据输入元素来计算基数，而不会储存输入元素本身，所以 HyperLogLog 不能像集合那样，返回输入的各个元素。</p>
+<h3 id="什么是基数">什么是基数?</h3>
+<p>比如数据集 {1, 3, 5, 7, 5, 7, 8}， 那么这个数据集的基数集为 {1, 3, 5 ,7, 8}, 基数(不重复元素)为5。 基数估计就是在误差可接受的范围内，快速计算基数。</p>
+<p>示例：</p>
+<pre><code><code>redis 127.0.0.1:6379&gt; PFADD runoobkey &quot;redis&quot;
+1) (integer) 1
+
+redis 127.0.0.1:6379&gt; PFADD runoobkey &quot;mongodb&quot;
+1) (integer) 1
+
+redis 127.0.0.1:6379&gt; PFADD runoobkey &quot;mysql&quot;
+1) (integer) 1
+
+redis 127.0.0.1:6379&gt; PFCOUNT runoobkey
+(integer) 3</code></pre>
+<h3 id="redis-hyperloglog-命令">Redis HyperLogLog 命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>pfadd key element [element ...]</td>
+<td>添加指定元素到 HyperLogLog 中。</td>
+</tr>
+<tr class="even">
+<td>pfcount key [key ...]</td>
+<td>返回给定 HyperLogLog 的基数估算值。</td>
+</tr>
+<tr class="odd">
+<td>pfmerge destkey sourcekey [sourcekey ...]</td>
+<td>将多个 HyperLogLog 合并为一个 HyperLogLog</td>
+</tr>
+</tbody>
+</table>
+<h1 id="redis-发布订阅">Redis 发布订阅</h1>
+<p>Redis 发布订阅(pub/sub)是一种消息通信模式：发送者(pub)发送消息，订阅者(sub)接收消息。</p>
+<p>Redis 客户端可以订阅任意数量的频道。</p>
+<p>下图展示了频道 channel1 ， 以及订阅这个频道的三个客户端 —— client2 、 client5 和 client1 之间的关系：</p>
+<p><img src="./images/Redis安装和基本使用0.png" /></p>
+<p>当有新消息通过 PUBLISH 命令发送给频道 channel1 时， 这个消息就会被发送给订阅它的三个客户端：</p>
+<p><img src="./images/Redis安装和基本使用1.png" /></p>
+<p>示例：</p>
+<p>以下实例演示了发布订阅是如何工作的。在我们实例中我们创建了订阅频道名为 <strong>redisChat</strong>:</p>
+<pre><code><code>redis 127.0.0.1:6379&gt; SUBSCRIBE redisChat
+Reading messages... (press Ctrl-C to quit)
+1) &quot;subscribe&quot;
+2) &quot;redisChat&quot;
+3) (integer) 1</code></pre>
+<p>现在，我们先重新开启个 redis 客户端，然后在同一个频道 redisChat 发布两次消息，订阅者就能接收到消息。</p>
+<pre><code><code>redis 127.0.0.1:6379&gt; PUBLISH redisChat &quot;Redis is a great caching technique&quot;
+(integer) 1
+
+redis 127.0.0.1:6379&gt; PUBLISH redisChat &quot;Learn redis by runoob.com&quot;
+(integer) 1
+
+# 订阅者的客户端会显示如下消息
+1) &quot;message&quot;
+2) &quot;redisChat&quot;
+3) &quot;Redis is a great caching technique&quot;
+1) &quot;message&quot;
+2) &quot;redisChat&quot;
+3) &quot;Learn redis by runoob.com&quot;</code></pre>
+<h3 id="redis-发布订阅命令">Redis 发布订阅命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>psubscribe pattern [pattern ...]</td>
+<td>订阅一个或多个符合给定模式的频道。</td>
+</tr>
+<tr class="even">
+<td>pubsub subcommand [argument [argument ...]]</td>
+<td>查看订阅与发布系统状态。</td>
+</tr>
+<tr class="odd">
+<td>publish channel message</td>
+<td>将信息发送到指定的频道。</td>
+</tr>
+<tr class="even">
+<td>punsubscribe [pattern [pattern ...]]</td>
+<td>退订所有给定模式的频道。</td>
+</tr>
+<tr class="odd">
+<td>subscribe channel [channel ...]</td>
+<td>订阅给定的一个或多个频道的信息。</td>
+</tr>
+<tr class="even">
+<td>unsubscribe [channel [channel ...]]</td>
+<td>指退订给定的频道。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="redis-事务">Redis 事务</h1>
+<p>Redis 事务可以一次执行多个命令， 并且带有以下三个重要的保证：</p>
+<ul>
+<li>批量操作在发送 EXEC 命令前被放入队列缓存。</li>
+<li>收到 EXEC 命令后进入事务执行，事务中任意命令执行失败，其余的命令依然被执行。</li>
+<li>在事务执行过程，其他客户端提交的命令请求不会插入到事务执行命令序列中。</li>
+</ul>
+<p>一个事务从开始到执行会经历以下三个阶段：</p>
+<ul>
+<li>开始事务。</li>
+<li>命令入队。</li>
+<li>执行事务。</li>
+</ul>
+<p>以下是一个事务的例子， 它先以 <strong>MULTI</strong> 开始一个事务， 然后将多个命令入队到事务中， 最后由 <strong>EXEC</strong> 命令触发事务， 一并执行事务中的所有命令：</p>
+<pre><code><code>redis 127.0.0.1:6379&gt; MULTI
+OK
+
+redis 127.0.0.1:6379&gt; SET book-name &quot;Mastering C++ in 21 days&quot;
+QUEUED
+
+redis 127.0.0.1:6379&gt; GET book-name
+QUEUED
+
+redis 127.0.0.1:6379&gt; SADD tag &quot;C++&quot; &quot;Programming&quot; &quot;Mastering Series&quot;
+QUEUED
+
+redis 127.0.0.1:6379&gt; SMEMBERS tag
+QUEUED
+
+redis 127.0.0.1:6379&gt; EXEC
+1) OK
+2) &quot;Mastering C++ in 21 days&quot;
+3) (integer) 3
+4) 1) &quot;Mastering Series&quot;
+   2) &quot;C++&quot;
+   3) &quot;Programming&quot;</code></pre>
+<p>单个 Redis 命令的执行是原子性的，但 Redis 没有在事务上增加任何维持原子性的机制，所以 Redis 事务的执行并不是原子性的。</p>
+<p>事务可以理解为一个打包的批量执行脚本，但批量指令并非原子化的操作，中间某条指令的失败不会导致前面已做指令的回滚，也不会造成后续的指令不做。</p>
+<p>比如:</p>
+<pre><code><code>redis 127.0.0.1:7000&gt; multi
+OK
+redis 127.0.0.1:7000&gt; set a aaa
+QUEUED
+redis 127.0.0.1:7000&gt; set b bbb
+QUEUED
+redis 127.0.0.1:7000&gt; set c ccc
+QUEUED
+redis 127.0.0.1:7000&gt; exec
+1) OK
+2) OK
+3) OK</code></pre>
+<p>如果在 set b bbb 处失败，set a 已成功不会回滚，set c 还会继续执行。</p>
+<h3 id="redis-事务命令">Redis 事务命令</h3>
+<table>
+<thead>
+<tr class="header">
+<th>命令</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>discard</td>
+<td>取消事务，放弃执行事务块内的所有命令。</td>
+</tr>
+<tr class="even">
+<td>exec</td>
+<td>执行所有事务块内的命令。</td>
+</tr>
+<tr class="odd">
+<td>multi</td>
+<td>标记一个事务块的开始。</td>
+</tr>
+<tr class="even">
+<td>unwatch</td>
+<td>取消 WATCH 命令对所有 key 的监视。</td>
+</tr>
+<tr class="odd">
+<td>watch key [key ...]</td>
+<td>监视一个(或多个) key ，如果在事务执行之前这个(或这些) key 被其他命令所改动，那么事务将被打断。</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

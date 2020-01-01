@@ -1,0 +1,290 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python实现网络多人聊天室 - Linux' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python实现网络多人聊天室 - Linux</center></div><div class='banquan'>原文出处:本文由博客园博主no樂on提供。<br/>
+原文连接:https://www.cnblogs.com/noonjuan/p/11295438.html</div><br>
+    <h1 style="text-align: center;">Python实现网络多人聊天室 - Linux</h1>
+<p><strong>相关连接：</strong></p>
+<p><strong>　　<a href="https://www.cnblogs.com/noonjuan/p/12063882.html" target="_blank">Python实现网络多人聊天室 - Windows</a></strong></p>
+<p><strong>　　<a href="https://www.cnblogs.com/noonjuan/p/11305117.html" target="_blank">Python实现网络图形化界面多人聊天室</a></strong></p>
+<p><strong>文件结构：</strong></p>
+<p>　　chatroom<br />　　├── client.py&nbsp; # 客户端代码<br />　　├── language.py&nbsp; # 语言文件<br />　　├── server.py&nbsp; # 服务端代码<br />　　└── settings.py&nbsp; # 设置文件</p>
+<p>　　0 directories, 4 files</p>
+<p><strong>使用模块：</strong></p>
+<ul>
+<li>os</li>
+<li>sys</li>
+<li>socket</li>
+<li>select</li>
+
+
+
+
+
+</ul>
+<p><strong>思路：</strong></p>
+<ul>
+<li>settings.py，定义HOST、PORT、ADDR、buffersize、language、curuser等变量。</li>
+<li>server.py，服务器代码，使用select模块select方法实现IO多路复用监听sys.stdin输入以及客户端连接，实现与客户端通信，将从客户端接收到的信息群发给每个客户端。</li>
+<li>client.py，客户端代码，同样使用IO多路复用同时监听客户端接收信息以及sys.stdin输入信息，实现与服务端的通信，间接实现与其他客户端的群聊。</li>
+<li>language.py，语言文件，支持中文以及英语。</li>
+
+
+
+
+
+</ul>
+<p><strong>代码：</strong></p>
+<p><span style="text-decoration: underline;"><em><strong>settings.py</strong></em></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> settings.py</span>
+<span style="color: #000000;">
+HOST </span>= <span style="color: #800000;">'</span><span style="color: #800000;">0.0.0.0</span><span style="color: #800000;">'</span>      <span style="color: #008000;">#</span><span style="color: #008000;"> 主机名</span>
+PORT = 5555            <span style="color: #008000;">#</span><span style="color: #008000;"> 端口号</span>
+buffersize = 1024    <span style="color: #008000;">#</span><span style="color: #008000;"> 缓冲大小</span>
+ADDR = HOST, PORT    <span style="color: #008000;">#</span><span style="color: #008000;"> 地址</span>
+<span style="color: #000000;">
+languages </span>= [<span style="color: #800000;">'</span><span style="color: #800000;">cn</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">en</span><span style="color: #800000;">'</span>]      <span style="color: #008000;">#</span><span style="color: #008000;"> 'cn' -&gt; 中文</span>
+language = <span style="color: #800000;">'</span><span style="color: #800000;">cn</span><span style="color: #800000;">'</span>                <span style="color: #008000;">#</span><span style="color: #008000;"> 'en' -&gt; 英文</span>
+<span style="color: #000000;">
+curuser </span>= <span style="color: #800000;">''</span>  <span style="color: #008000;">#</span><span style="color: #008000;"> 当前用户</span></pre>
+</div>
+<p><span style="text-decoration: underline;"><em><strong>language.py</strong></em></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> language.py</span>
+
+<span style="color: #0000ff;">from</span> settings <span style="color: #0000ff;">import</span><span style="color: #000000;"> language
+
+</span><span style="color: #0000ff;">if</span> language == <span style="color: #800000;">'</span><span style="color: #800000;">en</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    administrator </span>= <span style="color: #800000;">'</span><span style="color: #800000;">Administrator</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_administrator_close_chatroom </span>= <span style="color: #800000;">'</span><span style="color: #800000;">Chatroom closed by Administrator.</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_uesr_enter_chatroom </span>= <span style="color: #800000;">'</span><span style="color: #800000;">entered the chatroom.</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_user_quit_chatroom </span>= <span style="color: #800000;">'</span><span style="color: #800000;">quited the chatroom.</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_username </span>= <span style="color: #800000;">'</span><span style="color: #800000;">username&gt; </span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_user_already_exists </span>= <span style="color: #800000;">'</span><span style="color: #800000;">Username already exists!</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_connect_to </span>= <span style="color: #800000;">'</span><span style="color: #800000;">Connected to</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_connect_from </span>= <span style="color: #800000;">'</span><span style="color: #800000;">Connected from</span><span style="color: #800000;">'</span>
+<span style="color: #0000ff;">elif</span> language == <span style="color: #800000;">'</span><span style="color: #800000;">cn</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    administrator </span>= <span style="color: #800000;">'</span><span style="color: #800000;">管理员</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_administrator_close_chatroom </span>= <span style="color: #800000;">'</span><span style="color: #800000;">管理员关闭了聊天室。</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_uesr_enter_chatroom </span>= <span style="color: #800000;">'</span><span style="color: #800000;">进入了聊天室。</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_user_quit_chatroom </span>= <span style="color: #800000;">'</span><span style="color: #800000;">退出了聊天室。</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_username </span>= <span style="color: #800000;">'</span><span style="color: #800000;">用户名&gt; </span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_user_already_exists </span>= <span style="color: #800000;">'</span><span style="color: #800000;">用户名已存在。</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_connect_to </span>= <span style="color: #800000;">'</span><span style="color: #800000;">连接到</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    txt_connect_from </span>= <span style="color: #800000;">'</span><span style="color: #800000;">连接从</span><span style="color: #800000;">'</span></pre>
+</div>
+<p><span style="text-decoration: underline;"><em><strong>server.py</strong></em></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> server.py</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 导入系统模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os, sys
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 导入网络编程（传输层）模块</span>
+<span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *
+<span style="color: #008000;">#</span><span style="color: #008000;"> IO多路复用模块</span>
+<span style="color: #0000ff;">from</span> select <span style="color: #0000ff;">import</span><span style="color: #000000;"> select
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置模块</span>
+<span style="color: #0000ff;">from</span> settings <span style="color: #0000ff;">import</span> *
+<span style="color: #008000;">#</span><span style="color: #008000;"> 语言模块</span>
+<span style="color: #0000ff;">from</span> language <span style="color: #0000ff;">import</span> *
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">main 主函数</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    server </span>= socket(AF_INET, SOCK_STREAM)  <span style="color: #008000;">#</span><span style="color: #008000;"> 建立TCP套接字</span>
+    server.setsockopt(SOL_SOCKET, SO_REUSEADDR, 1)  <span style="color: #008000;">#</span><span style="color: #008000;"> 设置端口可立即重用</span>
+    server.bind(ADDR)  <span style="color: #008000;">#</span><span style="color: #008000;"> 绑定地址</span>
+    server.listen()  <span style="color: #008000;">#</span><span style="color: #008000;"> 监听</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 接收函数</span>
+<span style="color: #000000;">    accept(server)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> accept(server):
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">accept 服务器接受函数</span><span style="color: #800000;">'</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 使用select模块的select方法实现IO多路复用监听传输</span>
+    rlist =<span style="color: #000000;"> [server, sys.stdin]
+    wlist </span>=<span style="color: #000000;"> []
+    xlist </span>=<span style="color: #000000;"> []
+
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        rs, ws, xs </span>=<span style="color: #000000;"> select(rlist, wlist, xlist)
+
+        </span><span style="color: #0000ff;">for</span> r <span style="color: #0000ff;">in</span><span style="color: #000000;"> rs:
+            </span><span style="color: #0000ff;">if</span> r <span style="color: #0000ff;">is</span><span style="color: #000000;"> server:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器接受客户端连接</span>
+                conn, addr =<span style="color: #000000;"> server.accept()
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 调用validate函数检查用户名</span>
+                <span style="color: #0000ff;">if</span><span style="color: #000000;"> validate(conn):
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将客户端套接字添加到rlist中以监听</span>
+<span style="color: #000000;">                    rlist.append(conn)
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果用户名注册成功</span>
+                    <span style="color: #0000ff;">print</span><span style="color: #000000;">(txt_connect_from, addr)
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                    conn.close()
+            </span><span style="color: #0000ff;">elif</span> r <span style="color: #0000ff;">is</span><span style="color: #000000;"> sys.stdin:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器向所有客户端发送系统（管理员）消息</span>
+                data =<span style="color: #000000;"> sys.stdin.readline()
+                </span><span style="color: #0000ff;">if</span> data == <span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果服务器输入回车，则退出</span>
+                    <span style="color: #0000ff;">for</span> c <span style="color: #0000ff;">in</span> rlist[2<span style="color: #000000;">:]:
+                        c.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+                        c.close()
+                    server.close()
+                    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(txt_administrator_close_chatroom)
+                    os._exit(0)
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果服务器输入正常语句，通知所有客户端</span>
+                    data = administrator + <span style="color: #800000;">'</span><span style="color: #800000;">: </span><span style="color: #800000;">'</span> +<span style="color: #000000;"> data
+                    </span><span style="color: #0000ff;">for</span> c <span style="color: #0000ff;">in</span> rlist[2<span style="color: #000000;">:]:
+                        c.send(data.encode())
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务器接受客户端的消息并转发给所有客户端</span>
+                data =<span style="color: #000000;"> r.recv(buffersize)
+                </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> data:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 关闭客户端</span>
+<span style="color: #000000;">                    r.close()
+                    rlist.remove(r)
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 转发信息给其他客户端</span>
+                    <span style="color: #0000ff;">print</span>(data.decode(), end=<span style="color: #800000;">''</span><span style="color: #000000;">)
+                    </span><span style="color: #0000ff;">for</span> c <span style="color: #0000ff;">in</span> rlist[2<span style="color: #000000;">:]:
+                        </span><span style="color: #0000ff;">if</span> c <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> r:
+                            c.send(data)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> validate(client):
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">检验用户名 validate username</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    name </span>=<span style="color: #000000;"> client.recv(buffersize).decode()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(name.decode())</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> print(users)</span>
+    <span style="color: #0000ff;">if</span> name <span style="color: #0000ff;">in</span><span style="color: #000000;"> users:
+        client.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">Username already exists!</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        users.append(name)
+        client.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">Welcome!</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 全局变量，管理用户信息</span>
+    users =<span style="color: #000000;"> []
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 主函数</span>
+    main()</pre>
+</div>
+<p><span style="text-decoration: underline;"><em><strong>client.py</strong></em></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> client.py</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 导入系统模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os, sys
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 导入网络编程（传输层）模块</span>
+<span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *
+<span style="color: #008000;">#</span><span style="color: #008000;"> IO多路复用模块</span>
+<span style="color: #0000ff;">from</span> select <span style="color: #0000ff;">import</span><span style="color: #000000;"> select
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 设置模块</span>
+<span style="color: #0000ff;">from</span> settings <span style="color: #0000ff;">import</span> *
+<span style="color: #008000;">#</span><span style="color: #008000;"> 语言模块</span>
+<span style="color: #0000ff;">from</span> language <span style="color: #0000ff;">import</span> *
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">main 主函数</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    client </span>= socket(AF_INET, SOCK_STREAM)  <span style="color: #008000;">#</span><span style="color: #008000;"> 建立TCP套接字</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 登录函数</span>
+    <span style="color: #0000ff;">if</span><span style="color: #000000;"> login(client):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 连接函数</span>
+<span style="color: #000000;">        connect(client)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> connect(client):
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">connect 客户端连接函数</span><span style="color: #800000;">'</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 使用select模块的select方法实现IO多路复用监听传输</span>
+    rlist =<span style="color: #000000;"> [client, sys.stdin]
+    wlist </span>=<span style="color: #000000;"> []
+    xlist </span>=<span style="color: #000000;"> []
+
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        rs, ws, xs </span>=<span style="color: #000000;"> select(rlist, wlist, xlist)
+
+        </span><span style="color: #0000ff;">for</span> r <span style="color: #0000ff;">in</span><span style="color: #000000;"> rs:
+            </span><span style="color: #0000ff;">if</span> r <span style="color: #0000ff;">is</span><span style="color: #000000;"> client:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接受服务器发来的消息</span>
+                data =<span style="color: #000000;"> client.recv(buffersize)
+                </span><span style="color: #0000ff;">if</span> data.decode() == <span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果消息为回车，聊天室关闭</span>
+<span style="color: #000000;">                    client.close()
+                    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(txt_administrator_close_chatroom)
+                    os._exit(0)
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 打印接收到的信息</span>
+                    <span style="color: #0000ff;">print</span>(data.decode(), end=<span style="color: #800000;">''</span><span style="color: #000000;">)
+            </span><span style="color: #0000ff;">elif</span> r <span style="color: #0000ff;">is</span><span style="color: #000000;"> sys.stdin:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 发送消息给服务器</span>
+                data =<span style="color: #000000;"> sys.stdin.readline()
+                </span><span style="color: #0000ff;">if</span> data == <span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果回车，发送退出消息，关闭客户端，退出聊天室</span>
+                    data = curuser + <span style="color: #800000;">'</span><span style="color: #800000;">: </span><span style="color: #800000;">'</span> + txt_user_quit_chatroom + <span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                    client.send(data.encode())
+                    client.close()
+                    os._exit(0)
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 发信息给服务器</span>
+                    data = curuser + <span style="color: #800000;">'</span><span style="color: #800000;">: </span><span style="color: #800000;">'</span> +<span style="color: #000000;"> data
+                    client.send(data.encode())
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> login(client):
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">登录函数 login</span><span style="color: #800000;">'</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 使用全局变量管理用户</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 先让客户端输入姓名</span>
+    <span style="color: #0000ff;">global</span><span style="color: #000000;"> curuser
+    curuser </span>=<span style="color: #000000;"> input(txt_username)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 再连接到服务器，传送用户名以检验</span>
+    client.connect(ADDR)  <span style="color: #008000;">#</span><span style="color: #008000;"> 连接到服务器地址</span>
+    <span style="color: #0000ff;">print</span><span style="color: #000000;">(txt_connect_to, ADDR)
+    client.send(curuser.encode())
+    data </span>=<span style="color: #000000;"> client.recv(buffersize)
+    </span><span style="color: #0000ff;">if</span> data.decode() == <span style="color: #800000;">'</span><span style="color: #800000;">Username already exists!</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果用户名已经存在，要求重新输入</span>
+        <span style="color: #0000ff;">print</span><span style="color: #000000;">(txt_user_already_exists)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 发送信息给服务器，告知服务器用户进入聊天室</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> -*- 因为监听传输的是sys.stdin.readline()，所以必须在最后添加换行符，以便清除阻塞 -*-</span>
+        data = curuser + <span style="color: #800000;">'</span><span style="color: #800000;">: </span><span style="color: #800000;">'</span> + txt_uesr_enter_chatroom + <span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        client.send(data.encode())
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    main()</span></pre>
+</div>
+<p><strong>运行截图：</strong></p>
+<p><strong><img src="./images/Python实现网络多人聊天室 - Linux0.png" alt="" /></strong></p>
+<p><strong>总结：</strong></p>
+<ul>
+<li>在打代码之前，一定要先进行规划，大致写出项目的大概路线。</li>
+<li>项目的实现要从最基本的地基开始，像这样一个网络间的多人聊天室的实现必须先从建立服务端和客户端开始，不能反而从表面入手。比如如果要做一个网络多人聊天室的图形化界面应用，绝对不可以先去写图形界面的实现，就算最后实现的图形界面多么好看，如果不能实现网络通信也白干。</li>
+<li>对于项目中出错的点，应该多加注释，方便以后阅读，在网上查找到有益的知识，可以把网址复制下来，写进项目文档，方便以后不时之需。</li>
+</ul>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

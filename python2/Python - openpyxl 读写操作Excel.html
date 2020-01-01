@@ -1,0 +1,211 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python - openpyxl 读写操作Excel' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python - openpyxl 读写操作Excel</center></div><div class='banquan'>原文出处:本文由博客园博主爱文飞翔提供。<br/>
+原文连接:https://www.cnblogs.com/an-wen/p/11171479.html</div><br>
+    <h3 id="openpyxl特点">openpyxl特点</h3>
+<pre><code><code>  openpyxl（可读写excel表）专门处理Excel2007及以上版本产生的xlsx文件，xls和xlsx之间转换容易 注意：如果文字编码是“gb2312” 读取后就会显示乱码，请先转成Unicode</code></pre>
+<p>1、openpyxl 读写单元格时，单元格的坐标位置起始值是（1,1），即下标最小值为1，否则报错！</p>
+<pre><code><code>    tableTitle = [&#39;userName&#39;, &#39;Phone&#39;, &#39;age&#39;, &#39;Remark&#39;]
+
+    # 维护表头
+    #        if row &lt; 1 or column &lt; 1:
+    #          raise ValueError(&quot;Row or column values must be at least 1&quot;)
+    # 如上，openpyxl 的首行、首列 是 （1,1）而不是（0,0），如果坐标输入含有小于1的值，提示 ：Row or column values must be at least 1，即最小值为1.
+    for col in range(len(tableTitle)):
+        c = col + 1
+        ws.cell(row=1, column=c).value = tableTitle[col]</code></pre>
+<p>2、openpyxl 支持直接横纵坐标访问，如A1,B2...</p>
+<pre><code><code>ws[&#39;A4&#39;] = 4 #直接赋值</code></pre>
+<h3 id="openpyxl操作excel">openpyxl操作excel</h3>
+<p>Excel文件三个对象</p>
+<pre><code><code>workbook： 工作簿，一个excel文件包含多个sheet。
+sheet：工作表，一个workbook有多个，表名识别，如“sheet1”,“sheet2”等。
+cell： 单元格，存储数据对象</code></pre>
+<h4 id="新建表">1、新建表</h4>
+<p>A workbook至少创建一个worksheet.</p>
+<p>通过<code>openpyxl.workbook.Workbook.active()</code>得到worksheet</p>
+<p>wb = Workbook(encoding='UTF-8')</p>
+<p><code>ws = wb.active</code><br />
+<strong>注意：</strong><br />
+该方法使用_active_sheet_index属性, 默认会设置0，也就是第一个worksheet。除非手动修改，否则使用active方法得到都是第一个worksheet。<br />
+你也可以创建worksheets，通过 <code>openpyxl.workbook.Workbook.create_sheet()</code> 方法：</p>
+<pre><code><code> ws = wb.create_sheet(&quot;Mysheet&quot;) #插入到最后(default)
+#或者
+ ws = wb.create_sheet(&quot;Mysheet&quot;, 0) #插入到最开始的位置</code></pre>
+<p>创建的sheet的名称会自动创建，按照sheet，sheet1，sheet2自动增长，通过title属性可以修改其名称。</p>
+<pre><code><code>ws.title = &quot;New Title&quot;
+ws = wb.create_sheet(title=&quot;Pip&quot;)</code></pre>
+<p>默认的sheet的tab是白色的，可以通过 RRGGBB颜色来修改sheet_properties.tabColor属性从而修改sheet tab按钮的颜色:</p>
+<pre><code><code>ws.sheet_properties.tabColor = &quot;1072BA&quot;</code></pre>
+<p>当你设置了sheet的名称，可以将其看成workbook中的一个key。也可以使用<code>openpyxl.workbook.Workbook.get_sheet_by_name()</code> 方法</p>
+<p>单元格赋值</p>
+<pre><code><code>#设定单元格的值，三种方式
+sheet.cell(row=2,column=5).value=99
+sheet.cell(row=3,column=5,value=100)
+ws[&#39;A4&#39;] = 4 #write </code></pre>
+<p>逐行写</p>
+<pre><code><code> ws.append(iterable)
+ #添加一行到当前sheet的最底部（即逐行追加从第一行开始） iterable必须是list,tuple,dict,range,generator类型的。 1,如果是list,将list从头到尾顺序添加。 2，如果是dict,按照相应的键添加相应的键值。
+ ws.append([‘This is A1’, ‘This is B1’, ‘This is C1’])
+ ws.append({‘A’ : ‘This is A1’, ‘C’ : ‘This is C1’})
+ ws.append({1 : ‘This is A1’, 3 : ‘This is C1’})</code></pre>
+<h4 id="读表操作">2、读表操作</h4>
+<pre><code><code>#打开文件：
+from openpyxl import load_workbook
+excel=load_workbook(&#39;E:/test.xlsx&#39;)
+#获取sheet：
+table = excel.get_sheet_by_name(&#39;Sheet1&#39;)   #通过表名获取  
+#获取行数和列数：
+rows=table.max_row   #获取行数
+cols=table.max_column    #获取列数
+#获取单元格值：
+Data=table.cell(row=row,column=col).value  #获取表格内容，是从第一行第一列是从1开始的，注意不要丢掉 .value</code></pre>
+<pre><code><code>#通过名字
+    ws = wb[&quot;frequency&quot;] 
+    #等同于 ws2 = wb.get_sheet_by_name(&#39;frequency&#39;)
+    #不知道名字用index
+    sheet_names = wb.get_sheet_names()
+    ws = wb.get_sheet_by_name(sheet_names[index])# index为0为第一张表 
+#或者
+    ws =wb.active
+   # 等同于  ws = wb.get_active_sheet() #通过_active_sheet_index设定读取的表，默认0读第一个表
+    #活动表表名
+   wb.get_active_sheet().title</code></pre>
+<p>单元格使用</p>
+<pre><code><code>c = ws[&#39;A4&#39;] 
+d = ws.cell(row = 4, column = 2) #行列读写</code></pre>
+<p>逐行读取</p>
+<pre><code><code>#逐行读
+        ws.iter_rows(range_string=None, row_offset=0, column_offset=0): range-string(string)-单元格的范围：例如(&#39;A1:C4&#39;) row_offset-添加行 column_offset-添加列 
+   # 返回一个生成器, 注意取值时要用value,例如：
+    for row in ws.iter_rows(&#39;A1:C2&#39;):
+        for cell in row:
+            print cell
+   #读指定行、指定列:
+    rows=ws.rows#row是可迭代的 
+    columns=ws.columns#column是可迭代的
+    #打印第n行数据 
+    print rows[n]#不需要用.value 
+    print columns[n]#不需要用.value</code></pre>
+<p>显示有多少张表</p>
+<pre><code><code>wb.get_sheet_names()  
+#显示表名，表行数，表列数   
+print ws.title  
+print ws.max_row
+print ws.max_column</code></pre>
+<p>公式计算formulae</p>
+<pre><code><code>ws[&quot;A1&quot;] = &quot;=SUM(1, 1)&quot;
+ws[&quot;A1&quot;] = &quot;=SUM(B1:C1)&quot;</code></pre>
+<h4 id="操作实例">3、操作实例</h4>
+<pre><code><code>#-*-coding:utf-8-*-
+# Time:2017/9/21 19:02
+# Author:YangYangJun
+
+
+from openpyxl import Workbook
+from openpyxl.reader.excel import load_workbook
+
+import os
+import time
+
+
+
+def writeExcel():
+    # 获取文件路径
+    excelPath = os.path.join(os.getcwd(), &#39;ExcelData&#39;)
+    print &quot;****&quot;
+    print excelPath
+    # 定义文件名称
+    #  invalid mode (&#39;wb&#39;) or filename: &#39;Excel2017-09-21_20:15:57.xlsx&#39;   这种方式明明文件，会提示保存失败，无效的文件名。
+    # nameTime = time.strftime(&#39;%Y-%m-%d_%H:%M:%S&#39;)
+    nameTime = time.strftime(&#39;%Y-%m-%d_%H-%M-%S&#39;)
+    excelName = &#39;Excel&#39; + nameTime + &#39;.xlsx&#39;
+    ExcelFullName= os.path.join(excelPath,excelName)
+    print ExcelFullName
+
+    wb = Workbook()
+
+    ws = wb.active
+
+    tableTitle = [&#39;userName&#39;, &#39;Phone&#39;, &#39;age&#39;, &#39;Remark&#39;]
+
+    # 维护表头
+    #        if row &lt; 1 or column &lt; 1:
+    #          raise ValueError(&quot;Row or column values must be at least 1&quot;)
+    # 如上，openpyxl 的首行、首列 是 （1,1）而不是（0,0），如果坐标输入含有小于1的值，提示 ：Row or column values must be at least 1，即最小值为1.
+    for col in range(len(tableTitle)):
+        c = col + 1
+        ws.cell(row=1, column=c).value = tableTitle[col]
+
+    # 数据表基本信息
+    tableValues = [[&#39;张学友&#39;, 15201062100, 18, &#39;测试数据！&#39;], [&#39;李雷&#39;, 15201062598, 19, &#39;测试数据！&#39;],[&#39;Marry&#39;, 15201062191, 28, &#39;测试数据！&#39;]]
+
+    for row in range(len(tableValues)):
+        ws.append(tableValues[row])
+    #wb.save(ExcelFullName)
+    wb.save(filename=ExcelFullName)
+    return ExcelFullName
+
+def readExcel(ExcelFullName):
+    wb = load_workbook(ExcelFullName)
+    #wb = load_workbook(filename=ExcelFullName)
+
+    # 获取当前活跃的worksheet,默认就是第一个worksheet
+    #ws = wb.active
+    # 当然也可以使用下面的方法
+    # 获取所有表格(worksheet)的名字
+    sheets = wb.get_sheet_names()
+    print sheets
+    # # 第一个表格的名称
+    sheet_first = sheets[0]
+    # # 获取特定的worksheet
+    #
+    ws = wb.get_sheet_by_name(sheet_first)
+    print &quot;***&quot;
+    print sheet_first
+    print ws.title
+    print &quot;^^^&quot;
+    # 获取表格所有行和列，两者都是可迭代的
+    rows = ws.rows
+    print rows
+
+    columns = ws.columns
+    # 迭代所有的行
+    for row in rows:
+        line = [col.value for col in row]
+        print line
+
+    # 通过坐标读取值
+
+    print ws[&#39;A1&#39;].value  # A表示列,1表示行
+    print ws.cell(row=1, column=1).value
+
+if __name__ == &#39;__main__&#39;:
+    ExcelFullName = writeExcel()
+    readExcel(ExcelFullName)</code></pre>
+<pre><code><code># 显示表名，表行数，表列数
+print &quot;Work Sheet Titile:&quot;, ws.title
+print &quot;Work Sheet Rows:&quot;, ws.max_row
+print &quot;Work Sheet Cols:&quot;, ws.max_column</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

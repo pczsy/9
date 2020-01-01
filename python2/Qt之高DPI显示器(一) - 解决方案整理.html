@@ -1,0 +1,352 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Qt之高DPI显示器(一) - 解决方案整理' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Qt之高DPI显示器(一) - 解决方案整理</center></div><div class='banquan'>原文出处:本文由博客园博主朝十晚八提供。<br/>
+原文连接:https://www.cnblogs.com/swarmbees/p/12004594.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#dpi发展">DPI发展</a><ul>
+        <li><a href="#ppi">1、PPI</a></li>
+        <li><a href="#dpi">2、DPI</a></li>
+        </ul></li>
+        <li><a href="#一win自适应系统">一、Win自适应系统</a></li>
+        <li><a href="#二qt机制">二、Qt机制</a><ul>
+        <li><a href="#windows系统dwm缩放">1、Windows系统DWM缩放</a></li>
+        <li><a href="#qt适配高dpi">2、 Qt适配高DPI</a></li>
+        <li><a href="#适配dpi结论">3、适配DPI结论</a></li>
+        </ul></li>
+        <li><a href="#三qt适配">三、Qt适配</a></li>
+        <li><a href="#四自己适配">四、自己适配</a><ul>
+        <li><a href="#窗口大小">1、窗口大小</a></li>
+        <li><a href="#字体大小">2、字体大小</a></li>
+        <li><a href="#间距">3、间距</a></li>
+        <li><a href="#图标">4、图标</a></li>
+        </ul></li>
+        <li><a href="#五参考文章">五、参考文章</a></li>
+        </ul>
+    </div>
+</div>
+<p><strong>原文链接：</strong><a href="https://www.cnblogs.com/swarmbees/p/12004594.html">Qt之高DPI显示器(一) - 解决方案整理</a></p>
+<p><strong><span style='font-size:28px;'>最近一直在处理高DPI问题，也花费了不少功夫，前前后后使用了多种解决方案，各种方案也都有利弊，<span style='color:red;'>笔者最终采用了自适配方案，虽然复杂一些，但是结果可控</span>。这里把处理的过程记录下来，留给有同样需求的同学</span></strong></p>
+<h2 id="dpi发展">DPI发展</h2>
+<p>随着显示器质量的增高，高分屏逐渐增多，很多用户平时使用的机器都是2k屏甚至是4k屏。</p>
+<blockquote>
+<p>显示器分辨率变大后，同样的物理尺寸下可以表示更多的点，也就是我们平时所说的像素。</p>
+</blockquote>
+<p><strong>误区说明</strong></p>
+<p>我们现在平时所说的软件像素应该是PPI(Pixels Per Inch)，中文意思是每英寸像素数，而我们windows系统中修改的DPI其实就是这个PPI。</p>
+<p>为什么会有这个误区呢？</p>
+<p>答案：因为这个世界正在尽人类想象所能地使其变得难懂。</p>
+<h3 id="ppi">1、PPI</h3>
+<p>每英寸像素数，像素表示的是“图片的原色”，足够靠近你显示屏上的图片你就会看到他们：一排一排的小方块。换句话说，他们也是一个电子图片的最小可寻址单元。</p>
+<p>其中每一个电子图片则是由更小的光学单元组成，这些光学单元就是红色、绿色和蓝色。</p>
+<p><strong>PPI的始作俑者</strong></p>
+<p>可悲的是，一些生产厂商将这些 sub-pixel 描述为“dot”，为什么这样认为呢？因为他和DPI的墨点工作方式相同，然后就是一顿商业互吹，用DPI来描述PPI就被开始误用了。</p>
+<center>
+    <img src="./images/Qt之高DPI显示器(一) - 解决方案整理0.png" />
+</center>
+<blockquote>
+<p>需要注意的是，pixel 是一个固定大小的物理物体，因此，一个屏幕上的 PPI 是固定的。大部显示器都是 66 - 130ppi。</p>
+</blockquote>
+<p><strong>PPI 和打印的目标</strong></p>
+<p>只有要打印出来时，设定 PPI 才有效。</p>
+<p>在打印的过程中，所有在屏幕上组成图片的物理pixel都被转换成不同色调的小正方形，这些小正方形是另外一种“像素”，下文中都使用pixel-d来表示。</p>
+<p>当打印时，如果增加图片的大小为300%，图片是放大了300%，但是图片的颗粒度更大了！如果想要清晰度不变，而大小发生变化，这个时候我们就需要修改PPI。</p>
+<p><strong>看一个图片打印的示例</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>图片尺寸</th>
+<th>PPI</th>
+<th>物理春</th>
+<th>结果</th>
+<th>打印机(DPI)</th>
+<th>每英寸点数</th>
+<th>总点数</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>300px * 300px</td>
+<td>10</td>
+<td>30 * 30英寸</td>
+<td>非常大</td>
+<td>60</td>
+<td>60 * 60</td>
+<td>30 * 30 * 每英寸点数</td>
+<td>非常虚</td>
+</tr>
+<tr class="even">
+<td>300px * 300px</td>
+<td>300</td>
+<td>1 * 1英寸</td>
+<td>非常小</td>
+<td>90</td>
+<td>90 * 90</td>
+<td>1 * 1 * 每英寸点数</td>
+<td>细腻</td>
+</tr>
+<tr class="odd">
+<td>300px * 300px</td>
+<td>60</td>
+<td>5 * 5英寸</td>
+<td>可能合适</td>
+<td>120</td>
+<td>120 * 120</td>
+<td>5 * 5 * 每英寸点数</td>
+<td>非常细腻</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>对于最终的打印输出而言，将 PPI 输入认为是一种调节物理大小的方式，而不是分辨率。</p>
+</blockquote>
+<p>PPI可以决定打印的大小，想要更加细腻的打印效果则是需要增加更多的pixel-d。</p>
+<h3 id="dpi">2、DPI</h3>
+<p>DPI 只是打印机的技术参数，就像是你电脑显示器的 pixel 分辨率。</p>
+<p>比如说，你以 600 dpi 来打印一幅 150ppi 的图像，那么每个“pixel”将会包括16个 dot（600 dot/150 “pixel” = 4 x 4 / “pixel”)。</p>
+<table>
+<thead>
+<tr class="header">
+<th>名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Inch英寸</td>
+<td>物理单位，可以衡量显示器的物理大小</td>
+</tr>
+<tr class="even">
+<td>PPI每英寸像素数</td>
+<td>物理值，由硬件厂商决定。表示每英寸下可以存储多少个光学单元</td>
+</tr>
+<tr class="odd">
+<td>DPI每英寸点数</td>
+<td>打印机单位，一个技术参数，代表打印机的好坏。<strong>通常来说，dot 矩阵打印机可打印的 dpi 范围为 60 - 90，喷墨打印机的 dpi 范围为 300 - 600，而激光打印机为 600 - 1800。</strong></td>
+</tr>
+<tr class="even">
+<td>Resolution分辨率</td>
+<td>显示器单位，描述每英寸像素数</td>
+</tr>
+<tr class="odd">
+<td>windows系统DPI</td>
+<td>个人理解：windows自己的一个标准，表示每英寸像素数，也就是PPI(显示器真正的PPI不支持修改)；类似于打印时的DPI。<strong>一个技术指标或者参数</strong></td>
+</tr>
+</tbody>
+</table>
+<p>综上：对于我们软件开发来说，其实所说的像素大小都是指PPI，这里要区分不是显示器的固定PPI，windows系统上修改DPI时其实修改的系统模拟出来的PPI；就类似于我们打印图片时输出的PPI一样，可以决定图片打印的物理尺寸。</p>
+<h2 id="一win自适应系统">一、Win自适应系统</h2>
+<p><a href="https://docs.microsoft.com/zh-cn/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows?redirectedfrom=MSDN">High DPI Desktop Application Development on Windows</a></p>
+<p>总的来说可以用，但是会模糊。目前<strong>win10效果最好</strong>，基本清晰，但是还可以优化；win7系统上基本是糊的，如果您的产品是一个互联网软件，那么系统自适应绝对不是最佳方案。</p>
+<h2 id="二qt机制">二、Qt机制</h2>
+<blockquote>
+<p>要使用Qt高DPI缩放，首先得禁用系统缩放。</p>
+</blockquote>
+<p><strong>方式1：</strong> QApplication构造前设置Qt::AA_EnableHighDpiScaling属性</p>
+<p><strong>方式2：</strong> 设置环境变量QT_AUTO_SCREEN_SCALE_FACTOR为1</p>
+<h3 id="windows系统dwm缩放">1、Windows系统DWM缩放</h3>
+<p>启用系统缩放时，由于使用的都是图片拉伸的方式则会产品模糊<br />
+--- | DPI Unaware | System DPI Awareness | Per-Monitor and Per-Monitor (V2) DPI Awareness<br />
+--- | --- | --- | ---<br />
+含义 | 启用系统缩放 | 应用程序已在启动的显示器上支持高DPI，但是没有对其他显示器支持，也就是说请系统在其他显示器上帮我启用系统缩放 | 永远不要对我做虚拟化，因为我自己能搞定</p>
+<p>启用系统DPI虚拟化，可以调用SetProcessDpiAwareness接口。该接口有一个枚举的参数类型PROCESS_DPI_AWARENESS，但是这个参数只有在Win8.1之后才有。</p>
+<blockquote>
+<p>Win10上有一个增强型虚拟化，可以大大优化DWM效果。</p>
+</blockquote>
+<blockquote>
+<p>Win7可以调用SetProcessDpiAware接口</p>
+</blockquote>
+<h3 id="qt适配高dpi">2、 Qt适配高DPI</h3>
+<p><strong>基于Qt5.7测试结果</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>---</th>
+<th>Qt虚拟化</th>
+<th>推荐度</th>
+<th>系统虚拟化</th>
+<th>推荐度</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Win7</td>
+<td>只能使用整数倍放大，效果会模糊</td>
+<td>*</td>
+<td>支持系统下拉框中的浮点缩放，图片会模糊(有些系统失效)</td>
+<td>**</td>
+</tr>
+<tr class="even">
+<td>Win10</td>
+<td>只能使用整数倍放大，字体比较清晰，但是需要适配高DPI图片</td>
+<td>****</td>
+<td>图片拉伸，启用了Win增强型DWM，效果还可以，但字体没有Qt适配清楚</td>
+<td>**</td>
+</tr>
+</tbody>
+</table>
+<p><strong>基于Qt5.13测试结果</strong><br />
+--- | Qt虚拟化 | 推荐度 | 系统虚拟化 | 推荐度<br />
+--- | --- | --- | --- | ----<br />
+Win7 | 同Qt5.7，但是显示有过好于Qt5.7 | ** | 同Qt5.7 | **<br />
+Win10 | 支持系统自定义分辨率，例如125%、175%<br>在不同分辨率下分别启动软件后，在相同指定分辨率下显示大小不一样<br>例如：在分辨率125%下启动软件，此时不要关闭程序1并修改分辨率为150%，然后在启动一次软件为程序2，观察程序1和程序2的大小，发现不一大。 | **** | 同Qt5.7 | **</p>
+<blockquote>
+<p>我们的软件在Win10上会强制启用增强型虚拟户，需要对exe右键属性-兼容性-所有用户设置进行禁用</p>
+</blockquote>
+<h3 id="适配dpi结论">3、适配DPI结论</h3>
+<p>1、Qt5.7只支持整数比例缩放</p>
+<ol>
+<li>100%:0-149%</li>
+<li>200%:150%-249%</li>
+<li>300%:250%-349%</li>
+<li>...往后依次类推</li>
+<li>100%DPI下启动程序，切换DPI时无法对已启动软件大小做出影响；反之如果非100%DPI启动程序则是正常的。</li>
+</ol>
+<p>2、Qt5.13支持系统预定义缩放比例</p>
+<ol>
+<li>100%：100%</li>
+<li>125%：125%</li>
+<li>...往后依次类推，如果自定义了缩放比，默认按250%(测试结果，不一定准，有待测试多个显示器)显示。但不同分辨率下启动同一个软件后(启动的软件不关闭切换分辨率)，在最后切换的分辨率上观察程序，大小都不一样。</li>
+</ol>
+<p><strong>Qt5.7和Qt5.13都有的问题</strong></p>
+<p>100%DPI启动软件后，再次修改DPI时，软件大小不会再次发生变化。</p>
+<p>到这这里高DPI测试基本结束，综合各种情况，得出如下<strong>两个结论</strong>：</p>
+<ol>
+<li>高DPI适配使用Qt来做。Qt支持高DPI比windows系统缩放效果要好。</li>
+<li>Qt使用5.7。升级Qt到5.13时，需要升级vs至少到2015，并且软件只能是x64版本的，否则还需要升级工具到更高版本，并且我们的依赖库也可能需要重新编译，成本较高，而且5.13支持高DPI比5.7多的地方我们暂时可以不需要(主要是支持系统定义好的浮点缩放)，因此不做Qt升级工作。</li>
+</ol>
+<h2 id="三qt适配">三、Qt适配</h2>
+<blockquote>
+<p>由于升级到5.13有很多成本，暂且使用Qt5.7进行适配</p>
+</blockquote>
+<p><strong>使用Qt5.7适配高DPI</strong></p>
+<blockquote>
+<p>缺点请看一节第三小节中<code>Qt5.7只支持整数比例缩放</code></p>
+</blockquote>
+<p>决定使用Qt5.7适配高DPI后，我们需要干如下几件事：</p>
+<ol>
+<li>原生放大比例和web放大比例统一</li>
+<li>系统DPI修改时，禁用刷新</li>
+<li>添加不同DPI下图片</li>
+</ol>
+<h4 id="统一比例">1、统一比例</h4>
+<blockquote>
+<p>100% 200%</p>
+</blockquote>
+<h4 id="强制刷新">2、强制刷新</h4>
+<blockquote>
+<p>WM_DPICHANGED</p>
+</blockquote>
+<p>接收系统DPI发生变化消息</p>
+<h4 id="图片适配">3、图片适配</h4>
+<blockquote>
+<p>添加不同DPI下图片</p>
+</blockquote>
+<p>Qt适配完之后还是存在一些问题，比方说只支持系统已有缩放比，不能支持任意比例缩放，而且有时候还存在刷新问题、软件异常放大等等。</p>
+<h2 id="四自己适配">四、自己适配</h2>
+<blockquote>
+<p>业务层不需要考虑scale，只需要使用T打头控件开发即可。</p>
+</blockquote>
+<p><span style='font-size:28px;'><strong>注：由于篇幅的缘故，T打头的控件下一篇文章讲解</strong></span></p>
+<p><strong>适配项目</strong></p>
+<ol>
+<li>窗口大小</li>
+<li>字体大小</li>
+<li>间距</li>
+<li>图标</li>
+</ol>
+<h3 id="窗口大小">1、窗口大小</h3>
+<p><strong>重写顶层窗口设置界面大小函数</strong></p>
+<pre><code><code>setFixedWidth
+setFixedHeight
+......</code></pre>
+<p><strong>动态调整</strong></p>
+<p>记录调用了哪些设置大小的函数，在dpi发生变化时重新设置一遍</p>
+<pre><code><code>if (testflag(&quot;setfixedWidth&quot;))
+{
+    setFixedWidth(width * scale);
+}</code></pre>
+<h3 id="字体大小">2、字体大小</h3>
+<blockquote>
+<p>重新生成qss文件</p>
+</blockquote>
+<p>读取原有qss文件，使用正则表达式生成scale版本的新qss文件。</p>
+<h3 id="间距">3、间距</h3>
+<p><strong>布局的margin</strong></p>
+<p>记录调用了哪些设置大小的函数，在dpi发生变化时重新设置一遍，类似于窗口大小变化时所作调整</p>
+<pre><code><code>if (testflag(&quot;margin&quot;))
+{
+    setContextMargin(...);
+}</code></pre>
+<p><strong>padding和margin</strong></p>
+<p>读取原有qss文件，使用正则表达式生成scale版本的新qss文件。</p>
+<h3 id="图标">4、图标</h3>
+<p>工程中需要添加1x 2x 3x等不同分辨率的图标，1x图标为正常情况下使用的图标，2x和3x图标分别是高分辨率下的图标</p>
+<p>替换图标有两种情况，一种是使用qss方式贴图，另一种是自绘贴图</p>
+<p><strong>qss方式</strong></p>
+<p>预先生成高分辨率下的整数倍xxx_2x.qss和xxx_3x.qss文件，实际使用的时候在动态调整，具体方案下一篇文章讲解</p>
+<p><strong>自绘</strong></p>
+<p>如果是自绘文字图图片，那就需要自己控制缩放比，和图片压缩系数，具体方案下一篇文章讲解</p>
+<h2 id="五参考文章">五、参考文章</h2>
+<p><a href="http://blog.jeswang.org/blog/2013/08/07/ppi-vs-dpi-you-shi-yao-qu-bie/">PPI vs. DPI: 有什么区别?</a></p>
+<p><a href="https://docs.microsoft.com/zh-cn/windows/win32/hidpi/high-dpi-desktop-application-development-on-windows?redirectedfrom=MSDN">High DPI Desktop Application Development on Windows</a></p>
+<p><a href="https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/ne-shellscalingapi-process_dpi_awareness">PROCESS_DPI_AWARENESS Enumeration</a></p>
+<p><a href="https://docs.microsoft.com/zh-cn/windows/win32/api/winuser/nf-winuser-setprocessdpiaware?redirectedfrom=MSDN">SetProcessDPIAware function</a>：Win Vista开始支持的接口</p>
+<p><a href="https://docs.microsoft.com/zh-cn/windows/win32/api/shellscalingapi/nf-shellscalingapi-setprocessdpiawareness?redirectedfrom=MSDN">SetProcessDpiAwareness function</a>：Win8.1开始支持的接口</p>
+<p><a href="https://blog.csdn.net/rankun1/article/details/55225022">关于Windows高DPI的一些简单总结</a></p>
+<p><a href="http://www.cocoachina.com/articles/69830">如何开发新的Qt 5.7高DPI每监视器DPI感</a></p>
+<p><strong>值得一看的优秀文章：</strong></p>
+<ol>
+<li><strong><a href="https://www.cnblogs.com/swarmbees/p/6707798.html">财联社-产品展示</a></strong></li>
+<li><strong><a href="https://www.cnblogs.com/swarmbees/p/10836505.html">广联达-产品展示</a></strong></li>
+<li><strong><a href="https://blog.csdn.net/qq_30392343/article/details/95527107">Qt定制控件列表</a></strong></li>
+<li><strong><a href="https://blog.csdn.net/qq_30392343/article/details/95526527">牛逼哄哄的Qt库</a></strong></li>
+</ol>
+<p><br><br />
+<html><br />
+<div style='font-weight:600;'><br />
+如果您觉得文章不错，不妨给个<span style='font-size:24px;color:blue;'>打赏</span>，写作不易，感谢各位的支持。您的支持是我最大的动力，谢谢！！！<br />
+</div><br />
+<center><br />
+<div><br />
+<table><br />
+<tr><br />
+<td><img src=https://www.cnblogs.com/images/cnblogs_com/swarmbees/1497876/o_weixin_reward.png border=0></td><br />
+<td><img src=https://www.cnblogs.com/images/cnblogs_com/swarmbees/1497876/o_zhifubao_reward.png border=0></td><br />
+</tr><br />
+</table><br />
+</div><br />
+</center><br />
+</html></p>
+<p><br><br></p>
+<hr />
+<p><strong>很重要--转载声明</strong></p>
+<ol>
+<li><p>本站文章无特别说明，皆为原创，版权所有，转载时请用链接的方式，给出原文出处。同时写上原作者：<a href="https://www.cnblogs.com/swarmbees/">朝十晚八</a> or <a href="https://www.jianshu.com/u/7673f8cfb4e6">Twowords</a></p></li>
+<li><p>如要转载，请原文转载，如在转载时修改本文，请事先告知，谢绝在转载时通过修改本文达到有利于转载者的目的。</p></li>
+</ol>
+<hr />
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

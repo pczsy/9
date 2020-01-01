@@ -1,0 +1,98 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python爬虫，爬取腾讯漫画实战' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python爬虫，爬取腾讯漫画实战</center></div><div class='banquan'>原文出处:本文由博客园博主shenjuncaci提供。<br/>
+原文连接:https://www.cnblogs.com/lovejunjuan/p/11389241.html</div><br>
+    <p>先上个爬取的结果图</p>
+<p>最后的结果为每部漫画按章节保存</p>
+<p><img src="./images/Python爬虫，爬取腾讯漫画实战0.png" alt="" /></p>
+<p><img src="./images/Python爬虫，爬取腾讯漫画实战1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;运行环境</p>
+<p>IDE VS2019</p>
+<p>Python3.7</p>
+<p>Chrome、ChromeDriver</p>
+<p><strong>Chrome和ChromeDriver的版本需要相互对应</strong></p>
+<p>先上代码，代码非常简短，包含空行也才50行，多亏了python强大的库</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+</span><span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> getChapterUrl(url):
+    headers </span>=<span style="color: #000000;"> {
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/66.0.3359.139 Safari/537.36</span><span style="color: #800000;">"</span><span style="color: #000000;">
+        }
+    part_url </span>= <span style="color: #800000;">"</span><span style="color: #800000;">http://ac.qq.com</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    res </span>= requests.get(url, headers=<span style="color: #000000;">headers)
+    html</span>=<span style="color: #000000;">res.content.decode()
+    el </span>=<span style="color: #000000;"> etree.HTML(html)
+    li_list </span>= el.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="chapter"]/div[2]/ol[1]/li</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">for</span> li <span style="color: #0000ff;">in</span><span style="color: #000000;"> li_list:
+            </span><span style="color: #0000ff;">for</span> p <span style="color: #0000ff;">in</span> li.xpath(<span style="color: #800000;">"</span><span style="color: #800000;">./p</span><span style="color: #800000;">"</span><span style="color: #000000;">):
+                </span><span style="color: #0000ff;">for</span> span <span style="color: #0000ff;">in</span> p.xpath(<span style="color: #800000;">"</span><span style="color: #800000;">./span[@class='works-chapter-item']</span><span style="color: #800000;">"</span><span style="color: #000000;">):
+                    item </span>=<span style="color: #000000;"> {}
+                    list_title </span>= span.xpath(<span style="color: #800000;">"</span><span style="color: #800000;">./a/@title</span><span style="color: #800000;">"</span>)[0].replace(<span style="color: #800000;">'</span> <span style="color: #800000;">'</span>, <span style="color: #800000;">''</span>).split(<span style="color: #800000;">'</span><span style="color: #800000;">：</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+                    </span><span style="color: #0000ff;">if</span> list_title[1].startswith((<span style="color: #800000;">'</span><span style="color: #800000;">第</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">序</span><span style="color: #800000;">'</span><span style="color: #000000;">)):
+                        getChapterFile(part_url </span>+ span.xpath(<span style="color: #800000;">"</span><span style="color: #800000;">./a/@href</span><span style="color: #800000;">"</span>)[0], list_title[0],list_title[1<span style="color: #000000;">])
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> getChapterFile(url,path1,path2):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">path = os.path.join(path)</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">漫画名称目录</span>
+    path=<span style="color: #000000;">os.path.join(path1)
+    </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> os.path.exists(path):
+        os.mkdir(path)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">章节目录</span>
+    path=path+<span style="color: #800000;">'</span><span style="color: #800000;">\\</span><span style="color: #800000;">'</span>+<span style="color: #000000;">path2
+    </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> os.path.exists(path):
+        os.mkdir(path)
+    chrome</span>=<span style="color: #000000;">webdriver.Chrome()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">"http://ac.qq.com/ComicView/index/id/505435/cid/2"</span>
+<span style="color: #000000;">    chrome.get(url)
+    time.sleep(</span>4<span style="color: #000000;">)
+    imgs </span>= chrome.find_elements_by_xpath(<span style="color: #800000;">"</span><span style="color: #800000;">//div[@id='mainView']/ul[@id='comicContain']//img</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(0, len(imgs)):
+            js</span>=<span style="color: #800000;">"</span><span style="color: #800000;">document.getElementById('mainView').scrollTop=</span><span style="color: #800000;">"</span>+str((i) * 1280<span style="color: #000000;">)
+            chrome.execute_script(js)
+            time.sleep(</span>3<span style="color: #000000;">)
+            </span><span style="color: #0000ff;">print</span>(imgs[i].get_attribute(<span style="color: #800000;">"</span><span style="color: #800000;">src</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+            with open(path</span>+<span style="color: #800000;">'</span><span style="color: #800000;">\\</span><span style="color: #800000;">'</span>+str(i)+<span style="color: #800000;">'</span><span style="color: #800000;">.png</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+                f.write(requests.get(imgs[i].get_attribute(</span><span style="color: #800000;">"</span><span style="color: #800000;">src</span><span style="color: #800000;">"</span><span style="color: #000000;">)).content)
+    chrome.close() 
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">下载完成</span><span style="color: #800000;">'</span><span style="color: #000000;">) 
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    getChapterUrl(</span><span style="color: #800000;">'</span><span style="color: #800000;">http://ac.qq.com/Comic/ComicInfo/id/505435</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>简单解释</p>
+<p>输入一个漫画的url即可爬取该漫画所有的章节，由于是模拟用户爬取的，所以速度方面有点慢，我试了下爬取银魂前70章，用了1个半小时，代码中的sleep可以适当简短点已加快爬取的速度</p>
+<p>付费的漫画是没有办法爬取的</p>
+<p>&nbsp;</p>
+<p><strong>谈一下过程中遇到的坑</strong></p>
+<p>腾讯的漫画网站打开章节时没有把所有图片的url都加载出来，所以我在这里用的方式是使用selenium来模拟用户操作，每次打开页面以后使用js操作滚动条下拉</p>
+<p>&nbsp;</p>
+<p>最后再贴下代码库，其实贴出的代码已经是所有的代码了</p>
+<p><a href="https://dev.azure.com/shenjuncaci/PythonTecentManhua" target="_blank">https://dev.azure.com/shenjuncaci/PythonTecentManhua</a></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

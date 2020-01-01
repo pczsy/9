@@ -1,0 +1,212 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修深入理解跳跃链表在Redis中的应用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>深入理解跳跃链表在Redis中的应用</center></div><div class='banquan'>原文出处:本文由博客园博主后端技术指南针提供。<br/>
+原文连接:https://www.cnblogs.com/backnullptr/p/12015242.html</div><br>
+    <p><span style="font-size: 18px;"><strong>0.前言</strong></span></p>
+<p>前面写了一篇关于跳表基本原理和特性的文章，本次继续介绍跳表的概率平衡和工程实现，跳表在Redis、LevelDB、ES中都有应用，本文以Redis为工程蓝本，分析跳表在Redis中的工程实现。</p>
+<p>通过本文你将了解到以下内容：</p>
+<ul>
+<li><strong>Redis基本的数据类型和底层数据结构</strong></li>
+<li><strong>Redis的有序集合的实现方法</strong></li>
+<li><strong>Redis的跳表实现细节</strong></li>
+</ul>
+<p><span style="font-size: 18px;"><strong>1.Redis的数据结构</strong></span></p>
+<p>Redis对外共有约五种类型的对象：</p>
+<ul>
+<li>字符串（String）</li>
+<li>列表（List）</li>
+<li>哈希（Hash）</li>
+<li>集合（Set）</li>
+<li>有序集合（SortedSet）</li>
+</ul>
+<p>redis源码文件src/server.h中对于5种结构的定义：</p>
+<div class="highlight">
+<div class="cnblogs_code">
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+<pre><code>1 /* The actual Redis Object */
+2 #define OBJ_STRING 0    /* String object. */
+3 #define OBJ_LIST 1      /* List object. */
+4 #define OBJ_SET 2       /* Set object. */
+5 #define OBJ_ZSET 3      /* Sorted set object. */
+6 #define OBJ_HASH 4      /* Hash object. */</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+</div>
+</div>
+<p>Redis对象由redisObject结构体表示，从src/server.h可以看到该结构的定义如下：</p>
+<div class="highlight">
+<div class="cnblogs_code">
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+<pre><code>1 typedef struct redisObject {
+2     unsigned type:4;
+3     unsigned encoding:4;    
+4     unsigned lru:LRU_BITS; 
+5     int refcount;
+6     void *ptr;
+7 } robj;</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+</div>
+<p>redisObject明确了对象类型、对象编码方式、过期设置、引用计数、内存指针等，从而完整表示一个key-value键值对。</p>
+<p>由于Redis是基于内存的，Antirez在实现这5种数据类型时在底层创建了多种数据结构，在对象底层选择采用哪种结构来实现，需要根据对象大小以及单个元素大小来进行确定，从而提高空间使用率和效率。</p>
+<p><strong>如图展示了Redis对外使用的数据类型和底层的数据结构：</strong></p>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用4.png" alt="" width="552" height="215" data-caption="" data-size="normal" data-rawwidth="909" data-rawheight="353" data-original="https://pic3.zhimg.com/v2-968ec44e09baf8357b099cfea986d83e_r.jpg" data-actualsrc="https://pic3.zhimg.com/v2-968ec44e09baf8357b099cfea986d83e_b.jpg" data-lazy-status="ok" /></p>
+<p>有序集合对象的编码可以是ziplist或者skiplist，在元素小于128并且元素长度小于64Byte时才会选择压缩列表实现，一般使用skiplist跳表实现。</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;"><strong>2.Redis的ZSet</strong></span></p>
+<p>ZSet结构同时包含一个字典和一个跳跃表，跳跃表按score从小到大保存所有集合元素。</p>
+<p>字典保存着从member到score的映射。这两种结构通过指针共享相同元素的member和score，不会浪费额外内存。</p>
+<div class="cnblogs_code">
+<pre><code>1 typedef struct zset {
+2     dict *dict;
+3     zskiplist *zsl;
+4 } zset;</pre>
+</div>
+<p><strong>ZSet中的字典和跳表布局：</strong></p>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用5.png" alt="" width="499" height="368" data-size="normal" data-rawwidth="1007" data-rawheight="742" data-original="https://pic2.zhimg.com/v2-a2411d494da744d4bf00ea8dd901a35d_r.jpg" data-actualsrc="https://pic2.zhimg.com/v2-a2411d494da744d4bf00ea8dd901a35d_b.jpg" data-lazy-status="ok" /></p>
+<p style="text-align: center;">注:图片源自网络</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;"><strong>3.ZSet中跳表的实现细节</strong></span></p>
+<ul>
+<li><strong>随机层数的实现原理</strong></li>
+</ul>
+<p>跳表是一个概率型的数据结构，元素的插入层数是随机指定的。Willam Pugh在论文中描述了它的计算过程如下：</p>
+<ol>
+<li>指定节点最大层数 MaxLevel，指定概率 p， 默认层数 lvl 为1</li>
+<li>生成一个0~1的随机数r，若r&lt;p，且lvl&lt;MaxLevel ，则lvl ++</li>
+<li>重复第 2 步，直至生成的r &gt;p 为止，此时的 lvl 就是要插入的层数。</li>
+</ol>
+<p><strong>论文中生成随机层数的伪码：</strong></p>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用6.png" alt="" width="481" data-size="normal" data-rawwidth="481" data-rawheight="186" data-original="https://pic1.zhimg.com/v2-1e66968e318fac918bc830472abe3310_r.jpg" data-actualsrc="https://pic1.zhimg.com/v2-1e66968e318fac918bc830472abe3310_b.jpg" data-lazy-status="ok" /></p>
+<p style="text-align: center;">论文中关于随机层数的伪码</p>
+<p>在Redis中对跳表的实现基本上也是遵循这个思想的，只不过有微小差异，看下Redis关于跳表层数的随机源码src/z_set.c：</p>
+</div>
+<div class="cnblogs_code">
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+<pre><code> 1 /* Returns a random level for the new skiplist node we are going to create.
+ 2  * The return value of this function is between 1 and ZSKIPLIST_MAXLEVEL
+ 3  * (both inclusive), with a powerlaw-alike distribution where higher
+ 4  * levels are less likely to be returned. */
+ 5 int zslRandomLevel(void) {
+ 6     int level = 1;
+ 7     while ((random()&amp;0xFFFF) &lt; (ZSKIPLIST_P * 0xFFFF))
+ 8         level += 1;
+ 9     return (level&lt;ZSKIPLIST_MAXLEVEL) ? level : ZSKIPLIST_MAXLEVEL;
+10 }</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+</div>
+<p>其中两个宏的定义在redis.h中：</p>
+<div class="cnblogs_code">
+<pre><code>1 #define ZSKIPLIST_MAXLEVEL 32 /* Should be enough for 2^32 elements */
+2 #define ZSKIPLIST_P 0.25      /* Skiplist P = 1/4 */</pre>
+</div>
+<p>可以看到while中的：</p>
+<div class="cnblogs_code">
+<pre><code>1 (random()&amp;0xFFFF) &lt; (ZSKIPLIST_P*0xFFFF)</pre>
+</div>
+<p>第一眼看到这个公式，因为涉及位运算有些诧异，<strong>需要研究一下Antirez为什么使用位运算来这么写？</strong></p>
+<p><img class="content_image lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用9.png" alt="" width="220" data-caption="" data-size="normal" data-rawwidth="220" data-rawheight="206" data-actualsrc="https://pic4.zhimg.com/v2-34a7ef19e76e70ac476abc0f06527737_b.jpg" data-lazy-status="ok" /></p>
+<p><strong>最开始的猜测是random()返回的是浮点数[0-1]</strong>，于是乎在线找了个浮点数转二进制的工具，输入0.25看了下结果：</p>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用10.png" alt="" width="659" height="179" data-caption="" data-size="normal" data-rawwidth="1023" data-rawheight="278" data-original="https://pic2.zhimg.com/v2-43785ab9e702db28a7aef6ab56ff1169_r.jpg" data-actualsrc="https://pic2.zhimg.com/v2-43785ab9e702db28a7aef6ab56ff1169_b.jpg" data-lazy-status="ok" /></p>
+<p>可以看到0.25的32bit转换16进制结果为0x3e800000，如果与0xFFFF做与运算结果是0，好像也符合预期，再试一个0.5:</p>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用11.png" alt="" width="661" height="186" data-caption="" data-size="normal" data-rawwidth="1008" data-rawheight="284" data-original="https://pic1.zhimg.com/v2-3f07cc88d1dd54922259c82ed60f16c0_r.jpg" data-actualsrc="https://pic1.zhimg.com/v2-3f07cc88d1dd54922259c82ed60f16c0_b.jpg" data-lazy-status="ok" /></p>
+<p>可以看到0.5的32bit转换16进制结果为0x3f000000，如果与0xFFFF做与运算结果还是0，不符合预期。</p>
+<p>我印象中C语言的math库好像并没有直接random函数，所以就去Redis源码中找找看，于是下载了3.2版本代码，也并没有找到random()的实现，不过找到了其他几个地方的应用：</p>
+<ul>
+<li><strong>random()在dict.c中的使用：</strong></li>
+</ul>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用12.png" alt="" width="602" height="524" data-caption="" data-size="normal" data-rawwidth="837" data-rawheight="728" data-original="https://pic3.zhimg.com/v2-01df304ef9fcbcb9c7785bbbf33244ae_r.jpg" data-actualsrc="https://pic3.zhimg.com/v2-01df304ef9fcbcb9c7785bbbf33244ae_b.jpg" data-lazy-status="ok" /></p>
+<ul>
+<li><strong>random()在cluster.c中的使用：</strong></li>
+</ul>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用13.png" alt="" width="743" height="237" data-caption="" data-size="normal" data-rawwidth="946" data-rawheight="302" data-original="https://pic2.zhimg.com/v2-d8110b15f2fe427a6cb815cf1c07a521_r.jpg" data-actualsrc="https://pic2.zhimg.com/v2-d8110b15f2fe427a6cb815cf1c07a521_b.jpg" data-lazy-status="ok" /></p>
+<p>看到这里的取模运算，后知后觉地发现原以为random()是个[0-1]的浮点数，但是现在看来是uint32才对，这样Antirez的式子就好理解了。</p>
+<p><strong>由于ZSKIPLIST_P=0.25，所以相当于0xFFFF右移2位变为0x3FFF，假设random()比较均匀，</strong></p>
+<p><strong>在进行0xFFFF与运算之后高16位清零之后，低16位取值就落在0x0000-0xFFFF之间，这样while为真的概率只有1/4，更一般地说为真的概率为1/ZSKIPLIST_P。</strong></p>
+<p>对于随机层数的实现并不统一，重要的是随机数的生成，<strong>在LevelDB中对跳表层数的生成代码是这样的</strong>：</p>
+<div class="cnblogs_code">
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+<pre><code> 1 template &lt;typename Key, typename Value&gt;
+ 2 int SkipList&lt;Key, Value&gt;::randomLevel() {
+ 3 
+ 4   static const unsigned int kBranching = 4;
+ 5   int height = 1;
+ 6   while (height &lt; kMaxLevel &amp;&amp; ((::Next(rnd_) % kBranching) == 0)) {
+ 7     height++;
+ 8   }
+ 9   assert(height &gt; 0);
+10   assert(height &lt;= kMaxLevel);
+11   return height;
+12 }
+13 
+14 uint32_t Next( uint32_t&amp; seed) {
+15   seed = seed &amp; 0x7fffffffu;
+16 
+17   if (seed == 0 || seed == 2147483647L) { 
+18     seed = 1;
+19   }
+20   static const uint32_t M = 2147483647L;
+21   static const uint64_t A = 16807;
+22   uint64_t product = seed * A;
+23   seed = static_cast&lt;uint32_t&gt;((product &gt;&gt; 31) + (product &amp; M));
+24   if (seed &gt; M) {
+25     seed -= M;
+26   }
+27   return seed;
+28 }</pre>
+<div class="cnblogs_code_toolbar"><span class="cnblogs_code_copy"><a title="复制代码"><img src="./images/深入理解跳跃链表在Redis中的应用0.png" alt="复制代码" /></a></span></div>
+</div>
+<p>可以看到leveldb使用随机数与kBranching取模，如果值为0就增加一层，这样虽然没有使用浮点数，但是也实现了概率平衡。</p>
+<ul>
+<li><strong>跳表结点的平均层数</strong></li>
+</ul>
+<p>我们很容易看出，<strong>产生越高的节点层数出现概率越低，无论如何层数总是满足幂次定律越大的数出现的概率越小。</strong></p>
+<blockquote>幂次定律：如果某件事的发生频率和它的某个属性成幂关系，那么这个频率就可以称之为符合幂次定律。幂次定律的表现是少数几个事件的发生频率占了整个发生频率的大部分， 而其余的大多数事件只占整个发生频率的一个小部分。</blockquote>
+<p class="ztext-empty-paragraph">&nbsp;</p>
+<p><img class="content_image lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用16.png" alt="" width="400" data-caption="" data-size="normal" data-rawwidth="400" data-rawheight="183" data-actualsrc="https://pic2.zhimg.com/v2-dff7a1b00e319a46e2f18dc7168fc2bd_b.jpg" data-lazy-status="ok" /></p>
+<p class="ztext-empty-paragraph">&nbsp;</p>
+<p>幂次定律应用到跳表的随机层数来说就是<span style="color: #ff0000;"><strong>大部分的节点层数都是黄色部分，只有少数是绿色部分，并且概率很低。</strong></span></p>
+<p><strong>定量的分析如下：</strong></p>
+<ul>
+<li>节点层数至少为1，大于1的节点层数满足一个概率分布。</li>
+<li>节点层数恰好等于1的概率为p^0(1-p)。</li>
+<li>节点层数恰好等于2的概率为p^1(1-p)。</li>
+<li>节点层数恰好等于3的概率为p^2(1-p)。</li>
+<li>节点层数恰好等于4的概率为p^3(1-p)。</li>
+<li>依次递推节点层数恰好等于K的概率为p^(k-1)(1-p)</li>
+</ul>
+<p>因此如果我们要求节点的平均层数，那么也就<strong>转换成了求概率分布的期望问题</strong>了，灵魂画手大白再次上线：</p>
+<p><img class="origin_image zh-lightbox-thumb lazy" style="display: block; margin-left: auto; margin-right: auto;" src="./images/深入理解跳跃链表在Redis中的应用17.png" alt="" width="636" height="351" data-caption="" data-size="normal" data-rawwidth="1080" data-rawheight="595" data-original="https://pic3.zhimg.com/v2-fe371b0ca24c675a67217fd165e46efa_r.jpg" data-actualsrc="https://pic3.zhimg.com/v2-fe371b0ca24c675a67217fd165e46efa_b.jpg" data-lazy-status="ok" /></p>
+<p>表中P为概率，V为对应取值，给出了所有取值和概率的可能，因此就可以求这个概率分布的期望了。</p>
+<p>方括号里面的式子其实就是高一年级学的等比数列，<strong>常用技巧错位相减求和</strong>，从中可以看到结点层数的期望值与1-p成反比。</p>
+<p><strong>对于Redis而言，当p=0.25时结点层数的期望是1.33。</strong></p>
+<p><strong>小结：</strong>在Redis源码中有详尽的关于插入和删除调整跳表的过程，本文就不再展开了，代码并不算难懂，都是纯C写的没有那么多炫技的特效，放心大胆读起来。</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;"><strong>4.参考资料</strong></span></p>
+<ul>
+<li><a class=" external" href="https://link.zhihu.com/?target=http%3A//note.huangz.me/algorithm/arithmetic/power-law.html" rel="nofollow noreferrer" target="_blank" data-za-detail-view-id="1043"><span class="invisible">http://<span class="visible">note.huangz.me/algorith<span class="invisible">m/arithmetic/power-law.html</span></span></span></a></li>
+<li><a class=" external" href="https://link.zhihu.com/?target=https%3A//juejin.im/post/5cb885a8f265da03973aa8a1" rel="nofollow noreferrer" target="_blank" data-za-detail-view-id="1043"><span class="invisible">https://<span class="visible">juejin.im/post/5cb885a8<span class="invisible">f265da03973aa8a1</span></span></span></a></li>
+<li><a class=" external" href="https://link.zhihu.com/?target=https%3A//epaperpress.com/sortsearch/download/skiplist.pdf" rel="nofollow noreferrer" target="_blank" data-za-detail-view-id="1043"><span class="invisible">https://<span class="visible">epaperpress.com/sortsea<span class="invisible">rch/download/skiplist.pdf</span></span></span></a></li>
+<li><a class=" external" href="https://link.zhihu.com/?target=https%3A//www.h-schmidt.net/FloatConverter/IEEE754.html" rel="nofollow noreferrer" target="_blank" data-za-detail-view-id="1043"><span class="invisible">https://www.<span class="visible">h-schmidt.net/FloatConv<span class="invisible">erter/IEEE754.html</span></span></span></a></li>
+<li><a class=" external" href="https://link.zhihu.com/?target=http%3A//www.ruanyifeng.com/blog/2010/06/ieee_floating-point_representation.html" rel="nofollow noreferrer" target="_blank" data-za-detail-view-id="1043"><span class="invisible">http://www.<span class="visible">ruanyifeng.com/blog/201<span class="invisible">0/06/ieee_floating-point_representation.html</span></span></span></a></li>
+<li><a class=" external" href="https://link.zhihu.com/?target=https%3A//cyningsun.github.io/06-18-2018/skiplist.html" rel="nofollow noreferrer" target="_blank" data-za-detail-view-id="1043"><span class="invisible">https://<span class="visible">cyningsun.github.io/06-<span class="invisible">18-2018/skiplist.html</span></span></span></a></li>
+</ul>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

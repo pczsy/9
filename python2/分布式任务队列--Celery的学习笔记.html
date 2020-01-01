@@ -1,0 +1,152 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修分布式任务队列--Celery的学习笔记' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>分布式任务队列--Celery的学习笔记</center></div><div class='banquan'>原文出处:本文由博客园博主TM0831提供。<br/>
+原文连接:https://www.cnblogs.com/TM0831/p/11389543.html</div><br>
+    <h3>一、Celery简介</h3>
+<p>　　Celery是一个简单，灵活，可靠的分布式系统，用于处理大量消息，同时为操作提供维护此类系统所需的工具。它是一个任务队列，专注于实时处理，同时还支持任务调度。</p>
+<p>　　所谓任务队列，是一个逻辑上的概念，可以将抽象中的任务发送到指定的执行任务的组件，任务队列可以跨线程或机器运行。</p>
+<p>　　Celery是基于Python开发的分布式异步消息任务队列，通过它可以轻松的实现任务的异步处理， 如果你的业务场景中需要用到异步任务，就可以考虑使用celery。</p>
+<p>&nbsp;</p>
+<h3>二、Celery使用场景</h3>
+<p>　　1.高并发的请求任务，比如需要发送大量请求的网络爬虫，就可以使用Celery来加速爬取。</p>
+<p>　　2.异步任务，将耗时的操作交给Celery来完成，比如发送/接收邮件、消息推送等等。</p>
+<p>　　3.定时任务，需要定时运行的程序，比如每天定时执行爬虫爬取数据。</p>
+<p>&nbsp;</p>
+<h3>三、Celery架构</h3>
+<p>　　下图是我找到的一张表示Celery架构的图：</p>
+<p>　　<img src="./images/分布式任务队列--Celery的学习笔记0.png" alt="" /></p>
+<p><strong>　　任务生产者</strong>：产生任务并且把任务提交到任务队列的就是任务生产者。</p>
+<p><strong>　　任务调度Beat</strong>：Celery会根据配置文件对任务进行调配，可以按一定时间间隔周期性地执行某些任务。</p>
+<p><strong>　　中间人Broker</strong>：Celery使用消息进行通信，需要中间人在客户端和Worker之间进行传递，接收客户端发送过来的任务，并将任务分配给Worker。</p>
+<p>　　在Celery的文档中，可以找到官方给出的实现Broker的工具有：</p>
+<table style="height: 143px; width: 631px;" border="0">
+<tbody>
+<tr>
+<td style="text-align: center;">名称</td>
+<td style="text-align: center;">状态</td>
+<td style="text-align: center;">监控</td>
+<td style="text-align: center;">远程控制</td>
+</tr>
+<tr>
+<td style="text-align: center;">RabbitMQ</td>
+<td style="text-align: center;">稳定</td>
+<td style="text-align: center;">是</td>
+<td style="text-align: center;">是</td>
+</tr>
+<tr>
+<td style="text-align: center;">Redis</td>
+<td style="text-align: center;">稳定</td>
+<td style="text-align: center;">是</td>
+<td style="text-align: center;">是</td>
+</tr>
+<tr>
+<td style="text-align: center;">Amazon SQS</td>
+<td style="text-align: center;">稳定</td>
+<td style="text-align: center;">否</td>
+<td style="text-align: center;">否</td>
+</tr>
+<tr>
+<td style="text-align: center;">Zookeeper</td>
+<td style="text-align: center;">实验性</td>
+<td style="text-align: center;">否</td>
+<td style="text-align: center;">否</td>
+</tr>
+</tbody>
+</table>
+<p><strong>　　消费者Worker</strong>：Worker是执行任务的单元，在Celery任务队列中属于消费者。Worker会不断地监听队列，一旦有任务添加进来，就会将任务取出来进行执行。Worker还可以运行在多台机器上，只要它们都指向同一个Broker就可以。</p>
+<p><strong>　　结果存储Backend</strong>：结果存储Backend，顾名思义就是将Worker执行后得到的结果存储起来。Celery中有几个内置的结果存储可供选择，包括SQLAlchemy / Django ORM、Redis、RabbitMQ、Mamcached等。</p>
+<p>&nbsp;</p>
+<h3>四、Celery安装</h3>
+<p>&nbsp;　&nbsp; &nbsp;Celery4.0版本是支持Python2.7的最后一个版本，所以如果你还在用py2的话，可能要选择安装Celery3或者更早的版本。我本人用的Python版本是Python3.7，然后安装的Celery版本是4.3。安装的话使用pip安装就好：</p>
+<blockquote>
+<p>pip install celery</p>
+</blockquote>
+<p>　　如果pip安装出错的话，可以去<a href="https://pypi.org/project/celery/" target="_blank">这个网址</a>进行下载。在使用pip安装的时候会自动安装一些相关依赖，如果这些依赖安装出错的话，搜一下相应版本的Wheel文件下载安装即可。</p>
+<p>　　中间件Broker我选择使用的是Redis，这里就不说Redis怎么安装了，<a href="https://www.cnblogs.com/TM0831/p/11372833.html" target="_blank">上一篇博客</a>中有Ubuntu下安装Redis的介绍。</p>
+<p>&nbsp;</p>
+<h3>五、Celery使用示例</h3>
+<h4>&nbsp;1.应用</h4>
+<p>&nbsp;　　在使用Celery的时候，第一件事是要创建一个Celery实例，一般称之为应用，简称为app。创建一个test.py，其中代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">from</span> celery <span style="color: #0000ff;">import</span><span style="color: #000000;"> Celery
+</span><span style="color: #008080;">2</span> 
+<span style="color: #008080;">3</span> 
+<span style="color: #008080;">4</span> app = Celery(<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span>, broker=<span style="color: #800000;">"</span><span style="color: #800000;">redis://127.0.0.1:6379</span><span style="color: #800000;">"</span>, backend=<span style="color: #800000;">"</span><span style="color: #800000;">redis://127.0.0.1:6379</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">5</span> 
+<span style="color: #008080;">6</span> 
+<span style="color: #008080;">7</span> <span style="color: #000000;">@app.task
+</span><span style="color: #008080;">8</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> add(x, y):
+</span><span style="color: #008080;">9</span>     <span style="color: #0000ff;">return</span> x + y</pre>
+</div>
+<h4>2.运行Celery服务器</h4>
+<p>　　在创建好应用之后，就可以使用Celery命令执行程序运行Worker了：</p>
+<blockquote>
+<p>celery -A test worker -l info</p>
+</blockquote>
+<p>　　运行后可以看到如下图：　　</p>
+<p>　　<img src="./images/分布式任务队列--Celery的学习笔记1.png" alt="" /></p>
+<p>　　有关可用命令行选项的完整列表，执行如下命令：</p>
+<blockquote>
+<p>celery worker --help</p>
+</blockquote>
+<h4>3.调用任务</h4>
+<p>　　要调用任务，可以使用delay()方法。</p>
+<p>　　<img src="./images/分布式任务队列--Celery的学习笔记2.png" alt="" /></p>
+<p>　　该任务会返回一个AsyncResult实例，可用于查询任务状态、获取任务返回值等。此时查看前面运行的服务器，会看到有如下信息：</p>
+<blockquote>
+<p>Received task: test.add[e7f01461-8c4d-4c29-ab6b-27be5084ecd9]</p>
+<p>Task test.add[e7f01461-8c4d-4c29-ab6b-27be5084ecd9] succeeded in 0.006505205000166825s: 5</p>
+</blockquote>
+<h4>4.查看结果</h4>
+<p>　　在前面定义的时候，已经选择使用Redis作为结果后端了，所以任务执行后的结果会保存到Redis中。而且，在调用任务的时候，还可以进行如下操作：</p>
+<p>　　<img src="./images/分布式任务队列--Celery的学习笔记3.png" alt="" /></p>
+<p>　　其中ready()方法会返回该任务是否已经执行，get()方法则会获取任务返回的结果。</p>
+<h4>&nbsp;5.配置文件</h4>
+<p>　　由于Celery的配置信息比较多，因此一般会创建一个配置文件来保存这些配置信息，通常会命名为celeryconfig.py。在test.py所在文件夹下新建配置文件celeryconfig.py，其中的代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #008000;">#</span><span style="color: #008000;"> broker(消息中间件来接收和发送任务消息)</span>
+<span style="color: #008080;"> 2</span> BROKER_URL = <span style="color: #800000;">'</span><span style="color: #800000;">redis://127.0.0.1:6379</span><span style="color: #800000;">'</span>
+<span style="color: #008080;"> 3</span> <span style="color: #008000;">#</span><span style="color: #008000;"> backend(存储worker执行的结果)</span>
+<span style="color: #008080;"> 4</span> CELERY_RESULT_BACKEND = <span style="color: #800000;">'</span><span style="color: #800000;">redis://127.0.0.1:6379</span><span style="color: #800000;">'</span>
+<span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 设置时间参照，不设置默认使用的UTC时间</span>
+<span style="color: #008080;"> 7</span> CELERY_TIMEZONE = <span style="color: #800000;">'</span><span style="color: #800000;">Asia/Shanghai</span><span style="color: #800000;">'</span>
+<span style="color: #008080;"> 8</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 指定任务的序列化</span>
+<span style="color: #008080;"> 9</span> CELERY_TASK_SERIALIZER = <span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span>
+<span style="color: #008080;">10</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 指定执行结果的序列化</span>
+<span style="color: #008080;">11</span> CELERY_RESULT_SERIALIZER = <span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>　　然后修改下test.py中的代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">from</span> celery <span style="color: #0000ff;">import</span><span style="color: #000000;"> Celery
+</span><span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> app = Celery(<span style="color: #800000;">"</span><span style="color: #800000;">test</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 5</span> app.config_from_object(<span style="color: #800000;">"</span><span style="color: #800000;">celerystudy.celeryconfig</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 6</span> 
+<span style="color: #008080;"> 7</span> 
+<span style="color: #008080;"> 8</span> <span style="color: #000000;">@app.task
+</span><span style="color: #008080;"> 9</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> add(x, y):
+</span><span style="color: #008080;">10</span>     <span style="color: #0000ff;">return</span> x + y</pre>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

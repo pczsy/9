@@ -1,0 +1,752 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python JSON的简单使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python JSON的简单使用</center></div><div class='banquan'>原文出处:本文由博客园博主Liam-Ji提供。<br/>
+原文连接:https://www.cnblogs.com/liam-ji/p/11389227.html</div><br>
+    <h1>1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; json简介</h1>
+<h2>1.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; json是什么？</h2>
+<p>JSON（JavaScript Object Notation）是一种轻量级的数据交换格式。</p>
+<p>&ldquo;在JSON出现之前，大家一直用XML来传递数据。因为XML是一种纯文本格式，所以它适合在网络上交换数据。XML本身不算复杂，但是，加上DTD、XSD、XPath、XSLT等一大堆复杂的规范以后，任何正常的软件开发人员碰到XML都会感觉头大了，最后大家发现，即使你努力钻研几个月，也未必搞得清楚XML的规范。</p>
+<p>终于，在2002年的一天，道格拉斯&middot;克罗克福特（Douglas Crockford）同学为了拯救深陷水深火热同时又被某几个巨型软件企业长期愚弄的软件工程师，发明了JSON这种超轻量级的数据交换格式。&rdquo;</p>
+<h2>1.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; json特点</h2>
+<p>json格式适合阅读，容易理解，对计算机来说处理起来也很方便。json文本格式与C家族语言（C，C++，C#，Java，JavaScript，Perl，Python以及许多其他语言）的传统变量非常的相似，它的文本语言建立在以下两种结构上：</p>
+<p>l&nbsp; &ldquo;名称/值&rdquo;对的无序集合（以下简称键值对），在其他编程语言中，这种&ldquo;名称/值&rdquo;对可能称为对象、记录、结构、字典、哈希表、键表或者关联数组。</p>
+<p>l&nbsp; &ldquo;值&rdquo;的有序列表，对应其他语言中的数组，向量，链表或者序列。</p>
+<p>上面这些基本的数据结构，几乎所有现代语言都能支持其中一种或多种，因此json作为一种数据交换格式就理所当然了。</p>
+<h2>1.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; json格式</h2>
+<p>名称（key/name）：用双引号包含的字符串。</p>
+<p>值（value）可以是双引号包含的字符串，真假值（true，false），空（null），对象或者数组，也就是说可以是嵌套结构。</p>
+<p>对象（object）是无序键值对的集合：以左花括弧&ldquo;{&rdquo;开始，右花括弧&ldquo;}&rdquo;结束，每个对名称（name）与值（value）之间使用&ldquo;：&rdquo;分隔，键值对之间使用逗号&ldquo;，&rdquo;分隔。</p>
+<p>数组（array）是有序值的序列：array以左方括弧&ldquo;[&rdquo;开始，右方括弧&ldquo;]&rdquo;结束，值与值之间使用逗号&ldquo;，&rdquo;分隔。</p>
+<p>字符串（string）是使用双引号包含的数个（可以是0个）连续unicode字符，使用反斜杠&ldquo;\&rdquo;作为转义字符，类似C语言和Java中的字符串。</p>
+<p>整数（number）除了不支持8进制和16进制，其他特性与C语言和Java语言整数相同。</p>
+<h1>2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Python3 JSON使用</h1>
+<p>Python内置可以处理JSON数据的包：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">import</span> json</pre>
+</div>
+<p><br />在Python中，JSON数据表示为一个字符串</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> json_data = <span style="color: #800000;">'</span><span style="color: #800000;">{"name": "Bob", "languages": ["Python", "Java"]}</span><span style="color: #800000;">'</span></pre>
+</div>
+<p><br />json数据还可以从文件中读取，Python中的常用JSON方法如下：</p>
+<table border="1" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td valign="top" width="151">
+<p>函数</p>
+
+
+
+
+
+</td>
+<td valign="top" width="402">
+<p>描述</p>
+
+
+
+
+
+</td>
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top" width="151">
+<p>json.dumps()</p>
+
+
+
+
+
+</td>
+<td valign="top" width="402">
+<p>将Python对象编码成JSON字符串</p>
+
+
+
+
+
+</td>
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top" width="151">
+<p style="text-align: left;">json.loads()</p>
+
+
+
+
+
+</td>
+<td valign="top" width="402">
+<p>将已编码的JSON字符串解码为Python对象</p>
+
+
+
+
+
+</td>
+
+
+
+
+
+</tr>
+
+
+
+
+
+</tbody>
+
+
+
+
+
+</table>
+<h2>2.1&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 在Python中解析JSON</h2>
+<p>使用Python JSON包中的json.loads()函数可以轻松解析JSON字符串和JSON文件为Python对象。</p>
+<p>例1：在Python中将JSON解析为dict</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+</span><span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> person = <span style="color: #800000;">'</span><span style="color: #800000;">{"name": "Bob", "languages": ["English", "Fench"]}</span><span style="color: #800000;">'</span>
+<span style="color: #008080;"> 4</span> person_dict =<span style="color: #000000;"> json.loads(person)
+</span><span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span> <span style="color: #008000;">#</span><span style="color: #008000;"> Output: {'name': 'Bob', 'languages': ['English', 'Fench']}</span>
+<span style="color: #008080;"> 7</span> <span style="color: #0000ff;">print</span><span style="color: #000000;">( person_dict)
+</span><span style="color: #008080;"> 8</span> 
+<span style="color: #008080;"> 9</span> <span style="color: #008000;">#</span><span style="color: #008000;"> Output: ['English', 'French']</span>
+<span style="color: #008080;">10</span> <span style="color: #0000ff;">print</span>(person_dict[<span style="color: #800000;">'</span><span style="color: #800000;">languages</span><span style="color: #800000;">'</span>])</pre>
+</div>
+<div>&nbsp;</div>
+<p>例2：在Python中读取JSON文件并解析person是JSON字符串，person_dict是Python dict对象。</p>
+<p>假设你的如下JSON数据存放在名字为&ldquo;person.json&rdquo;的文件中</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> {<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">Bob</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">2</span> <span style="color: #800000;">"</span><span style="color: #800000;">languages</span><span style="color: #800000;">"</span>: [<span style="color: #800000;">"</span><span style="color: #800000;">English</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">Fench</span><span style="color: #800000;">"</span><span style="color: #000000;">]
+</span><span style="color: #008080;">3</span> }</pre>
+</div>
+<p><br />可以使用如下方式解析该文件中的JSON数据：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+</span><span style="color: #008080;">2</span> 
+<span style="color: #008080;">3</span> with open(<span style="color: #800000;">'</span><span style="color: #800000;">path_to_file/person.json</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+</span><span style="color: #008080;">4</span>     data =<span style="color: #000000;"> json.load(f)
+</span><span style="color: #008080;">5</span> 
+<span style="color: #008080;">6</span> <span style="color: #008000;">#</span><span style="color: #008000;"> Output: {'name': 'Bob', 'languages': ['English', 'Fench']}</span>
+<span style="color: #008080;">7</span> <span style="color: #0000ff;">print</span>(data)</pre>
+</div>
+<p><br />代码中使用open()函数打开文件，使用json.load()函数解析JSON数据，将解析得到的数据放在data变量。</p>
+<p>JSON字符串在解析到Python对象时的默认数据对应见下表</p>
+<div style="text-align: left;" align="center"><br />
+<table border="1" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td valign="top">
+<p class="a"><strong>JSON</strong></p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a"><strong>Python</strong></p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">object</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">dict</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">array</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">list</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">string</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">unicode</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">number (int)</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">int, long</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">number (real)</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">float</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">true</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">True</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">false</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">False</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">null</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">None</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+
+
+
+
+
+
+</tbody>
+
+
+
+
+
+
+</table>
+
+
+
+
+
+
+</div>
+<p>关于json.load()函数的详细使用方法见<span style="text-decoration: underline;"><a href="https://docs.python.org/3.7/library/json.html">https://docs.Python.org/3.7/library/json.html</a></span></p>
+<p>关于在Python中对文件的操作请参考<span style="text-decoration: underline;"><a href="https://www.programiz.com/python-programming/file-operation">https://www.programiz.com/Python-programming/file-operation</a></span></p>
+<h2>2.2&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 将Python数据打包成json字符串</h2>
+<p>使用Python JSON包中的json.dumps()函数可以将Python数据打包成JSON字符串。</p>
+<p>例3：将dict转成JSON</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+</span><span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> person_dict = {<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Bob</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+</span><span style="color: #008080;"> 4</span> <span style="color: #800000;">'</span><span style="color: #800000;">age</span><span style="color: #800000;">'</span>: 12<span style="color: #000000;">,
+</span><span style="color: #008080;"> 5</span> <span style="color: #800000;">'</span><span style="color: #800000;">children</span><span style="color: #800000;">'</span><span style="color: #000000;">: None
+</span><span style="color: #008080;"> 6</span> <span style="color: #000000;">}
+</span><span style="color: #008080;"> 7</span> 
+<span style="color: #008080;"> 8</span> person_json =<span style="color: #000000;"> json.dumps(person_dict)
+</span><span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #008000;">#</span><span style="color: #008000;"> Output: {"name": "Bob", "age": 12, "children": null}</span>
+<span style="color: #008080;">11</span> <span style="color: #0000ff;">print</span>(person_json)</pre>
+</div>
+<p><br />例4：将JSON数据写入文件</p>
+<p>上面的程序中，打开一个文件名为&ldquo;person.txt&rdquo;的文件，打开模式为写入&ldquo;w&rdquo;，如果文件不存在，就会自动新建一个。接着使用json.dump()函数将person_dict数据打包成JSON字符串，写入到打开的文件中。</p>
+<p>程序运行后会在该代码所在目录生成person.txt文件，文件内容应该如下;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> {<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">Bob</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">languages</span><span style="color: #800000;">"</span>: [<span style="color: #800000;">"</span><span style="color: #800000;">English</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">Fench</span><span style="color: #800000;">"</span>], <span style="color: #800000;">"</span><span style="color: #800000;">married</span><span style="color: #800000;">"</span>: true, <span style="color: #800000;">"</span><span style="color: #800000;">age</span><span style="color: #800000;">"</span>: 32}</pre>
+</div>
+<p><span style="font-size: 1.5em;"><br />2.3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 格式化输出JSON数据</span></p>
+<p>为了分析JSON数据，我们可能需要以阅读友好的格式输出JSON数据。通过向json.dumps()函数传递格式控制参数indent和sort_keys可以实现该功能。</p>
+<p>例5：格式化打印json数据</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+</span><span style="color: #008080;">2</span> 
+<span style="color: #008080;">3</span> person_string = <span style="color: #800000;">'</span><span style="color: #800000;">{"name": "Bob", "languages": "English", "numbers": [2, 1.6, null]}</span><span style="color: #800000;">'</span>
+<span style="color: #008080;">4</span> 
+<span style="color: #008080;">5</span> <span style="color: #008000;">#</span><span style="color: #008000;"> Getting dictionary</span>
+<span style="color: #008080;">6</span> person_dict =<span style="color: #000000;"> json.loads(person_string)
+</span><span style="color: #008080;">7</span> 
+<span style="color: #008080;">8</span> <span style="color: #008000;">#</span><span style="color: #008000;"> Pretty Printing JSON string back</span>
+<span style="color: #008080;">9</span> <span style="color: #0000ff;">print</span>(json.dumps(person_dict, indent = 4, sort_keys=True))</pre>
+</div>
+<p><br />上述参数意思为：缩进4个空格，对键值对进行升序排序，运行后输出结果如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #000000;">{
+</span><span style="color: #008080;">2</span>     <span style="color: #800000;">"</span><span style="color: #800000;">languages</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">English</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">3</span>     <span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">Bob</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">4</span>     <span style="color: #800000;">"</span><span style="color: #800000;">numbers</span><span style="color: #800000;">"</span><span style="color: #000000;">: [
+</span><span style="color: #008080;">5</span>         2<span style="color: #000000;">,
+</span><span style="color: #008080;">6</span>         1.6<span style="color: #000000;">,
+</span><span style="color: #008080;">7</span> <span style="color: #000000;">        null
+</span><span style="color: #008080;">8</span> <span style="color: #000000;">    ]
+</span><span style="color: #008080;">9</span> }</pre>
+</div>
+<p><br />可以看到，输出结果多了换行和缩进，看起来整洁多了。</p>
+<p>Python对象在打包为JSON字符串过程中默认数据对应见下表</p>
+<div style="text-align: left;" align="center">
+<table border="1" cellspacing="0" cellpadding="0">
+<tbody>
+<tr>
+<td valign="top">
+<p class="a"><strong>Python</strong></p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a"><strong>JSON</strong></p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">dict</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">object</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">list, tuple</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">array</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a" style="text-align: left;">str</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">string</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a" style="text-align: left;">int, float, int- &amp; float-derived Enums</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">number</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">True</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">true</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a" style="text-align: left;">False</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">false</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+<tr>
+<td valign="top">
+<p class="a">None</p>
+
+
+
+
+
+
+</td>
+<td valign="top">
+<p class="a">null</p>
+
+
+
+
+
+
+</td>
+
+
+
+
+
+
+</tr>
+
+
+
+
+
+
+</tbody>
+
+
+
+
+
+
+</table>
+
+
+
+
+
+
+</div>
+<p>&nbsp;</p>
+<h1>3&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; json数据样例</h1>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">{
+</span><span style="color: #008080;"> 2</span>     <span style="color: #800000;">"</span><span style="color: #800000;">firstName</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">John</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;"> 3</span>     <span style="color: #800000;">"</span><span style="color: #800000;">lastName</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">Smith</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;"> 4</span>     <span style="color: #800000;">"</span><span style="color: #800000;">isAlive</span><span style="color: #800000;">"</span><span style="color: #000000;">: true,
+</span><span style="color: #008080;"> 5</span>     <span style="color: #800000;">"</span><span style="color: #800000;">age</span><span style="color: #800000;">"</span>: 27<span style="color: #000000;">,
+</span><span style="color: #008080;"> 6</span>     <span style="color: #800000;">"</span><span style="color: #800000;">address</span><span style="color: #800000;">"</span><span style="color: #000000;">: {
+</span><span style="color: #008080;"> 7</span>     <span style="color: #800000;">"</span><span style="color: #800000;">streetAddress</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">21 2nd Street</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;"> 8</span>     <span style="color: #800000;">"</span><span style="color: #800000;">city</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">New York</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;"> 9</span>     <span style="color: #800000;">"</span><span style="color: #800000;">state</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">NY</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">10</span>     <span style="color: #800000;">"</span><span style="color: #800000;">postalCode</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">10021-3100</span><span style="color: #800000;">"</span>
+<span style="color: #008080;">11</span> <span style="color: #000000;">    },
+</span><span style="color: #008080;">12</span> 
+<span style="color: #008080;">13</span>     <span style="color: #800000;">"</span><span style="color: #800000;">phoneNumbers</span><span style="color: #800000;">"</span><span style="color: #000000;">: [
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;">15</span>         <span style="color: #800000;">"</span><span style="color: #800000;">type</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">home</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">16</span>         <span style="color: #800000;">"</span><span style="color: #800000;">number</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">212 555-1234</span><span style="color: #800000;">"</span>
+<span style="color: #008080;">17</span> <span style="color: #000000;">    },
+</span><span style="color: #008080;">18</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;">19</span>         <span style="color: #800000;">"</span><span style="color: #800000;">type</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">office</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">20</span>         <span style="color: #800000;">"</span><span style="color: #800000;">number</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">646 555-4567</span><span style="color: #800000;">"</span>
+<span style="color: #008080;">21</span> <span style="color: #000000;">    },
+</span><span style="color: #008080;">22</span> <span style="color: #000000;">    {
+</span><span style="color: #008080;">23</span>         <span style="color: #800000;">"</span><span style="color: #800000;">type</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">mobile</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">24</span>         <span style="color: #800000;">"</span><span style="color: #800000;">number</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">123 456-7890</span><span style="color: #800000;">"</span>
+<span style="color: #008080;">25</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">26</span> <span style="color: #000000;">    ],
+</span><span style="color: #008080;">27</span>     <span style="color: #800000;">"</span><span style="color: #800000;">children</span><span style="color: #800000;">"</span><span style="color: #000000;">: [],
+</span><span style="color: #008080;">28</span>     <span style="color: #800000;">"</span><span style="color: #800000;">spouse</span><span style="color: #800000;">"</span><span style="color: #000000;">: null
+</span><span style="color: #008080;">29</span> }</pre>
+</div>
+<p>&nbsp;&nbsp;</p>
+<h1>4&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 参考链接</h1>
+<p><span style="text-decoration: underline;"><a href="https://www.json.org/">https://www.json.org</a></span></p>
+<p><a href="https://docs.python.org/3.7/library/json.html">https://docs.python.org/3.7/library/json.html</a></p>
+<p><span style="text-decoration: underline;"><a href="https://en.wikipedia.org/wiki/JSON">https://en.wikipedia.org/wiki/JSON</a></span></p>
+<p><span style="text-decoration: underline;"><a href="https://www.liaoxuefeng.com/wiki/1022910821149312/1023021554858080">https://www.liaoxuefeng.com/wiki/1022910821149312/1023021554858080</a></span></p>
+<p><span style="text-decoration: underline;"><a href="https://developers.squarespace.com/what-is-json">https://developers.squarespace.com/what-is-json</a></span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

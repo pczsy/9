@@ -1,0 +1,239 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修JVM内存结构划分' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>JVM内存结构划分</center></div><div class='banquan'>原文出处:本文由博客园博主boardMan提供。<br/>
+原文连接:https://www.cnblogs.com/CodeMLB/p/12088837.html</div><br>
+    <h1 id="jvm内存结构划分">JVM内存结构划分</h1>
+<ul>
+<li><a href="#jvm内存结构划分">JVM内存结构划分</a>
+<ul>
+<li><a href="#数据区域划分">数据区域划分</a>
+<ul>
+<li><a href="#程序计数器">程序计数器</a></li>
+<li><a href="#虚拟机栈">虚拟机栈</a></li>
+<li><a href="#本地方法栈">本地方法栈</a></li>
+<li><a href="#堆">堆</a></li>
+<li><a href="#方法区">方法区</a>
+<ul>
+<li><a href="#运行时常量池">运行时常量池</a></li>
+<li><a href="#stringtable">StringTable</a></li>
+</ul></li>
+<li><a href="#直接内存">直接内存</a></li>
+</ul></li>
+<li><a href="#创建新对象说明">创建新对象说明</a>
+<ul>
+<li><a href="#对象的创建">对象的创建</a></li>
+<li><a href="#对象的内存布局">对象的内存布局</a>
+<ul>
+<li><a href="#对象头">对象头</a></li>
+<li><a href="#实例数据">实例数据</a></li>
+<li><a href="#对齐填充">对齐填充</a></li>
+</ul></li>
+<li><a href="#对象的访问定位">对象的访问定位</a></li>
+</ul></li>
+</ul></li>
+</ul>
+<h2 id="数据区域划分">数据区域划分</h2>
+<p>运行时内存区域划分：程序计数器、虚拟机栈、本地方法栈、堆、方法区</p>
+<h3 id="程序计数器">程序计数器</h3>
+<p>存储内容:</p>
+<blockquote>
+<p>当前线程所执行的行号指示器,记住下一条JVM指令的执行地址</p>
+</blockquote>
+<ul>
+<li>线程私有</li>
+<li>通过寄存器实现</li>
+<li>不存在运行时内存溢出</li>
+</ul>
+<h3 id="虚拟机栈">虚拟机栈</h3>
+<p>存储内容：</p>
+<blockquote>
+<p>虚拟机栈更多情况下就是指局部变量表部分，局部变量表中存放了编译期可知的各种Java虚拟机基本数据类型、对象引用（reference类型）、returnAddress类型（指向一条字节码指令的地址）</p>
+</blockquote>
+<ul>
+<li>垃圾回收不涉及栈内存</li>
+<li>栈内存是线程私有的,可以理解为线程运行需要的内存空间</li>
+<li>栈由栈帧组成，每个栈帧代表一个方法执行时需要的内存(参数，局部变量，返回地址)</li>
+<li>每个线程只能有一个活动栈帧,对应着当前正在执行的那个方法</li>
+</ul>
+<p>PS.</p>
+<blockquote>
+<p>栈内存分配过大只能支撑一定的递归调用,并不会影响运行速度,还可能减少线程数量(因为物理内存是一定的)</p>
+</blockquote>
+<h3 id="本地方法栈">本地方法栈</h3>
+<p>为运行本地方法时分配的内存(HotSpot把虚拟机栈和本地方法栈合二为一了)</p>
+<h3 id="堆">堆</h3>
+<p>存储内容</p>
+<blockquote>
+<p>存放对象实例</p>
+</blockquote>
+<ul>
+<li>有垃圾回收机制</li>
+<li>线程共享,需要考虑线程安全问题</li>
+<li>从内存分配的角度来说:堆中可以划分出多个线程私有的分配缓冲区(TLAB),以提升对象分配时的效率</li>
+<li>Java堆可以处于物理上不连续的内存空间,但在逻辑上应该视为连续的(但是对于比如数组这种大对象,可能会要求连续的内存空间)</li>
+</ul>
+<h3 id="方法区">方法区</h3>
+<p>存储内容：</p>
+<blockquote>
+<p>被虚拟机加载的类型信息、常量、静态变量、即时编译器后的代码缓存等</p>
+</blockquote>
+<ul>
+<li>线程共享区</li>
+<li>在虚拟机启动时被创建,逻辑上属于堆的一部分(不同JVM实现的方式不同)
+<ul>
+<li>JDK1.6使用永久代(PerGen)作为方法区的实现</li>
+<li>JDK1.8使用元空间(Metaspace)对方法区进行实现(包含Class ClassLoader 常量池三个部分,放在直接内存中)StringTable放在堆中(有助于垃圾回收管理)</li>
+</ul></li>
+</ul>
+<blockquote>
+<p>使用场景:如Spring Mybatis使用的动态加载</p>
+</blockquote>
+<h4 id="运行时常量池">运行时常量池</h4>
+<p>存储内容：</p>
+<blockquote>
+<p>存放编译器生成的各种字面量与符号引用</p>
+</blockquote>
+<ul>
+<li>运行时常量池是方法区的一部分</li>
+<li>二进制字节码内容:类基本信息、常量池表、类方法定义，包含了虚拟机指令</li>
+</ul>
+<p>PS.</p>
+<blockquote>
+<p>其中,常量池表中存放编译期间生成的各种<strong>字面量</strong>(比如各种基本数据类型)与<strong>符号引用</strong>(比如,类名\方法名\参数类型),这部分内容将在类加载后存放到方法区的运行时常量池中,<strong>并把符号地址变为真实地址</strong></p>
+</blockquote>
+<h4 id="stringtable">StringTable</h4>
+<p>类似于hashTable结构，不能自动扩容<br />
+常量池中的字符串只是符号，第一次使用时才变为对象<br />
+利用串池机制,避免重复创建字符对象</p>
+<ul>
+<li>案例<br />
+字符串拼接的原理是编译期优化<br />
+字符串拼接原理是StringBuilder(JDK1.8)<br />
+使用intern()方法,主动将串池中还没有的字符串对象放入串池</li>
+</ul>
+<pre><code><code>// StringTable [ &quot;a&quot;, &quot;b&quot; ,&quot;ab&quot; ]  hashtable 结构，不能扩容
+public class Demo1_22 {
+    // 常量池中的信息，都会被加载到运行时常量池中， 这时 a b ab 都是常量池中的符号，还没有变为 java 字符串对象
+    // ldc #2 会把 a 符号变为 &quot;a&quot; 字符串对象
+    // ldc #3 会把 b 符号变为 &quot;b&quot; 字符串对象
+    // ldc #4 会把 ab 符号变为 &quot;ab&quot; 字符串对象
+
+    public static void main(String[] args) {
+        String s1 = &quot;a&quot;; // 懒惰的
+        String s2 = &quot;b&quot;;
+        String s3 = &quot;ab&quot;;
+        String s4 = s1 + s2; // new StringBuilder().append(&quot;a&quot;).append(&quot;b&quot;).toString()  new String(&quot;ab&quot;)
+        String s5 = &quot;a&quot; + &quot;b&quot;;  // javac 在编译期间的优化，结果已经在编译期确定为ab
+
+        System.out.println(s3 == s5);
+    }
+}</code></pre>
+<p>JDK1.7以后,利用intern()方法,会将字符串对象尝试放入串池，如果有则并不会放入，如果没有则放入串池， 会把串池中的对象返回;而JDK1.6调用intern()方法,是将对象拷贝一份到串池中,指向堆中的对象本身引用并不不改变</p>
+<pre><code><code>
+public class Demo1_23 {
+
+    //  [&quot;ab&quot;, &quot;a&quot;, &quot;b&quot;]
+    public static void main(String[] args) {
+        demo1();
+        demo2();
+    }
+
+    static void demo1() {
+        // 串池中事前没有&quot;ab&quot;,intern()之后,s返回的是串池中的对象
+        String s = new String(&quot;a&quot;) + new String(&quot;b&quot;);
+
+        String s1 = s.intern();
+
+        System.out.println(s == &quot;ab&quot;);  // true
+        System.out.println(s1 == &quot;ab&quot;);     //true
+    }
+
+    static void demo2() {
+        // 串池中事前已有&quot;ab&quot;,s返回的仍是堆中的对象
+        String x = &quot;ab&quot;;
+        String s = new String(&quot;a&quot;) + new String(&quot;b&quot;);
+
+        // 堆  new String(&quot;a&quot;)   new String(&quot;b&quot;) new String(&quot;ab&quot;)
+        String s2 = s.intern(); // 将这个字符串对象尝试放入串池，如果有则并不会放入，如果没有则放入串池， 会把串池中的对象返回
+
+        System.out.println( s2 == x);   // true
+        System.out.println( s == x );   //false
+    }
+}</code></pre>
+<ul>
+<li>位置<br />
+JDK1.6时,StringTable放在元空间内,属于永久代的位置,但是StringTable占用内存容易触发full gc耗时较久;JDK1.7以后将StringTable放在堆内存中,随着内存占用增大首先触发minor gc,耗时较短.</li>
+</ul>
+<h3 id="直接内存">直接内存</h3>
+<p>使用Native函数直接分配堆外内存,然后通过Java堆里的DirectByteBuffer对象作为引用对这块内存的引用进行操作。避免了在Java堆和Native堆之间来回复制数据<br />
+原理说明:</p>
+<blockquote>
+<p>使用Unsafe对象完成直接内存的分配和回收,回收时需要主动调用freeMemory方法<br />
+ByteBuffer的实现类内部使用了Cleaner(虚引用)来监测ByteBuffer(BB)对象,一旦BB对象被垃圾回收,会有ReferenceHandler线程通过Cleaner方法调用freeMemory来释放内存</p>
+</blockquote>
+<h2 id="创建新对象说明">创建新对象说明</h2>
+<p>HotSpot虚拟机在Java堆中对象分配、布局和访问的过程</p>
+<h3 id="对象的创建">对象的创建</h3>
+<ol>
+<li><p>new字节码指令<br />
+虚拟机遇到new字节码指令时，首先检查能否在常量池中定位到一个类的符号引用，并检查该符号引用的来是否已被加载、解析和初始化。如果没有，则执行相应的类加载过程。<br />
+类加载检查后，虚拟机为新生对象分配内存</p></li>
+<li><p>内存分配<br />
+对象所需的内存大小在类加载过程中可以确定，在Java虚拟机中为对象划分内存时有两种方式：<strong>指针碰撞</strong>、<strong>空闲列表</strong><br />
+<strong>指针碰撞</strong>： 利用一个<strong>指针</strong>作为<strong>已用内存</strong>和<strong>未用内存</strong>的分界点的<strong>指示器</strong>，内存分配就仅仅是指针的移动。优点在于不会造成内存碎片化，但是速度较慢<br />
+<strong>空闲列表</strong>：虚拟机维护一个<strong>内存使用记录表</strong>，使用时，从空闲的内存区域直接划分一块足够大的空间给对象实例。</p></li>
+<li><p>内存分配的线程安全问题<br />
+划分可用空间后仍要考虑并发情况下对内存的使用，有两种方式解决内存冲突的问题：<strong>CAS</strong>配上失败重试、<strong>TLAB</strong>本地线程分配缓冲<br />
+<strong>TLAB</strong>：把内存分配的动作按照线程划分在不同的空间之中进行，即每个线程在Java堆中预先分配了一小块内存空间</p></li>
+</ol>
+<h3 id="对象的内存布局">对象的内存布局</h3>
+<p>对象在堆内存中的布局可以划分为三个部分：<strong>对象头</strong>、<strong>实例数据</strong>、<strong>对齐填充</strong></p>
+<h4 id="对象头">对象头</h4>
+<p>对象头中包含两类信息：<strong>Mark Word</strong>、<strong>类型指针</strong></p>
+<ul>
+<li><p>Mark Word<br />
+存储对象自身运行时数据，考虑到虚拟机的空间效率，被设计成一个动态定义的数据结构，即根据对象的状态复用自己的存储空间（数据长度在32位和64位虚拟机上分别为32个比特和64个比特）</p></li>
+<li><p>类型指针<br />
+对象中指向它类型元数据的指针，Java虚拟机通过这个指针来确定该对象是哪个类的实例（不是所有虚拟机都必须在对象数据上保留类型指针）此外，如果对象是一个数组，对象头中还必须拥有一块记录数据长度的数据</p></li>
+</ul>
+<h4 id="实例数据">实例数据</h4>
+<p>即程序代码里定义的各种类型的字段内容，包括从父类继承的或子类中定义的字段。各类数据存储是按照一定顺序的（long/double、ints...），而宽度相同的字段总是被分配到一起存放，所以父类中定义的变量可能会出现在子类之前。</p>
+<h4 id="对齐填充">对齐填充</h4>
+<p>占位符，无特殊意义<br />
+HotSpot虚拟机的自动内存管理系统要求对象的起始地址必须是8字节的整倍数，若有些对象的对象头和示例数据内存设计不是8的倍数，则需要利用占位符来进行填充。</p>
+<h3 id="对象的访问定位">对象的访问定位</h3>
+<p>Java程序通过reference数据操作对上的具体对象，主流的访问方式有两种：<strong>句柄</strong>、<strong>直接指针</strong></p>
+<ul>
+<li><p>句柄<br />
+Java堆中可能划分出一块内存作为句柄池。reference中存储对象的句柄地址，句柄中包含对象的实例数据和类型数据的具体地址信息。</p></li>
+<li><p>直接指针<br />
+Java堆中对象的布局需要考虑如何放置类型数据的相关信息（如访问信息）。reference中存储的直接就是对象地址，如果只访问对象本身，就不要多一次间接访问的开销</p></li>
+</ul>
+<p>优缺点</p>
+<blockquote>
+<p>使用句柄访问， reference数据只需关乎句柄地址，当对象被回收或移动后只需改变句柄中的实例数据指针，而reference本身不用修改<br />
+使用直接指针省去了一次指针定位的时间开销，速度更快，由于Java中对象的访问相当频繁，所以效果可观。<br />
+HotSpot使用直接指针的方式</p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

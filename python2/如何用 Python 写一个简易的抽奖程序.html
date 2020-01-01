@@ -1,0 +1,219 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修如何用 Python 写一个简易的抽奖程序' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>如何用 Python 写一个简易的抽奖程序</center></div><div class='banquan'>原文出处:本文由博客园博主极客挖掘机提供。<br/>
+原文连接:https://www.cnblogs.com/babycomeon/p/12005708.html</div><br>
+    <p><img src="./images/如何用 Python 写一个简易的抽奖程序0.png" /></p>
+<p>不知道有多少人是被这个头图骗进来的：）</p>
+<p>事情的起因是这样的，上周有同学问小编，看着小编的示例代码敲代码，感觉自己也会写了，如果不看的话，七七八八可能也写的出来，但是一旦自己独立写一段程序，感觉到无从下手。</p>
+<p>其实这个很正常，刚开始学习写代码，都是跟着别人的套路往下写，看的套路少，很难形成自己的套路，这就和做数学题是一样的，做一道题就想会所有的题目，这个可能性微乎其微，都是通过大量的练习来摸索到自己的套路。</p>
+<p>正好快过年了，各个公司都会搞一些抽奖活动，小编今天就来聊一下，如果要写一个简单的抽奖程序，小编是怎么写的。</p>
+<h2 id="分析需求">分析需求</h2>
+<p>我们先整理下思路，目标是什么？</p>
+<p>目标是要写一个抽奖程序，那么抽奖程序的核心是什么？</p>
+<p>当然是如何判断一个人中奖了。那么如何判断一个人中奖呢？</p>
+<p>是不是可以通过随机函数来操作呢？</p>
+<h2 id="中奖方法">中奖方法</h2>
+<p>一步一步来，我们先通过随机函数来判断是否中奖。代码是不是可以先写成下面这样：</p>
+<pre><code><code>import random
+
+# 判断中奖函数
+def lottery():
+    flag = random.randint(0, 9)
+    if flag &lt; 2:
+        return True
+    else:
+        return False</code></pre>
+<p>首先，我们获取 0 ~ 9 之间的随机正整数（这里不讨论 random 是不是真随机，从狭义上来讲我们可以认为它是随机的），如果中奖率为 20% 的话，我们可以认为小于 2 的数字为中奖，其余的为没有中奖。然后中奖后返回 True ，没有中奖返回 False 。</p>
+<p>我们加一个入口测试函数，测试一下上面的代码是否能正常运行，并且中奖率是否能维持在大约 20 % 左右。</p>
+<pre><code><code>if __name__ == &#39;__main__&#39;:
+    # 中奖次数
+    a = 0
+    # 没有中奖次数
+    b = 0
+    for i in range(1000000) :
+        if (lottery()):
+            a += 1
+        else:
+            b += 1
+
+    print(&#39;共计中奖：&#39;, a, &#39;，未中奖：&#39;, b)</code></pre>
+<p>执行结果：</p>
+<pre><code><code>共计中奖： 200145 ，未中奖： 799855</code></pre>
+<p>上面的测试总共循环了 1 百万次，大约执行需要 2 ~ 3 秒左右，速度还是蛮快的。可以看到，中奖结果确实接近 20% 左右。</p>
+<h2 id="动态中奖率">动态中奖率</h2>
+<p>难道到这里就结束了么？当然不可能，这里只是刚刚开了个头。</p>
+<p>如果这时老板说，你这个概率不能调整啊，需要让中奖率可以动态调整的，活动刚开始的时候中奖率要高，随着时间的推移，中奖率要降下来。</p>
+<p>这时候咋整，傻眼了吧。</p>
+<p>既然中奖率要可调整，那么我们中奖率就不能定死在程序中了，这个中奖率需要有一个地方去做存储，在每次做随机的时候将这个中奖率取出来。</p>
+<p>简单易行的方法就是将这个中奖率放在数据库中或者缓存服务中，这个根据实际业务场景来定。一般是根据预估访问压力的大小来进行技术选型，如果压力不是特别大，那么放在数据库中也是可以的，如果并发会比较高的话，建议还是放在缓存中。</p>
+<p>我们来写一个从数据库获取中奖概率的方法（为了展示直观，小编这里直接使用 Mysql 数据库用作数据存储），先看下数据库的数据：</p>
+<p><img src="./images/如何用 Python 写一个简易的抽奖程序1.png" /></p>
+<p>很简单的设计了一张表，里面有意义的字段有两个，一个用作中奖率的分子部分，一个用作中奖率的分母部分。分母部分最好要设置成 100 、 1000 、 10000 这种，这样计算中奖率会比较好计算。</p>
+<pre><code><code>def get_lottery_rate():
+    conn = pymysql.connect(host=&#39;localhost&#39;, user=&#39;root&#39;, password=&#39;password&#39;, database=&#39;test&#39;, charset=&#39;utf8mb4&#39;)
+    try:
+        sql = &#39;SELECT fenzi, fenmu FROM rate&#39;
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        result = cursor.fetchone()
+        return result
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()</code></pre>
+<p>运行这个方法测试结果如下：</p>
+<pre><code><code>(10, 100)</code></pre>
+<p>可以看到，我们获得了一个元组，里面的内容就是我们从数据库取出来的分子和分母。</p>
+<p>我们将前面的抽奖的那个方法改一下，改成从数据库获取中奖比例。修改后的代码如下：</p>
+<pre><code><code>def lottery():
+    rate = get_lottery_rate()
+    flag = random.randint(1, rate[1])
+    if flag &lt; rate[0]:
+        return True
+    else:
+        return False</code></pre>
+<p>还是运行上面的测试方法，这里要注意下，因为我们现在是从数据库获取数据，每次方法执行都要加上数据库链接的建立与销毁，建议将循环次数修改为 1000 以内，不然执行的时间就有点太长了。</p>
+<p>小编这里将循环次数修改为 1000 次后，执行结果如下：</p>
+<pre><code><code>共计中奖： 92 ，未中奖： 908</code></pre>
+<p>那么到这里，我们就可以通过修改数据库中数据实时的操作中奖率了。当然上面的慢的问题我们可以使用数据库连接池等技术进行优化。</p>
+<h2 id="增加奖项">增加奖项</h2>
+<p>那么是否就结束了呢？no no no，我们接着加需求。</p>
+<p>现在，我们只能知道每次到底中不中奖，只有一个奖项，但是现在想变成 3 个奖项，如：一等奖、二等奖、三等奖那该怎么办？</p>
+<p>这个对之前的抽奖方法改动就有点大了，首先我们先在数据库增加出来另外两个奖项的配置：</p>
+<p><img src="./images/如何用 Python 写一个简易的抽奖程序2.png" /></p>
+<p>配置这里三个奖项的分母最好保持一致，否则后续计算会徒增复杂度。</p>
+<p>修改我们获取配置的那个方法：</p>
+<pre><code><code>def get_lottery_rate():
+    conn = pymysql.connect(host=&#39;localhost&#39;, port = 3306, user=&#39;root&#39;, password=&#39;password&#39;, database=&#39;test&#39;, charset=&#39;utf8mb4&#39;)
+    try:
+        sql = &#39;SELECT * FROM rate order by id asc &#39;
+        cursor = conn.cursor()
+        cursor.execute(sql)
+        result = cursor.fetchall()
+        return result
+    except Exception as ex:
+        print(ex)
+    finally:
+        conn.close()</code></pre>
+<p>测试调用后结果如下：</p>
+<pre><code><code>((1, 10, 100), (2, 5, 100), (3, 1, 100))</code></pre>
+<p>先在我们要做的是要将这个配置融入进我们之前的中奖的那个方法中，不多说，直接上代码：</p>
+<pre><code><code># 判断中奖函数
+def lottery():
+    config = get_lottery_rate()
+    flag = random.randint(1, config[0][2])
+    if flag &lt;= config[0][1]:
+        return 1
+    elif flag &gt; config[0][1] and flag &lt;= (config[1][1] + config[0][1]):
+        return 2
+    elif flag &gt; (config[1][1] + config[0][1]) and flag &lt;= (config[2][1] + config[1][1]):
+        return 3
+    else:
+        return 0</code></pre>
+<p>接着修改我们的做测试的代码：</p>
+<pre><code><code>def main():
+    # 一等奖中奖次数
+    a = 0
+    # 二等奖中奖次数
+    b = 0
+    # 三等奖中奖次数
+    c = 0
+    # 未中奖次数
+    d = 0
+    # 循环次数
+    e = 0
+    for i in range(1000):
+        e += 1
+        print(&#39;当前循环次数：&#39;, e)
+        result = lottery()
+        print(&#39;当前中奖结果：&#39;, result)
+        if (result == 1):
+            a += 1
+        elif (result == 2):
+            b += 1
+        elif (result == 3):
+            c += 1
+        else:
+            d += 1
+
+    print(&#39;一等奖中奖：&#39;, a, &#39;，二等奖中奖次数：&#39;, b, &#39;，三等奖中奖次数：&#39;, c, &#39;，未中奖次数：&#39;, d)</code></pre>
+<p>调用我们的测试方法：</p>
+<pre><code><code>if __name__ == &#39;__main__&#39;:
+    main()</code></pre>
+<p>小编这里的运行结果如下：</p>
+<p><img src="./images/如何用 Python 写一个简易的抽奖程序3.png" /></p>
+<h2 id="增加会员判断">增加会员判断</h2>
+<p>到这里我们还没完，还能加需求，现在网站大多数都是会员制的，比如白银会员，黄金会员，钻石会员，如果不同的会员等级需要有不同的中奖率，这个是很正常的一件事儿，小编现在还清晰的记得当年某家大型互联网公司代码中的注释 “穷逼 VIP（活动送的那种）” 。</p>
+<p>我们假设钻石会员的中奖率为整体中奖率的 100% ，黄金会员的中奖率为整体中奖率的 50% ，白银会员的中奖率为整体中奖率的 20% 。</p>
+<p>最简单的实现方式是直接在最外层套一层会员中奖率的判断，不知道各位同学怎么想。</p>
+<p>小编这里给出自己的解决方案：</p>
+<pre><code><code># 判断会员等级中奖率过滤
+# 会员等级 1.白银会员 2.黄金会员 3. 钻石会员
+def vip_lottery(level):
+    rate = random.randint(1, 10)
+    # 如果是钻石会员，直接进入抽奖函数
+    if level == 3:
+        return lottery()
+    # 如果是黄金会员， 50% 概率进入抽奖函数
+    elif level == 2:
+        if rate &lt;= 5:
+            return lottery()
+        else:
+            return 0
+    # 如果是白银会员， 20% 概率进入抽奖函数
+    elif level == 1:
+        if rate &lt;= 2:
+            return lottery()
+        else:
+            return 0
+    # 如果是其他，直接返回未中奖
+    else:
+        return 0</code></pre>
+<p>我们新增一个测试增加会员过滤的测试方法：</p>
+<pre><code><code># 会员制中奖测试方法
+def test_vip():
+    print(&#39;请输入您当前的会员等级：1.白银会员 2.黄金会员 3. 钻石会员&#39;)
+    level = input()
+    result = vip_lottery(int(level))
+    if (result == 1):
+        print(&#39;恭喜您中了一等奖&#39;)
+    elif (result == 2):
+        print(&#39;恭喜您中了二等奖&#39;)
+    elif (result == 3):
+        print(&#39;恭喜您中了三等奖&#39;)
+    else:
+        print(&#39;未中奖，谢谢惠顾&#39;)</code></pre>
+<p>在我们的入口函数中调用这个方法：</p>
+<pre><code><code>if __name__ == &#39;__main__&#39;:
+    test_vip()</code></pre>
+<p>最终测试结果如下：</p>
+<p><img src="./images/如何用 Python 写一个简易的抽奖程序4.png" /></p>
+<p>小编的人品还可以嘛，直接就能中三等奖。</p>
+<p>那么，到这里，是不是一个简易的抽奖程序就算完成了呢？其实还能接着加，如果每个奖项都有数量限制，并且限制的数量是可以随时调整的等等等等，小编这里就不一一列举了。</p>
+<p>整体代码写的稍微有些长了，小编就不贴出来了，上传到代码仓库各位感兴趣的同学自己访问吧。</p>
+<p><strong>注意：</strong> 本篇文章所使用代码，仅供演示讲解使用，不可用于生产环境，在访问量过大的情况下会产生严重的性能问题。</p>
+<h2 id="示例代码">示例代码</h2>
+<p><a href="https://github.com/meteor1993/python-learning/tree/master/python-lottery" title="示例代码-Github">示例代码-Github</a></p>
+<p><a href="https://gitee.com/inwsy/python-learning/tree/master/python-lottery" title="示例代码-Gitee">示例代码-Gitee</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

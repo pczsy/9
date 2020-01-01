@@ -1,0 +1,503 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python之路【第三十篇】django 模型层-多表关系' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python之路【第三十篇】django 模型层-多表关系</center></div><div class='banquan'>原文出处:本文由博客园博主Simon92提供。<br/>
+原文连接:https://www.cnblogs.com/hackerer/p/11758735.html</div><br>
+    <h1>多表操作</h1>
+<p>&nbsp;文件为 ----&gt; &nbsp;orm2</p>
+<h3>数据库表关系之关联字段与外键约束</h3>
+<div class="cnblogs_code">
+<pre><code><strong>一对多</strong><br />Book
+    id    title    price    publish         email    addr
+    1    php        100        人民出版社     111    北京
+    2    python     120        沙河出版社     222    沙河
+    3    go         110        人民出版社     119    北京
+    4    java       300        人民出版社     111    北京
+    
+Book多
+    id    title    price    publish_id
+    1    php        100            1
+    2    python     120            1 
+    3    go         110            2     
+    4    java       300            1    
+    
+Publish一
+    id    name         email    addr
+    1    人民出版社     111      北京
+    2    沙河出版社     222      沙河
+
+    
+查询python这本书的出版社的邮箱(子查询）
+    select publish_id from Book where title="python"
+    select email  from Publish where id=1  id=(上边的)
+    
+    一旦确定是一对多的表关系：建立一对多的关系-------&gt;在多的表中建立关联字段（publish_id）
+
+<strong>
+多对多：</strong>
+Book
+    id    title    price    publish_id
+    1    php        100            1
+    2    python     120            1 
+    3    go         110            2     
+    4    java       300            1    
+    
+Author
+    id    name    age        addr
+    1    alex    34         北京
+    2    egon    55         南京
+
+Book2Author
+    id    book_id        author_id
+    1      2            1
+    2      2            2
+    3      3            2
+    
+alex出版过的书籍名称(子查询)
+select id form Author where name='alex'  （拿到alex这个id）
+select book_id from Book2Author where author_id=1
+select title from Book id=book_id    
+    一旦确定表关系是多对多：创建第三张表：<br />　　　　id　　book_id　　author_id
+<strong>
+一对一：</strong>
+Author
+    id    name    age        Authordetail_id(unique)
+    1    alex    34            1
+    2    egon    55            2
+    
+AuthorDetail
+    id    addr    gender        tel        gf_name
+    1    北京    male        110        小花
+    2    南京    male        911        小红
+    
+一旦确定是一对多的关系：建立一对多的关系-------&gt;在多的表中建立关联字段    （一个出版社可以出版多本书）
+一旦确定多对多的关系：建立多对多的关系---------&gt;创建第三张表（关联表）：id和两个关联字段   （一本书可以有多个作者，一个作者可以出版多本书；）
+一旦确定一对一的关系：建立一对一的关系----------&gt;在两张表中的任意一张表中建立关联字段+unique  （一个作者只有一个详细信息）</pre>
+</div>
+<h3>&nbsp;数据库表关系之sql创建关联表</h3>
+<p>&nbsp;对应的sql语句</p>
+<div class="cnblogs_code">
+<pre><code>Publish<br />Book<br />Author<br />AuthorDetail<br />Book2Author<br /><br />CREATE TABLE publish（
+        id INT PRIMARY KEY auto_increment,
+        name VARCHAR(20)
+        );
+CREATE TABLE book(
+        id INT PRIMARY KEY auto_increment,
+        title VARCHAR (20),
+        price DECIMAL (8,2),
+        pub_date DATE,
+        publish_id INT,
+        FOREIGN KEY (publish_id) REFERENCES publish(id)  一个出版社可以出版多本书
+        );
+CREATE TABLE authordetail(
+        id INT PRIMARY KEY auto_increment,
+        tel VARCHAR(20)
+        );
+CREATE TABLE author(
+        id INT PRIMARY KEY auto_increment,
+        name VARCHAR(20),
+        age INT,
+        authordetail_id INT UNIQUE,
+        FOREIGN KEY(authordetail_id) REFERENCES authordetail(id)  一个作者只有一个详细信息
+        );
+    CREATE TABLE book2author(
+        id INT PRIMARY KEY auto_increment,
+        book_id INT,
+        author_id INT,
+        FOREIGN KEY(book_id) REFERENCES book(id), 
+        FOREIGN KEY(author_id) REFERENCES author(id)            一个书可以有多个作者，一个作者可以出版多本书    
+        );</pre>
+</div>
+<h1><strong>1、创建模型（ORM生成关联表模型）</strong></h1>
+<p>models</p>
+<div class="cnblogs_code">
+<pre><code>from django.db import models
+
+# Create your models here.
+
+'''
+Book ----&gt; Publish 一对多
+'''
+#作者详情表
+class AuthorDetail(models.Model):
+    nid = models.AutoField(primary_key=True)
+    birthday=models.DateField()
+    telephone=models.BigIntegerField()
+    addr=models.CharField( max_length=64)
+
+class Author(models.Model):
+    nid = models.AutoField(primary_key=True)
+    name=models.CharField( max_length=32)
+    age=models.IntegerField()
+    # 与AuthorDetail建立一对一的关系
+    authorDetail=models.OneToOneField(to="AuthorDetail",on_delete=models.CASCADE)  to_field="nid"这个可加可不加，它会默认去关联主键
+
+#出版社表
+class Publish(models.Model):
+    nid = models.AutoField(primary_key=True)   id字段是自动添加的，如果不加主键数据库迁移的时候它也会给你默认生成一个id的字段，可以不写nid，写了就用你写的。
+    name=models.CharField( max_length=32)
+    city=models.CharField( max_length=32)
+    email=models.EmailField()
+
+class Book(models.Model):
+    nid = models.AutoField(primary_key=True)
+    title = models.CharField( max_length=32)
+    publishDate=models.DateField()
+    price=models.DecimalField(max_digits=5,decimal_places=2) 
+　　#建立一对多关联要有一个关联字段，上边的都是普通字段；给关联字段再绑定约束关系；
+    # 与Publish建立一对多的关系,外键字段建立在多的一方；django会自动给你补全publish_id; to就是foreign key哪个;加上引号就会在全局里边找；
+    publish=models.ForeignKey(to="Publish",to_field="nid",on_delete=models.CASCADE, null=True) #关联主键nid；这句话相当于下面两句;在django2.0要加上on_delete=models.CASCADE;null=True是允许这个字段为空
+    '''         
+    publish_id INT,
+    FOREIGN KEY（publish_id)REFERENCES publish(id)   to_field这个字段的nid主键；上边的publish在数据库迁移的时候就是这两句话
+    '''
+   <strong> #</strong><strong>多对多,会自动生成第三张表；</strong>下面的几个意思是一样的
+    authors = models.ManyToManyField(to="Author") 
+    '''
+    CREATE TABLE book2author(      上边那一句话执行的结果就相当于会生成这个；book_authors它就是这样拼的
+        id INT PRIMARY KEY auto_increment,
+        book_id INT,
+        author_id INT,
+        FOREIGN KEY(book_id)REFERENCES book(id),
+        FOREIGN KEY(author_id)REFERENCES author(id),
+    )
+    '''
+# class Book2Author(models.Model):  这是自己写的第三张表
+#     nid = models.AutoField(primary_key=True)
+#     book = models.ForeignKey(to="Book") to_field="nid"
+#     author = models.ForeignKey(to="Author")</pre>
+</div>
+<p>&nbsp;在settings里边</p>
+<div class="cnblogs_code">
+<pre><code>INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    "app01",
+]</pre>
+</div>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>#在models里边<br />publish=models.ForeignKey(to="Publish",to_field="nid",on_delete=models.CASCADE) <br /><br />#关联主键nid；这句话相当于两句;在django2.0要加上on_delete=models.CASCADE，只要用到Foreignkey（在一对多的时候，在one to one的时候）</pre>
+</div>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>C:\Users\Administrator\PycharmProjects\orm2&gt;python manage.py makemigrations
+Migrations for 'app01':
+  app01\migrations\0001_initial.py
+    - Create model Author
+    - Create model AuthorDetail
+    - Create model Book
+    - Create model Publish
+    - Add field publish to book
+    - Add field authorDetail to author
+
+C:\Users\Administrator\PycharmProjects\orm2&gt;python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, app01, auth, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying app01.0001_initial... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying sessions.0001_initial... OK</pre>
+</div>
+<p>&nbsp;生成了5张表；book_authors生成的表；book表生成了一个publish_id字段；</p>
+<p><img src="./images/Python之路【第三十篇】django 模型层-多表关系0.png" alt="" /></p>
+<p>注意事项：</p>
+<ul>
+<li><code>&nbsp;id</code>&nbsp;字段是自动添加的</li>
+<li>&nbsp;对于外键字段，Django 会在字段名上添加<tt class="docutils literal">"_id"</tt>&nbsp;来创建数据库中的列名 &nbsp;如 &nbsp;authordetail_id &nbsp; 、 publish_id &nbsp; 、book_id &nbsp; 、author_id&nbsp;</li>
+<li>&nbsp;这个例子中的<code>CREATE TABLE</code>&nbsp;SQL 语句使用PostgreSQL 语法格式，要注意的是Django 会根据settings&nbsp;中指定的数据库类型来使用相应的SQL 语句。</li>
+<li>&nbsp;定义好模型之后，你需要告诉Django _使用_这些模型。你要做的就是修改配置文件中的INSTALL_APPSZ中设置，在其中添加<code>models.py</code>所在应用的名称。</li>
+<li class="line" data-line="91">外键字段 ForeignKey 有一个 null=True 的设置(它允许外键接受空值 NULL)，你可以赋给它空值 None 。</li>
+</ul>
+<p>一对一就是oneToOneField;一对多就是ForeignKey;它俩是一样的，会在那张表里边多生成一个字段，加一个_id+一个约束关系；多对多就是ManyToManyField，会生成一个第三张关系表；</p>
+<h1>2.多表操作-添加</h1>
+<p>单表（没有任何关联字段）操作添加记录有两种一个是create，一个是obj.save(实例化来一个对象，用这个对象.sabe)</p>
+<h3>一对多添加记录（如果在有绑定关系的表中添加记录）</h3>
+<div class="cnblogs_code">
+<pre><code>from django.shortcuts import render, HttpResponse
+
+# Create your views here.
+from app01.models import *
+def add(request):
+    #pub = Publish.objects.create(name="人民出版社", email="1234@123.com", city="北京")  Publish是单表，可以直接生成一个出版社记录
+###################绑定一对多的关系##############
+    #方式一：
+    #为book表绑定关系 和出版社的关系：book多-----&gt;publish 1
+    #book_obj = Book.objects.create(title="红楼梦", price=100, publishDate="2012-12-12", publish_id=1)
+    #print(book_obj.title, type(book_obj) )  #返回值book_obj就是添加记录的对象  打印 -- &gt;<strong> 红楼梦  &lt;class 'app01.models.Book'&gt;</strong>
+#<strong>book_obj.publishDate 、 book_obj.publish（拿到出版社对象&lt;class 'app01.models.Publish'&gt;）、  book_obj.publish_id（book_obj.publish.nid） 、 book_obj.publish.city</strong><br />　　book_obj可以直接 .Book的字段；也可以.Publish里边的字段，先.出它的出版社对象再.它的字段<br />
+    #方式二：
+    # pub_obj = Publish.objects.filter(nid=1).first() 查询id为1的<strong>出版社对象&lt;class 'app01.models.Publish'&gt;</strong>；不加first就是queryset的那个集合&lt;class 'django.db.models.query.QuerySet'&gt;
+    # book_obj = Book.objects.create(title="水浒传", price=100, publishDate="2012-12-12", publish=pub_obj) #publish就是book表里边的那个字段；<br />　　　　　　　　　　　　　　　　　　　　　　　　　　　#让它等于publish的一个<strong>实例模型对象</strong>，赋值的时候pub_obj给了它一个对象；相当于它把上边第一种方式的翻译过来了
+    # print(book_obj.title) 打印它的title
+    # print(book_obj.price) 
+    # print(book_obj.publishDate)
+    # print(book_obj.publish) #人民出版社； #拿到的就是出版社<strong>Publish对象</strong>，可以继续往后 . ；方式一的话是查到为id为1的出版社再赋给它  #它就是与这本书关联的出版社对象，一个书只有一个出版社对象；<br />##无论用方式一还是方式二创建都可以.publish或者.publish_id；<br />它打印出来是Publish object(1);在那张表中加上__str__(self)就显示name了，打印出来那个出版社看起来是字符串其实是个对象，可以继续在对象之前取.
+    #print(book_obj.publish.name) #与这本书关联的出版社对象，你可以.拿到这个出版社的任何字段  #(book_obj.publish.email)<br />　　# print(book_obj.publish_id)　#就是那个1<br /><br />
+    #查询西游记的出版社对应的邮箱；
+    book_obj = Book.objects.filter(title="西游记").first()  #先把这个书的对象取出来；
+    print(book_obj.publish.email) #先拿出一个对象找出它的关联对象，再去.  publish为什么可以.出来，是因在赋值的时候已给它对象了，方式一或二都可以
+    return HttpResponse("ok")</pre>
+</div>
+<h3>&nbsp;多对多添加纪录</h3>
+<p>通过第三张表给它绑定两个作者；你没办法直接给这张表添加记录，数据库知道这张表叫什么，orm不知道这张表叫什么名字；django给我们提供了一个接口。</p>
+<div class="cnblogs_code">
+<pre><code>###############绑定多对多的关系######################
+    # book_obj = Book.objects.create(title="三国演义", price=100, publishDate="2012-12-12", publish_id=1)
+    #
+    # egon = Author.objects.get(name="egon") #把这两个作者找出来
+    # alex = Author.objects.get(name="alex")
+    # #绑定多对多的关系的API（找到这个字段） ##<strong>authors这个字段</strong>接受了ManyToManyField（to="Author"）这个实例对象；给书籍对象添加作者 .authors就可以了
+    # book_obj.authors.add(egon, alex) #作者对象；book_obj为书籍对象，给它添加作者；它所要做的事情就是，找到book和author关联的那张表，在那张表中生成纪录；<br />　　　　　　　　　　　　　　           #book_obj的id主键是3，egon是2，alex是1；这句话它去找到book_obj和author之间的关联表，然后去表中生成记录，3 1、3 2生成两条记录
+    # #book_obj.authors.add(1, 2, 3) #这里边放的是author的主键的id；这是另外一种简洁的形式，用4跟1拼一个，4跟2拼一个，4跟3，这样的三条记录；直接放author的主键。作者主键值;
+    # #book_obj.authors.add(*[1,2,3]) #跟上边的效果是等效的，*是在给函数传列表时等效位置参数加*
+
+    #解出多对多关系
+    book = Book.objects.filter(nid=4).first() #查到nid=4，把这本书拿到查出来了；
+    # book.authors.remove(2) #加上1,2就把他们都删除了，删除4 1 、4 2；book的主键为4
+    ##book.authors.remove(*[1,2]) #跟上边一样了
+
+    #book.authors.clear()#全部删除
+
+    #查询主键为4的书籍的所有作者的名字
+    print(book.authors.all()) #拿出来的是一个集合，所有的,注意与上边.publish的区别（与这本书关联的<strong>一个</strong>出版社对象）[obj1、obj2....]<br />　　　　<strong>&lt;QuerySet [&lt;Author:alex &gt;]&gt;　</strong>　　queryset:与这本书关联的所有作者对象集合；列表里边套对象的格式；打印出&lt;QuerySet [&lt;Author: object(1)&gt;]&gt;;加上__str__就打印出了
+    ret = book.authors.all().values("name")  <strong>&lt;QuerySet [{'name':'alex'}]&gt;</strong></pre>
+<pre><code>　　print(ret) <br />　　return HttpResponse("ok")</pre>
+</div>
+<p>&nbsp;</p>
+<pre><code>book_obj.publish      book.authors.all() 两个最核心的知识点；一对一，一对多的字段，意味着这张表的实例对象，当它.publish的时候它就会.出与它关联的出版社对象；<br />当它.authors.all()的时候就会.出与它关联的作者集对象集合。<br /><br /></pre>
+<h1>3.跨表查询&nbsp;</h1>
+<h2>3.1基于对象（子查询）之跨表查询（会翻译成子查询）</h2>
+<h3>一对多</h3>
+<div class="cnblogs_code">
+<pre><code>def query(request):
+    '''
+    跨表查询：
+        1 基于对象查询；
+        2 基于双下划线查询；
+        3 聚合与分组查询
+        4 F 与 Q 查询
+    :param request:
+    :return:
+    '''
+    ##########基于对象（就是先查出来拿到那个结果再去跨表去查到它相关的内容）的跨表查询（子查询）###########
+'''
+    #一对多  正向按字段:publish
+    book多    --------------&gt;    publish 1
+            &lt;--------------
+             反向按表名book_set.all() django封装的
+    '''
+    #一对多的正向查询（确定关联字段（属性）放在哪里放在哪张表里，book表和publish表的关联字段在book表里边）
+    #查询主键为1的书籍的出版社所在的城市
+    # book_obj = Book.objects.filter(nid=1).first() 拿到book对象
+    # print(book_obj.publish.city)
+
+　　'''
+　　select publish_id from Book where nid=1;
+　　select city from publish where nid=1
+　　'''   
+
+ #一对多查询的正向查询：查询西游记这本书的出版社的名字
+    # book_obj = Book.objects.filter(title="西游记").first()
+
+    #SELECT "app01_book"."nid", "app01_book"."title", "app01_book"."publishDate", "app01_book"."price", "app01_book"."read_num", "app01_book"."comment_num", "app01_book"."publish_id" FROM "app01_book" WHERE "app01_book"."title" = '西游记' ORDER BY "app01_book"."nid" ASC LIMIT 1; args=('西游记',)
+    #SELECT "app01_publish"."nid", "app01_publish"."name", "app01_publish"."city", "app01_publish"."email" FROM "app01_publish" WHERE "app01_publish"."nid" = 1; args=(1,)
+    # print(book_obj.publish) #与这本书关联的出版社对象  #人民出版社
+    # print(book_obj.publish.name)    #人民出版社
+        #基于对象跨表查询的sql语句
+        #select publish_id from Book where title='西游记'
+        #select name from Publish where id=1
+
+    #一对多查询的反向查询：查询人民出版社出版过的书籍名称
+    # publish = Publish.objects.filter(name='人民出版社').first()
+    # ret = publish.book_set.all()
+    # print(ret) #Queryset里边放对象 &lt;QuerySet [&lt;Book: 红楼梦&gt;, &lt;Book: 西游记&gt;, &lt;Book: 水浒传&gt;]&gt;    # for obj in publish.book_set.all():
+    #     print(obj.title)  #打印出了关联书籍的名字</pre>
+</div>
+<p>&nbsp;</p>
+<h3>多对多</h3>
+<div class="cnblogs_code">
+<pre><code>#多对多查询
+'''
+    #多对多  按字段authors
+    book    -----------------------&gt;    author
+            &lt;----------------------
+             按表名book_set.all()
+    '''<br />
+    #正向查询
+    #查询水浒传所有作者的名字
+    book_obj = Book.objects.filter(title="水浒传").first()
+    #SELECT "app01_book"."nid", "app01_book"."title", "app01_book"."publishDate", "app01_book"."price", "app01_book"."read_num", "app01_book"."comment_num", "app01_book"."publish_id" FROM "app01_book" WHERE "app01_book"."title" = '水浒传' ORDER BY "app01_book"."nid" ASC LIMIT 1; args=('水浒传',)
+    # SELECT "app01_author"."nid", "app01_author"."name", "app01_author"."age", "app01_author"."authordetail_id" FROM "app01_author" INNER JOIN "app01_book_authors" ON ("app01_author"."nid" = "app01_book_authors"."author_id") WHERE "app01_book_authors"."book_id" = 3;
+    author_list = book_obj.authors.all() #queryset对象&lt;QuerySet []&gt; [author_obj1,...]
+    for author in author_list:
+        print(author.name) #alex egon
+
+    #反向查询
+    #alex出版过的所有书籍名称
+    # alex = Author.objects.filter(name="alex").first()
+    # book_list = alex.book_set.all()
+    # for book in book_list:
+    #     print(book.title) #金瓶、水浒传</pre>
+</div>
+<p>&nbsp;</p>
+<h3>一对一</h3>
+<div class="cnblogs_code">
+<pre><code>#############一对一查询（只是多了个unique）
+    '''
+    #一对一  按字段（关联字段）:authordetail
+    author    --------------&gt;    authordetail
+            &lt;--------------
+             按表名author
+    '''
+##############正向查询：查询alex的手机号
+
+    alex = Author.objects.filter(name="alex").first()  #拿到作者对象
+    # SELECT "app01_author"."nid", "app01_author"."name", "app01_author"."age", "app01_author"."authordetail_id" FROM "app01_author" WHERE "app01_author"."name" = 'alex' ORDER BY "app01_author"."nid" ASC LIMIT 1; args=('alex',)
+    # SELECT "app01_authordetail"."nid", "app01_authordetail"."birthday", "app01_authordetail"."telephone", "app01_authordetail"."addr" FROM "app01_authordetail" WHERE "app01_authordetail"."nid" = 1; args=(1,)
+    print(alex.authordetail.telephone) #1867889  找出它的关联对象.authordetail
+    <br /><br />#反向查询#查询手机号为911的的作者的名字和年龄
+    ad = AuthorDetail.objects.filter(telephone=911).first() #AuthorDetail对象
+    #SELECT "app01_authordetail"."nid", "app01_authordetail"."birthday", "app01_authordetail"."telephone", "app01_authordetail"."addr" FROM "app01_authordetail" WHERE "app01_authordetail"."telephone" = 911 ORDER BY "app01_authordetail"."nid" ASC LIMIT 1; args=(911,)
+    #SELECT "app01_author"."nid", "app01_author"."name", "app01_author"."age", "app01_author"."authordetail_id" FROM "app01_author" WHERE "app01_author"."authordetail_id" = 2; args=(2,)
+    print(ad.author.name) #egon  #找它的关联对象，反向查询直接用表名author表
+    print(ad.author.age)  #23</pre>
+</div>
+<p>&nbsp;</p>
+<h2>3.2 基于queryset双下划线的跨表查询（对应翻译的sql语句是join）（会翻译成join查询）</h2>
+<p>　　Django 还提供了一种直观而高效的方式在查询(lookups)中表示关联关系，它能自动确认 SQL JOIN 联系。要做跨关系查询，就使用两个下划线来链接模型(model)间关联字段的名称，直到最终链接到你想要的 model 为止。</p>
+<p>关键点：正向查询按字段，反向查询按表名。</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>    ####################################基于双下划线的跨表查询（join查询）#########################
+   <strong> ###############一对多查询的正向查询：查询西游记这本书的出版社名字</strong>
+    '''
+    正向查询按字段，反向查询按表名小写 用来告诉ORM引擎join哪张表
+    '''
+    #方式一
+    ret = Book.objects.filter(title='西游记').values('publish__name') #values(publish)就相当于join另外一张表，但这里按orm的规则是不能写表名，写字段，然后再去__它的字段
+     # SELECT "app01_publish"."name" FROM "app01_book" INNER JOIN "app01_publish" ON ("app01_book"."publish_id" = "app01_publish"."nid") WHERE "app01_book"."title" = '西游记' LIMIT 21;
+    print(ret) #&lt;QuerySet [{'publish__name': '人民出版社'}]&gt;
+    #方式二    这两种方式所对应sql语句是一样的
+    ret = Publish.objects.filter(book__title='西游记').values("name")
+    # SELECT "app01_publish"."name" FROM "app01_publish" INNER JOIN "app01_book" ON ("app01_publish"."nid" = "app01_book"."publish_id") WHERE "app01_book"."title" = '西游记' LIMIT 21;
+    print(ret) #&lt;QuerySet [{'name': '人民出版社'}]&gt;<br /><br /></pre>
+<pre><code>    # 练习1:  查询苹果出版社出版过的所有书籍的名字与价格(一对多)   #以谁为基表以谁为左表都可以；
+
+    ret=Publish.objects.filter(name="人民出版社").values("book__title","book__price")  #publish为左表，出版社去找书籍是反向查询；
+    ret=Book.objects.filter(publish__name="人民出版社").values("title","price") #以book为左表，显示它的values它的字段
+    print(ret)
+
+    '''依次对应上边的Book和Publish;这两种方式翻译成sql语句都一样
+   SELECT * FROM "app01_book" INNER JOIN "app01_publish" ON ("app01_book"."publish_id" = "app01_publish"."nid") WHERE "app01_publish"."name" = '人民出版社' LIMIT 21; args=('人民出版社',)
+
+   SELECT * FROM "app01_publish" LEFT OUTER JOIN "app01_book" ON ("app01_publish"."nid" = "app01_book"."publish_id") WHERE "app01_publish"."name" = '人民出版社' LIMIT 21; args=('人民出版社',)
+
+    '''</pre>
+<pre><code>&nbsp;</pre>
+</div>
+<p><img src="./images/Python之路【第三十篇】django 模型层-多表关系1.png" alt="" /></p>
+<p><img src="./images/Python之路【第三十篇】django 模型层-多表关系2.png" alt="" /></p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>    #####################多对多：查询水浒传这本书的的所有作者的名字（join)
+    # 方式一 #多对多的字段相当于跨了2张表；foreignkey跨了1张表
+    #需求：通过Book（基表）表join与其关联的Author表，属于正向查询：按字段authors通知ORM引擎join book_authors与author；Book表通过它下面那个authors字段去关联Author表
+    ret = Book.objects.filter(title='水浒传').values('authors__name')
+    # SELECT "app01_author"."name" FROM "app01_book" LEFT OUTER JOIN "app01_book_authors" ON ("app01_book"."nid" = "app01_book_authors"."book_id") LEFT OUTER JOIN "app01_author" ON ("app01_book_authors"."author_id" = "app01_author"."nid") WHERE "app01_book"."title" = '水浒传' LIMIT 21; args=('水浒传',)
+    print(ret)#<strong>&lt;QuerySet [{'authors__name': 'alex'}, {'authors__name': 'egon'}]&gt;</strong>
+    #方式二
+    #需求：通过Author表join与其关联的Book表，属于反向查询：按表名小写book通知ORM引擎join book_authors与book表
+    ret = Author.objects.filter(book__title='水浒传').values('name')
+     # SELECT "app01_author"."name" FROM "app01_author" INNER JOIN "app01_book_authors" ON ("app01_author"."nid" = "app01_book_authors"."author_id") INNER JOIN "app01_book" ON ("app01_book_authors"."book_id" = "app01_book"."nid") WHERE "app01_book"."title" = '水浒传' LIMIT 21; args=('水浒传',)
+    print(ret) #<strong>&lt;QuerySet [{'name': 'alex'}, {'name': 'egon'}]&gt;<br /><br /></strong></pre>
+<pre><code>　　# 练习2: 查询alex出过的所有书籍的名字(多对多)
+    ret = Author.objects.filter(name="alex").values("book__title") #跨表查询 正向
+    ret = Book.objects.filter(authors__name="alex").values("title")  #  正向按字段，反向按表名
+
+    # 练习3: 查询人民出版社出版过的所有书籍的名字以及作者的姓名
+    ret = Book.objects.filter(publish__name="人民出版社").values("title", "authors__name") #只要不是这张表自己提供的就需要跨表
+
+    # 练习4: 手机号以151开头的作者出版过的所有书籍名称以及出版社名称  #用哪张表作为基表都可以的
+    Book.objects.filter(authors__authordetail__telephone="151").values("title", "publish__title")  ##因为Book表只跟authors表有关联，所以最开始前边应加上这个;book表通过关系表跨到authors表
+
+
+    return HttpResponse("ok")</pre>
+<pre><code><strong>&nbsp;</strong></pre>
+</div>
+<p>&nbsp;</p>
+<p><img src="./images/Python之路【第三十篇】django 模型层-多表关系3.png" alt="" /></p>
+<p><img src="./images/Python之路【第三十篇】django 模型层-多表关系4.png" alt="" /></p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>    #一对一查询：查询alex的手机号
+    #方式一：
+    # 需求：通过Author表join与其关联的AuthorDetail表，属于正向查询：按字段authordetail通知ORM引擎join Authordetail表
+    ret = Author.objects.filter(name='alex').values('authordetail__telephone')
+    # SELECT "app01_authordetail"."telephone" FROM "app01_author" INNER JOIN "app01_authordetail" ON ("app01_author"."authordetail_id" = "app01_authordetail"."nid") WHERE "app01_author"."name" = 'alex' LIMIT 21; args=('alex',)
+    print(ret) #&lt;QuerySet [{'authordetail__telephone': 1867889}]&gt;
+
+    #方式二：
+    # 需求：通过AuthorDetail表join与其关联的Author表，属于反向查询：按表名小写author通知ORM引擎join Author
+    ret = AuthorDetail.objects.filter(author__name='alex').values('telephone')
+    # SELECT "app01_authordetail"."telephone" FROM "app01_authordetail" INNER JOIN "app01_author" ON ("app01_authordetail"."nid" = "app01_author"."authordetail_id") WHERE "app01_author"."name" = 'alex' LIMIT 21; args=('alex',)
+    print(ret) #&lt;QuerySet [{'telephone': 1867889}]&gt;</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>    #############进阶练习
+    #练习：手机号以186开头的作者出版过的所有书籍名称以及书籍出版社名称
+    #方式一
+    #需求通过Book表join AuthorDetail表，Book与AuthorDetail无关联，所以必须连续跨表
+    ret = Book.objects.filter(authors__authordetail__telephone__startswith = '186').values('title','publish__name')
+    #  SELECT "app01_book"."title", "app01_publish"."name" FROM "app01_book" INNER JOIN "app01_book_authors" ON ("app01_book"."nid" = "app01_book_authors"."book_id") 
+    # INNER JOIN "app01_author" ON ("app01_book_authors"."author_id" = "app01_author"."nid") 
+    # INNER JOIN "app01_authordetail" ON ("app01_author"."authordetail_id" = "app01_authordetail"."nid") INNER JOIN "app01_publish" ON ("app01_book"."publish_id" = "app01_publish"."nid") 
+    # WHERE "app01_authordetail"."telephone" LIKE '186%' ESCAPE '\' LIMIT 21; args=('186%',)
+    print(ret) #&lt;QuerySet [{'title': '金瓶', 'publish__name': '人民出版社'}, {'title': '水浒传', 'publish__name': '人民出版社'}]&gt;
+    # 方式二:
+    ret = Author.objects.filter(authordetail__telephone__startswith='186').values('book__title','book__publish__name')
+    # SELECT "app01_book"."title", "app01_publish"."name" FROM "app01_author" INNER JOIN "app01_authordetail" ON ("app01_author"."authordetail_id" = "app01_authordetail"."nid") 
+    # LEFT OUTER JOIN "app01_book_authors" ON ("app01_author"."nid" = "app01_book_authors"."author_id") 
+    # LEFT OUTER JOIN "app01_book" ON ("app01_book_authors"."book_id" = "app01_book"."nid") 
+    # LEFT OUTER JOIN "app01_publish" ON ("app01_book"."publish_id" = "app01_publish"."nid") WHERE "app01_authordetail"."telephone" LIKE '186%' ESCAPE '\' LIMIT 21; args=('186%',)
+    print(ret) #&lt;QuerySet [{'book__title': '金瓶', 'book__publish__name': '人民出版社'}, {'book__title': '水浒传', 'book__publish__name': '人民出版社'}]&gt;</pre>
+<p>&nbsp;</p>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

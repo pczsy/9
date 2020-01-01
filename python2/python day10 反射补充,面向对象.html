@@ -1,0 +1,926 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python day10 反射补充,面向对象' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python day10 反射补充,面向对象</center></div><div class='banquan'>原文出处:本文由博客园博主bluestarpin提供。<br/>
+原文连接:https://www.cnblogs.com/lanxing0422/p/pythonday10.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#pythdon-day-10">pythdon day 10</a><ul>
+        <li><a href="#反射补充">1. 反射补充</a></li>
+        <li><a href="#面向对象">16. 面向对象</a><ul>
+        <li><a href="#面向对象初步介绍">16.1 面向对象初步介绍</a></li>
+        <li><a href="#面向对象和面向过程区别">16.2 面向对象和面向过程区别</a></li>
+        <li><a href="#对象的进化">16.3 对象的进化</a></li>
+        </ul></li>
+        <li><a href="#类class">17. 类class</a><ul>
+        <li><a href="#类的定义">17.1 类的定义</a></li>
+        <li><a href="#init__构造方法和__new__方法">17.2 __init__构造方法和__new__方法</a></li>
+        <li><a href="#实例属性和实例方法">17.3 实例属性和实例方法</a></li>
+        <li><a href="#类对象类属性类方法静态方法">17.4 类对象/类属性/类方法/静态方法</a></li>
+        <li><a href="#del方法析构函数和垃圾回收机制">17.5 <strong>del</strong>()方法(析构函数)和垃圾回收机制</a></li>
+        <li><a href="#call方法和可调用对象">17.6 <strong>call</strong>()方法和可调用对象</a></li>
+        <li><a href="#方法没有重载方法的动态性">17.7 方法没有重载/方法的动态性</a></li>
+        <li><a href="#私有属性和私有方法实现封装">17.8 私有属性和私有方法(实现封装)</a></li>
+        <li><a href="#property装饰器">17.9 @property装饰器</a></li>
+        <li><a href="#属性和方法命名总结类编程风格">17.10 属性和方法命名总结/类编程风格</a></li>
+        <li><a href="#继承inheritance">17.11 继承(inheritance)</a></li>
+        <li><a href="#object根类">17.12 object根类</a></li>
+        <li><a href="#多重继承">17.13 多重继承</a></li>
+        <li><a href="#super方法获得父类定义">17.14 super()方法获得父类定义</a></li>
+        <li><a href="#多态polymorphism">17.15 多态(polymorphism)</a></li>
+        <li><a href="#特殊方法和特性属性">17.16 特殊方法和特性属性</a></li>
+        <li><a href="#对象的浅拷贝和深拷贝">17.17 对象的浅拷贝和深拷贝</a></li>
+        <li><a href="#组合">17.18 组合</a></li>
+        </ul></li>
+        <li><a href="#面向对象三大特征">18. 面向对象三大特征</a><ul>
+        <li><a href="#封装隐藏">18.1 封装(隐藏)</a></li>
+        <li><a href="#继承">18.2 继承</a></li>
+        <li><a href="#多态">18.3 多态</a></li>
+        </ul></li>
+        <li><a href="#设计模式工厂模式与单例模式">19. 设计模式：工厂模式与单例模式</a><ul>
+        <li><a href="#工厂模式">19.1 工厂模式</a></li>
+        <li><a href="#单例模式">19.2 单例模式</a></li>
+        </ul></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="pythdon-day-10">pythdon day 10</h1>
+<p>2019/10/13</p>
+<p>学习资料来自老男孩与尚学堂</p>
+<h2 id="反射补充">1. 反射补充</h2>
+<p>反射模拟网络浏览器登录</p>
+<pre><code><code># 初级版
+&#39;&#39;&#39;
+from lib import account
+
+url = input(&#39;please input the website address:&gt;&gt;&gt;  &#39;)
+
+if url.endswith(&#39;login&#39;):
+    r = account.login()
+    print(r)
+elif url.endswith(&#39;logout&#39;):
+    r = account.logout()
+    print(r)
+else:
+    print(&#39;404&#39;)
+&#39;&#39;&#39;
+
+# 中级版
+&#39;&#39;&#39;
+url = input(&#39;please input the website address:&gt;&gt;&gt;  &#39;)
+inp = url.split(&#39;/&#39;)[1]  # [&#39;www.baidu.com&#39;,&#39;login&#39;][1] == &#39;login&#39;
+
+if hasattr(account, inp):  # 判断某个模块中是否有指定对象
+    target_func = getattr(account, inp, None)  # 找到模块中的指定对象
+    r = target_func()
+    print(r)
+else:
+    print(&#39;404&#39;)
+&#39;&#39;&#39;
+
+# 高级版
+# from lib import account as lat  # 从lib包里面导入account模块
+# print(lat.__name__)
+# m = __import__(&#39;lib.account&#39;, fromlist=True)  # 本质上是调用了__import__方法
+# print(m.__name__)
+inp = input(&#39;module/function:  &#39;).strip()
+module_name, func_name = inp.split(&#39;/&#39;)  # 将列表中的索引值为0与1分别赋值给前面的两个变量
+
+m = __import__(&#39;lib.&#39;+module_name, fromlist=True)  # 因为__import__接收字符串作为参数，
+if hasattr(m, func_name):
+    target_func = getattr(m, func_name)
+    r = target_func()
+    print(r)
+else:
+    print(&#39;404&#39;)</code></pre>
+<h2 id="面向对象">16. 面向对象</h2>
+<h3 id="面向对象初步介绍">16.1 面向对象初步介绍</h3>
+<p>面对对象(object oriented programming,OOP)编程的思想主要是针对大型软件设计而来的。面向对象编程命名程序的扩展性更强/可读性更好，使得编程可以像搭积木一样简单。<br />
+面向对象编程将数据和操作数据相关的方法封装到对象中，组织代码和数据的方式更加接近人的思维，从而大大提高了编程的效率。<br />
+python完全采用了面向对象的思想，是真正面向对象的编程语言，完全支持面向对象的基本功能，例如：继承/多态/封装等。<br />
+python中，一切对象。前面学习的数据类型，函数等，都是对象。<br />
+<strong>python支持面向过程/面向对象/函数式编程等多种编程范式</strong>。</p>
+<h3 id="面向对象和面向过程区别">16.2 面向对象和面向过程区别</h3>
+<ul>
+<li><p><strong>面向过程(procedure oriented)思维</strong><br />
+面向过程编程更加关注的是<strong>程序的逻辑流程</strong>,是一种“执行者”思维，适合编写小规模的程序。<br />
+面向过程思想思考问题时，我们首先思考“怎么按步骤实现？”，并将步骤对应成方法，一步一步，最终完成。这个适合简单任务，不需要过多协作的情况下。</p></li>
+<li><strong>面向对象(object oriented)思维</strong><br />
+<strong>面向对象更加关注的是“软件中对象之间的关系”，是一种“设计者”思维</strong>，适合编写大规模的程序。(<br />
+面向对象思想更契合人的思维模式。<strong>我们首先思考的是“怎么设计这个事物？” 。</strong>比如，思考造车，就会先思考，“车怎么设计？”，而不是“怎么按步骤造车的问题”。这就是思维方式的转变。<br />
+<strong>面向对象方式思考造车，发现车由如下对象组成</strong>：
+<ol>
+<li>轮胎</li>
+<li>发动机</li>
+<li>车壳</li>
+<li>座椅</li>
+<li>挡风玻璃<br />
+为了便于协作，我们找轮胎厂完成制造轮胎的步骤，发动机厂完成制造发动机的步骤，这样，发现大家可以同时进行车的制造，最终进行组装，大大提高了效率。但是，具体到轮胎厂的一个流水线操作，仍然是有步骤的，不是离不开面向过程思想。<br />
+因此，<strong>面向对象可以帮助我们从宏观上把握/从整体上分析整个系统。但是，具体到实现部分的微观操作(就是一个个方法)，仍然需要面向过程的思路去处理</strong>。<br />
+面向对象和面向过程是相辅相成的，面向对象离不开面向过程。</li>
+</ol></li>
+<li><p><strong>面向对象思考方式</strong><br />
+遇到复杂问题，先从问题中找名词(面向过程更多的是找动词)，然后确立这些名词哪些可以作为类，再根据问题需求确定类的属性和方法，确定类之间的关系。</p></li>
+<li><strong>面向对象和面向过程的总结:</strong></li>
+<li>[x] 都是解决问题的思维方式，都是代码组织的方式。</li>
+<li>[x] 解决简单问题可以使用面向过程。</li>
+<li><p>[x] 解决复杂问题:宏观上使用面向对象把握，微观处理上仍然是面向过程。</p></li>
+</ul>
+<p><img src="./images/python day10 反射补充,面向对象0.png" alt="面向对象与面向过程" /></p>
+<h3 id="对象的进化">16.3 对象的进化</h3>
+<p>随着编程面临的问题越来越复杂，编程语言本身也在进化，从主要处理简单数据开始，随着数据变多进化“数组”；数据类型变复杂，进化出了“结构体”；处理数据的方式和逻辑变复杂，进化出了“对象”。</p>
+<ol>
+<li>简单数据：像30，40，50.2等这些数字，就是简单的数据。最初的计算机编程，都是像这样的数字。</li>
+<li>数组：将同类型的数据放到一起。比如，整数数组[20,30,40],字符串数组['aa','bb','cc']等</li>
+<li>结构体：将不同类型的数据放到一起，是C语言中的数据结构。比如：<code>struct resume{int age;char name[10],double salary;};</code>等</li>
+<li>对象：将不同类型的数据/方法(即函数)放到一起，就是对象。比如：</li>
+</ol>
+<pre><code><code>class Student:#旧式类写法
+    company = &#39;SXT&#39;  #类属性
+    conut = 0        #类属性
+    def __init__(self,name,score):
+        self.name = name     #实例属性
+        self.score = score
+        Student.count = Student.count + 1
+    def say_score(self):     #实例方法
+        print(&#39;我的公司是：&#39;, Student.company)
+        print(self.name,&#39;我的分数是:&#39;,self.score)</code></pre>
+<h2 id="类class">17. 类class</h2>
+<h3 id="类的定义">17.1 类的定义</h3>
+<p>可以将对象比作一个“饼干”，类就是制造这个饼干的“模具”。<br />
+<strong>通过类定义数据类型的属性(数据)和方法(行为)</strong>，也就是说，“类将行为和状态打包在一起”。<br />
+<strong>对象是类的具体实体，一般称为“类的实例”</strong>。类看做饼干模具，对象就是根据这个模具制造出的饼干。<br />
+从一个类创建对象时，<strong>每个对象都会共享这个类的行为(即类中定义的方法)，但会有自己的属性值(不共享状态)。更具体一点:“方法代码是共享的，属性数据不共享”</strong>。<br />
+python中，一切皆对象。类也称为&quot;类对象&quot;，类的实例也称为“实例对象”。<br />
+定义类的语法格式如下：</p>
+<pre><code><code>class 类名:
+    类体</code></pre>
+<p>要点如下：</p>
+<ol>
+<li>类名必须符合&quot;标识符&quot;的规则；一般规定，首字母大字，多个单词使用“驼峰原则”，即每个单词首字母大写。</li>
+<li>类体中可以定性属性和方法。</li>
+<li>属性用来描述数据，方法(即函数)用来描述这些数据相关的操作。</li>
+</ol>
+<pre><code><code># 一个典型的类的定义
+class Student(object):#新式类写法
+    def __init__(self,name,score):#__init__是构造函数
+        self.name = name     #实例属性
+        self.score = score
+    def say_score(self):     #实例方法
+        print(self.name,&#39;我的分数是:&#39;,self.score)
+
+s1 = Student(&#39;张三&#39;,80)
+#s1是实例对象，实际是Student.__init__(s1,&#39;张三&#39;,80)
+s1.say_score()  #实际是Student.say_score(s1)</code></pre>
+<h3 id="init__构造方法和__new__方法">17.2 __init__构造方法和__new__方法</h3>
+<p>类是抽象的，也称为为“对象的模板”。我们需要通过类这个模板，创建类的实例对象，然后才能使用类定义的功能。<br />
+一个python对象包含三个部分：id(identity识别码)/type(对象类型)/value(对象的值)<br />
+现在，可以更进一步的说，一个python对象包含如下部分：<br />
+1. id(identity识别码)<br />
+2. type(对象类型)<br />
+3. value(对象的值)<br />
+(1) 属性(attribute)<br />
+(2) 方法(method)<br />
+创建对象，我们需要定义构造函数__init__()方法。构造方法用于执行&quot;实例对象的初始化工作&quot;，即对象创建后，初始化当前对象的相关属性，无返回值。</p>
+<p><strong>init</strong>()的要点如下：</p>
+<ol>
+<li>名称固定，必须为:<strong>init</strong>():</li>
+<li>第一个参数固定，必须为self.self指的就是刚刚创建好的实例对象。</li>
+<li>构造函数通常用来初始化实例对象的实例属性。</li>
+<li><strong>通过“类名(参数列表)”来调用构造函数</strong>。调用后，将创建后的对象返回给相应的变量。比如：s1 = Student('张三',80)</li>
+<li><strong>init</strong>()方法：初始化创建好的对象，<strong>初始化指的是：给实例属性赋值</strong></li>
+<li><strong>new</strong>()方法：用于创建对象，但我们一般无需重定义该方法。</li>
+<li>如果我们不定义__init__()方法，系统会提供一个默认的__init__方法。如果我们定义了带参的__init__方法，系统不创建默认的__init__方法。</li>
+</ol>
+<p>注：<br />
+1. python中的self相当于C++中的self指针，JAVA和C#中的this关键字。python中，self必须为构造函数的第一个参数，名字可以任意修改。但一般遵守惯例，都叫做self。</p>
+<h3 id="实例属性和实例方法">17.3 实例属性和实例方法</h3>
+<h4 id="实例属性实例变量">17.3.1 实例属性(实例变量)</h4>
+<p><strong>实例属性是从属于实例对象的属性，也称为“实例变量”</strong>。他的使用有如下几个要点：</p>
+<ol>
+<li>实例属性一般在__init__()方法中通过如下代码定义：<br />
+self.实例属性名 = 初始值<br />
+</li>
+<li>在本类的其他实例方法中，也是通过self 进行访问：<br />
+self.实例属性名<br />
+</li>
+<li>创建实例对象后，通过实例对象访问：<br />
+obj01 = 类名() #创建对象，调用__init__()初始化属性<br />
+obj01.实例属性名 = 值 #可以给已有属性赋值，也可以新加属性</li>
+</ol>
+<h4 id="实例方法">17.3.2 实例方法</h4>
+<p><strong>实例方法是从属于实例对象的方法</strong>。实例方法的定义格式如下：<br />
+def 方法名(self [, 形参列表])：<br />
+函数体<br />
+方法的调用格式如下：<br />
+对象.方法名([实参列表])<br />
+要点：</p>
+<ol>
+<li>定义实例方法时，第一个参数必须为self。和前面一样，self 指当前的实例对象。 2. 调用实例方法时，不需要也不能给self 传参。self 由解释器自动传参。</li>
+</ol>
+<ul>
+<li><strong>函数和方法的区别</strong></li>
+</ul>
+<ol>
+<li>都是用来完成一个功能的语句块，本质一样。<br />
+</li>
+<li>方法调用时，通过对象来调用。方法从属于特定实例对象，普通函数没有这个特点。</li>
+<li>直观上看，方法定义时需要传递self，函数不需要。</li>
+</ol>
+<pre><code><code>class Student(object):#类名一般首字母大写，多个单词每个单词首字母大写
+    &#39;&#39;&#39;定义类的测试&#39;&#39;&#39;
+    def __init__(self,name,score):#构造函数的第一个参数必须是self
+        self.name = name
+        self.score = score
+    def say_score(self):#对象的方法，第一个参数也必须是self。
+        print(&#39;{0}的分数是{1}&#39;.format(self.name,self.score))
+
+s1 = Student(&#39;小蓝&#39;,90)  ## Student.__init(s1,&#39;小蓝&#39;,90)
+s1.say_score()  ## Student.say_score(s1)
+s1.age = 28
+s1.salary = 3800
+print(s1.salary)
+print(s1.say_score)
+s2 = Student(&#39;小张&#39;,20)  #s2并不会有salary，age属性。
+print(dir(s1))  #获得对象的的所有属性和方法
+print(s1.__dict__)  #对象的属性，将属性以字典形式返回
+print(isinstance(s1,list))  #判断“对象”是不是“指定类型”
+小蓝的分数是90
+3800
+&lt;bound method Student.say_score of &lt;__main__.Student object at 0x000001CBEBADF9B0&gt;&gt;
+
+[&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__dir__&#39;, &#39;__doc__&#39;, &#39;__eq__&#39;, &#39;__format__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;,
+ &#39;__gt__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__init_subclass__&#39;, &#39;__le__&#39;, &#39;__lt__&#39;, &#39;__module__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, &#39;__re
+duce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;ag
+e&#39;, &#39;name&#39;, &#39;salary&#39;, &#39;say_score&#39;, &#39;score&#39;]
+
+{&#39;name&#39;: &#39;小蓝&#39;, &#39;score&#39;: 90, &#39;age&#39;: 28, &#39;salary&#39;: 3800}
+
+False</code></pre>
+<h3 id="类对象类属性类方法静态方法">17.4 类对象/类属性/类方法/静态方法</h3>
+<h4 id="类对象">17.4.1 类对象</h4>
+<p>当解释器执行class语句时，就会创建一个类对象。</p>
+<pre><code><code>class Student(object):
+    &#39;&#39;&#39;测试类之二&#39;&#39;&#39;
+    pass   #空语句，占位符
+print(type(Student),&#39;\r\n*******\r\n&#39;,id(Student))
+
+Stu2 = Student  #实际就是生成了一个变量名就是类名“Student”的对象。也可以赋值给新变量Stu2.
+s1 = Stu2()
+print(s1)</code></pre>
+<h4 id="类属性类变量">17.4.2 类属性(类变量)</h4>
+<p>类属性是从属于&quot;类对象&quot;的属性，也称为&quot;类变量&quot;。由于类属性从属于类对象，可以被所有实例对象共享。<br />
+类属性的定义方式:<br />
+class 类名：<br />
+类变量名 = 初始值<br />
+<strong>在类中或者类的外面，我们可以通过：&quot;类名.类变量名&quot;来读写</strong>。</p>
+<pre><code><code>class Student(object):
+    &#39;&#39;&#39;类属性的使用测试&#39;&#39;&#39;
+    company = &#39;SXT&#39;  #类属性
+    count = 0        #类属性
+    def __init__(self,name,score):
+        self.name = name          #实例属性
+        self.score = score
+        Student.count  += 1
+    def say_score(self):          #实例方法
+        print(&#39;我的公司是：&#39;,Student.company)
+        print(self.name,&#39;的分数是：&#39;,self.score)
+s1 = Student(&#39;张三&#39;,80)    #s1是实例对象，自动调用__init__() 方法
+s1.say_score()
+print(&#39;一共创建{0}个Student对象&#39;.format(Student.count))</code></pre>
+<h4 id="类方法">17.4.3 类方法</h4>
+<p>类方法是从属于&quot;类对象&quot;的方法。类方法通过装饰器@classmethod来定义，格式如下：<br />
+@classmethod<br />
+def 类方法名(cls [,开参列表])：<br />
+函数体<br />
+要点如下：</p>
+<ol>
+<li>@classmethod必须位于方法上面一行。</li>
+<li>第一个cls必须有；cls指的就是&quot;类对象&quot;本身。</li>
+<li>调用类方法格式：&quot;类名.类方法名(参数列表)&quot;。参数列表中，不需要也不能给cls传递值。</li>
+<li>类方法中访问实例属性和实例方法导致错误。</li>
+<li><strong>子类继承父类方法时，传入cls是子类对象，而非父类对象</strong>。</li>
+</ol>
+<pre><code><code>class Student(object):
+    &#39;&#39;&#39;类属性/类方法的使用测试&#39;&#39;&#39;
+    company = &#39;SXT&#39;  #类属性
+    count = 0        #类属性
+    @classmethod
+    def printCompany(cls):
+        print(cls.company)
+    def __init__(self,name,score):
+        self.name = name          #实例属性
+        self.score = score
+        Student.count  += 1
+    def say_score(self):          #实例方法
+        print(&#39;我的公司是：&#39;,Student.company)
+        print(self.name,&#39;的分数是：&#39;,self.score)
+# s1 = Student(&#39;张三&#39;,80)    #s1是实例对象，自动调用__init__() 方法
+# s1.say_score()
+# print(&#39;一共创建{0}个Student对象&#39;.format(Student.count))
+Student.printCompany()</code></pre>
+<h4 id="静态方法">17.4.4 静态方法</h4>
+<p>python中允许定义<strong>与&quot;类对象&quot;无关的方法，称为&quot;静态方法&quot;</strong>.</p>
+<p>“静态方法”和在模块中定义普通函数没有区别，只不过“静态方法”放到了“类的名字空间里面”，需要通过“类调用”。</p>
+<p>静态方法通过装饰器@staticmethod来定义，格式如下：</p>
+<pre><code><code>    @staticmethod
+    def 静态方法名([形参列表]) ：
+        函数体</code></pre>
+<p>要点如下：</p>
+<ol>
+<li>@staticmethod必须位于方法上面一行</li>
+<li>调用静态方法格式：“类名.静态方法名(参数列表)”。</li>
+<li>静态方法中访问实例属性和实例方法会导致错误</li>
+</ol>
+<pre><code><code>class Student(object):
+    &#39;&#39;&#39;类属性的使用测试&#39;&#39;&#39;
+    company = &#39;SXT&#39;  #类属性
+    count = 0        #类属性
+
+    def __init__(self,name,score):
+        self.name = name          #实例属性
+        self.score = score
+        Student.count  += 1
+    def say_score(self):          #实例方法
+        print(&#39;我的公司是：&#39;,Student.company)
+        print(self.name,&#39;的分数是：&#39;,self.score)
+
+    @staticmethod
+    def add(a, b):  # 静态方法
+        print(&#39;{0}+{1}={2}&#39;.format(a, b, a + b))
+        return a + b
+
+    @classmethod
+    def printCompany(cls):#类方法
+        print(cls.company)
+
+s1 = Student(&#39;张三&#39;,80)    #s1是实例对象，自动调用__init__() 方法
+# s1.say_score()
+# print(&#39;一共创建{0}个Student对象&#39;.format(Student.count))
+# Student.printCompany()
+print(Student.add(1.4,7))
+s1.add(1,2)
+
+1.4+7=8.4
+8.4
+1+2=3</code></pre>
+<h3 id="del方法析构函数和垃圾回收机制">17.5 <strong>del</strong>()方法(析构函数)和垃圾回收机制</h3>
+<p>**__del__方法称为“析构方法”，用于实现对象被销毁时所需的操作**。比如：释放对象 占用的资源，例如：打开的文件资源、网络连接等。</p>
+<p>Python实现自动的垃圾回收，当对象没有被引用时（引用计数为 0），由垃圾回收器调用__del__方法。<br />
+我们也可以通过del 语句删除对象，从而保证调用__del__方法。<br />
+系统会自动提供__del__方法，一般不需要自定义析构方法。</p>
+<pre><code><code>class Person(object):
+    def __del__(self):
+        print(&#39;销毁对象{0}&#39;.format(self))
+
+p1 = Person()
+p2 = Person()
+del p2
+print(&#39;程序结束 &#39;)</code></pre>
+<h3 id="call方法和可调用对象">17.6 <strong>call</strong>()方法和可调用对象</h3>
+<p>定义了__call__方法的对象，称为“可调用对象”，即该对象可以像函数一样被调用</p>
+<pre><code><code>class SalaryAccount(object):
+    def __call__(self, salary,*args, **kwargs):
+        print(&#39;算工资啦&#39;)
+        # return  3000
+        yearsalary = salary*12
+        daysalary = salary//22.5
+        hoursalary = daysalary//8
+
+        return dict(yearsalary= yearsalary,daysalary=daysalary,hoursalary=hoursalary)
+
+s = SalaryAccount()
+print(s(30000))</code></pre>
+<h3 id="方法没有重载方法的动态性">17.7 方法没有重载/方法的动态性</h3>
+<h4 id="方法没有重载">17.7.1 方法没有重载</h4>
+<p>在其他语言中，可以定义多个重名的方法，只要保证方法签名唯一即可。<strong>方法签名包含 3 个部分：方法名、参数数量、参数类型</strong>。</p>
+<p>Python中，方法的的参数没有声明类型（调用时确定参数的类型），参数的数量也可以由 可变参数控制。因此，Python中是没有方法的重载的。定义一个方法即可有多种调用方式， 相当于实现了其他语言中的方法的重载。</p>
+<p>如果我们在类体中定义了多个重名的方法，只有最后一个方法有效。<br />
+建议：不要使用重名的方法！Python中方法没有重载。只有最后一个有效。</p>
+<h4 id="方法的动态性">17.7.2 方法的动态性</h4>
+<pre><code><code>class Person(object):
+    # def __del__(self):
+    #     print(&#39;销毁对象{0}&#39;.format(self))
+    def work(self):
+        print(&#39;努力上班！&#39;)
+
+def play_game(self):
+    print(&#39;{0}玩游戏&#39;.format(self))
+
+def work2(s):
+    print(&#39;好好工作，努力上班&#39;)
+
+Person.play_game = play_game
+
+p1 = Person()
+p2 = Person()
+p1.work()
+p1.play_game()
+
+Person.work = work2
+
+p1.work()
+
+努力上班！
+&lt;__main__.Person object at 0x000001D55025F9B0&gt;玩游戏
+好好工作，努力上班</code></pre>
+<h3 id="私有属性和私有方法实现封装">17.8 私有属性和私有方法(实现封装)</h3>
+<p><strong>Python对于类的成员没有严格的访问控制限制，这与其他面向对象语言有区别</strong>。关于私有 属性和私有方法，有如下要点：</p>
+<ol>
+<li>通常我们约定，两个下划线开头的属性是私有的(private)。其他为公共的(public)</li>
+<li><strong>类内部可以访问私有属性</strong>(方法)<br />
+</li>
+<li>类外部不能直接访问私有属性(方法)</li>
+<li>**类外部可以通过“_类名__私有属性(方法)名”访问私有属性(方法)**</li>
+</ol>
+<p>【注】方法本质上也是属性！只不过是可以通过()执行而已。所以，此处讲的私有属性和公 有属性，也同时讲解了私有方法和公有方法的用法。如下测试中，同时也包含了私有方法和 公有方法的例子。</p>
+<pre><code><code>#测试私有属性
+class Employee(object):
+    __company = &#39;蓝星科技&#39;  #类的私有属性
+    def __init__(self,name,age):
+        self.name = name
+        self.__age = age #实例的私有属性,加了两个下划线
+    def __work(self):#私有方法，加了两个下划线
+        print(&#39;好好工作，赚钱养老婆&#39;)
+        print(&#39;年龄：{0}&#39;.format(self.__age))#类内部调用私有属性是完全没有问题的。
+        print(Employee.__company)
+
+
+e = Employee(&#39;小蓝&#39;,18)
+print(e.name)
+# print(e.__age)
+print(e._Employee__age)
+print(dir(e))
+e._Employee__work()
+print(Employee._Employee__company)
+
+小蓝
+18
+[&#39;_Employee__age&#39;, &#39;_Employee__company&#39;, &#39;_Employee__work&#39;, &#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__dir__&#39;, &#39;__do
+c__&#39;, &#39;__eq__&#39;, &#39;__format__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;, &#39;__gt__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__init_subclass__&#39;, &#39;
+__le__&#39;, &#39;__lt__&#39;, &#39;__module__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, &#39;__s
+izeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;name&#39;]
+好好工作，赚钱养老婆
+年龄：18
+蓝星科技
+蓝星科技</code></pre>
+<p>从打印的 Person 对象所有属性我们可以看出。私有属性“__age”在实际存储时是按照 “_Person__age”这个属性来存储的。这也就是为什么我们不能直接使用“__age”而可以 使用“_Person__age”的根本原因。</p>
+<h3 id="property装饰器">17.9 @property装饰器</h3>
+<p><strong>@property可以将一个方法的调用方式变成&quot;属性调用&quot;</strong>。一般用来给对应的属性增加get和set方法。<br />
+@property 主要用于帮助我们处理属性的读操作、写操作。对于某一个属性，我们可以直 接通过：<br />
+<code>emp1.salary = 30000</code><br />
+如上的操作：读操作、写操作。但是，这种做法不安全。比如，我需要限制薪水必须为1-10000 的数字。这时候，我们就需要通过getter、setter方法来处理。</p>
+<pre><code><code>class Employee(object):
+    def __init__(self,name,salary):
+        self.__name = name
+        self.__salary = salary
+
+    @property  #定义下面的方法变成了一个属性
+    def salary(self):
+        print(&#39;计算工资&#39;)
+        return self.__salary
+
+    @salary.getter
+    def get_salary(self,salary):
+        return self.__salary
+
+    @salary.setter  #针对salary属性的一个设置
+    def salary(self,salary):
+        if 1000&lt;salary&lt;50000:
+            self.__salary = salary
+        else:
+            print(&#39;录入错误，薪水在1000--50000这个范围&#39;)
+&#39;&#39;&#39;
+    def get_salary(self):
+        return self.__salary
+
+    def set_salary(self,salary):
+        if 1000&lt;salary&lt;50000:
+            self.__salary = salary
+        else:
+            print(&#39;录入错误，薪水在1000--50000这个范围&#39;)
+&#39;&#39;&#39;
+
+# emp1 = Employee(&#39;蓝星&#39;,30000)
+# print(emp1.get_salary())
+# emp1.set_salary(20000)
+# print(emp1.get_salary())
+# emp1.salary = 20000  #不能设置
+# emp1.salary()       #也可像方法一样调用了，因为salary已经是一个属性了。
+
+emp2 = Employee(&#39;lanxing&#39;,20000)
+print(emp2.salary)
+
+emp2.salary = -29990
+emp2.salary = 2000</code></pre>
+<h3 id="属性和方法命名总结类编程风格">17.10 属性和方法命名总结/类编程风格</h3>
+<h4 id="属性和方法命名总结">17.10.1 属性和方法命名总结</h4>
+<p><code>· _xxx</code>：保护成员，不能用“frommodule import * ”导入，只有类对象和子类对象能访 问这些成员。<br />
+<code>· __xxx__</code>：系统定义的特殊成员<br />
+<code>· __xxx</code>： 类中的私有成员，只有类对象自己能访问，子类对象也不能访问。（但，在类外部可以通过“对象名._类名__xxx”这种特殊方式访问。 Python 不存在严格意义的私有成员）<br />
+注：再次强调，方法和属性都遵循上面的规则。</p>
+<h4 id="类编码风格">17.10.2 类编码风格</h4>
+<ol>
+<li>类名首字母大写，多个单词之间采用驼峰原则。</li>
+<li>实例名、模块名采用小写，多个单词之间采用下划线隔开。</li>
+<li><strong>每个类，应紧跟“文档字符串”，说明这个类的作用</strong>。</li>
+<li>可以用空行组织代码，但不能滥用。<strong>在类中，使用一个空行隔开方法；模块中，使用两个空行隔开多个类</strong>。</li>
+</ol>
+<h3 id="继承inheritance">17.11 继承(inheritance)</h3>
+<p>继承是面向对象程序设计的重要特征，也是实现“<strong>代码复用</strong>”的重要手段。<br />
+如果一个新类继承自一个设计好的类，就直接具备了已有类的特征，就大大降低了工作难度。<strong>已有的类，我们称为“父类或者基类”，新的类，我们称为“子类或者派生类”</strong>。</p>
+<h4 id="继承的语法格式">17.11.1 继承的语法格式</h4>
+<p>python支持多重继承，一个子类可以继承多个父类。继承的语法格式如下：<br />
+class 子类类名(父类1[,父类2,...]):<br />
+类体<br />
+如果在类定义中没有指定父类，<strong>则默认父类是object类</strong>。也就是说，object是所有类的父类，里面定义了一些所有类共有的默认实现，比如__new__().</p>
+<p>定义子类时，必须在其构造函数中调用父类的构造函数。调用格式如下：<br />
+父类名.__init__(self,参数列表)：</p>
+<pre><code><code>class Person(object):
+
+    def __init__(self,name,age):
+        self.name = name
+        self.__age = age     #私有属性
+
+    def say_age(self):
+        print(&#39;年龄，年龄，我也不知道&#39;)
+
+
+class Student(Person):
+
+    def __init__(self,name,age,score):
+        #调用父类的构造函数方法一
+        Person.__init__(self,name,age)#语法级别上不调用也没错，但是作为子类，必须要去调用，不然这个子类就没有name属性了。
+        self.score = score
+
+#Student---&gt;Person---&gt;object类
+print(Student.mro())#打印继承顺序
+
+s = Student(&#39;lanxing&#39;,22,78)
+s.say_age()
+print(s.name)
+# print(s.age)
+print(s._Person__age)</code></pre>
+<h4 id="类成员的继承和重写">17.11.2 类成员的继承和重写</h4>
+<ol>
+<li><strong>成员继承</strong>：子类继承了父类除构造方法之外的所有成员。</li>
+<li><strong>方法重写</strong>：子类可以重新定义父类中的方法，这样就会覆盖父类的方法，也称为<strong>重写</strong></li>
+</ol>
+<pre><code><code>#类成员继承和方法重写的案例
+
+
+class Person(object):
+
+    def __init__(self,name,age):
+        self.name = name
+        self.__age = age
+
+    def say_age(self):
+        print(&#39;我的年龄是&#39;,self.__age)
+
+    def say_intro(self):
+        print(&#39;我的名字是{0}&#39;.format(self.name))
+
+
+class Student(Person):
+
+    def __init__(self,name,age,score):
+        Person.__init__(self,name,age)   #必须显式的调用父类初始化方法，不然解释器不会去调用。
+        self.score = score
+
+    def say_score(self):
+        print(self.name,&#39;的分数是:&#39;,self.score )
+
+    def say_name(self):   #重写父类的方法
+        print(&#39;报告老师，我是&#39;,self.name)
+
+s1 = Student(&#39;张三&#39;,15,85)
+
+s1.say_score()
+s1.say_name()
+s1.say_age()</code></pre>
+<h4 id="查看类的继承层次结构">17.11.3 查看类的继承层次结构</h4>
+<p>通过类的方法mro()或者类的属性__mro__可以输出这个类的继承层次结构。</p>
+<pre><code><code>class A:
+    pass
+class B(A):
+    pass
+class C(B):
+    pass
+
+
+#print(C.mro())
+print(C.__mro__)#与上方代码是一样的效果
+
+[&lt;class &#39;__main__.C&#39;&gt;, &lt;class &#39;__main__.B&#39;&gt;, &lt;class &#39;__main__.A&#39;&gt;, &lt;class &#39;object&#39;&gt;]</code></pre>
+<h3 id="object根类">17.12 object根类</h3>
+<h4 id="object根类的属性">17.12.1 object根类的属性</h4>
+<p>object类是所有类的父类，因此所有的类都有object类的属性和方法。显然有必要深入研究下object类的结构。</p>
+<ul>
+<li><strong>dir()查看对象属性</strong><br />
+内置函数dir()可以查看指定对象所有的属性。</li>
+</ul>
+<pre><code><code>class Person(object):
+
+    def __init__(self,name,age):
+        self.name = name
+        self.__age = age     #私有属性
+
+    def say_age(self):
+        print(self.name,&#39;的年龄是:&#39;,self.age)
+
+obj = object()  #obj是object这个基类实例化的对象
+print(dir(obj))  #输出obj这个对象的所有属性
+print(&#39;----------&#39;)
+s2 = Person(&#39;lanxing&#39;,19)
+print(dir(s2))
+
+[&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dir__&#39;, &#39;__doc__&#39;, &#39;__eq__&#39;, &#39;__format
+__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;, &#39;__gt__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;
+__init_subclass__&#39;, &#39;__le__&#39;, &#39;__lt__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, &#39;__reduce
+__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, &#39;__sizeof__&#39;, &#39;__str_
+_&#39;, &#39;__subclasshook__&#39;]
+
+-------------------
+
+[&#39;_Person__age&#39;, &#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__dir__&#39;, &#39;_
+_doc__&#39;, &#39;__eq__&#39;, &#39;__format__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;, &#39;__gt__
+&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__init_subclass__&#39;, &#39;__le__&#39;, &#39;__lt__&#39;, &#39;_
+_module__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__rep
+r__&#39;, &#39;__setattr__&#39;, &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__w
+eakref__&#39;, &#39;name&#39;, &#39;say_age&#39;]</code></pre>
+<p>从上面我们可以发现这样几个要点：</p>
+<ol>
+<li>Person对象增加了六个属性： <strong>dict</strong>, <strong>module</strong>, <strong>weakref</strong> ,age, name, say_age</li>
+<li>object的所有属性，Person 类作为object 的子类，显然包含了所有的属性。</li>
+<li>我们打印age、name、say_age，发现say_age 虽然是方法，实际上也是属性。只不过， 这个属性的类型是“method”而已。</li>
+</ol>
+<pre><code><code>    age &lt;class &#39;int&#39;&gt;
+    name &lt;class &#39;str&#39;&gt;
+    say_age &lt;class &#39;method&#39;&gt;</code></pre>
+<h4 id="重写__str__方法">17.12.2 重写__str__方法</h4>
+<pre><code><code>class Person(object):
+
+    def __init__(self,name,age):
+        self.name = name
+        self.__age = age     #私有属性
+
+p = Person(&#39;LANXING&#39;,22)
+print(p)
+
+&lt;__main__.Person object at 0x000001EC5F1CF940&gt;
+
+
+class Person(object):
+
+    def __init__(self,name,age):
+        self.name = name
+        self.__age = age     #私有属性
+
+    def __str__(self):
+        &#39;&#39;&#39;将对象转化成一个字符串，一般用于print方法&#39;&#39;&#39;
+        return &#39;名字是:{0},年龄是{1}&#39;.format(self.name,self.__age)
+
+p = Person(&#39;LANXING&#39;,22)
+print(p)
+
+名字是:LANXING,年龄是22</code></pre>
+<h3 id="多重继承">17.13 多重继承</h3>
+<p><strong>python支持多重继承</strong>，一个子类可以有多个&quot;直接父类&quot;。这样，就具备了多个父类的特点。但是，<strong>由于这样会被类的整体层次搞的异常复杂，尽量避免使用</strong>。</p>
+<p>在python3中，不管是新式类写法还是经典类写法，都是按照广度优先进行查询。<br />
+python2中，新式类写法是按照广度优先，经典类写法是按照深度优先。</p>
+<pre><code><code>class A:    #经典类写法
+    pass
+class B(A): #新式类写法
+    pass
+class C(B,A):   #多重继承
+    pass
+class D(C,B)
+#广度优先就是D先从C查询，C没有，就找B，B再没有就找A。
+#深度优先就是D先从C查询，如果C没有，就再找A。</code></pre>
+<h3 id="super方法获得父类定义">17.14 super()方法获得父类定义</h3>
+<p>在子类中，如果想要获得父类的方法时，可以通过super()来获得。<br />
+super()代表父类的定义，不是父类的对象。</p>
+<pre><code><code>class A:
+
+    def say(self):
+        print(&#39;A:&#39;,self)
+class B(A):
+
+    def say(self):
+        # A.say(self)
+        super().say()  #super()=A
+        print(&#39;B:&#39;,self)
+
+B().say()</code></pre>
+<h3 id="多态polymorphism">17.15 多态(polymorphism)</h3>
+<p>多态(polymorphism)是指同一个方法调用由于对象不同可能会产生不同的行为。<br />
+关于多态要注意以下2点：</p>
+<ol>
+<li>多态是方法的多态，属性没有多态。</li>
+<li>多态的存在有2个必要条件：继承和方法重写。</li>
+</ol>
+<pre><code><code>class Man(object):
+
+    def eat(self):
+        print(&#39;饿了，吃饭了！&#39;)
+
+
+class Chinese(Man):
+
+    def eat(self):    #方法重写
+        print(&#39;中国人用筷子吃饭&#39;)
+
+
+class English(Man):
+
+    def eat(self):
+        print(&#39;英国人用叉子吃饭&#39;)
+
+
+class Indian(Man):
+
+    def eat(self):
+        print(&#39;印度人用右手吃饭&#39;)
+
+def manEat(m):
+    if isinstance(m,Man):
+        m.eat()          #多态
+    else:
+        print(&#39;不能吃饭&#39;)
+
+manEat(Chinese())
+manEat(English())</code></pre>
+<h3 id="特殊方法和特性属性">17.16 特殊方法和特性属性</h3>
+<p><img src="./images/python day10 反射补充,面向对象1.png" alt="特殊属性" /></p>
+<h3 id="对象的浅拷贝和深拷贝">17.17 对象的浅拷贝和深拷贝</h3>
+<ul>
+<li><strong>变量的赋值操作</strong><br />
+只是形成两个变量，实际还是指向同一个对象。</li>
+<li><strong>浅拷贝</strong><br />
+Python拷贝一般都是浅拷贝。拷贝时，对象包含的子对象内容不拷贝。因此，源对象 和拷贝对象会引用同一个子对象。</li>
+<li><strong>深拷贝</strong><br />
+使用copy模块的 deepcopy 函数，递归拷贝对象中包含的子对象。源对象和拷贝对象所有的子对象也不同。</li>
+</ul>
+<pre><code><code>import copy
+
+
+class   MobilePhone(object):
+
+    def __init__(self,cpu,screen):
+        self.cpu = cpu
+        self.screen = screen
+
+
+class Cpu:
+    def calculate(self):
+        print(&#39;计算，算个12345&#39;)
+        print(&#39;cpu的对象&#39;,self)
+
+
+class Screen:
+    def show(self):
+        print(&#39;显示一个好看的画面&#39;)
+        print(&#39;屏幕对象：&#39;,self)
+
+#测试变量赋值
+c1 = Cpu()
+c2 = c1
+# print(c1)
+# print(c2)
+
+#测试浅复制
+s1 = Screen()
+m1 = MobilePhone(c1,s1)
+m2 = copy.copy(m1)
+
+# print(m1,m1.cpu,m1.screen)
+# print(m2,m2.cpu,m2.screen)
+
+#测试深复制
+
+m3 = copy.deepcopy(m1)
+print(m1,m1.cpu,m1.screen)
+print(m3,m3.cpu,m3.screen)</code></pre>
+<h3 id="组合">17.18 组合</h3>
+<p>&quot;is-a&quot;关系，我们可以使用“继承”。从而实现子类拥有父类的方法和属性。“is-a” 关系指的是类似这样的关系：狗是动物，dog is animal。狗类就应该继承动物类。<br />
+&quot;has -a&quot;关系，我们可以使用“组合”，也能实现一个类拥有另一个类的方法和属性。has-a”关系指的是这样的关系：手机拥有 CPU。 MobilePhone has a CPU.</p>
+<pre><code><code>#使用继承实现代码的复用
+class A1:
+
+    def say_a1(self):
+        print(&#39;a1,a1,a1&#39;)
+
+
+class B1(A1):
+    pass
+
+
+b1 = B1()
+b1.say_a1()
+
+#同样的效果，使用组合来实现代码的复用
+class A2:
+
+    def say_a2(self):
+        print(&#39;a2,a2,a2&#39;)
+
+class B2:
+
+    def __init__(self,a):
+        self.a =a
+
+a2 = A2()
+b2 = B2(a2)
+b2.a.say_a2()</code></pre>
+<h2 id="面向对象三大特征">18. 面向对象三大特征</h2>
+<p>python是面向对象的语言，也支持面向对象编程的三大特性：继承/封装(隐藏)/多态</p>
+<h3 id="封装隐藏">18.1 封装(隐藏)</h3>
+<p><strong>隐藏对象的属性和实现细节，只对外提供必要的方法</strong>。相当于将“细节封装起来”，只对外暴露“相关调用的方法”。<br />
+通过前面学习的“私有属性/私有方法”的方式，实现“封装”。python追求简洁的语法，没有严格的语法级别的访问控制符，更多的是依靠程序员自觉实现。</p>
+<h3 id="继承">18.2 继承</h3>
+<p>继承可以让子类具有父类的特性，<strong>提高了代码的重用性</strong>。<br />
+从设计上是一种增量进化，原有父类设计不变的情况下，可以增加新的功能，或者改进已有的算法。</p>
+<h3 id="多态">18.3 多态</h3>
+<p>多态是指同一个方法调用由于对象不同会产生不同的行为。生活中这样的例子比比皆是：同样是休息方法，人不同休息方法不同。张三休息是睡觉，李四休息是玩游戏，程序员休息是&quot;敲几行代码&quot;。即“<strong>一个接口，多种实现</strong>”。</p>
+<h2 id="设计模式工厂模式与单例模式">19. 设计模式：工厂模式与单例模式</h2>
+<p>设计模式是面向对象语言特有的内容，是我们在面临某一类问题时候固定的做法，设计模式有很多种，比较流行的是:GOF，23种设计模式。<br />
+对于初学者，学习两个最常用的模式：工厂模式与单例模式。</p>
+<h3 id="工厂模式">19.1 工厂模式</h3>
+<p>工厂模式实现了创建者和调用者的分离，使用专门的工厂类将选择实现类/创建对象进行了统一的管理和控制。越是大型的软件，越是需要工厂模式。</p>
+<pre><code><code>#工厂模式
+
+class CarFactory(object):
+
+    def createCar(self,brand):
+        if brand ==&quot;benz&quot;:
+            return Benz()
+        elif brand ==&quot;baoma&quot;:
+            return Baoma()
+        elif brand == &quot;biyadi&quot;:
+            return Biyadi()
+        else:
+            return &#39;未知品牌，不能代工&#39;
+class Benz:
+    pass
+class Baoma:
+    pass
+class Biyadi:
+    pass
+
+factory = CarFactory()
+c1 = factory.createCar(&#39;benz&#39;)
+c2 = factory.createCar(&#39;baoma&#39;)
+print(c1)
+print(c2)
+
+&lt;__main__.Benz object at 0x0000022FD5D604A8&gt;
+&lt;__main__.Baoma object at 0x0000022FD5D604E0&gt;</code></pre>
+<h3 id="单例模式">19.2 单例模式</h3>
+<p><strong>单例模式(singleton pattern)的核心作用是确保一个类只有一个实例对象，并且提供一个访问该实例的全局访问点</strong>。</p>
+<p>单例模式只生成一个实例对象，减少了对系统资源的开销。当一个对象的产生需要比较多的资源，如读取配置文件/产生其他依赖对象时，可以产生一个“单例对象”，然后永久驻留内存中，从而极大的降低开销。<br />
+单例模式有多种实现的方法，这里推荐重写__new__()的方法。</p>
+<pre><code><code>class MySingleton(object):
+
+    __obj = None    #类属性
+    __init_flag = True
+
+    def __new__(cls, *args, **kwargs):
+        if cls.__obj == None:
+            cls.__obj =object.__new__(cls)
+        return  cls.__obj
+
+    def __init__(self,name):
+        if MySingleton.__init_flag:
+            self.name = name
+            print(&#39;init.....&#39;)
+            MySingleton.__init_flag = False
+
+
+a = MySingleton(&#39;aa&#39;)
+b = MySingleton(&#39;bb&#39;)
+print(a)
+print(b)</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

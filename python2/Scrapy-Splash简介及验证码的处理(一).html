@@ -1,0 +1,80 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Scrapy-Splash简介及验证码的处理(一)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Scrapy-Splash简介及验证码的处理(一)</center></div><div class='banquan'>原文出处:本文由博客园博主一只帅气的IT小昂提供。<br/>
+原文连接:https://www.cnblogs.com/ITXiaoAng/p/11799090.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#一splash简介与准备">一：Splash简介与准备 <br></a></li>
+        <li><a href="#二验证码的识别1">二：验证码的识别(1)</a></li>
+        </ul>
+    </div>
+</div>
+<p>  在之前的博客中，我们学习了selenium的用法，它是一个动态抓取页面的方法，但是，动态抓取页面还有其他的方法，这里介绍Splash方法，并结合具体实例进行讲解。<br />
+<br><br></p>
+<h3 id="一splash简介与准备">一：Splash简介与准备 <br></h3>
+<h4 id="简介"><strong>1.简介</strong> <br></h4>
+<p>  Splash是一个JavaScript渲染服务，说到js大家肯定会想到网页，对的，Splash是Scrapy中支持JavaScrapy渲染的工具，是一个带有HTTP API的轻量级浏览器，可以进行动态渲染页面的抓取。<br />
+<br></p>
+<h4 id="安装"><strong>2.安装</strong> <br></h4>
+<p>  Scrapy-Splash安装有两个方法，这里我们用Docker进行安装，因此首先要安装Docker(多容器技术，将应用和环境进行打包，形成一个独立的&quot;应用&quot;，可以让每个应用隔离，适合于大规模爬虫系统)，下载地址为： <br><br />
+  <a href="https://docs.docker.com/docker-for-windows/install/" class="uri">https://docs.docker.com/docker-for-windows/install/</a><br><br />
+  下载后安装，会出现 <font color="red"> docker desktop requires Windows 10 Pro or Enterprise version 15063问题。 </font><br />
+这个问题是windows10家庭版不支持Hyper-V，无法安装docker,需要下载docker toolbox安装。地址为：<br><br />
+  <a href="http://mirrors.aliyun.com/docker-toolbox/windows/docker-toolbox/" class="uri">http://mirrors.aliyun.com/docker-toolbox/windows/docker-toolbox/</a><br />
+<br><br />
+  <font color="red">也可以开启Hyper-V进行安装，这里就不具体说明了。</font><br><br />
+  安装后打开cmd控制台，会有下面的结果，说明运行成功(安装的过程很麻烦，需要耐心)：<br><br />
+<img src="./images/Scrapy-Splash简介及验证码的处理(一)0.png" /></p>
+<p>  下面就是用安装Scrapy-Splash了，安装的命令为：</p>
+<pre><code><code>docker run -p 8050:8050 scrapinghub/splash</code></pre>
+<p>  这里的话，我在环境配置上出了问题，再bios中把Intel Virtualization Technology已经设置为enable，但是再运行docker时还是出现了问题，在外部的因特尔虚拟化技术已经打开了，但是却用不了virutualBox虚拟机。这里等到之后的博客，继续为大家讲解Splash。如果大家有知道原因的话，可以和我交流。<br />
+<img src="./images/Scrapy-Splash简介及验证码的处理(一)1.png" /></p>
+<p><br> <br></p>
+<h3 id="二验证码的识别1">二：验证码的识别(1)</h3>
+<p>  现在，许多网站都用各种各样的措施进行反爬虫，其中一项就是用验证码。而且验证码现在已经发展得有很多种，而且交互式验证码已经越来越流行，需要鼠标操作的也越来越多，这也造成爬虫的工作越发艰难，下面就先介绍如何用python识别常见的一种图形验证码。</p>
+<h4 id="图形验证码的识别">图形验证码的识别</h4>
+<p>  图形验证码是最早的验证码，很常见，一般有字母和数字组成，我们先保存网上的一些验证码图片，如下：<br />
+<img src="./images/Scrapy-Splash简介及验证码的处理(一)2.png" /></p>
+<h5 id="使用的识图技术">(1)使用的识图技术</h5>
+<p>  <strong>OCR技术</strong>：光学字符识别，是指通过扫描字符·，然后通过形状将其翻译成电子文本的过程。</p>
+<h5 id="识图用到的库">(2)识图用到的库</h5>
+<p>  <strong>tesserocr库</strong>：Python的一个OCR识别库，是对tesseract做的一层封装，因此需要先安装tesseract,然后安装tesserocr，安装过程这里就不详讲了。</p>
+<h5 id="识图方法实现">(3)识图方法实现</h5>
+<pre><code><code>import tesserocr
+from PIL import Image
+
+image = Image.open(&#39;1.jpg&#39;)
+result = tesserocr.image_to_text(image)
+print(result)</code></pre>
+<p>识别前后的图片和结果如下：<br />
+<img src="./images/Scrapy-Splash简介及验证码的处理(一)3.png" /></p>
+<p>  还有其他方法也可以识别验证码，就是用file_to_text()方法直接将图片文件转化为字符串，我们换张图片如下：</p>
+<pre><code><code>print(tesserocr.file_to_text(&#39;2.jpg&#39;))</code></pre>
+<p>识别前后的图片和结果如下：<br />
+<img src="./images/Scrapy-Splash简介及验证码的处理(一)4.png" /></p>
+<p>  我们看到识别的结果和我们想要的有所区别，但其实是线条阻挡了，在下面的博客中会介绍如何处理。</p>
+<p>其他的验证码识别如下：<br />
+<img src="./images/Scrapy-Splash简介及验证码的处理(一)5.png" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

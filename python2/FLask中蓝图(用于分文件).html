@@ -1,0 +1,105 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修FLask中蓝图(用于分文件)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>FLask中蓝图(用于分文件)</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11604629.html</div><br>
+    <h2 id="一不使用蓝图自己分文件">一,不使用蓝图，自己分文件</h2>
+<h3 id="目录结构">目录结构</h3>
+<pre><code><code>-templates
+-views
+    -__init__.py
+    -user.py
+    -order.py
+-app.py</code></pre>
+<p>app.py</p>
+<pre><code><code>from views import app
+if __name__ == &#39;__main__&#39;:
+    app.run()</code></pre>
+<p>init.py</p>
+<pre><code><code>from flask import Flask,request
+app = Flask(__name__)
+#不导入这个不行
+from . import account
+from . import order
+from . import user</code></pre>
+<p>user.py</p>
+<pre><code><code>from . import app
+@app.route(&#39;/user&#39;)
+def user():
+    return &#39;user&#39;</code></pre>
+<p>order.py</p>
+<pre><code><code>from . import app
+@app.route(&#39;/order&#39;)
+def order():
+    return &#39;order&#39;</code></pre>
+<p>注意点:只有是包的时候才能from.然后import 相对路径进行导入</p>
+<h3 id="缺点">缺点</h3>
+<p>容易发生循环导入问题</p>
+<h2 id="二.使用蓝图之中小型系统">二.使用蓝图之中小型系统</h2>
+<p><a href="https://files.cnblogs.com/files/pythonywy/pro_flask_%E7%AE%80%E5%8D%95%E5%BA%94%E7%94%A8%E7%A8%8B%E5%BA%8F%E7%9B%AE%E5%BD%95%E7%A4%BA%E4%BE%8B.rar">详见代码点击可以下载</a></p>
+<h3 id="目录结构-1">目录结构：</h3>
+<pre><code><code>-flask_pro
+    -flask_test
+        -__init__.py
+        -static
+        -templates
+        -views
+            -order.py
+            -user.py
+     -manage.py 
+        </code></pre>
+<p>__init_.py</p>
+<pre><code><code>from flask import  Flask
+app=Flask(__name__)
+from flask_test.views import user
+from flask_test.views import order
+app.register_blueprint(user.us)            #注册蓝图app.register_blueprint(蓝图的对象)   
+app.register_blueprint(order.ord)</code></pre>
+<p>manage.py</p>
+<pre><code><code>from flask_test import  app
+if __name__ == &#39;__main__&#39;:
+    app.run(port=8008)</code></pre>
+<p>user.py</p>
+<pre><code><code>from flask import Blueprint
+us=Blueprint(&#39;user&#39;,__name__)   #蓝图的对象的名称=Blueprint(&#39;自定义蓝图名称&#39;,__name__) 
+
+@us.route(&#39;/login&#39;)
+def login():
+    return &#39;login&#39;</code></pre>
+<p>order.py</p>
+<pre><code><code>from flask import Blueprint
+ord=Blueprint(&#39;order&#39;,__name__)
+
+@ord.route(&#39;/test&#39;)
+def test():
+    return &#39;order test&#39;</code></pre>
+<h2 id="三.使用蓝图之大型系统">三.使用蓝图之大型系统</h2>
+<p><a href="https://files.cnblogs.com/files/pythonywy/pro_flask_%E5%A4%A7%E5%9E%8B%E5%BA%94%E7%94%A8%E7%9B%AE%E5%BD%95%E7%A4%BA%E4%BE%8B.rar">详见代码点击可以下载</a></p>
+<h2 id="四.总结">四.总结</h2>
+<p>1 xxx = Blueprint('account', __name__,url_prefix='/xxx')</p>
+<p><code>url_prefix</code>:蓝图URL前缀，表示url的前缀，在该蓝图下所有url都加前缀</p>
+<p>2 xxx = Blueprint('account', __name__,url_prefix='/xxx',template_folder='tpls')</p>
+<p><code>template_folder</code>：给当前蓝图单独使用templates，向上查找，当前找不到，会找总templates</p>
+<p>3 蓝图的<code>befort_request</code>，对当前蓝图有效</p>
+<p>4 大型项目，可以模拟出类似于django中app的概念</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,228 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修pymysql指南' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>pymysql指南</center></div><div class='banquan'>原文出处:本文由博客园博主奥辰提供。<br/>
+原文连接:https://www.cnblogs.com/chenhuabin/p/11241195.html</div><br>
+    <h1 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">1 引言</h1>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">mysql应该说是如今使用最为普遍的数据库了，没有之一，而Python作为最为流行的语言之一，自然少不了与mysql打交道，pymysql就是使用最多的工具库了。</p>
+<h1 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">2 创建库、表</h1>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">我们先从创建数据库、数据表说起，有了库表，后面的增删改查才有根据。</p>
+<h2 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">2.1 创建数据库</h2>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">pymysql的所有对数据库的操作都必须先与数据库服务建立连接，然后创建游标为基础执行具体的sql语句。创建数据库方法如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+ 
+conn </span>= pymysql.connect( <span style="color: #008000;">#</span><span style="color: #008000;"> 创建数据库连接</span>
+    host=<span style="color: #800000;">'</span><span style="color: #800000;">10.10.11.131</span><span style="color: #800000;">'</span>, <span style="color: #008000;">#</span><span style="color: #008000;"> 要连接的数据库所在主机ip</span>
+    user=<span style="color: #800000;">'</span><span style="color: #800000;">chb</span><span style="color: #800000;">'</span>, <span style="color: #008000;">#</span><span style="color: #008000;"> 数据库登录用户名</span>
+    password=<span style="color: #800000;">'</span><span style="color: #800000;">123456!</span><span style="color: #800000;">'</span>, <span style="color: #008000;">#</span><span style="color: #008000;"> 登录用户密码</span>
+    charset=<span style="color: #800000;">'</span><span style="color: #800000;">utf8</span><span style="color: #800000;">'</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 编码，注意不能写成utf-8</span>
+<span style="color: #000000;">)
+cursor </span>=<span style="color: #000000;"> con.cursor()
+cursor .execute(</span><span style="color: #800000;">"</span><span style="color: #800000;">create database test_db character set utf8;</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 执行完之后别忘了关闭游标和数据库连接</span>
+<span style="color: #000000;">cursor.close()
+conn.close()</span></pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">上面代码执行完后，就创建了一个名为test_db的数据库：</p>
+<div style="text-align: center; float: none;"><img src="./images/pymysql指南0.png" alt="" /></div>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">&nbsp;</div>
+<h2 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">2.2 创建数据表</h2>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+ 
+conn </span>= pymysql.connect( <span style="color: #008000;">#</span><span style="color: #008000;"> 创建数据库连接</span>
+    host=<span style="color: #800000;">'</span><span style="color: #800000;">10.10.11.131</span><span style="color: #800000;">'</span>, <span style="color: #008000;">#</span><span style="color: #008000;"> 要连接的数据库所在主机ip</span>
+    user=<span style="color: #800000;">'</span><span style="color: #800000;">chb</span><span style="color: #800000;">'</span>, <span style="color: #008000;">#</span><span style="color: #008000;"> 数据库登录用户名</span>
+    password=<span style="color: #800000;">'</span><span style="color: #800000;">123456!</span><span style="color: #800000;">'</span>, <span style="color: #008000;">#</span><span style="color: #008000;"> 登录用户密码</span>
+    database=<span style="color: #800000;">'</span><span style="color: #800000;">test_db</span><span style="color: #800000;">'</span>, <strong><span style="color: #008000;">#</span><span style="color: #008000;"> 连接的数据库名，也可以后续通过cursor.execture('user test_db')指定</span></strong>
+    charset=<span style="color: #800000;">'</span><span style="color: #800000;">utf8</span><span style="color: #800000;">'</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 编码，注意不能写成utf-8</span>
+<span style="color: #000000;">)
+ 
+cursor </span>= conn.cursor() <span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个游标</span>
+ 
+<span style="color: #008000;">#</span><span style="color: #008000;"> 需要执行的创建表的sql语句</span>
+sql = <span style="color: #800000;">"""</span><span style="color: #800000;">
+create table book(
+bookid int auto_increment primary key ,
+bookname VARCHAR(255) not null ,
+authors VARCHAR(255) not null ,
+year_publication YEAR not null
+);
+</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+ 
+cursor.execute(sql) </span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用游标执行sql</span>
+ 
+<span style="color: #008000;">#</span><span style="color: #008000;"> 执行完之后别忘了关闭游标和数据库连接</span>
+<span style="color: #000000;">cursor.close()
+conn.close()</span></pre>
+</div>
+</div>
+<div style="text-align: center; float: none;"><img src="./images/pymysql指南1.png" alt="" /></div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">在这个创建数据表的例子中，在创建数据库服务连接时，我们通过 database='test_db'这行代码指定参数连接了目标数据库，如果不想在创建数据库服务连接时指定数据库，可以在后续通过cursor.execture('user test_db')这种方法指定数据库。</p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">从上面创建数据库和数据表的例子可以看出，pymysql执行具体操作时都是先创建数据库服务连接，然后通过连接创建游标，以游标来执行具体的sql语句来完成具体的对数据库操作。不单单可以创建数据库、数据表，还可以创建索引、视图等等，方法也是一样的，这里不再介绍。</p>
+<h1 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">&nbsp;3 增删改查</h1>
+<h2 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">3.1 插入</h2>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">插入操作可以通过游标的execute和executemany两个方法来完成。注意：只要是对数据表有修改的操作（插入、更新、删除）在使用execute方法后，都需要再次调用commit方法对数据库的修改才会最终生效。</p>
+<p>execute方法一次插入一条记录，executemany一次插入多条记录：</p>
+<p><strong>（1）execute：一次插入一条记录</strong></p>
+<div class="cnblogs_code">
+<pre><code>cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">insert into book(bookname, authors, year_publication) values("%s", "%s", %s);</span><span style="color: #800000;">'</span> % (<span style="color: #800000;">'</span><span style="color: #800000;">Python从入门到放弃</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">乔布斯</span><span style="color: #800000;">'</span>, 2019<span style="color: #000000;">))
+conn.commit()</span></pre>
+</div>
+<div style="text-align: center; float: none;"><img src="./images/pymysql指南2.png" alt="" /></div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">上面这种写法是先用字符串利用%s占位生成一条完整的sql语句，然后去执行。其实，pymysql的游标也自带这一功能，而且看起来更加方便，所以，我们还可以这样执行execute方法：</p>
+<div class="cnblogs_code">
+<pre><code>cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">insert into book(bookname, authors, year_publication) values(%s, %s, %s);</span><span style="color: #800000;">'</span>, (<span style="color: #800000;">'</span><span style="color: #800000;">Python从入门到放弃</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">乔布斯</span><span style="color: #800000;">'</span>, 2019<span style="color: #000000;">))
+conn.commit()</span></pre>
+</div>
+<div style="text-align: center; float: none;"><img src="./images/pymysql指南3.png" alt="" /></div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><span style="font-weight: bold;">这种方法的好处是sql语句中的%s不需要加引号（如果加了引号，引号也会被当做数据插入到数据表中），游标执行这一语句时，会根据数据类型来判断是否要加上引号。</span></p>
+<div>
+<p><strong>（2）executemany：一次插入多条记录</strong></p>
+</div>
+<div class="cnblogs_code">
+<pre><code>data =<span style="color: #000000;"> [
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">21天完全入门Java</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">扎克伯格</span><span style="color: #800000;">'</span>, 2018<span style="color: #000000;">),
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">Linux学习手册</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">李纳斯</span><span style="color: #800000;">'</span>, 2017<span style="color: #000000;">),
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">MySQL从删库到跑路</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">比尔盖茨</span><span style="color: #800000;">'</span>, 2018<span style="color: #000000;">),
+]
+cursor.executemany(</span><span style="color: #800000;">'</span><span style="color: #800000;">insert into book(bookname, authors, year_publication) values("%s", "%s", %s);</span><span style="color: #800000;">'</span><span style="color: #000000;">, data)
+conn.commit()</span></pre>
+</div>
+<div style="text-align: center; float: none;"><img src="./images/pymysql指南4.png" alt="" /></div>
+<h2 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">3.2 更新</h2>
+<div class="cnblogs_code">
+<pre><code>cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">update book set authors=%s where bookname=%s;</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">"</span><span style="color: #800000;">马云</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">Python从入门到放弃</span><span style="color: #800000;">"</span><span style="color: #000000;">])
+conn.commit()</span></pre>
+</div>
+<div style="text-align: center; float: none;"><img src="./images/pymysql指南5.png" alt="" /></div>
+<h2 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">3.3 查询</h2>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">查询是最最要但也是最复杂的一个操作了。我们分为fetch操作、游标两部分来说。</p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><strong>（1）fetch操作</strong></p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">插入、更新、删除操作必须再执行commit操作之后才会生效，而查询操作也只有在执行fetch操作之后才会生效。fetch操作包括3个方法，分别是fetchone()、fetchall()、fetchmany()。</p>
+<ul>
+<li>fetchall()：查询指定的所有记录</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">select * from book where bookid &lt; %s;</span><span style="color: #800000;">'</span>, [4<span style="color: #000000;">])
+books </span>=<span style="color: #000000;"> cursor.fetchall()
+</span><span style="color: #0000ff;">print</span>(books)</pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">输出结果为：</p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><span style="font-family: 仿宋;"><em>((1, 'Python从入门到放弃', '马云', 2019), (2, 'Python从入门到放弃', '马云', 2019), (3, '21天完全入门Java', '扎克伯格', 2018))</em></span></p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">输出结果是以元组的形式来保存，且每一条记录也是一个元素，这是由游标cursor决定的，在下文中还会说到。</p>
+<div>
+<ul>
+<li>fetchmany(size)：查询指定数量的记录</li>
+</ul>
+</div>
+<div class="cnblogs_code">
+<pre><code>cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">select * from book where bookid &lt; %s;</span><span style="color: #800000;">'</span>, [4<span style="color: #000000;">])
+books </span>= cursor.fetchmany(2<span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(books)</pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">输出结果为：</p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">((1, 'Python从入门到放弃', '马云', 2019), (2, 'Python从入门到放弃', '马云', 2019))</span></em></p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">可以看出，fetchmany(size)是取出符合查询条件的最前面的指定数量记录。这里的size指的就是想要取出的记录条数。</p>
+<div>
+<ul>
+<li>fetchone()：取出第一条记录</li>
+</ul>
+</div>
+<div class="cnblogs_code">
+<pre><code>cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">select * from book where bookid &lt; %s;</span><span style="color: #800000;">'</span>, [4<span style="color: #000000;">])
+books </span>=<span style="color: #000000;"> cursor.fetchone()
+</span><span style="color: #0000ff;">print</span>(books)</pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">输出结果：</p>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">(1, 'Python从入门到放弃', '马云', 2019)</span></em></div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">fetchone()相当于是fetchmany(1)，取出第一条符合查询条件的记录。</p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><strong>（2）游标</strong></p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">我们之前使用游标都是采用默认的Cursor类型，除此以外，pymysql还提供了DictCursor、SSCursor、SSDictCursor这几类游标。</p>
+<div>
+<ul>
+<li><strong>DictCursor</strong></li>
+</ul>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">之前使用的Cursor返回的数据是以元组的方式保存，而DictCursor是以字典的形式保存。创建这种类型的游标方法也很简单，在conn.sursor()方法中传入DictCursor这个类即可：</p>
+<div class="cnblogs_code">
+<pre><code>cursor = conn.cursor(pymysql.cursors.DictCursor) <span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个字典游标</span>
+cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">select * from book where bookid &lt; %s;</span><span style="color: #800000;">'</span>, [3<span style="color: #000000;">])
+books </span>=<span style="color: #000000;"> cursor.fetchall()
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(books)
+cursor.execute(</span><span style="color: #800000;">'</span><span style="color: #800000;">select * from book where bookid &lt; %s;</span><span style="color: #800000;">'</span>, [3<span style="color: #000000;">])
+book_one </span>=<span style="color: #000000;"> cursor.fetchone()
+</span><span style="color: #0000ff;">print</span>(book_one)</pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">输出结果如下：</p>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">[{'bookid': 1, 'bookname': 'Python从入门到放弃', 'authors': '马云', 'year_publication': 2019}, {'bookid': 2, 'bookname': 'Python从入门到放弃', 'authors': '马云', 'year_publication': 2019}]</span></em></div>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">{'bookid': 1, 'bookname': 'Python从入门到放弃', 'authors': '马云', 'year_publication': 2019}</span></em></div>
+<div>
+<ul>
+<li><strong>SSCursor和SSDictCursor</strong></li>
+</ul>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">SSCursor和SSDictCursor被称为流式游标，这类游标不会像上面使用的Cursor和DictCursor那样，一次性返回所有的数据，流式游标会陆陆续续一条一条得返回查询数据，所以这类游标适用于内存低、网络带宽小、数据量大的应用场景中。</p>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">流式游标的使用方法类似于迭代器，再循环中每取一条，生成一条：</p>
+<div class="cnblogs_code">
+<pre><code>cursor = conn.cursor(pymysql.cursors.SSCursor) <span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个流式游标</span>
+cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">select * from book;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+book </span>=<span style="color: #000000;"> cursor.fetchone()
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> book:
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(book)
+book </span>= cursor.fetchone()</pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">输出结果如下：</p>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">(1, 'Python从入门到放弃', '马云', 2019)</span></em></div>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">(2, 'Python从入门到放弃', '马云', 2019)</span></em></div>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">(3, '21天完全入门Java', '扎克伯格', 2018)</span></em></div>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">(4, 'Linux学习手册', '李纳斯', 2017)</span></em></div>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><em><span style="font-family: 仿宋;">(5, 'MySQL从删库到跑路', '比尔盖茨', 2018)</span></em></div>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><strong>注意：流式游标虽然也有fetchall()方法，调用后的结果与普通游标一样返回所有数据，但是最好别去调用，这样会失去流式游标的优势。使用流式游标时，如果数据量很大，导致游标一直处在循环遍历状态，这时，数据库连接（conn）是被占用的，不能再被用于执行其他sql，如果要执行其他sql那就必须再创建一个数据库连接，游标占用数据库连接的时长是有限制的，如果流式游标一直在遍历，60秒后数据库连接会断开，不过可以在创建数据库连接时传入参数init_command=("SET NET_WRITE_TIMEOUT=XX")来设置这个超时时间。</strong></div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">SSCursor与SSDictCursor的区别就类似于Cursor和DictCursor的区别，这里就不在介绍了。</p>
+<h2 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">3.4 删除</h2>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">使用pymysql执行插入、更新、删除操作都是相似的，最后都需要commit提交：</p>
+<div class="cnblogs_code">
+<pre><code>cursor.execute(<span style="color: #800000;">'</span><span style="color: #800000;">delete from book where bookid=%s;</span><span style="color: #800000;">'</span>, [1<span style="color: #000000;">])
+conn.commit()</span></pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">这时候，bookid为1的记录已经被删除，如下图所示：</p>
+<div style="text-align: left; float: none;"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/pymysql指南6.png" alt="" /></div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">也可以使用executemany()一次性删除多条：</p>
+<div class="cnblogs_code">
+<pre><code>cursor.executemany(<span style="color: #800000;">'</span><span style="color: #800000;">delete from book where bookid=%s;</span><span style="color: #800000;">'</span>, [[2], [4<span style="color: #000000;">]])
+conn.commit()</span></pre>
+</div>
+<p style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">如下图所示，bookid为2和4的记录已经被删除：</p>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/pymysql指南7.png" alt="" /></div>
+<h1 style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">&nbsp;4 总结</h1>
+<p>pymysql还提供了事务机制，但我还有疑问没搞清楚，不敢往博客上面写：执行多个修改数据库操作（多个execute方法）时，其中有一个方法有异常，这是commit，所有的所有都不会成功，那么为什么还要rollback呢？如果哪位前辈知道答案，请一定告知，感激不尽！</p>
+<p>参考：</p>
+<p>https://www.cnblogs.com/xfxing/p/9322199.html</p>
+<p>https://www.runoob.com/python3/python3-mysql.html</p>
+<p>https://www.jianshu.com/p/1ba64df4fd15</p>
+<div style="white-space: pre-wrap; text-align: left; line-height: 1.75; font-size: 14px;">&nbsp;</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

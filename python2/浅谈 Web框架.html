@@ -1,0 +1,472 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修浅谈 Web框架' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>浅谈 Web框架</center></div><div class='banquan'>原文出处:本文由博客园博主林染提供。<br/>
+原文连接:https://www.cnblogs.com/zengyi1995/p/11328892.html</div><br>
+    <h3><em><strong>一、<span style="font-size: 1.17em;">Web框架本质</span></strong></em></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">所有的Web应用本质上就是一个socket服务端，而用户的浏览器就是一个socket客户端</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><em><strong><span class="md-plain">二、Web框架功能</span></strong></em></h3>
+<ul>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">socket收发消息 &mdash;&mdash; wsgiref（测试）、uwsgi（线上）</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">根据不同的路径返回不同的字符串</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">返回动态页面（字符串的替换）&mdash;&mdash; jinja2</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><em><strong><span class="md-plain">三、Web框架种类</span></strong></em></h3>
+<ul>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">django</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">根据不同的路径返回不同的字符串</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">返回动态页面（字符串的替换）</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">flask</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">根据不同的路径返回不同的字符串</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">tornado</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">socket收发消息</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">根据不同的路径返回不同的字符串</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">返回动态页面（字符串的替换）</span></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><em><strong><span class="md-plain">四、自定义web框架</span></strong></em></h3>
+<ul>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">简单示例：socket服务端</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个socket对象</span>
+sk =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 绑定IP和端口</span>
+sk.bind((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8000<span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 监听</span>
+sk.listen(5<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 等待连接</span>
+<span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn, addr </span>=<span style="color: #000000;"> sk.accept()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接收数据</span>
+    data= conn.recv(1024<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(data)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 返回数据</span>
+    conn.send(b<span style="color: #800000;">'</span><span style="color: #800000;">HTTP/1.1 200 OK\r\n\r\n&lt;h1&gt;ok!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 断开连接</span>
+    conn.close()</pre>
+</div>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">根据不同路径返回不同的内容（普通版）</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('9923a93a-fd51-4056-b275-e52f7751e297')"><img id="code_img_closed_9923a93a-fd51-4056-b275-e52f7751e297" class="code_img_closed" src="./images/浅谈 Web框架0.png" alt="" /><img id="code_img_opened_9923a93a-fd51-4056-b275-e52f7751e297" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('9923a93a-fd51-4056-b275-e52f7751e297',event)" src="./images/浅谈 Web框架1.png" alt="" />
+<div id="cnblogs_code_open_9923a93a-fd51-4056-b275-e52f7751e297" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个socket对象</span>
+sk =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 绑定IP和端口</span>
+sk.bind((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8000<span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 监听</span>
+sk.listen(5<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 等待连接</span>
+<span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn, addr </span>=<span style="color: #000000;"> sk.accept()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接收数据</span>
+    data = conn.recv(1024<span style="color: #000000;">)
+    data </span>= data.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    url </span>= data.split()[1<span style="color: #000000;">]
+    conn.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP/1.1 200 OK\r\n\r\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">if</span> url == <span style="color: #800000;">'</span><span style="color: #800000;">/index/</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 返回数据</span>
+        conn.send(b<span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;index!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">elif</span> url == <span style="color: #800000;">'</span><span style="color: #800000;">/home/</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        conn.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;home!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        conn.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;404 not found!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 断开连接</span>
+    conn.close()</pre>
+</div>
+<span class="cnblogs_code_collapse">普通版</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('0fbe2b43-7893-41fe-891d-46ca6991accf')"><img id="code_img_closed_0fbe2b43-7893-41fe-891d-46ca6991accf" class="code_img_closed" src="./images/浅谈 Web框架0.png" alt="" /><img id="code_img_opened_0fbe2b43-7893-41fe-891d-46ca6991accf" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('0fbe2b43-7893-41fe-891d-46ca6991accf',event)" src="./images/浅谈 Web框架1.png" alt="" />
+<div id="cnblogs_code_open_0fbe2b43-7893-41fe-891d-46ca6991accf" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个socket对象</span>
+sk =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 绑定IP和端口</span>
+sk.bind((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8000<span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 监听</span>
+sk.listen(5<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 函数</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> index(url):
+    ret </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;index!&lt;/h1&gt;({})</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(url)
+    </span><span style="color: #0000ff;">return</span> ret.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> home(url):
+    ret </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;home!&lt;/h1&gt;({})</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(url)
+    </span><span style="color: #0000ff;">return</span> ret.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 等待连接</span>
+<span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn, addr </span>=<span style="color: #000000;"> sk.accept()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接收数据</span>
+    data = conn.recv(1024<span style="color: #000000;">)
+    data </span>= data.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    url </span>= data.split()[1<span style="color: #000000;">]
+    conn.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP/1.1 200 OK\r\n\r\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">if</span> url == <span style="color: #800000;">'</span><span style="color: #800000;">/index/</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 返回数据</span>
+        ret =<span style="color: #000000;"> index(url)
+    </span><span style="color: #0000ff;">elif</span> url == <span style="color: #800000;">'</span><span style="color: #800000;">/home/</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        ret </span>=<span style="color: #000000;"> home(url)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        ret </span>= b<span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;404 not found!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    conn.send(ret)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 断开连接</span>
+    conn.close()</pre>
+</div>
+<span class="cnblogs_code_collapse">函数版</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('d2cb34e4-991e-486f-8b57-22298b480533')"><img id="code_img_closed_d2cb34e4-991e-486f-8b57-22298b480533" class="code_img_closed" src="./images/浅谈 Web框架0.png" alt="" /><img id="code_img_opened_d2cb34e4-991e-486f-8b57-22298b480533" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('d2cb34e4-991e-486f-8b57-22298b480533',event)" src="./images/浅谈 Web框架1.png" alt="" />
+<div id="cnblogs_code_open_d2cb34e4-991e-486f-8b57-22298b480533" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个socket对象</span>
+sk =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 绑定IP和端口</span>
+sk.bind((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8000<span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 监听</span>
+sk.listen(5<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 函数</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> index(url):
+    ret </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;index!&lt;/h1&gt;({})</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(url)
+    </span><span style="color: #0000ff;">return</span> ret.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> home(url):
+    ret </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;home!&lt;/h1&gt;({})</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(url)
+    </span><span style="color: #0000ff;">return</span> ret.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个list1和实际要执行的函数的对应关系 </span>
+list1 =<span style="color: #000000;"> [
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">/index/</span><span style="color: #800000;">'</span><span style="color: #000000;">, index),
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">/home/</span><span style="color: #800000;">'</span><span style="color: #000000;">, home),
+]
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 等待连接</span>
+<span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn, addr </span>=<span style="color: #000000;"> sk.accept()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接收数据</span>
+    data = conn.recv(1024<span style="color: #000000;">)
+    data </span>= data.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    url </span>= data.split()[1<span style="color: #000000;">]
+    conn.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP/1.1 200 OK\r\n\r\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    func </span>=<span style="color: #000000;"> None
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> list1:
+        </span><span style="color: #0000ff;">if</span> url ==<span style="color: #000000;"> i[0]:
+            func </span>= i[1<span style="color: #000000;">]
+            </span><span style="color: #0000ff;">break</span>
+    <span style="color: #0000ff;">if</span><span style="color: #000000;"> func:
+        ret </span>=<span style="color: #000000;"> func(url)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        ret </span>= b<span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;404 not found!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    conn.send(ret)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 断开连接</span>
+    conn.close()</pre>
+</div>
+<span class="cnblogs_code_collapse">函数进阶版</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('f234a207-fbb2-4df9-b97d-ff3491272ebb')"><img id="code_img_closed_f234a207-fbb2-4df9-b97d-ff3491272ebb" class="code_img_closed" src="./images/浅谈 Web框架0.png" alt="" /><img id="code_img_opened_f234a207-fbb2-4df9-b97d-ff3491272ebb" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('f234a207-fbb2-4df9-b97d-ff3491272ebb',event)" src="./images/浅谈 Web框架1.png" alt="" />
+<div id="cnblogs_code_open_f234a207-fbb2-4df9-b97d-ff3491272ebb" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个socket对象</span>
+sk =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 绑定IP和端口</span>
+sk.bind((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8000<span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 监听</span>
+sk.listen(5<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 函数</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> index(url):
+    with open(</span><span style="color: #800000;">'</span><span style="color: #800000;">index.html</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">rb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+        ret </span>=<span style="color: #000000;"> f.read()
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> home(url):
+    ret </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;home!&lt;/h1&gt;({})</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(url)
+    </span><span style="color: #0000ff;">return</span> ret.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个list1和实际要执行的函数的对应关系</span>
+list1 =<span style="color: #000000;"> [
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">/index/</span><span style="color: #800000;">'</span><span style="color: #000000;">, index),
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">/home/</span><span style="color: #800000;">'</span><span style="color: #000000;">, home),
+]
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 等待连接</span>
+<span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn, addr </span>=<span style="color: #000000;"> sk.accept()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接收数据</span>
+    data = conn.recv(1024<span style="color: #000000;">)
+    data </span>= data.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    url </span>= data.split()[1<span style="color: #000000;">]
+    conn.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP/1.1 200 OK\r\n\r\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    func </span>=<span style="color: #000000;"> None
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> list1:
+        </span><span style="color: #0000ff;">if</span> url ==<span style="color: #000000;"> i[0]:
+            func </span>= i[1<span style="color: #000000;">]
+            </span><span style="color: #0000ff;">break</span>
+    <span style="color: #0000ff;">if</span><span style="color: #000000;"> func:
+        ret </span>=<span style="color: #000000;"> func(url)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        ret </span>= b<span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;404 not found!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    conn.send(ret)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 断开连接</span>
+    conn.close()</pre>
+</div>
+<span class="cnblogs_code_collapse">返回html页面</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('9677c071-11b5-4485-80fa-f9e549f1d520')"><img id="code_img_closed_9677c071-11b5-4485-80fa-f9e549f1d520" class="code_img_closed" src="./images/浅谈 Web框架0.png" alt="" /><img id="code_img_opened_9677c071-11b5-4485-80fa-f9e549f1d520" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('9677c071-11b5-4485-80fa-f9e549f1d520',event)" src="./images/浅谈 Web框架1.png" alt="" />
+<div id="cnblogs_code_open_9677c071-11b5-4485-80fa-f9e549f1d520" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个socket对象</span>
+sk =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 绑定IP和端口</span>
+sk.bind((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8000<span style="color: #000000;">))
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 监听</span>
+sk.listen(5<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 函数</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> index(url):
+    with open(</span><span style="color: #800000;">'</span><span style="color: #800000;">index.html</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">rb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+        ret </span>=<span style="color: #000000;"> f.read()
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> home(url):
+    ret </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;home!&lt;/h1&gt;({})</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(url)
+    </span><span style="color: #0000ff;">return</span> ret.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> timer(url):
+    now </span>= time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%H:%M:%S</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    with open(</span><span style="color: #800000;">'</span><span style="color: #800000;">time.html</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span>,encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+        data </span>=<span style="color: #000000;"> f.read()
+    data </span>= data.replace(<span style="color: #800000;">'</span><span style="color: #800000;">xxtimexx</span><span style="color: #800000;">'</span><span style="color: #000000;">,now)
+​
+    </span><span style="color: #0000ff;">return</span> data.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个list1和实际要执行的函数的对应关系</span>
+list1 =<span style="color: #000000;"> [
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">/index/</span><span style="color: #800000;">'</span><span style="color: #000000;">, index),
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">/home/</span><span style="color: #800000;">'</span><span style="color: #000000;">, home),
+    (</span><span style="color: #800000;">'</span><span style="color: #800000;">/time/</span><span style="color: #800000;">'</span><span style="color: #000000;">, timer),
+]
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 等待连接</span>
+<span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn, addr </span>=<span style="color: #000000;"> sk.accept()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接收数据</span>
+    data = conn.recv(1024<span style="color: #000000;">)
+    data </span>= data.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    url </span>= data.split()[1<span style="color: #000000;">]
+    conn.send(b</span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP/1.1 200 OK\r\n\r\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    func </span>=<span style="color: #000000;"> None
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> list1:
+        </span><span style="color: #0000ff;">if</span> url ==<span style="color: #000000;"> i[0]:
+            func </span>= i[1<span style="color: #000000;">]
+            </span><span style="color: #0000ff;">break</span>
+    <span style="color: #0000ff;">if</span><span style="color: #000000;"> func:
+        ret </span>=<span style="color: #000000;"> func(url)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        ret </span>= b<span style="color: #800000;">'</span><span style="color: #800000;">&lt;h1&gt;404 not found!&lt;/h1&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    conn.send(ret)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 断开连接</span>
+<span style="color: #000000;">    conn.close()
+补充：time.html
+
+</span>&lt;!DOCTYPE html&gt;
+&lt;html lang=<span style="color: #800000;">"</span><span style="color: #800000;">en</span><span style="color: #800000;">"</span>&gt;
+&lt;head&gt;
+    &lt;meta charset=<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span>&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;当前时间是：@@time@@&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+</div>
+<span class="cnblogs_code_collapse">返回动态页面</span></div>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><em><strong><span class="md-plain">五、wsgiref</span></strong></em></h3>
+<ul>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">常用的WSGI服务器有uWSGI、Gunicorn</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">Python标准库提供的独立WSGI服务器叫wsgiref，Django开发环境用的就是这个模块来做服务器</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">简单示例：</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('8f814afc-83da-4f98-853c-a620aa6da911')"><img id="code_img_closed_8f814afc-83da-4f98-853c-a620aa6da911" class="code_img_closed" src="./images/浅谈 Web框架0.png" alt="" /><img id="code_img_opened_8f814afc-83da-4f98-853c-a620aa6da911" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('8f814afc-83da-4f98-853c-a620aa6da911',event)" src="./images/浅谈 Web框架1.png" alt="" />
+<div id="cnblogs_code_open_8f814afc-83da-4f98-853c-a620aa6da911" class="cnblogs_code_hide">
+<pre><code><span style="color: #800000;">"""</span><span style="color: #800000;">  
+根据URL中不同的路径返回不同的内容--函数进阶版  
+返回HTML页面  
+让网页动态起来  
+wsgiref模块版  
+</span><span style="color: #800000;">"""</span>       
+<span style="color: #0000ff;">from</span> wsgiref.simple_server <span style="color: #0000ff;">import</span><span style="color: #000000;"> make_server     
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 将返回不同的内容部分封装成函数   </span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> index(url):   
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 读取index.html页面的内容   </span>
+    with open(<span style="color: #800000;">"</span><span style="color: #800000;">index.html</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">r</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">) as f:   
+        s </span>=<span style="color: #000000;"> f.read()   
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 返回字节数据   </span>
+    <span style="color: #0000ff;">return</span> bytes(s, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">)       
+     
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> home(url):   
+    with open(</span><span style="color: #800000;">"</span><span style="color: #800000;">home.html</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">r</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">) as f:   
+        s </span>=<span style="color: #000000;"> f.read()   
+    </span><span style="color: #0000ff;">return</span> bytes(s, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">)       
+     
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> timer(url):   
+    </span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time   
+    with open(</span><span style="color: #800000;">"</span><span style="color: #800000;">time.html</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">r</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">) as f:   
+        s </span>=<span style="color: #000000;"> f.read()   
+        s </span>= s.replace(<span style="color: #800000;">'</span><span style="color: #800000;">@@time@@</span><span style="color: #800000;">'</span>, time.strftime(<span style="color: #800000;">"</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">"</span><span style="color: #000000;">))   
+    </span><span style="color: #0000ff;">return</span> bytes(s, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">)        
+     
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个url和实际要执行的函数的对应关系   </span>
+list1 =<span style="color: #000000;"> [   
+    (</span><span style="color: #800000;">"</span><span style="color: #800000;">/index/</span><span style="color: #800000;">"</span><span style="color: #000000;">, index),   
+    (</span><span style="color: #800000;">"</span><span style="color: #800000;">/home/</span><span style="color: #800000;">"</span><span style="color: #000000;">, home),   
+    (</span><span style="color: #800000;">"</span><span style="color: #800000;">/time/</span><span style="color: #800000;">"</span><span style="color: #000000;">, timer),   
+]        
+     
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> run_server(environ, start_response):   
+    start_response(</span><span style="color: #800000;">'</span><span style="color: #800000;">200 OK</span><span style="color: #800000;">'</span>, [(<span style="color: #800000;">'</span><span style="color: #800000;">Content-Type</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">text/html;charset=utf8</span><span style="color: #800000;">'</span>), ])  <span style="color: #008000;">#</span><span style="color: #008000;"> 设置HTTP响应的状态码和头信息   </span>
+    url = environ[<span style="color: #800000;">'</span><span style="color: #800000;">PATH_INFO</span><span style="color: #800000;">'</span>]  <span style="color: #008000;">#</span><span style="color: #008000;"> 取到用户输入的url   </span>
+    func =<span style="color: #000000;"> None   
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> list1:   
+        </span><span style="color: #0000ff;">if</span> i[0] ==<span style="color: #000000;"> url:   
+            func </span>= i[1<span style="color: #000000;">]   
+            </span><span style="color: #0000ff;">break</span>   
+    <span style="color: #0000ff;">if</span><span style="color: #000000;"> func:   
+        response </span>=<span style="color: #000000;"> func(url)   
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:   
+        response </span>= b<span style="color: #800000;">"</span><span style="color: #800000;">404 not found!</span><span style="color: #800000;">"</span>   
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> [response, ]      
+     
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:   
+    httpd </span>= make_server(<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8090<span style="color: #000000;">, run_server)   
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">我在8090等你哦...</span><span style="color: #800000;">"</span><span style="color: #000000;">)   
+    httpd.serve_forever()  </span></pre>
+</div>
+<span class="cnblogs_code_collapse">示例</span></div>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><em><strong><span class="md-plain">六、jinja2</span></strong></em></h3>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain md-expand">模板渲染现成的工具：jinja2</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">下载jinja2：pip install jinja2</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">示例：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> wsgiref.simple_server <span style="color: #0000ff;">import</span><span style="color: #000000;"> make_server  
+</span><span style="color: #0000ff;">from</span> jinja2 <span style="color: #0000ff;">import</span><span style="color: #000000;"> Template    
+  
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> index(url):  
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 读取HTML文件内容  </span>
+    with open(<span style="color: #800000;">"</span><span style="color: #800000;">index2.html</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">r</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">) as f:  
+        data </span>=<span style="color: #000000;"> f.read()  
+        template </span>= Template(data)   <span style="color: #008000;">#</span><span style="color: #008000;"> 生成模板文件 </span>
+        ret = template.render({<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">alex</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">hobby_list</span><span style="color: #800000;">'</span>: [<span style="color: #800000;">'</span><span style="color: #800000;">抽烟</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">喝酒</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">烫头</span><span style="color: #800000;">'</span>]})   <span style="color: #008000;">#</span><span style="color: #008000;"> 把数据填充到模板中  </span>
+    <span style="color: #0000ff;">return</span> bytes(ret, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">)  
+  
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> home(url):  
+    with open(</span><span style="color: #800000;">"</span><span style="color: #800000;">home.html</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">r</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">) as f:  
+        s </span>=<span style="color: #000000;"> f.read()  
+    </span><span style="color: #0000ff;">return</span> bytes(s, encoding=<span style="color: #800000;">"</span><span style="color: #800000;">utf8</span><span style="color: #800000;">"</span><span style="color: #000000;">)  
+  
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个url和实际要执行的函数的对应关系  </span>
+list1 =<span style="color: #000000;"> [  
+    (</span><span style="color: #800000;">"</span><span style="color: #800000;">/index/</span><span style="color: #800000;">"</span><span style="color: #000000;">, index),  
+    (</span><span style="color: #800000;">"</span><span style="color: #800000;">/home/</span><span style="color: #800000;">"</span><span style="color: #000000;">, home),  
+]   
+  
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> run_server(environ, start_response):  
+    start_response(</span><span style="color: #800000;">'</span><span style="color: #800000;">200 OK</span><span style="color: #800000;">'</span>, [(<span style="color: #800000;">'</span><span style="color: #800000;">Content-Type</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">text/html;charset=utf8</span><span style="color: #800000;">'</span>), ])  <span style="color: #008000;">#</span><span style="color: #008000;"> 设置HTTP响应的状态码和头信息  </span>
+    url = environ[<span style="color: #800000;">'</span><span style="color: #800000;">PATH_INFO</span><span style="color: #800000;">'</span>]  <span style="color: #008000;">#</span><span style="color: #008000;"> 取到用户输入的url  </span>
+    func =<span style="color: #000000;"> None  
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> list1:  
+        </span><span style="color: #0000ff;">if</span> i[0] ==<span style="color: #000000;"> url:  
+            func </span>= i[1<span style="color: #000000;">]  
+            </span><span style="color: #0000ff;">break</span>  
+    <span style="color: #0000ff;">if</span><span style="color: #000000;"> func:  
+        response </span>=<span style="color: #000000;"> func(url)  
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:  
+        response </span>= b<span style="color: #800000;">"</span><span style="color: #800000;">404 not found!</span><span style="color: #800000;">"</span>  
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> [response, ]  
+  
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:  
+    httpd </span>= make_server(<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8090<span style="color: #000000;">, run_server)  
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">我在8090等你哦...</span><span style="color: #800000;">"</span><span style="color: #000000;">)  
+    httpd.serve_forever() </span></pre>
+</div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('630986e8-6d3f-408e-a0b9-ed0d039f7ba7')"><img id="code_img_closed_630986e8-6d3f-408e-a0b9-ed0d039f7ba7" class="code_img_closed" src="./images/浅谈 Web框架0.png" alt="" /><img id="code_img_opened_630986e8-6d3f-408e-a0b9-ed0d039f7ba7" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('630986e8-6d3f-408e-a0b9-ed0d039f7ba7',event)" src="./images/浅谈 Web框架1.png" alt="" />
+<div id="cnblogs_code_open_630986e8-6d3f-408e-a0b9-ed0d039f7ba7" class="cnblogs_code_hide">
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=<span style="color: #800000;">"</span><span style="color: #800000;">zh-CN</span><span style="color: #800000;">"</span>&gt;
+&lt;head&gt;
+    &lt;meta charset=<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span>&gt;
+    &lt;meta http-equiv=<span style="color: #800000;">"</span><span style="color: #800000;">x-ua-compatible</span><span style="color: #800000;">"</span> content=<span style="color: #800000;">"</span><span style="color: #800000;">IE=edge</span><span style="color: #800000;">"</span>&gt;
+    &lt;meta name=<span style="color: #800000;">"</span><span style="color: #800000;">viewport</span><span style="color: #800000;">"</span> content=<span style="color: #800000;">"</span><span style="color: #800000;">width=device-width, initial-scale=1</span><span style="color: #800000;">"</span>&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;姓名：{{name}}&lt;/h1&gt;
+    &lt;h1&gt;爱好：&lt;/h1&gt;
+    &lt;ul&gt;<span style="color: #000000;">
+        {</span>% <span style="color: #0000ff;">for</span> hobby <span style="color: #0000ff;">in</span> hobby_list %<span style="color: #000000;">}
+            </span>&lt;li&gt;{{hobby}}&lt;/li&gt;<span style="color: #000000;">
+        {</span>% endfor %<span style="color: #000000;">}
+    </span>&lt;/ul&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+</div>
+<span class="cnblogs_code_collapse">index2.html</span></div>
+</li>
+</ol>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

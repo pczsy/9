@@ -1,0 +1,247 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修入门级实操教程！从概念到部署，全方位了解K8S Ingress！' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>入门级实操教程！从概念到部署，全方位了解K8S Ingress！</center></div><div class='banquan'>原文出处:本文由博客园博主RancherLabs提供。<br/>
+原文连接:https://www.cnblogs.com/rancherlabs/p/12034075.html</div><br>
+    <p>Kubernetes Ingress用于添加规则，以将流量从外部路由到Kubernetes集群的服务中。在本文中你将了解ingress 的概念，以及用于路由外部流量到Kubernetes deployment的ingress controller。</p>
+<p>通常情况下，自定义Nginx或HAproxy Kubernetes部署将作为服务被暴露，它们用于将外部流量代理到内部集群的服务中。其中，路由规则将会bake到Pod中，并作为configmap添加。Kubernetes ingress的行为与此类似，只是路由规则将作为Kubernetes ingress对象维护。它具有动态路由规则配置的巨大优势，因此无需重新部署proxy pods。</p>
+<p><img src="./images/入门级实操教程！从概念到部署，全方位了解K8S Ingress！0.png" /></p>
+<h1 id="kubernetes-ingress入门浅析">Kubernetes Ingress入门浅析</h1>
+<p>想要顺利开始使用Kubernetes Ingress，你需要了解以下两个关键概念：</p>
+<p>1、 Kubernetes Ingress</p>
+<p>2、 Kubernetes Ingress Controller</p>
+<p>让我们来逐一了解。</p>
+<h2 id="kubernetes-ingress">Kubernetes Ingress</h2>
+<p>Kubernetes Ingress是一个原生的Kubernetes资源，你可以设置规则来从外部路由流量到集群内部的服务端点。它需要一个Ingress Controller来路由ingress对象所指定的规则。Ingress 对象如下所示：</p>
+<pre><code><code>apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress
+  namespace: dev
+spec:
+  rules:
+  - host: test.apps.example.com
+    http:
+      paths:
+      - backend:
+          serviceName: hello-service
+          servicePort: 80</code></pre>
+<p>上面的声明意味着，对test.apps.example.com的所有调用都应该hit名为hello-service的服务，这一服务位于dev命名空间中。</p>
+<p>关于Ingress对象，你需要了解的关键事项如下：</p>
+<ol>
+<li><p>你应该在你所部署服务的命名空间内创建ingress规则。如果在其他没有ingress对象的命名空间中，你将无法路由流量到其中的服务内。</p></li>
+<li><p>一个ingress对象需要一个ingress controller来路由流量</p></li>
+<li><p>外部流量将不会hit ingress API，而是hit ingress controller服务。</p></li>
+</ol>
+<h2 id="kubernetes-ingress-controller">Kubernetes Ingress Controller</h2>
+<p>Ingress controller是一个典型的部署在集群中的代理服务，它只是暴露给服务的Kubernetes部署。以下是可用于Kubernetes的Ingress Controller：</p>
+<ul>
+<li><p>Nginx Ingress Controller</p></li>
+<li><p>Traefik</p></li>
+<li><p>HAproxy</p></li>
+<li><p>Contour</p></li>
+<li><p>GKE Ingress Controller</p></li>
+</ul>
+<p>目前，Nginx是大多数企业的选择。以下是Nginx Ingress Controller的工作原理：</p>
+<ol>
+<li><p>在Nginx controller pod内部的nginx.conf文件是一个go 模板，它可以与Kubernetes Ingress API通信并实时获得流量路由的最新值。</p></li>
+<li><p>Nginx controller与Kubernetes ingress API 通信以检查是否为流量路由创建了规则。</p></li>
+<li><p>如果它发现了任何ingress规则，它将应用到Nginx Controller配置，也就是使用go模板在pod内的nginx.conf文件。</p></li>
+</ol>
+<p>如果你使用exec连接到pod并检查/etc/nginx/nginx.conf文件，则可以看到在conf文件中应用的ingress对象中指定的所有规则。</p>
+<p>以下的架构图将解释在一个Kubernetes集群上的ingress设置。</p>
+<p><img src="./images/入门级实操教程！从概念到部署，全方位了解K8S Ingress！1.png" /></p>
+<p>接下来，我们详细看看如何使用Nginx Ingress Controller在Kubernetes中设置Ingress。</p>
+<h1 id="前期准备">前期准备</h1>
+<ul>
+<li><p>一个Kubernetes集群</p></li>
+<li><p>安装好的kubectl并已对Kubernetes集群进行身份验证</p></li>
+<li><p>Kubernetes集群的管理员访问权限</p></li>
+<li><p>指向ingress controller负载均衡器的有效域</p></li>
+</ul>
+<p>如果你在谷歌云上，请为你的账户分配管理员权限以启用集群角色。</p>
+<pre><code><code>ACCOUNT=$(gcloud info --format=&#39;value(config.account)&#39;)
+kubectl create clusterrolebinding owner-cluster-admin-binding \
+    --clusterrole cluster-admin \
+    --user $ACCOUNT</code></pre>
+<blockquote>
+<p>请注意：本教程已在Google Cloud GKE集群上尝试过。理论上，它可在所有云环境中使用。如果你真的遇到任何错误，则可能需要在设置中进行一些调整。</p>
+</blockquote>
+<h1 id="设置nginx-ingress-controller">设置Nginx Ingress Controller</h1>
+<p>有两个nginx ingress controller：</p>
+<ul>
+<li><p>Kubernetes社区的Nginx ingress controller: <a href="https://github.com/kubernetes/ingress-nginx" class="uri">https://github.com/kubernetes/ingress-nginx</a></p></li>
+<li><p>Nginx公司的Nginx ingress controller: <a href="https://github.com/nginxinc/kubernetes-ingress" class="uri">https://github.com/nginxinc/kubernetes-ingress</a></p></li>
+</ul>
+<p>我们将使用Kubernetes社区的nginx controller。</p>
+<p>Ingress controller需要特定的命名空间、服务账户、集群角色绑定、configmap等。因此，你需要使用官方ingress repo中的yaml文件来创建所提到的Kubernetes对象。</p>
+<p>官方repo：</p>
+<p><a href="https://github.com/kubernetes/ingress-nginx/tree/master/deploy" class="uri">https://github.com/kubernetes/ingress-nginx/tree/master/deploy</a></p>
+<p>让我们使用mandatory.yaml文件部署ingress controller，你可以在官方repo找到它。它有nginx所需的Kubernetes对象列表。</p>
+<p>让我们使用kubectl创建Nginx controller deployment：</p>
+<pre><code><code>kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/master/deploy/static/mandatory.yaml</code></pre>
+<p>检查ingress controller pod以确保它是否正确设置：</p>
+<pre><code><code>kubectl get pods -n ingress-nginx</code></pre>
+<h1 id="为ingress-controller设置-loadbalancer-服务">为Ingress Controller设置 LoadBalancer 服务</h1>
+<p>下一步是创建一个LoadBalancer类型的服务，以在集群外部暴露nginx controller部署。</p>
+<p>Step1：在本地创建项目目录，然后切换到该目录。</p>
+<pre><code><code>mkdir ingress-deployment &amp;&amp; cd ingress-deployment</code></pre>
+<p>Step2：创建一个名为nginx-ingress.yaml的文件</p>
+<pre><code><code>vi nginx-ingress.yaml</code></pre>
+<p>Step3：复制以下内容到文件</p>
+<blockquote>
+<p>请注意：label下的annotation对于nginx controller部署集成非常重要</p>
+</blockquote>
+<pre><code><code>kind: Service
+apiVersion: v1
+metadata:
+  name: ingress-nginx
+  namespace: ingress-nginx
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+spec:
+  externalTrafficPolicy: Local
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: https
+      port: 443
+      targetPort: https</code></pre>
+<p>Step4：创建ingress 服务</p>
+<pre><code><code>kubectl apply -f nginx-ingress.yaml</code></pre>
+<p>Step5：检查已创建的服务是否已连接到外部负载均衡器</p>
+<pre><code><code>kubectl get svc -n ingress-nginx</code></pre>
+<h1 id="将域名映射到loadbalancer-ip">将域名映射到Loadbalancer IP</h1>
+<p>为了让我们的ingress的设置运转起来，我们需要映射一个域名到负载均衡器IP。你可以用两种方式，完成此操作。</p>
+<h2 id="单个dns映射">单个DNS映射</h2>
+<p>你可以将单个域作为A record直接映射到负载均衡器IP，使用这一功能，你只能为ingress controller提供一个域，并可以基于多个路径进行流量路由。</p>
+<p>例如：</p>
+<pre><code><code>www.example.com --&gt; Loadbalancer IP</code></pre>
+<p>您可以使用此模型进行基于路径的路由。</p>
+<p>以下有几个例子：</p>
+<pre><code><code>http://www.example.com/app1
+http://www.example.com/app2
+http://www.example.com/app1/api
+http://www.example.com/app2/api</code></pre>
+<h2 id="通配符dns映射">通配符DNS映射</h2>
+<p>如果你映射一个通配符DNS到负载均衡器，你就可以通过ingress拥有动态DNS端点。</p>
+<p>例如：</p>
+<pre><code><code> *.apps.example.com</code></pre>
+<p>这样，你可以通过单个ingress controller拥有多个动态子域，并且每个DNS有自己基于路径的路由。</p>
+<p>例如：</p>
+<pre><code><code>#URL one
+ 
+http://demo1.apps.example.com/api
+http://demo1.apps.example.com/api/v1
+http://demo1.apps.example.com/api/v2
+ 
+#URL two
+ 
+http://demo2.apps.example.com/api
+http://demo2.apps.example.com/api/v1
+http://demo2.apps.example.com/api/v2</code></pre>
+<p>出于演示目的，我们已将通配符DNS映射到LoadBalancer IP。你可以根据你的DNS提供商进行此设置。</p>
+<h1 id="设置一个demo-应用程序">设置一个Demo 应用程序</h1>
+<p>出于测试的目的，我们将部署一个demo应用程序并且添加一个ClusterIP服务到应用程序上。</p>
+<p>Step1：创建一个名为dev的命名空间</p>
+<pre><code><code>kubectl create namespace dev</code></pre>
+<p>Step2：创建一个名为<code>hello-app.yaml</code>的文件</p>
+<p>Step3：复制以下内容到文件并保存</p>
+<pre><code><code>apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app
+  namespace: dev
+spec:
+  selector:
+    matchLabels:
+      app: hello
+  replicas: 3
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: hello
+        image: &quot;gcr.io/google-samples/hello-app:2.0&quot;</code></pre>
+<p>Step4：使用kubectl创建deployment</p>
+<pre><code><code>kubectl create -f hello-app.yaml</code></pre>
+<p>检查deployment状态</p>
+<p>Step5：创建一个名为<code>hello-app-service.yaml</code>的文件</p>
+<p>Step6：复制以下内容到文件并保存</p>
+<pre><code><code>
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-service
+  namespace: dev
+  labels:
+    app: hello
+spec:
+  type: ClusterIP
+  selector:
+    app: hello
+  ports:
+  - port: 80
+    targetPort: 8080
+    protocol: TCP</code></pre>
+<p>Step7：使用kubectl创建服务</p>
+<pre><code><code>kubectl create -f hello-app-service.yaml</code></pre>
+<p>检查服务状态</p>
+<pre><code><code>kubectl get svc -n dev</code></pre>
+<h1 id="创建kubernetes-ingress对象">创建Kubernetes Ingress对象</h1>
+<p>现在让我们使用一个DNS创建一个Ingress对象来访问我们的hello app。Ingress对象可以设置路由规则。</p>
+<p>Ingress controller pod会连接到Ingress API来检查规则，并且会相应地更新其nginx.conf。</p>
+<p>Step1：创建一个名为<code>ingress.yaml</code>的文件</p>
+<p>Step2：复制以下内容到文件并保存</p>
+<p>使用你的域名替换<code>test.apps.example.info</code>。此处，我们假设你已经有<code>*.apps.example.info</code>格式的通配符域名。</p>
+<pre><code><code>
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test-ingress
+  namespace: dev
+spec:
+  rules:
+  - host: test.apps.example.info
+    http:
+      paths:
+      - backend:
+          serviceName: hello-service
+          servicePort: 80</code></pre>
+<p>Step3：描述已创建的ingress对象，它用于检查配置</p>
+<pre><code><code>kubectl describe ingress  -n dev</code></pre>
+<p>现在，如果你尝试访问<code>test.apps.example.info</code>域（用你的域名代替它），你应该能够访问我们部署的app。</p>
+<blockquote>
+<p>原文链接：</p>
+<p><a href="https://devopscube.com/kubernetes-ingress-tutorial/" class="uri">https://devopscube.com/kubernetes-ingress-tutorial/</a></p>
+<p><a href="https://devopscube.com/setup-ingress-kubernetes-nginx-controller/" class="uri">https://devopscube.com/setup-ingress-kubernetes-nginx-controller/</a></p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

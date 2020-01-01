@@ -1,0 +1,305 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修pyecharts实现星巴克门店分布可视化分析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>pyecharts实现星巴克门店分布可视化分析</center></div><div class='banquan'>原文出处:本文由博客园博主AwesomeTang提供。<br/>
+原文连接:https://www.cnblogs.com/awesometang/p/12005679.html</div><br>
+    <h3 id="项目介绍">项目介绍</h3>
+<p>使用<strong><em>pyecharts</em></strong>对星巴克门店分布进行可视化分析：</p>
+<ul>
+<li>全球门店分布/拥有星巴克门店最多的10个国家或地区；</li>
+<li>拥有星巴克门店最多的10个城市；</li>
+<li>门店所有权占比；</li>
+<li>中国地区门店分布热点图。</li>
+</ul>
+<h3 id="数据背景">数据背景</h3>
+<p>该数据集来源<a href="https://www.kaggle.com/starbucks/store-locations"><strong><em>Kaggle</em></strong></a>，囊括了截至2017/2月份全球<strong>星巴克</strong>门店的基础信息，其中包括品牌名称、门牌地址、所在国家、经纬度等一系列详细的信息。</p>
+<h3 id="数据说明">数据说明</h3>
+<table>
+<thead>
+<tr class="header">
+<th>字段名称</th>
+<th>类型</th>
+<th>解释说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Brand</td>
+<td>Object</td>
+<td>品牌名称，数据字典中包含了星巴克旗下的子品牌</td>
+</tr>
+<tr class="even">
+<td>Store Number</td>
+<td>Object</td>
+<td>门店编号，独立且唯一</td>
+</tr>
+<tr class="odd">
+<td>Store Name</td>
+<td>Object</td>
+<td>门店名称，示例：“北京建国门内大街店”</td>
+</tr>
+<tr class="even">
+<td>Ownership Type</td>
+<td>Object</td>
+<td>门店所有权类型，如：Company Owned</td>
+</tr>
+<tr class="odd">
+<td>Street Address</td>
+<td>Object</td>
+<td>门店所在的街道地址</td>
+</tr>
+<tr class="even">
+<td>City</td>
+<td>Object</td>
+<td>门店所在的城市名称</td>
+</tr>
+<tr class="odd">
+<td>State/Province</td>
+<td>Object</td>
+<td>门店所在的省份地区</td>
+</tr>
+<tr class="even">
+<td>Country</td>
+<td>Object</td>
+<td>门店所在的国家或地区，如：US，代表美国</td>
+</tr>
+<tr class="odd">
+<td>Postcode</td>
+<td>Object</td>
+<td>门店所在地址的邮政编码</td>
+</tr>
+<tr class="even">
+<td>Phone Number</td>
+<td>Object</td>
+<td>门店的联系电话</td>
+</tr>
+<tr class="odd">
+<td>Timezone</td>
+<td>Object</td>
+<td>门店所在地的时区</td>
+</tr>
+<tr class="even">
+<td>Longitude</td>
+<td>Float64</td>
+<td>门店地址的经度</td>
+</tr>
+<tr class="odd">
+<td>Latitude</td>
+<td>Float64</td>
+<td>门店地址的纬度</td>
+</tr>
+</tbody>
+</table>
+<h3 id="可视化">可视化</h3>
+<ul>
+<li>导入包以及数据</li>
+</ul>
+<pre><code><code>import pyecharts
+import pandas as pd
+import warnings
+warnings.filterwarnings(&quot;ignore&quot;)
+data = pd.read_csv(&#39;directory.csv&#39;)
+#读取文件
+Country = pd.read_csv(&#39;Country.csv&#39;)
+#用于替换星巴克门店信息中Country字段简写
+data = pd.merge(data,Country,left_on=&#39;Country&#39;,right_on=&#39;国际域名缩写&#39;,how = &#39;left&#39;)</code></pre>
+<h4 id="星巴克门店全球分布">星巴克门店全球分布</h4>
+<ul>
+<li>截止数据采集时间，目前星巴克总共在全球73个国家和地区设有门店，合计25249家。</li>
+</ul>
+<pre class="python"><code>temp = data.groupby(&#39;Countries and Regions&#39;)[&#39;Brand&#39;].count().reset_index()
+temp.columns = [&#39;国家或地区&#39;,&#39;计数&#39;]
+
+Map = pyecharts.Map(&quot;世界地图 - 不带标记点&quot;)
+Map.add(&quot;国家或地区&quot;,temp[&#39;国家或地区&#39;], temp[&#39;计数&#39;], maptype=&quot;world&quot;, is_visualmap=True,style=&#39;heatmap&#39;,
+              is_map_symbol_show=False, visual_text_color=&#39;#000&#39;)
+Map</code></pre>
+<p><img src="./images/pyecharts实现星巴克门店分布可视化分析0.png" alt="image.png" /></p>
+<ul>
+<li>我们可以看见，门店主要还是集中在美洲，亚洲，欧洲，非洲目前只有<strong><em>摩洛哥，埃及</em></strong>和<strong><em>南非</em></strong>设有门店。</li>
+<li>另外有意思的一点，整个澳大利亚只有22家星巴克门店，难道是澳大利亚人不爱喝咖啡吗，其实正好相反，因为澳大利亚人太钟爱咖啡了，澳大利亚人对咖啡的讲究，就像中国人对茶的挑剔一样，对于星巴克这种过于商业化的连锁品牌有些难以生存。</li>
+<li>其实除了澳大利亚其实还有一个国家更过分，只是由于面积小不容易被注意到，那就是<strong><em>意大利</em></strong>，一家星巴克也没有（<em>查了一下新闻，星巴克似乎17年3月在意大利开设了一家</em>）。</li>
+</ul>
+<h4 id="拥有星巴克门店最多的10个国家或地区">拥有星巴克门店最多的10个国家或地区</h4>
+<pre class="python"><code>temp = data.groupby(&#39;City&#39;)[&#39;Brand&#39;].count().reset_index()
+temp = temp.nlargest(10,&#39;Brand&#39;)
+temp.columns = [&#39;城市&#39;,&#39;计数&#39;]
+
+bar = pyecharts.Bar(&quot;星巴克门店数量TOP10城市&quot;, &quot;来源：kaggle&quot;,width=1200,height=600)
+bar.add(&quot;门店数量&quot;, temp[&#39;城市&#39;], temp[&#39;计数&#39;],mark_point=[&#39;max&#39;])
+bar</code></pre>
+<p><img src="./images/pyecharts实现星巴克门店分布可视化分析1.png" alt="image.png" /></p>
+<ul>
+<li>毕竟是美国的品牌，美国星巴克门店数量还是远多于其他国家，其次是我们国家，总计2734家，目前应该更多了。</li>
+</ul>
+<h4 id="拥有星巴克门店最多10个城市">拥有星巴克门店最多10个城市</h4>
+<ul>
+<li>看到上面的统计，我们可能会想到拥有星巴克门店最多的城市应该是<strong><em>纽约</em></strong>或者<strong><em>洛杉矶</em></strong>这些美国的超级城市，其实最后统计结果还有点意外。</li>
+</ul>
+<pre class="python"><code>temp = data.groupby(&#39;City&#39;)[&#39;Brand&#39;].count().reset_index()
+temp = temp.nlargest(10,&#39;Brand&#39;)
+temp.columns = [&#39;城市&#39;,&#39;计数&#39;]
+
+bar = pyecharts.Bar(&quot;星巴克门店数量TOP10城市&quot;, &quot;来源：kaggle&quot;,width=1200,height=600)
+#bar.use_theme(&#39;vintage&#39;)
+bar.add(&quot;门店数量&quot;, temp[&#39;城市&#39;], temp[&#39;计数&#39;],mark_point=[&#39;max&#39;])
+bar</code></pre>
+<p><img src="./images/pyecharts实现星巴克门店分布可视化分析2.png" alt="image.png" /></p>
+<ul>
+<li>排名第一的既不是纽约也不是洛杉矶，而是<strong>上海</strong>，拥有542家星巴克门店远远领先其他城市；</li>
+<li>第二是首尔，韩国5000W人口拥有近1000家星巴克门店，首尔出现在第二的位置不算意外，第三是北京，第四才是美国的纽约。</li>
+<li>第10名西雅图，是星巴克总部所在地，除了这个原因，也许西雅图程序员也贡献了不少营业额。</li>
+</ul>
+<h4 id="所有权分布">所有权分布</h4>
+<p>这个需要提前解释一下，目前星巴克门店的经营方式氛围如下4类：</p>
+<ul>
+<li>Company Owned：公司独资直营，这也是<strong>星巴克门店最多的经营方式</strong></li>
+<li>Licensed: <a href="https://en.wikipedia.org/wiki/Brand_licensing">许可经营</a></li>
+<li>Joint Venture: <a href="http://www.investopedia.com/terms/j/jointventure.asp">合资经营</a>，比如：国内江浙沪地区的星巴克最早就是由星巴克与统一集团联手经营，17年7月的时候星巴克已收回所有权</li>
+<li>Franchise：<a href="http://www.investopedia.com/terms/f/franchise.asp">授权经营</a>，类似麦当劳的经营模式</li>
+</ul>
+<pre class="python"><code>temp = data.groupby(&#39;Ownership Type&#39;)[&#39;Brand&#39;].count().reset_index()
+temp = temp.nlargest(10,&#39;Brand&#39;)
+temp.columns = [&#39;Ownership Type&#39;,&#39;计数&#39;]
+
+chart = pyecharts.Pie(&quot;星巴克门店所有权分布&quot;, &quot;来源：kaggle&quot;, title_pos=&#39;center&#39;)
+chart.add(&quot;占比&quot;, temp[&#39;Ownership Type&#39;], temp[&#39;计数&#39;], is_random=True,
+              radius=[30, 75], rosetype=&#39;radius&#39;,
+              is_legend_show=False, is_label_show=True)
+chart</code></pre>
+<p><img src="./images/pyecharts实现星巴克门店分布可视化分析3.png" alt="image.png" /></p>
+<h3 id="中国区分布">中国区分布</h3>
+<ul>
+<li>我们接下来通过热点图看下星巴克门店在中国区内的分布情况；</li>
+</ul>
+<pre class="python"><code>temp = data[data[&#39;Country&#39;]==&#39;CN&#39;].groupby(&#39;City&#39;)[&#39;Brand&#39;].count().reset_index()
+#防坑，门店信息中城市格式不统一,无法使用pyecharts自带的经纬度，自定义添加门店文件自带的经纬度
+position = dict(zip(data[&#39;City&#39;].values,data[[&#39;Longitude&#39;,&#39;Latitude&#39;]].values.tolist()))
+chart = pyecharts.Geo(&quot;全国门店分布热点图&quot;, &quot;来源：Kaggle&quot;, title_color=&quot;#fff&quot;, title_pos=&quot;center&quot;,
+width=800, height=600, background_color=&#39;#404a59&#39;)
+chart.add(&quot;&quot;, temp[&#39;City&#39;], temp[&#39;Brand&#39;], visual_range=[0, 80], type=&#39;heatmap&#39;,
+        visual_text_color=&quot;#fff&quot;, is_visualmap=True,is_legend_show=False,
+       geo_cities_coords = position)
+chart</code></pre>
+<p><img src="./images/pyecharts实现星巴克门店分布可视化分析4.png" alt="image.png" /></p>
+<ul>
+<li>毫无意外的最红的三个区域——<strong><em>长三角，珠三角</em></strong>和<strong><em>北京</em></strong>；</li>
+<li>中部城市以成都/武汉为首。</li>
+<li><strong><em>TOP20</em></strong>榜单，看看有没有你所在的城市：</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th>城市</th>
+<th>数量</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>上海市</td>
+<td>542</td>
+</tr>
+<tr class="even">
+<td>北京市</td>
+<td>234</td>
+</tr>
+<tr class="odd">
+<td>杭州市</td>
+<td>117</td>
+</tr>
+<tr class="even">
+<td>深圳市</td>
+<td>113</td>
+</tr>
+<tr class="odd">
+<td>广州市</td>
+<td>106</td>
+</tr>
+<tr class="even">
+<td>香港</td>
+<td>104</td>
+</tr>
+<tr class="odd">
+<td>成都市</td>
+<td>98</td>
+</tr>
+<tr class="even">
+<td>苏州市</td>
+<td>90</td>
+</tr>
+<tr class="odd">
+<td>南京市</td>
+<td>73</td>
+</tr>
+<tr class="even">
+<td>武汉市</td>
+<td>67</td>
+</tr>
+<tr class="odd">
+<td>宁波市</td>
+<td>59</td>
+</tr>
+<tr class="even">
+<td>天津市</td>
+<td>58</td>
+</tr>
+<tr class="odd">
+<td>重庆市</td>
+<td>41</td>
+</tr>
+<tr class="even">
+<td>无锡市</td>
+<td>40</td>
+</tr>
+<tr class="odd">
+<td>西安市</td>
+<td>40</td>
+</tr>
+<tr class="even">
+<td>佛山市</td>
+<td>33</td>
+</tr>
+<tr class="odd">
+<td>东莞市</td>
+<td>31</td>
+</tr>
+<tr class="even">
+<td>厦门市</td>
+<td>31</td>
+</tr>
+<tr class="odd">
+<td>青岛市</td>
+<td>28</td>
+</tr>
+<tr class="even">
+<td>常州市</td>
+<td>26</td>
+</tr>
+</tbody>
+</table>
+<h3 id="最后">最后</h3>
+<p>总体来说，星巴克门店主要还是分布在发达国家和地区，当然也与不同国家地区的文化有关，我们还是不能武断地因为哪个城市，哪个国家星巴克更多就断定更发达。<br />
+另外<strong><em>echarts</em></strong>是由百度团队开发的<strong><em>JavaScript</em></strong>可视化图表库，目前<strong><em>python</em></strong>中可以直接通过<strong><em>pyecharts</em></strong>调用，除了丰富的图表还具有传统图表不具有的交互性，强烈推荐各位使用。<br />
+---<br />
+<strong><em>skr～skr～～～</em></strong></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

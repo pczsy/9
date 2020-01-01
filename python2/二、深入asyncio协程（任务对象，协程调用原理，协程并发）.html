@@ -1,0 +1,403 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修二、深入asyncio协程（任务对象，协程调用原理，协程并发）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>二、深入asyncio协程（任务对象，协程调用原理，协程并发）</center></div><div class='banquan'>原文出处:本文由博客园博主西瓜你个兔子提供。<br/>
+原文连接:https://www.cnblogs.com/FuckSpider/p/11584838.html</div><br>
+    <p>  <em>由于才开始写博客，之前都是写笔记自己看，所以可能会存在表述不清，过于啰嗦等各种各样的问题，有什么疑问或者批评欢迎在评论区留言。</em></p>
+<p><strong><em>如果你初次接触协程，请先阅读上一篇文章<a href="https://www.cnblogs.com/FuckSpider/p/11555970.html">初识asyncio协程</a>对asyncio有个初步的认识。</em></strong></p>
+<h2 id="一任务对象task任务">一、任务对象（task任务）</h2>
+<p>参照上一篇<a href="https://www.cnblogs.com/FuckSpider/p/11555970.html">初识asyncio协程</a>我们了解到了任务对象是对协程的一种封装，其中包含各种状态，如阻塞状态（suspended），运行状态（running），完成状态（done）；</p>
+<p><strong>1、创建任务对象的三种方式</strong></p>
+<ul>
+<li><p>第一种：<code>loop.create_task(xxx)</code></p></li>
+<li><p>第二种：<code>asyncio.ensure_future(xxx)</code></p></li>
+<li><p>第三种：<code>asyncio.create_task(xxx)</code></p>
+<p>其实第三种方法内部也是用的第一种方法，不过需要注意的是此方法在创建任务前需要一个已运行的事件循环，不然会抛出<code>RuntimeError:no running event loop</code></p></li>
+</ul>
+<p><strong>2、添加回调</strong></p>
+<pre><code><code>import asyncio
+async def get_url(url):
+    print(&#39;start get_url&#39;)
+    await asyncio.sleep(2)
+    print(&#39;end get_url&#39;)
+    return &#39;Joshua&#39;
+
+def callback(future):  # 回调函数
+    print(&#39;Hello {}&#39;.format(future.result()))
+
+if __name__==&quot;__main__&quot;:
+    loop = asyncio.get_event_loop()
+    task = loop.create(get_url(&#39;https://www.baidu.com&#39;))
+    task.add_done_callback(callback)  # 添加回调
+    loop.run_until_complete(task)</code></pre>
+<p><strong>3、向回调函数传递参数</strong></p>
+<pre><code><code>from functools import partial
+# partial(偏函数)可以把函数包装成另外一个函数
+import asyncio
+async def get_url(url):
+    print(&#39;start get_url&#39;)
+    await asyncio.sleep(2)
+    print(&#39;end get_url&#39;)
+    return &#39;Joshua&#39;
+
+def callback(url,future):
+    # 注意：要想向回调函数传递参数需要将参数放在future前面
+    print(&#39;Hello {}&#39;.format(future.result()))
+
+if __name__==&quot;__main__&quot;:
+    loop = asyncio.get_event_loop()
+    task = loop.create(get_url(&#39;https://www.baidu.com&#39;))
+    # 在传递前需要先用partial将函数封装成另外一个函数
+    task.add_done_callback(partical(callback,&#39;https://www.baidu.com&#39;))</code></pre>
+<p><strong>4、task取消()</strong></p>
+<p>用于请求取消Task对象，这将会再下一轮事件循环中抛出<code>CanceledError</code>;</p>
+<ul>
+<li><p>请求取消：<code>task.cancel()</code></p></li>
+<li><p>判断是否取消：<code>cancelled()</code></p></li>
+<li><p>判断是否结束：`<code>done</code>()`</p></li>
+<li><p>举个例子，如下</p>
+<pre><code><code>import asyncio
+
+async def a():
+    print(&#39;执行a()&#39;)
+    await asyncio.sleep(3)
+    print(&#39;执行a()完成&#39;)
+
+async def b():
+    print(&#39;执行b()&#39;)
+    await asyncio.sleep(2)
+    print(&#39;执行b()完成&#39;)
+
+if __name__ == &#39;__main__&#39;:
+    loop = asyncio.get_event_loop()
+    task1 = loop.create_task(a())
+    task2 = loop.create_task(b())
+    task1.cancel()  # 取消task1
+    loop.run_until_complete(asyncio.gather(task1, task2))
+
+# 运行结果如下
+&gt;&gt;&gt; 执行b()
+&gt;&gt;&gt; Traceback (most recent call last):
+  ... # 省略Traceback中的部分
+&gt;&gt;&gt; concurrent.futures._base.CancelledError
+# 如果不想因为抛出异常而中断运行，可以在`gather`中设置`return_exception=True`
+# 如果设置`return_exception=True`,这样异常会和成功的结果一样处理，并聚合至结果列表，那么运行结果将如下:
+&gt;&gt;&gt; 执行b()
+&gt;&gt;&gt; 执行b()完成</code></pre>
+<p>可以看到<code>a()</code>并没有执行。</p></li>
+</ul>
+<p><strong>5、shield屏蔽取消</strong></p>
+<p><em><code>asyncio.shield</code>(</em>aw<em>, </em>**, <em>loop=None</em>)，用于保护一个可等待对象被取消</p>
+<ul>
+<li>aw：可等待对象，如果为协程，将会在内部将其封装为Task</li>
+</ul>
+<p>我们先将上面取消的例子修改一下，如下：</p>
+<pre><code><code>import asyncio
+
+async def a():
+    print(&#39;执行a()&#39;)
+    await asyncio.sleep(3)
+    print(&#39;执行a()完成&#39;)
+
+async def b():
+    print(&#39;执行b()&#39;)
+    await asyncio.sleep(2)
+    print(&#39;执行b()完成&#39;)
+
+def c():
+    loop = asyncio.get_event_loop()
+    task1 = loop.create_task(a())
+    task1 = asyncio.shield(task1)  # 设置屏蔽取消操作
+    task2 = loop.create_task(b())
+    task1.cancel()
+    loop.run_until_complete(asyncio.gather(task1, task2, return_exceptions=True))
+
+c()
+# 运行结果如下
+&gt;&gt;&gt; 执行a()
+&gt;&gt;&gt; 执行b()
+&gt;&gt;&gt; 执行b()完成</code></pre>
+<p>看到这里依然被取消了，小伙伴们肯定都是一（沙）脸（雕）懵（博）逼（主），但是这真不怪我啊，它确实是这样输出的，那么为什么会这样呢？我们先看下<code>shield（）</code>的源码，如下：</p>
+<pre><code><code>def shield(arg, *, loop=None):
+    inner = ensure_future(arg, loop=loop)  # 首先创建一个内部的Task 赋给inner
+    if inner.done():  # 如果内部的Task执行完毕则返回inner
+        # Shortcut.
+        return inner
+    loop = futures._get_loop(inner)
+    outer = loop.create_future()  # 在事件循环上创建一个外部的Task
+
+    def _done_callback(inner):  # 回调函数，在inner执行完毕后回调
+        if outer.cancelled():  # 如果外部Task被取消
+            if not inner.cancelled():  # 如果内部Task没被取消
+                # Mark inner&#39;s result as retrieved.
+                inner.exception()  # 根据注释的意思，内部Task的结果会被标记为已检索
+            return
+
+        if inner.cancelled():  # 如果内部的Task取消了，则外部的Task也将取消
+            outer.cancel()  
+        else:
+            exc = inner.exception()  # 返回内部Task的异常
+            if exc is not None:  # 如果存在异常，则外部Task的异常被设置为内部Task的异常
+                outer.set_exception(exc)
+            else:  # 否则将外部Task结果设置为内部Task的结果
+                outer.set_result(inner.result())
+
+    inner.add_done_callback(_done_callback)
+    return outer  # 返回外部Task</code></pre>
+<p>由上面源码可以看到，真正运行的是内部的Task（inner），事件循环上的外部Task的一切都来自于内部Task，而我们取消的则是事件循环上的外部Task，对内部的Task不产生任何影响，所以当事件循环上所有Task执行完成就退出了，而内部Task仍然在运行着，这就导致虽然我们设置了屏蔽取消然而还是被取消了,那怎么解决呢？</p>
+<p>有如下两种方法：</p>
+<ul>
+<li><p>让被取消的Task耗时小于正常Task的耗时，也就是把要被取消的<code>a()</code>协程模拟阻塞延时设置得比<code>b()</code>协程小，这样使被屏蔽取消的协程的内部Task比事件循环中其他正常Task执行完成得早；如下：</p>
+<pre><code><code>async def a():
+    print(&#39;执行a()&#39;)
+    await asyncio.sleep(1)  # 由原来的3改为1，使其小于b()的延时
+    print(&#39;执行a()完成&#39;)
+
+async def b():
+    print(&#39;执行b()&#39;)
+    await asyncio.sleep(2)
+    print(&#39;执行b()完成&#39;)</code></pre>
+<p>执行结果如下：</p>
+<pre><code><code>&gt;&gt;&gt; 执行a()
+&gt;&gt;&gt; 执行b()
+&gt;&gt;&gt; 执行a()完成
+&gt;&gt;&gt; 执行b()完成</code></pre>
+<p>可以看到这下<code>a()</code>协程执行完成了。</p></li>
+<li><p>让事件循环持续运行，也就不会因为事件循环上的Task执行完成，程序退出导致被屏蔽取消的协程的内部Task未能执行完成；如下：</p>
+<pre><code><code>import asyncio
+import time
+async def a():
+    print(&#39;执行a()&#39;)
+    await asyncio.sleep(3)
+    print(&#39;执行a()完成&#39;)
+
+async def b():
+    print(&#39;执行b()&#39;)
+    await asyncio.sleep(2)
+    print(&#39;执行b()完成&#39;)
+
+if __name__ == &#39;__main__&#39;:
+    loop = asyncio.get_event_loop()
+    task1 = loop.create_task(a())
+    task2 = loop.create_task(b())
+    loop.run_forever()
+# 输出如下
+&gt;&gt;&gt; 执行a()
+&gt;&gt;&gt; 执行b()
+&gt;&gt;&gt; 执行b()完成
+&gt;&gt;&gt; 执行a()完成</code></pre></li>
+</ul>
+<p><strong>6、任务对象的其他方法（粘贴自官方文档）</strong></p>
+<ul>
+<li><p><code>result</code>()</p>
+<p>返回 Task 的结果。如果 Task 对象 <em>已完成</em>，其封包的协程的结果会被返回 (或者当协程引发异常时，该异常会被重新引发。)如果 Task 对象 <em>被取消</em>，此方法会引发一个 <a href="https://docs.python.org/zh-cn/3/library/asyncio-exceptions.html#asyncio.CancelledError"><code>CancelledError</code></a> 异常。如果 Task 对象的结果还不可用，此方法会引发一个 <a href="https://docs.python.org/zh-cn/3/library/asyncio-exceptions.html#asyncio.InvalidStateError"><code>InvalidStateError</code></a> 异常。</p></li>
+<li><p><code>exception</code>()</p>
+<p>返回 Task 对象的异常。如果所封包的协程引发了一个异常，该异常将被返回。如果所封包的协程正常返回则该方法将返回 <code>None</code>。如果 Task 对象 <em>被取消</em>，此方法会引发一个 <a href="https://docs.python.org/zh-cn/3/library/asyncio-exceptions.html#asyncio.CancelledError"><code>CancelledError</code></a> 异常。如果 Task 对象尚未 <em>完成</em>，此方法将引发一个 <a href="https://docs.python.org/zh-cn/3/library/asyncio-exceptions.html#asyncio.InvalidStateError"><code>InvalidStateError</code></a> 异常。</p></li>
+<li><p><code>remove_done_callback</code>(<em>callback</em>)</p>
+<p>从回调列表中移除 <em>callback</em> 指定的回调。此方法应该仅在低层级的基于回调的代码中使用。要了解更多细节请查看 <a href="https://docs.python.org/zh-cn/3/library/asyncio-future.html#asyncio.Future.remove_done_callback"><code>Future.remove_done_callback()</code></a> 的文档。</p></li>
+<li><p><code>get_stack</code>(**<em>, </em>limit=None*)</p>
+<p>返回此 Task 对象的栈框架列表。如果所封包的协程未完成，这将返回其挂起所在的栈。如果协程已成功完成或被取消，这将返回一个空列表。如果协程被一个异常终止，这将返回回溯框架列表。框架总是从按从旧到新排序。每个被挂起的协程只返回一个栈框架。可选的 <em>limit</em> 参数指定返回框架的数量上限；默认返回所有框架。返回列表的顺序要看是返回一个栈还是一个回溯：栈返回最新的框架，回溯返回最旧的框架。(这与 traceback 模块的行为保持一致。)</p></li>
+<li><p><code>print_stack</code>(**<em>, </em>limit=None<em>, </em>file=None*)</p>
+<p>打印此 Task 对象的栈或回溯。此方法产生的输出类似于 traceback 模块通过 <a href="https://docs.python.org/zh-cn/3/library/asyncio-task.html#asyncio.Task.get_stack"><code>get_stack()</code></a> 所获取的框架。<em>limit</em> 参数会直接传递给 <a href="https://docs.python.org/zh-cn/3/library/asyncio-task.html#asyncio.Task.get_stack"><code>get_stack()</code></a>。<em>file</em> 参数是输出所写入的 I/O 流；默认情况下输出会写入 <a href="https://docs.python.org/zh-cn/3/library/sys.html#sys.stderr"><code>sys.stderr</code></a>。</p></li>
+<li><p><em>classmethod</em> <code>all_tasks</code>(<em>loop=None</em>)</p>
+<p>返回一个事件循环中所有任务的集合。默认情况下将返回当前事件循环中所有任务。如果 <em>loop</em> 为 <code>None</code>，则会使用 <a href="https://docs.python.org/zh-cn/3/library/asyncio-eventloop.html#asyncio.get_event_loop"><code>get_event_loop()</code></a> 函数来获取当前事件循环。This method is <strong>deprecated</strong> and will be removed in Python 3.9. Use the <a href="https://docs.python.org/zh-cn/3/library/asyncio-task.html#asyncio.all_tasks"><code>asyncio.all_tasks()</code></a> function instead.</p></li>
+<li><p><em>classmethod</em> <code>current_task</code>(<em>loop=None</em>)</p>
+<p>返回当前运行任务或 <code>None</code>。如果 <em>loop</em> 为 <code>None</code>，则会使用 <a href="https://docs.python.org/zh-cn/3/library/asyncio-eventloop.html#asyncio.get_event_loop"><code>get_event_loop()</code></a> 函数来获取当前事件循环。</p></li>
+</ul>
+<h2 id="二协程调用原理">二、协程调用原理</h2>
+<p>为了更好的理解后面的并发执行，所以现在为我们先了解下协程的调用原理，先举个协程嵌套的例子：</p>
+<pre><code><code>import asyncio
+import time
+async def compute(x,y):
+    await asyncio.sleep(1)
+    return x+y
+
+async def print_sum(x,y):
+    reuslt = await compute(x,y)
+    print(result)
+
+if __name__ == &quot;__main__&quot;:
+    start = time.time()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(print_sum(1,2))
+    loop.close()
+    print(&#39;Cost:{}&#39;.format(time.time()-start))
+    
+#输出如下
+&gt;&gt;&gt; 3
+&gt;&gt;&gt; Cost:1.0007200241088867
+</code></pre>
+<p>下面是这个例子的时序图：</p>
+<p><img src="./images/二、深入asyncio协程（任务对象，协程调用原理，协程并发）0.png" /></p>
+<ol>
+<li><p>创建一个<code>Event Loop</code>事件循环，调用<code>run_until_complete</code>启动事件循环并为<code>print_sum</code>创建一个任务对象Task，<code>Event Loop</code>进入running状态，Task进入pending状态；</p></li>
+<li><p>Task驱动运<code>print_sum</code>运行到<code>await compute(x,y)</code>转向调用子协程<code>compute</code>，<code>print_sum</code>进入</p>
+<p>suspended状态，子协程<code>compute</code>进入running状态；</p></li>
+<li><p><code>compute</code>运行到<code>await asyncio.sleep(1)</code>发生阻塞耗时，进入suspended状态，此时直接与Task沟通，与Task打通一条通道（子协程与调用方Task），可以粗略的理解为类似子线程与进程沟通；</p>
+<p><strong>这样做的好处在于能够保证<code>print_sum</code>中是同步进行，而整体程序是异步运行，后面有例子解释这个问题。</strong></p></li>
+<li><p>Task与子协程沟通后转向与<code>Event Loop</code>沟通，<code>Event Loop</code>中没有其他的Task便只能等待阻塞操作完成（睡眠1秒）；</p></li>
+<li><p>在等待阻塞耗时操作完成后，<code>Event Loop</code>通过Task与子协程<code>compute</code>的通道唤醒<code>compute</code>，此时<code>compute</code>进入running状态;</p></li>
+<li><p><code>compute</code>执行下一步的代码<code>return x+y</code>，从running状态转为done状态，同时抛出<code>StopIteration</code>异常，并且携带<code>return</code>的结果；</p></li>
+<li><p><code>print_sum</code>捕获<code>compute</code>抛出的异常，并从其中获取<code>compute</code>返回的结果，此时<code>print_sum</code>由suspended状态转为running状态，执行下一步的代码<code>print(result)</code></p></li>
+<li><p>在<code>print_sum</code>执行完<code>print</code>后由running状态转为done状态，同时抛出<code>StopIteration</code>异常；</p></li>
+<li><p>Task捕获到<code>print_sum</code>抛出的异常后由runing状态转为done状态；</p></li>
+<li><p>此时<code>Event Loop</code>进入stopped状态；</p></li>
+</ol>
+<p>举个例子解释第3条：</p>
+<pre><code><code>import asyncio
+import time
+async def compute(x,y):
+    await asyncio.sleep(1)
+    return x+y
+
+async def print_sum(x,y):
+    result = await compute(x,y)
+    print(result)
+
+if __name__ == &quot;__main__&quot;:
+    start = time.time()
+    loop = asyncio.get_event_loop()
+    tasks = [print_sum(1,2),print_sum(1,2)]  # 创建两个协程对象
+    loop.run_until_complete(asyncio.gather(*tasks))  # 同时执行两个协程对象
+    loop.close()
+    print(&#39;Cost:{}&#39;.format(time.time()-start))
+                            
+#输出如下
+&gt;&gt;&gt;3
+&gt;&gt;&gt;3
+&gt;&gt;&gt;Cost:1.0004866123199463</code></pre>
+<p>由上述例子可以看出在执行多个协程对象的时候并没有延长运行时间，实际上<strong><code>asyncio.gather</code>的部分作用就是把协程对象转为Task并把它们注册到事件循环上</strong>。此例子在上述时序图解释中的第3，4步并没有等待阻塞，而是转向调用另一个<code>print_sum</code>的Task，是<strong>异步操作</strong>，所以理论上来说这种方法即使执行1000个协程对象依然只耗时1秒钟。</p>
+<p>再来看一个例子：</p>
+<pre><code><code>import asyncio
+import time
+async def compute(x,y):
+    print(&#39;执行compute&#39;)
+    await asyncio.sleep(1)
+    return x+y
+
+async def print_sum(x,y):
+    result1 = await compute(x, y)  # 调用子协程
+    print(result1)
+    result2 = await compute(x, y)  # 调用子协程
+    print(result2)
+
+if __name__ == &quot;__main__&quot;:
+    start = time.time()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(print_sum(1,2))  # 同时执行两个协程对象
+    loop.close()
+    print(&#39;Cost:{}&#39;.format(time.time()-start))
+# 输出如下
+&gt;&gt;&gt; 执行compute
+&gt;&gt;&gt; 3
+&gt;&gt;&gt; 执行compute
+&gt;&gt;&gt; 3
+&gt;&gt;&gt; Cost:2.0158169269561768</code></pre>
+<p>可以看到此例总体运行时间为2秒，验证在<code>print_sum</code>中是同步运行的，所以两次执行子协程耗时加倍，如果想让其依旧是1秒完成怎么修改？</p>
+<p>自然是将同步操作转为异步操作，也就是让协程对象转为任务对象（Task）了，如下：</p>
+<pre><code><code>import asyncio
+import time
+async def compute(x,y):
+    print(&#39;执行compute&#39;)
+    await asyncio.sleep(1)
+    return x+y
+
+async def print_sum(x,y):
+    task1 = asyncio.create_task(compute(x, y))
+    task2 = asyncio.create_task(compute(x, y))
+    await task1
+    print(task1.result())
+    await task2
+    print(task2.result())
+
+if __name__ == &quot;__main__&quot;:
+    start = time.time()
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(print_sum(1,2))  
+    loop.close()
+    print(&#39;Cost:{}&#39;.format(time.time()-start))
+# 输出如下
+&gt;&gt;&gt; 执行compute
+&gt;&gt;&gt; 执行compute
+&gt;&gt;&gt; 3
+&gt;&gt;&gt; 3
+&gt;&gt;&gt; Cost:1.0004889965057373</code></pre>
+<p>在此有个坑，大家在写的时候注意避开，如下：</p>
+<pre><code><code>async def print_sum(x,y):
+    await asyncio.create_task(compute(x, y))
+    await asyncio.create_task(compute(x, y))
+    # 这样写依然是同步运行，要将生成的对象赋给一个变量再进行await，即上个例子那样</code></pre>
+<h2 id="三asyncio并发">三、asyncio并发</h2>
+<p>在上面协程调用原理的几个实例中我们其实已经接触到了部分并发的知识，下面来详细讲解一下asyncio的并发。</p>
+<p><strong>asyncio并发的几种实现方式：</strong></p>
+<ol>
+<li><p>asyncio.gather(*aws, loop=None, return_exceptions=False)`</p>
+<ul>
+<li><code>aws</code>：可等待对象（协程，Task，Future），如果某个可等待对象是协程，那么<code>asynico.gather</code>内部会自动将其转换为Task并加入事件循环。如果所有可等待对象都成功完成，结果将一个由所有返回值聚合的列表，顺序与aws顺序一致。</li>
+<li><code>return_exceptions</code>当其为默认值<code>False</code>的时候，如果aws中的可等待对象被取消，那么会抛出一个<code>CancelledError</code>结束程序运行；如果将其设为<code>True</code>的时候则不抛异常，程序正常运行，在返回结果的列表中将此可等待对象的结果设置为<code>concurrent.futures._base.CancelledError()</code></li>
+</ul></li>
+<li><p><code>asyncio.wait((aws, *, loop=None, timeout=None, return_when=ALL_COMPLETED)</code></p>
+<ul>
+<li><p>aws：可等待对象，并发运行aws指定的可等待对象并阻塞线程直到满足 <em>return_when</em> 指定的条件；</p></li>
+<li><p>loop：这个参数可以不用管它，根据官方文档描述其将于<code>python3.10</code>中被去除；</p></li>
+<li><p>timeout：支持小数和整数，如果设置了则将被应用于控制返回之前等待的最长秒数，并不会引发<code>TimeoutError</code>,如果超时发生则返回未完成的Task或Future；</p></li>
+<li><p>return_when：指定函数的返回时机条件：</p>
+<p><code>FIRST_COMPLETED</code>: 第一个可等待对象完成时返回；</p>
+<p><code>FIRST_EXCEPTION</code>：第一个异常发生时返回，如果无异常则在所有可等待对象完成时返回；</p>
+<p><code>ALL_COMPLETED</code>：默认，当所有可等待对象完成时返回</p></li>
+</ul></li>
+</ol>
+<p><strong><code>asyncio.gather</code>和<code>asyncio.wait</code>的区别：</strong></p>
+<ol>
+<li><p>两者都用来做协程并发，其中<code>asyncio.gather</code>返回协程的运行结果，<code>asyncio.wait</code>返回两个Task/Future的列表（完成的协程和未完成的协程两个列表）；</p></li>
+<li><p><code>asyncio.gather</code>相当于全程黑盒，只告诉你协程的结果；</p></li>
+<li><p><code>asyncio.gather</code>的可以将Task分组，示例如下：</p>
+<pre><code><code>import asyncio
+async def get_url(url):
+   print(&#39;start get_url&#39;)
+   await asyncio.sleep(2)
+   print(&#39;end get_url&#39;)
+   return &#39;Joshua&#39;
+
+if __name__==&quot;__main__&quot;:
+   loop = asyncio.get_event_loop()
+   # 将url分组
+   group1 = [get_url(&#39;https://www.baidu.com&#39;) for _ in range(10)]
+   group2= [get_url(&#39;https://www.baidu.com&#39;) for _ in range(10)]
+   group1.cancel()  # 将第一组任务取消
+   loop.run_until_complete(asyncio.gather(*group1,*group2))</code></pre></li>
+<li><p><code>asyncio.wait</code>会返回执行完成的和未完成的任务，你可以在其运行中做一些操作，如上面的<code>return_when</code>返回实际条件来控制什么时候返回，如果你想要执行的结果需要自行从完成的任务里面用result方法取；</p></li>
+<li><p>获取返回结果的示例如下：</p>
+<pre><code><code>tasks = [Task1,Task2,Task3]
+# gather的获取结果方法
+results = await asyncio.gather(*tasks)  # 注意此处gather方法不支持可迭代对象做参数，需要加*脱掉[]
+
+# wait的获取结果方法
+# 第一种
+done,pending = await asyncio.wait(tasks)  # 标准格式的wait方法
+results = [task.result() for task in done]
+# 第二种
+await asyncio.wait(tasks)
+results = [task.result() for task in tasks]</code></pre></li>
+</ol>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

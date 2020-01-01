@@ -1,0 +1,1027 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python基础（十七）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python基础（十七）</center></div><div class='banquan'>原文出处:本文由博客园博主天狼大大提供。<br/>
+原文连接:https://www.cnblogs.com/tianlangdada/p/11628400.html</div><br>
+    <h1 id="今日主要内容">今日主要内容</h1>
+<ul>
+<li>正则表达式</li>
+<li>logging模块</li>
+</ul>
+<h1 id="一正则表达式">一、正则表达式</h1>
+<h2 id="一什么是正则表达式">（一）什么是正则表达式</h2>
+<ol>
+<li>正则表达式的定义：
+<ul>
+<li>是对字符串操作的一种逻辑公式，就是用事先定义好的一些特定字符、及这些特定字符的组合，组成一个“规则字符串”，这个“规则字符串”用来表达对字符串的一种过滤逻辑。</li>
+<li>简单来说，我们使用正则表达式就是为了对字符串进行 <strong>匹配</strong> 和 <strong>过滤</strong></li>
+</ul></li>
+<li>正则表达式的特点：
+<ul>
+<li>灵活性强、逻辑性强、功能性强</li>
+<li>可以迅速的用极简单的方式控制复杂的字符串</li>
+</ul></li>
+</ol>
+<h2 id="二正则表达式的构成">（二）正则表达式的构成</h2>
+<ul>
+<li>正则表达式由<strong>普通字符</strong>和<strong>元字符</strong>构成
+<ul>
+<li>普通字符</li>
+<li>元字符</li>
+</ul></li>
+</ul>
+<ol>
+<li><p>普通字符</p>
+<ul>
+<li><p>普通字符包括：大小写字母、数字，在匹配普通字符的时候直接写就可以了，Python也能实现同样的效果，很简单</p>
+<ul>
+<li>利用<code>re</code>模块，返回正则表达式匹配过滤出来的字符</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnbzxdnb&quot;
+print(re.findall(&quot;zxd&quot;, s))  # 普通字符，直接写就好了
+
+运行结果：
+[&#39;zxd&#39;, &#39;zxd&#39;]  # 成功匹配过滤</code></pre>
+<ul>
+<li>Python基础逻辑也可以实现</li>
+</ul>
+<pre><code><code>s = &quot;zxdnbzxdnb&quot;
+
+print(&quot;zxd&quot; in s)  # 是否存在
+print(s.count(&quot;zxd&quot;))  # 存在几个
+print([&quot;zxd&quot;] * 2)  # 打印出来就好了
+
+运行结果：
+True
+2
+[&#39;zxd&#39;, &#39;zxd&#39;]  # 实现同样的效果</code></pre></li>
+</ul></li>
+<li><p>元字符</p>
+<ul>
+<li><p>元字符才是正则表达式的灵魂所在，介绍部分内容:</p>
+<ul>
+<li>字符组</li>
+<li>常用元字符（单一匹配）</li>
+<li>量词</li>
+</ul></li>
+<li><p>字符组</p>
+<ul>
+<li><p>字符组用<code>[]</code>表示，<code>[]</code>中出现的内容会被匹配到</p>
+<p>例：匹配到字符串<code>&quot;zxdhnbzxdznbzxdtnb&quot;</code>中的<code>&quot;hnb&quot;</code> <code>&quot;znb&quot;</code> <code>&quot;tnb&quot;</code></p>
+<pre><code><code>import re
+
+s = &quot;zxdhnbzxdznbzxdtnb&quot;
+print(re.findall(&quot;[hzt]nb&quot;, s))
+
+运行结果：
+[&#39;hnb&#39;, &#39;znb&#39;, &#39;tnb&#39;]  # 将字符串中含有&quot;hnb&quot;、&quot;znb&quot;、&quot;tnb&quot;的部分过滤出来</code></pre></li>
+<li><p><code>[]</code>还可填入一个范围，比如<code>[0-9a-zA-Z]</code>它可以匹配字符串中0到9，a到z，A到Z中的字符</p>
+<p>例：匹配到字符串<code>&quot;zxd123456zxdznb&quot;</code>中的数字</p>
+<pre><code><code>import re
+
+s = &quot;zxd123456zxdznb&quot;
+print(re.findall(&quot;[0-9]&quot;, s))
+
+运行结果：
+[&#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;]  # 匹配到字符串中的0到9的数字</code></pre></li>
+<li><p>范围遵循ascii码的从小到大规定，比如<code>[A-z]</code>可以匹配之间的所有字符，但<code>[a-Z]</code>只能匹配到a</p>
+<pre><code><code>import re
+
+s = &quot;asdzxcqwe123!@#&quot;
+print(re.findall(&quot;[A-z]&quot;, s))
+print(re.findall(&quot;[a-Z]&quot;, s))
+
+运行结果：
+[&#39;a&#39;, &#39;s&#39;, &#39;d&#39;, &#39;z&#39;, &#39;x&#39;, &#39;c&#39;, &#39;q&#39;, &#39;w&#39;, &#39;e&#39;]  # [A-z]匹配成功
+sre_constants.error: bad character range a-Z at position 1  # [a-Z]报错</code></pre></li>
+<li><p>字符组还可以反向过滤，在<code>[]</code>中加入<code>^</code>，比如<code>[^123]</code>它可以匹配字符串中除了123以外的所有字符</p>
+<p>例：匹配到字符串<code>&quot;zxdznb123456789&quot;</code>中除数字以外的字符</p>
+<pre><code><code>import re
+
+s = &quot;zxdznb123456789&quot;
+print(re.findall(&quot;[^0-9]&quot;, s))
+
+运行结果：
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;z&#39;, &#39;n&#39;, &#39;b&#39;]  # 匹配到字符串中除数字以外的字符</code></pre></li>
+<li><p>应用举例：通过匹配判断手机号输入是否正确（有点low的例子）</p>
+<pre><code><code>import re
+
+number = input(&quot;手机号:&quot;)
+if len(number) != 11:
+    print(&quot;手机号输入有误！&quot;)
+else:
+ num = re.findall(&quot;[1][3-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]&quot;, number)
+    if not num:
+        print(&quot;手机号格式不正确！&quot;)
+    else:
+        print(&quot;手机号可以使用！&quot;)</code></pre></li>
+</ul></li>
+<li><p>常用元字符（单一匹配）</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>\w</strong></th>
+<th><strong>匹配字母（含中文）、数字、下划线</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>\W</strong></td>
+<td><strong>匹配非字母（含中文）、数字、下划线</strong></td>
+</tr>
+<tr class="even">
+<td><strong>\s</strong></td>
+<td><strong>匹配空白符</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>\S</strong></td>
+<td><strong>匹配非空白符</strong></td>
+</tr>
+<tr class="even">
+<td><strong>\d</strong></td>
+<td><strong>匹配数字</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>\D</strong></td>
+<td><strong>匹配非数字</strong></td>
+</tr>
+<tr class="even">
+<td><strong>\b</strong></td>
+<td><strong>匹配单词的边界</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>\B</strong></td>
+<td><strong>匹配非单词的边界</strong></td>
+</tr>
+<tr class="even">
+<td><strong>\A</strong></td>
+<td><strong>匹配字符串的开始</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>^</strong></td>
+<td><strong>匹配字符串的开始</strong></td>
+</tr>
+<tr class="even">
+<td><strong>\Z</strong></td>
+<td><strong>匹配字符串的结尾</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>$</strong></td>
+<td><strong>匹配字符串的结尾</strong></td>
+</tr>
+<tr class="even">
+<td><strong>\n</strong></td>
+<td><strong>匹配一个换行符</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>\t</strong></td>
+<td><strong>匹配一个制表符</strong></td>
+</tr>
+<tr class="even">
+<td><strong>.</strong></td>
+<td><strong>匹配除换行符以外任意字符</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>a|b</strong></td>
+<td><strong>匹配字符a或b</strong></td>
+</tr>
+<tr class="even">
+<td><strong>()</strong></td>
+<td><strong>分组，匹配括号内的表达式</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>[]</strong></td>
+<td><strong>匹配字符组内的字符</strong></td>
+</tr>
+<tr class="even">
+<td><strong>[^]</strong></td>
+<td><strong>匹配除字符组以外的字符</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p><strong>\w</strong> ：匹配字符串中字母（含中文）、数字、下划线</p>
+<p>例：匹配到字符串<code>&quot;zxd123\n456！@#￥&quot;</code>中的字母和数字</p>
+<pre><code><code>import re
+
+s = &quot;zxd123\n456！@#￥&quot;
+print(re.findall(&quot;\w&quot;, s))
+
+运行结果：
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;]</code></pre></li>
+<li><p><strong>\W</strong> ：匹配字符串中非字母（含中文）、数字、下划线</p>
+<p>例：匹配到字符串<code>&quot;zxd123\n456！@#￥&quot;</code>中的非字母和数字的内容</p>
+<pre><code><code>import re
+
+s = &quot;zxd123\n456！@#￥&quot;
+print(re.findall(&quot;\W&quot;, s))
+
+运行结果：
+[&#39;\n&#39;, &#39;！&#39;, &#39;@&#39;, &#39;#&#39;, &#39;￥&#39;]</code></pre></li>
+<li><p><strong>\s</strong> ：匹配空白符（包含空格、制表符和换行符 ）</p>
+<p>例：匹配到字符串<code>&quot;zxd  \t123  \n456  ！@#￥&quot;</code>中的空白符</p>
+<pre><code><code>import re
+
+s = &quot;zxd  \t123  \n456  ！@#￥&quot;
+print(re.findall(&quot;\s&quot;, s))
+
+运行结果：
+[&#39; &#39;, &#39; &#39;, &#39;\t&#39;, &#39; &#39;, &#39; &#39;, &#39;\n&#39;, &#39; &#39;, &#39; &#39;]</code></pre></li>
+<li><p><strong>\S</strong> ：匹配非空白符</p>
+<p>例：匹配到字符串<code>&quot;zxd  \t123  \n456  ！@#￥&quot;</code>中非空白符的内容</p>
+<pre><code><code>import re
+
+s = &quot;zxd  \t123  \n456  ！@#￥&quot;
+print(re.findall(&quot;\S&quot;, s))
+
+运行结果：
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;, &#39;！&#39;, &#39;@&#39;, &#39;#&#39;, &#39;￥&#39;]</code></pre></li>
+<li><p><strong>\d</strong> ：匹配数字</p>
+<p>例：匹配到字符串<code>&quot;zxd123456zxdznb&quot;</code>中的数字</p>
+<pre><code><code>import re
+
+s = &quot;zxd123456zxdznb&quot;
+print(re.findall(&quot;\d&quot;, s))
+
+运行结果：
+[&#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;]</code></pre></li>
+<li><p><strong>\D</strong> ：匹配非数字</p>
+<p>例：匹配到字符串<code>&quot;zxd123456zxdznb&quot;</code>中的非数字的内容</p>
+<pre><code><code>import re
+
+s = &quot;zxd123456zxdznb&quot;
+print(re.findall(&quot;\D&quot;, s))
+
+运行结果：
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;z&#39;, &#39;n&#39;, &#39;b&#39;]</code></pre></li>
+<li><p><strong>\b</strong> ：匹配单词边界</p>
+<p>例：匹配到字符串<code>&quot;周杰伦-麻花藤-潘长江-赵本山-林俊周-韩周鸿-周猩猩-周星&quot;</code>中所有姓周的人名</p>
+<pre><code><code>import re
+
+s = &quot;周杰伦-麻花藤-潘长江-赵本山-林俊周-韩周鸿-周猩猩-周星&quot;
+print(re.findall(r&quot;\b周\w+&quot;, s))
+
+运行结果：
+[&#39;周杰伦&#39;, &#39;周猩猩&#39;, &#39;周星&#39;]</code></pre></li>
+<li><p><strong>\B</strong> ：匹配非单词边界</p>
+<p>例：匹配到字符串<code>&quot;周杰伦-麻花藤-潘长江-赵本山-林俊周-韩周鸿-周猩猩-周星&quot;</code>中所有名带有周的人</p>
+<pre><code><code>import re
+
+s = &quot;周杰伦-麻花藤-潘长江-赵本山-林俊周-韩周鸿-周猩猩-周星&quot;
+print(re.findall(r&quot;\w+\B周\w*&quot;, s))
+
+运行结果：
+[&#39;林俊周&#39;, &#39;韩周鸿&#39;]</code></pre></li>
+<li><p><strong>\A</strong> ：匹配字符串的开头（不常用，知道就行）</p>
+<p>例：匹配到字符串<code>&quot;zxdhnbzxdznb&quot;</code>的开头</p>
+<pre><code><code>import re
+
+s = &quot;zxdhnbzxdznb&quot;
+print(re.findall(&quot;\A\w&quot;, s))
+
+运行结果：
+[&#39;z&#39;]</code></pre></li>
+<li><p><strong>^</strong> ：匹配字符串的开头（常用）</p>
+<p>例：匹配到字符串<code>&quot;zxdhnbzxdznb&quot;</code>的开头</p>
+<pre><code><code>import re
+
+s = &quot;zxdhnbzxdznb&quot;
+print(re.findall(&quot;^\w&quot;, s))
+
+运行结果：
+[&#39;z&#39;]</code></pre></li>
+<li><p><strong>\Z</strong> ：匹配字符串的结尾（不常用，知道就行）</p>
+<p>例：匹配到字符串<code>&quot;zxdhnbzxdznb&quot;</code>的结尾</p>
+<pre><code><code>import re
+
+s = &quot;zxdhnbzxdznb&quot;
+print(re.findall(&quot;\w\Z&quot;, s))
+
+运行结果：
+[&#39;b&#39;]</code></pre></li>
+<li><p><strong>$</strong> ：匹配字符串的结尾（常用）</p>
+<p>例：匹配到字符串<code>&quot;zxdhnbzxdznb&quot;</code>的结尾</p>
+<pre><code><code>import re
+
+s = &quot;zxdhnbzxdznb&quot;
+print(re.findall(&quot;\w$&quot;, s))
+
+运行结果：
+[&#39;b&#39;]</code></pre></li>
+<li><p><strong>^</strong> 和 <strong>$</strong> 结合使用时，两者之间的长度一定要和待匹配的字符串长度相同，否则匹配不上</p>
+<pre><code><code>import re
+
+s = &quot;zxdznb666&quot;
+print(re.findall(&quot;^zxdznb666$&quot;, s))
+print(re.findall(&quot;^zxdznb$&quot;, s))
+
+运行结果：
+[&#39;zxdznb666&#39;]
+[]</code></pre></li>
+<li><p><strong>^</strong> 和 <strong>$</strong> 的应用举例：通过匹配判断手机号输入是否正确（升级版，还是很low）</p>
+<pre><code><code>import re
+
+number = input(&quot;手机号:&quot;)
+num = re.findall(&quot;^[1][3-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]$&quot;, number)  # 匹配到以1开头，以0到9结尾的一串11位数字
+if not num:
+    print(&quot;手机号格式不正确！&quot;)
+else:
+ print(&quot;手机号可以使用！&quot;)</code></pre></li>
+<li><p><strong>\n</strong> ：匹配换行符</p>
+<p>例：匹配到字符串<code>&quot;zxd  \t123  \n456  ！@#$&quot;</code>中的换行符</p>
+<pre><code><code>import re
+
+s = &quot;zxd  \t123  \n456  ！@#$&quot;
+print(re.findall(&quot;\n&quot;, s))
+
+运行结果：
+[&#39;\n&#39;]</code></pre></li>
+<li><p><strong>\t</strong> ：匹配制表符</p>
+<p>例：匹配到字符串<code>&quot;zxd  \t123  \n456  ！@#$&quot;</code>中的制表符</p>
+<pre><code><code>import re
+
+s = &quot;zxd  \t123  \n456  ！@#$&quot;
+print(re.findall(&quot;\t&quot;, s))
+
+运行结果：
+[&#39;\t&#39;]</code></pre></li>
+<li><p><strong>.</strong> ：匹配除换行符任意的字符，当指定<code>re.DOTALL</code>时，可以匹配含换行符以内的任意字符</p>
+<p>例：匹配字符串<code>&quot;zxd123\n456&quot;</code>中所有内容（含换行符|不含换行符)</p>
+<pre><code><code>import re
+
+s = &quot;zxd123\n456&quot;
+print(re.findall(&quot;.&quot;, s))
+print(re.findall(&quot;.&quot;, s, re.DOTALL))
+
+运行结果：
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;]
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;\n&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;]</code></pre></li>
+<li><p><strong>a|b</strong> ：匹配字符a或b，优先匹配前面，只要前面匹配到了后面就不看了，继续向下匹配</p>
+<p>例：匹配到字符串<code>&quot;zxdnb666zxd&quot;</code>中的<code>zxd</code> 和<code>666</code></p>
+<pre><code><code>import re
+
+s = &quot;zxdnb666zxd&quot;
+print(re.findall(&quot;zxd|666&quot;, s))
+
+运行结果：
+[&#39;zxd&#39;, &#39;666&#39;, &#39;zxd&#39;]</code></pre></li>
+<li><p><strong>()</strong> ：分组，匹配括号内的表达式，可以在括号两端增加限制</p>
+<p>例：匹配到字符串<code>&quot;zxdnb66zxd66zxd&quot;</code>中的<code>zxd</code>，只匹配到66中间的<code>zxd</code></p>
+<pre><code><code>import re
+
+s = &quot;zxdnb66zxd66zxd&quot;
+print(re.findall(&quot;(zxd)&quot;, s))
+print(re.findall(&quot;66(zxd)66&quot;, s))
+
+运行结果：
+[&#39;zxd&#39;, &#39;zxd&#39;, &#39;zxd&#39;]
+[&#39;zxd&#39;]</code></pre></li>
+<li><p><strong>[]</strong> ：匹配字符组范围内的字符</p></li>
+<li><p><strong>[^]</strong> ：匹配非字符组范围内的字符</p></li>
+</ul></li>
+<li><p>量词（多个匹配）</p>
+<table>
+<thead>
+<tr class="header">
+<th>*****</th>
+<th><strong>重复零次或更多次</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>+</strong></td>
+<td><strong>重复一次或更多次</strong></td>
+</tr>
+<tr class="even">
+<td><strong>？</strong></td>
+<td><strong>重复零次或一次</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>{n}</strong></td>
+<td><strong>重复n次</strong></td>
+</tr>
+<tr class="even">
+<td><strong>{n,}</strong></td>
+<td><strong>重复n次或更多次</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>{n,m}</strong></td>
+<td><strong>重复n到m次</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>***** ：重复零次或更多次</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66zxd66zxd&quot;
+print(re.findall(&quot;6*&quot;, s))
+
+运行结果：
+ [&#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;66&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;66&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;]</code></pre>
+<ul>
+<li><strong>+</strong> ：重复一次或更多次</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66zxd66zxd&quot;
+print(re.findall(&quot;6+&quot;, s)) 
+
+运行结果：
+[&#39;66&#39;, &#39;66&#39;]</code></pre>
+<ul>
+<li><strong>？</strong>：重复零次或一次</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66zxd66zxd&quot;
+print(re.findall(&quot;6?&quot;, s))
+
+运行结果：
+[&#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;6&#39;, &#39;6&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;6&#39;, &#39;6&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;, &#39;&#39;]</code></pre>
+<ul>
+<li><strong>{n}</strong> ：重复n次</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66zxd66zxd&quot;
+print(re.findall(&quot;\w{3}&quot;, s))
+
+运行结果：
+[&#39;zxd&#39;, &#39;nb6&#39;, &#39;6zx&#39;, &#39;d66&#39;, &#39;zxd&#39;]</code></pre>
+<ul>
+<li><strong>{n,}</strong> ：重复n次或更多次</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66-zxd-6-6zxd&quot;
+print(re.findall(&quot;\w{3,}&quot;, s))
+
+运行结果：
+[&#39;zxdnb66&#39;, &#39;zxd&#39;, &#39;6zxd&#39;]</code></pre>
+<ul>
+<li><strong>{n,m}</strong> ：重复n到m次</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66-zxd-6-6zxd&quot;
+print(re.findall(&quot;\w{3,5}&quot;, s))
+
+运行结果：
+[&#39;zxdnb&#39;, &#39;zxd&#39;, &#39;6zxd&#39;]</code></pre>
+<ul>
+<li><strong>{}</strong> 的应用举例：通过匹配判断手机号输入是否正确（再次升级版）</li>
+</ul>
+<pre><code><code>import re
+
+number = input(&quot;手机号:&quot;)
+num = re.findall(&quot;^[1][3-9][0-9]{9}$&quot;, number)  # 匹配到以1开头，以0到9结尾的一串11位数字
+if not num:
+    print(&quot;手机号格式不正确！&quot;)
+else:
+   print(&quot;手机号可以使用！&quot;)</code></pre></li>
+</ul></li>
+<li><p>贪婪匹配和非贪婪匹配（惰性匹配）</p>
+<ul>
+<li><p>贪婪匹配：<strong>尽可能多的匹配</strong>，量词中的 <code>*  +  {}</code> 都是贪婪匹配</p>
+<pre><code><code>import re
+
+s = &quot;zxdznb666&quot;
+print(re.findall(&quot;\w*&quot;, s))
+print(re.findall(&quot;\w+&quot;, s))
+print(re.findall(&quot;\w{1,3}&quot;, s))
+
+运行结果：
+[&#39;zxdznb666&#39;, &#39;&#39;]
+[&#39;zxdznb666&#39;]
+[&#39;zxd&#39;, &#39;znb&#39;, &#39;666&#39;]</code></pre>
+<ul>
+<li>贪婪匹配底层运用到的算法：回溯算法</li>
+</ul>
+<p><img src="./images/python基础（十七）0.png" /></p></li>
+<li><p>非贪婪匹配（惰性匹配）：尽可能少的匹配，量词中的 <code>?</code> 是非贪婪匹配</p>
+<pre><code><code>import re
+
+s = &quot;zxdznb666&quot;
+print(re.findall(&quot;\w{1,3}?&quot;, s))
+
+运行结果：
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;z&#39;, &#39;n&#39;, &#39;b&#39;, &#39;6&#39;, &#39;6&#39;, &#39;6&#39;]</code></pre>
+<ul>
+<li>非贪婪匹配底层用到的算法：先去找结束的值，再去判断规则</li>
+</ul>
+<p><img src="./images/python基础（十七）1.png" /></p></li>
+</ul></li>
+<li><p>转义：定义规则时，会遇到类似于\n这样的具有特殊意义的词，可以使用转义表示，转义有两种方式：</p>
+<ul>
+<li>方式一：<code>\\n</code></li>
+<li>方式二：<code>r&quot;\n&quot;</code></li>
+</ul></li>
+</ol>
+<h2 id="三正则模块re">（三）正则模块re</h2>
+<ul>
+<li><p>核心方法：</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>re.findall()</strong></th>
+<th><strong>按规则查找，返回list</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>re,finditer()</strong></td>
+<td><strong>按规则查找，返回一个迭代器，通过group方法取值</strong></td>
+</tr>
+<tr class="even">
+<td><strong>re.search()</strong></td>
+<td><strong>任意位置匹配，匹配到就返回结果，没匹配上返回None</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>re.match()</strong></td>
+<td><strong>只能从字符串开头开始匹配，匹配到就返回结果，匹配不到返回None</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p><strong>re.findall()</strong></p>
+<ul>
+<li>函数定义：<code>findall(pattern, string, flags=0)</code></li>
+<li>函数说明：按规则查找，返回一个列表</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxd123\n456！@#￥&quot;
+print(re.findall(&quot;\w&quot;, s))
+
+运行结果：
+[&#39;z&#39;, &#39;x&#39;, &#39;d&#39;, &#39;1&#39;, &#39;2&#39;, &#39;3&#39;, &#39;4&#39;, &#39;5&#39;, &#39;6&#39;]</code></pre></li>
+<li><p><strong>re,finditer()</strong></p>
+<ul>
+<li>函数定义：<code>finditer(pattern, string, flags=0)</code></li>
+<li>函数说明：按规则查找，返回一个迭代器，通过group方法取值</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxd&quot;
+it = re.finditer(&quot;\w&quot;, s)
+for el in it:
+    print(el.group())
+
+运行结果：
+z
+x
+d</code></pre></li>
+<li><p><strong>re.search()</strong></p>
+<ul>
+<li>函数定义：<code>search(pattern, string, flags=0)</code></li>
+<li>函数说明：任意位置匹配，匹配到就返回结果，没匹配上返回None</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66-zxd-6-6zxd&quot;
+print(re.search(r&quot;\w+&quot;, s).group())
+
+运行结果：
+zxdnb66</code></pre>
+<ul>
+<li>还可以给分组起名称，利用名称输出
+<ul>
+<li>格式为：<code>?P&lt;名称&gt;</code></li>
+</ul></li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;&lt;h1&gt;hello&lt;/h1&gt;&quot;
+ret = re.search(&quot;&lt;(?P&lt;h&gt;\w+)&gt;(?P&lt;h1&gt;\w+)&lt;/(?P&lt;h2&gt;\w+)&gt;&quot;,s)
+print(ret.group(&quot;h&quot;))
+print(ret.group(&quot;h1&quot;))
+print(ret.group(&quot;h2&quot;))
+
+运行结果：
+h1
+hello
+h1</code></pre></li>
+<li><p><strong>re.match()</strong></p>
+<ul>
+<li>函数定义：<code>match(pattern, string, flags=0)</code></li>
+<li>函数说明：只能从字符串开头开始匹配，匹配到就返回结果，匹配不到返回None</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxdnb66-zxd-6-6zxd&quot;
+print(re.match(r&quot;\w+&quot;, s).group())
+
+s = &quot;-zxdnb66-zxd-6-6zxd&quot;
+print(re.match(r&quot;\w+&quot;, s))
+
+运行结果：
+zxdnb66
+None</code></pre></li>
+</ul></li>
+<li><p>其他方法</p>
+<table>
+<thead>
+<tr class="header">
+<th><strong>re.split()</strong></th>
+<th><strong>可按照任意分隔符进行分隔</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>re.sub()</strong></td>
+<td><strong>替换</strong></td>
+</tr>
+<tr class="even">
+<td><strong>re.compile()</strong></td>
+<td><strong>编译规则</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><p><strong>re.split()</strong></p>
+<ul>
+<li>函数定义：<code>split(pattern, string, maxsplit=0, flags=0)</code></li>
+<li>函数说明：按照填入的参数进行切割，返回一个列表，将填入的参数用括号括起来，则在返回的列表中保留切割参数，还可指定最大切割次数，剩余部分作为最后一个元素存放在列表中</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxd-nb-666-777-888&quot;
+print(re.split(&quot;-&quot;, s))
+print(re.split(&quot;(-)&quot;, s))
+print(re.split(&quot;-&quot;, s, maxsplit=2))
+
+运行结果：
+[&#39;zxd&#39;, &#39;nb&#39;, &#39;666&#39;, &#39;777&#39;, &#39;888&#39;]
+[&#39;zxd&#39;, &#39;-&#39;, &#39;nb&#39;, &#39;-&#39;, &#39;666&#39;, &#39;-&#39;, &#39;777&#39;, &#39;-&#39;, &#39;888&#39;]
+[&#39;zxd&#39;, &#39;nb&#39;, &#39;666-777-888&#39;]</code></pre></li>
+<li><p><strong>re.sub()</strong></p>
+<ul>
+<li>函数定义：<code>sub(pattern, repl, string, count=0, flags=0)</code></li>
+<li>函数说明：替换，可以通过count控制替换次数</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxd-nb-666-777-888&quot;
+print(re.sub(&quot;-&quot;, &quot;|&quot;, s))
+print(re.sub(&quot;-&quot;, &quot;|&quot;, s, 2))
+
+运行结果：
+zxd|nb|666|777|888
+zxd|nb|666-777-888</code></pre></li>
+<li><p><strong>re.compile()</strong></p>
+<ul>
+<li>函数定义：<code>compile(pattern, flags=0)</code></li>
+<li>函数说明：编译一个正则表达式，返回一个规则对象</li>
+</ul>
+<pre><code><code>import re
+
+s = &quot;zxd-nb-666-777-888&quot;
+obj = re.compile(&quot;\w+&quot;)
+print(obj.findall(s))
+
+运行结果：
+[&#39;zxd&#39;, &#39;nb&#39;, &#39;666&#39;, &#39;777&#39;, &#39;888&#39;]</code></pre></li>
+</ul></li>
+</ul>
+<h1 id="二logging模块">二、logging模块</h1>
+<h2 id="一什么是日志">（一）什么是日志</h2>
+<ul>
+<li>我们在编写代码的时候，会报很多的错误，错误信息是不会自动生成的，这些错误信息是编写python解释器的程序员们预先写好的日志加入到程序中，如过触发了某种条件会显示到中控台上，我们在写程序的过程中也会不断调试，我们调试的方法一般都是使用<code>print</code>打印出来，这就可以通过日志显示和记录</li>
+<li>在python中使用logging模块就可以自定义日志，在我们编写程序的时候，就可以利用自定义日志来进行显示和记录</li>
+<li>最重要的一点，日志是给程序员看的，需要给用户看的还是需要print出来</li>
+</ul>
+<h2 id="二logging模块-1">（二）logging模块</h2>
+<ol>
+<li><p>logging模块的使用：</p>
+<ul>
+<li>基础配置型：简单、可定制化差</li>
+<li>对象配置型：复杂、可定制化强</li>
+</ul></li>
+<li><p>日志分级</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">日志分级</th>
+<th style="text-align: center;">对应解释</th>
+<th style="text-align: center;">级别数值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;"><strong>debug</strong></td>
+<td style="text-align: center;"><strong>调试</strong></td>
+<td style="text-align: center;"><strong>10</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>info</strong></td>
+<td style="text-align: center;"><strong>信息</strong></td>
+<td style="text-align: center;"><strong>20</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>warning</strong></td>
+<td style="text-align: center;"><strong>警告</strong></td>
+<td style="text-align: center;"><strong>30</strong></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;"><strong>error</strong></td>
+<td style="text-align: center;"><strong>错误</strong></td>
+<td style="text-align: center;"><strong>40</strong></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;"><strong>critical</strong></td>
+<td style="text-align: center;"><strong>危险</strong></td>
+<td style="text-align: center;"><strong>50</strong></td>
+</tr>
+</tbody>
+</table></li>
+<li><p>函数式简单配置</p>
+<ul>
+<li>基础版日志</li>
+</ul>
+<pre><code><code>import logging
+
+logging.debug(&#39;debug message&#39;)        # 调试
+logging.info(&#39;info message&#39;)          # 信息
+logging.warning(&#39;warning message&#39;)    # 警告
+logging.error(&#39;error message&#39;)        # 错误
+logging.critical(&#39;critical message&#39;)  # 危险
+
+运行结果：
+WARNING:root:warning message
+ERROR:root:error message
+CRITICAL:root:critical message</code></pre>
+<ul>
+<li><p>说明：</p>
+<ol>
+<li>运行时显示的的结果只有<code>warning</code>、<code>error</code>、<code>critical</code>三个级别的日志信息，logging模块默认从<code>warning</code>级别（30）的日志开始输出</li>
+<li>输出的日志由日志级别、用户名、日志信息三部分构成</li>
+</ol></li>
+<li><p>通过日志配置函数 <code>logging.basicConfig()</code> 可以调整输出级别、日志内容等信息，配置函数如下：</p>
+<ul>
+<li>函数定义：<code>basicConfig(**kwargs)</code></li>
+<li>关键字参数说明：</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th><strong>filename</strong></th>
+<th><strong>指定文件，日志内容将会存储在文件中</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>filemode</strong></td>
+<td><strong>文件打开方式，指定了filename后才能指定，默认为&quot;a&quot;</strong></td>
+</tr>
+<tr class="even">
+<td><strong>format</strong></td>
+<td><strong>日志显示格式，参数如下</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>datefmt</strong></td>
+<td><strong>时间显示格式</strong></td>
+</tr>
+<tr class="even">
+<td><strong>level</strong></td>
+<td><strong>日志级别</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>format</strong> 参数说明：</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th><strong>%(name)s</strong></th>
+<th><strong>Logger的名字</strong></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>%(levelno)s</strong></td>
+<td><strong>数字形式的日志级别</strong></td>
+</tr>
+<tr class="even">
+<td><strong>%(levelname)s</strong></td>
+<td><strong>文本形式的日志级别</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>%(pathname)s</strong></td>
+<td><strong>调用日志输出函数的模块的完整路径名，可能没有</strong></td>
+</tr>
+<tr class="even">
+<td><strong>%(filename)s</strong></td>
+<td><strong>调用日志输出函数的模块的文件名</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>%(module)s</strong></td>
+<td><strong>调用日志输出函数的模块名</strong></td>
+</tr>
+<tr class="even">
+<td><strong>%(funcName)s</strong></td>
+<td><strong>调用日志输出函数的函数名</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>%(lineno)d</strong></td>
+<td><strong>调用日志输出函数的语句所在的代码行</strong></td>
+</tr>
+<tr class="even">
+<td><strong>%(created)f</strong></td>
+<td><strong>当前时间，用UNIX标准的表示时间的浮点数表示</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>%(relativeCreated)d</strong></td>
+<td><strong>输出日志信息时，自Logger创建以来的毫秒数</strong></td>
+</tr>
+<tr class="even">
+<td><strong>%(asctime)s</strong></td>
+<td><strong>字符串形式的当前时间。默认格式是 “2003-07-08 16:49:45,896”。</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>%(thread)d</strong></td>
+<td><strong>线程ID。可能没有</strong></td>
+</tr>
+<tr class="even">
+<td><strong>%(threadName)s</strong></td>
+<td><strong>线程名。可能没有</strong></td>
+</tr>
+<tr class="odd">
+<td><strong>%(process)d</strong></td>
+<td><strong>进程ID。可能没有</strong></td>
+</tr>
+<tr class="even">
+<td><strong>%(message)s</strong></td>
+<td><strong>用户输出的消息</strong></td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>举例：</li>
+</ul>
+<pre><code><code>import logging
+
+logging.basicConfig(level=logging.DEBUG,  # 调整日志输出等级
+                    format=&quot;Time:&#39;%(asctime)s&#39; FilePath:&#39;%(pathname)s&#39; [line:%(lineno)d] %(levelname)s Message:&#39;%(message)s&#39;&quot;,
+                    datefmt=&#39;%Y-%m-%d %H:%M:%S&#39;)
+logging.debug(&#39;debug message&#39;)
+logging.info(&#39;info message&#39;)
+logging.warning(&#39;warning message&#39;)
+logging.error(&#39;error message&#39;)
+logging.critical(&#39;critical message&#39;)
+
+运行结果：
+Time:&#39;2019-10-03 15:09:06&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:226] DEBUG Message:&#39;debug message&#39;
+Time:&#39;2019-10-03 15:09:06&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:227] INFO Message:&#39;info message&#39;
+Time:&#39;2019-10-03 15:09:06&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:228] WARNING Message:&#39;warning message&#39;
+Time:&#39;2019-10-03 15:09:06&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:229] ERROR Message:&#39;error message&#39;
+Time:&#39;2019-10-03 15:09:06&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:230] CRITICAL Message:&#39;critical message&#39;</code></pre></li>
+</ul></li>
+<li><p>列举三个应用，理解日志的用法</p>
+<ul>
+<li><code>logging.debug()</code>的应用</li>
+</ul>
+<pre><code><code>import logging
+
+logging.basicConfig(level=logging.DEBUG,  # 这里可以通过修改输出等级来控制需要调试的时候输出
+                    format=&quot;Time:&#39;%(asctime)s&#39; FilePath:&#39;%(pathname)s&#39; [line:%(lineno)d] %(levelname)s Message:&#39;%(message)s&#39;&quot;,
+                    datefmt=&#39;%Y-%m-%d %H:%M:%S&#39;)
+lst = list()
+for el in range(5):
+    lst.append(el)
+    logging.debug(lst)
+print(lst)
+
+运行结果：
+[0, 1, 2, 3, 4]  # 并发问题导致先输出lst
+Time:&#39;2019-10-03 17:16:49&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:239] DEBUG Message:&#39;[0]&#39;
+Time:&#39;2019-10-03 17:16:49&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:239] DEBUG Message:&#39;[0, 1]&#39;
+Time:&#39;2019-10-03 17:16:49&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:239] DEBUG Message:&#39;[0, 1, 2]&#39;
+Time:&#39;2019-10-03 17:16:49&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:239] DEBUG Message:&#39;[0, 1, 2, 3]&#39;
+Time:&#39;2019-10-03 17:16:49&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:239] DEBUG Message:&#39;[0, 1, 2, 3, 4]&#39;</code></pre>
+<ul>
+<li><code>logging.info()</code>的应用</li>
+</ul>
+<pre><code><code>import logging
+
+logging.basicConfig(level=logging.INFO,
+                    format=&quot;Time:&#39;%(asctime)s&#39; FilePath:&#39;%(pathname)s&#39; [line:%(lineno)d] %(levelname)s Message:&#39;%(message)s&#39;&quot;,
+                    datefmt=&#39;%Y-%m-%d %H:%M:%S&#39;)
+userinfo = dict()
+user = input(&quot;账号:&quot;)
+pwd = input(&quot;密码:&quot;)
+userinfo[user] = pwd
+logging.info(f&quot;注册的账号:{user},注册的密码:{pwd}&quot;)  # 记录程序运行时的信息
+
+运行结果：
+账号:zxd
+密码:zxd123
+Time:&#39;2019-10-03 17:35:07&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:251] INFO Message:&#39;注册的账号:zxd,注册的密码:zxd123&#39;</code></pre>
+<ul>
+<li><code>logging.error()</code>的应用</li>
+</ul>
+<pre><code><code>import logging
+
+logging.basicConfig(level=logging.INFO,
+                    format=&quot;Time:&#39;%(asctime)s&#39; FilePath:&#39;%(pathname)s&#39; [line:%(lineno)d] %(levelname)s Message:&#39;%(message)s&#39;&quot;,
+                    datefmt=&#39;%Y-%m-%d %H:%M:%S&#39;)
+try:
+    def division(a, b):
+        c = a / b
+        return c
+
+    division(3, 0)
+except ZeroDivisionError:
+    print(&quot;除数不能为0&quot;)
+    logging.error(&quot;输入除数为0&quot;)
+
+运行结果：
+除数不能为0
+Time:&#39;2019-10-03 17:51:46&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:266] ERROR Message:&#39;输入除数为0&#39;</code></pre></li>
+<li><p>函数式简单配置有两个弊端：</p>
+<ul>
+<li>编码不能修改</li>
+<li>中控台和文件不能同时进行（要么在中控台显示，要么写入文件）</li>
+</ul></li>
+<li><p>logger对象配置</p>
+<ul>
+<li>利用logger对象来操作日志文件，具体流程如下：
+<ul>
+<li>创建一个logger对象，用来操作日志</li>
+<li>创建一个文件管理操作符，用来写入文件</li>
+<li>创建一个屏幕管理操纵符， 用来屏幕显示</li>
+<li>创建一个日志输出的格式</li>
+<li>将操作符与输出格式进行绑定</li>
+<li>将logger对象与操作符进行绑定</li>
+</ul></li>
+</ul>
+<pre><code><code>import logging
+
+logger = logging.getLogger()
+# 创建一个logger对象，用来操作日志
+fh = logging.FileHandler(&quot;log.log&quot;, encoding=&quot;utf-8&quot;)
+# 创建一个文件管理操作符，用来写入文件
+sh = logging.StreamHandler()
+# 创建一个屏幕管理操纵符， 用来屏幕显示
+fmt = logging.Formatter(&quot;Time:&#39;%(asctime)s&#39; FilePath:&#39;%(pathname)s&#39; [line:%(lineno)d] %(levelname)s Message:&#39;%(message)s&#39;&quot;)
+# 创建一个日志输出的格式
+
+fh.setFormatter(fmt)
+# 将文件管理操作符与输出格式进行绑定
+sh.setFormatter(fmt)
+# 将屏幕管理操作符与输出格式进行绑定
+logger.addHandler(fh)
+# 将logger对象与文件管理操作符进行绑定
+logger.addHandler(sh)
+# 将logger对象与屏幕管理操作符进行绑定
+
+logger.setLevel(logging.DEBUG)
+# 调整日志输出级别
+
+logger.debug(&#39;debug message&#39;)
+logger.info(&#39;info message&#39;)
+logger.warning(&#39;warning message&#39;)
+logger.error(&#39;error message&#39;)
+logger.critical(&#39;critical message&#39;)
+
+运行结果：
+Time:&#39;2019-10-03 18:31:18,217&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:283] DEBUG Message:&#39;debug message&#39;
+Time:&#39;2019-10-03 18:31:18,217&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:284] INFO Message:&#39;info message&#39;
+Time:&#39;2019-10-03 18:31:18,217&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:285] WARNING Message:&#39;warning message&#39;
+Time:&#39;2019-10-03 18:31:18,217&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:286] ERROR Message:&#39;error message&#39;
+Time:&#39;2019-10-03 18:31:18,218&#39; FilePath:&#39;D:/python_S26/day17/exercise.py&#39; [line:287] CRITICAL Message:&#39;critical message&#39;
+</code></pre>
+<ul>
+<li>说明：
+<ul>
+<li>通过logger对象来操作日志可以让中控台和文件同时进行</li>
+<li>通过logger对象写入文件时，可以指定编码方式</li>
+<li>灵活性高，创建的对象之间没有关系，通过绑定链在一起，完全可以绑定两个文件管理操作符来写入不同的文件，也可以绑定不同的输出格式</li>
+</ul></li>
+</ul></li>
+</ol>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,128 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修django项目中使用邮箱找回密码功能' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>django项目中使用邮箱找回密码功能</center></div><div class='banquan'>原文出处:本文由博客园博主记住我忘记我提供。<br/>
+原文连接:https://www.cnblogs.com/nmsghgnv/p/11366130.html</div><br>
+    <p>本文使用qq邮箱，需要登录邮箱，在设置-账户里面开启SMTP服务，要记下授权码</p>
+<p>前端html</p>
+<div class="cnblogs_code">
+<pre><code>{<span style="color: #008000;">#</span><span style="color: #008000;">找回密码的表单#}</span>
+
+&lt;form action=<span style="color: #800000;">""</span> method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">login</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+    {</span>% csrf_token %<span style="color: #000000;">}
+    </span>&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">member_name</span><span style="color: #800000;">"</span> Placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">Username</span><span style="color: #800000;">"</span> required=<span style="color: #800000;">""</span>/&gt;
+    &lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">email</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">member_email</span><span style="color: #800000;">"</span> Placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">email</span><span style="color: #800000;">"</span> required=<span style="color: #800000;">""</span>/&gt;
+
+    &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">login-agileits-bottom</span><span style="color: #800000;">"</span>&gt;
+        &lt;h6&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">onsubmit</span><span style="color: #800000;">"</span>&gt;提交&lt;/a&gt;&lt;/h6&gt;
+    &lt;/div&gt;
+&lt;/form&gt;<span style="color: #000000;">
+
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">找回密码的表单结束#}</span></pre>
+</div>
+<p>前端js</p>
+<div class="cnblogs_code">
+<pre><code>{<span style="color: #008000;">#</span><span style="color: #008000;">  找回密码的jquery  #}</span>
+<span style="color: #000000;">$(document).ready(function () {
+    $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+        $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/blog/findpwd/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#login</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+            </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                layer.msg(data.info,{
+                    time:</span>2000<span style="color: #000000;">
+                });
+                {</span><span style="color: #008000;">#</span><span style="color: #008000;">location.href = "/blog/login/";#}</span>
+            } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+            }
+        }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    })
+});
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">  找回密码的jquery结束  #}</span></pre>
+</div>
+<p>路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 找回密码</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">findpwd/</span><span style="color: #800000;">'</span>, login.findpwd,name=<span style="color: #800000;">'</span><span style="color: #800000;">findpwd</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> findpwd(request):
+    </span><span style="color: #0000ff;">from</span> django.core.mail <span style="color: #0000ff;">import</span><span style="color: #000000;"> send_mail
+    </span><span style="color: #0000ff;">from</span> mysite7 <span style="color: #0000ff;">import</span><span style="color: #000000;"> settings
+    </span><span style="color: #0000ff;">import</span><span style="color: #000000;"> threading
+    </span><span style="color: #0000ff;">from</span> blog.utils <span style="color: #0000ff;">import</span> function  <span style="color: #008000;">#</span><span style="color: #008000;"> 引入自定义的验证码</span>
+    <span style="color: #0000ff;">if</span> request.method == <span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        member_name </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">member_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        member_email </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">member_email</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        member_obj </span>= Member.objects.filter(member_name=member_name, member_email=<span style="color: #000000;">member_email).first()
+        
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> member_obj:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 随机生成新密码</span>
+            num = function.range_num(6<span style="color: #000000;">)
+            new_pwd </span>= Member.objects.filter(member_name=member_name).update(member_pwd=<span style="color: #000000;">make_password(num))
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> new_pwd:
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> 0
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">邮件已发送,注意查收</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                t </span>= threading.Thread(target=send_mail, args=<span style="color: #000000;">(
+                    </span><span style="color: #800000;">'</span><span style="color: #800000;">%s在找回密码</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> member_name,
+                    </span><span style="color: #800000;">'</span><span style="color: #800000;">您的密码已经被重置，新密码为%s</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> num,
+                    settings.EMAIL_HOST_USER,
+                    [</span><span style="color: #800000;">'</span><span style="color: #800000;">%s</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> member_obj.member_email]
+                ))
+                t.start()
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 1<span style="color: #000000;">
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">密码找回失败</span><span style="color: #800000;">'</span>
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 3<span style="color: #000000;">
+            res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">用户/邮箱不存在</span><span style="color: #800000;">'</span>
+        <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">blog/findPwd.html</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>项目目录下创建untils文件夹，文件夹下创建function.py文件，封装生成的随机密码</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 随机数</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> range_num(num):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个种子，从这里面随机拿出一个值，可以是字母</span>
+    seeds = <span style="color: #800000;">"</span><span style="color: #800000;">1234567890</span><span style="color: #800000;">"</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个空列表，每次循环，将拿到的值，加入列表</span>
+    random_num =<span style="color: #000000;"> []
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> choice函数：每次从seeds拿一个值，加入列表</span>
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(num):
+        random_num.append(random.choice(seeds))
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将列表里的值，变成四位字符串</span>
+    <span style="color: #0000ff;">return</span> <span style="color: #800000;">""</span> . join(random_num)<span style="color: #008000;">#</span><span style="color: #008000;">5454</span></pre>
+</div>
+<p>settings.py文件中设置</p>
+<div class="cnblogs_code">
+<pre><code>EMAIL_HOST=<span style="color: #800000;">'</span><span style="color: #800000;">smtp.qq.com</span><span style="color: #800000;">'</span><span style="color: #000000;">
+EMAIL_PORT</span>=465<span style="color: #000000;">
+EMAIL_HOST_USER</span>=<span style="color: #800000;">'</span><span style="color: #800000;">3028981710@qq.com</span><span style="color: #800000;">'</span><span style="color: #008000;">#</span><span style="color: #008000;">账号</span>
+EMAIL_HOST_PASSWORD=<span style="color: #800000;">'</span><span style="color: #800000;">kimtvyyymbwodgaf</span><span style="color: #800000;">'</span><span style="color: #008000;">#</span><span style="color: #008000;">密码（授权码）</span>
+EMAIL_USE_SSL=True</pre>
+</div>
+<p>页面效果</p>
+<p><img src="./images/django项目中使用邮箱找回密码功能0.png" alt="" /></p>
+<p>done。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

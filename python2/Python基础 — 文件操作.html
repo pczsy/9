@@ -1,0 +1,245 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python基础 — 文件操作' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python基础 — 文件操作</center></div><div class='banquan'>原文出处:本文由博客园博主丁可乐提供。<br/>
+原文连接:https://www.cnblogs.com/dwlovelife/p/11636701.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#文件操作介绍">1. 文件操作介绍</a></li>
+        <li><a href="#文件的读写">2. 文件的读写</a><ul>
+        <li><a href="#文本文件">2.1 文本文件</a></li>
+        <li><a href="#二进制文件">2.2 二进制文件</a></li>
+        <li><a href="#json文件">2.3 JSON文件</a></li>
+        </ul></li>
+        <li><a href="#文件的定位重命名和删除">3. 文件的定位，重命名和删除</a></li>
+        <li><a href="#文件夹的相关操作">4. 文件夹的相关操作</a></li>
+        </ul>
+    </div>
+</div>
+<h2 id="文件操作介绍">1. 文件操作介绍</h2>
+<p>大家应该听说过一句话：“好记性不如烂笔头”。</p>
+<p>不仅人的大脑会遗忘事情，计算机也会如此，比如一个程序在运行过程中用了九牛二虎之力终于计算出了结果，试想一下如果不把这些数据存放起来，相比重启电脑之后，数据就会丢失</p>
+<p>在Python中实现文件的读写操作其实非常简单，通过Python内置的<code>open</code>函数，我们可以指定文件名、操作模式、编码信息等来获得操作文件的对象，接下来就可以对文件进行读写操作了。这里所说的操作模式是指要打开什么样的文件（字符文件还是二进制文件）以及做什么样的操作（读、写还是追加），具体的如下表所示</p>
+<p><img src="./images/Python基础 — 文件操作0.png" /></p>
+<p> </p>
+<h2 id="文件的读写">2. 文件的读写</h2>
+<p>文件的读写其实主要分几个部分，文本文件、二进制文件（图片音频视频）、JSON文件，操作上大同小异</p>
+<p>示例：</p>
+<pre><code><code>import time
+def main():
+    f = open(&#39;F://a.txt&#39;, &#39;r&#39;, encoding=&#39;utf-8&#39;)
+    print(f.read())
+    f.close()
+    # 一次性读取整个文件的内容
+    with open(&quot;F://a.txt&quot;,&quot;r&quot;,encoding=&#39;utf-8&#39;) as f:
+        print(f.read())
+    
+    # 通过for-in循环逐行读取
+    with open(&quot;F://a.txt&quot;,mode=&quot;r&quot;) as f:
+        for line in f:
+            print(line,end=&quot;&quot;)
+    
+    # 读取文件按行读取到列表中
+    with open(&quot;F://a.txt&quot;,&quot;r&quot;,encoding=&#39;utf-8&#39;) as f:
+        lines = f.readlines()
+    print(lines)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p><strong>注：</strong>通过<code>with</code>关键字指定文件对象的上下文环境并在离开上下文环境时自动释放文件资源，无须在 finally 关闭文件流</p>
+<p> </p>
+<h3 id="文本文件">2.1 文本文件</h3>
+<p>要将文本信息写入文件文件也非常简单，在使用<code>open</code>函数时指定好文件名并将文件模式设置为<code>'w'</code>即可。注意如果需要对文件内容进行追加式写入，应该将模式设置为<code>'a'</code>。下面的例子演示了如何将1-9999之间的素数分别写入三个文件中（1-99之间的素数保存在a.txt中，100-999之间的素数保存在b.txt中，1000-9999之间的素数保存在c.txt中）。</p>
+<pre><code><code>from math import sqrt
+#是否是素数
+def is_prime(n):
+    &quot;&quot;&quot;判断素数的函数&quot;&quot;&quot;
+    assert n &gt; 0
+    for x in range(2,int(sqrt(n)) + 1):
+        if n % x == 0:
+            return False
+        
+    return False if n == 1 else True
+
+def main():
+    filenames = (&#39;F://a.txt&#39;,&quot;F://b.txt&quot;,&quot;F://c.txt&quot;)
+    fs_list = []
+    try:
+        for f in filenames:
+            fs_list.append(open(f,&quot;w&quot;,encoding=&#39;utf-8&#39;))
+
+        for number in range(1,10001):
+            if is_prime(number):
+                if number &lt; 100:
+                    print(&quot;1:&quot;,number)
+                    fs_list[0].write(str(number) + &#39;\n&#39;)
+                elif number &lt; 1000:
+                    print(&quot;2:&quot;,number)
+                    fs_list[1].write(str(number) + &#39;\n&#39;)
+                else:
+                    print(&quot;3:&quot;,number)
+                    fs_list[2].write(str(number) + &#39;\n&#39;)
+    except Exception as e:
+        print(e)
+    finally:
+        for fs in fs_list:
+            fs.close()
+    print(&quot;操作完成&quot;)
+
+if __name__ == &#39;__main__&#39;:
+    main() </code></pre>
+<p> </p>
+<h3 id="二进制文件">2.2 二进制文件</h3>
+<p>了解完文本文件的操作，二进制文件的读写复制也几乎差不多</p>
+<pre><code><code>&quot;&quot;&quot;
+读写二进制文件
+version:0.1
+author:coke
+&quot;&quot;&quot;
+def main():
+    try:
+        with open(&quot;F://aa.jpg&quot;,&quot;rb&quot;) as f1:
+            data = f1.read()
+            print(type(data))
+        with open(&quot;F://bb.jpg&quot;,&quot;wb&quot;) as f2:
+            f2.write(data)
+    except Exception as e:
+        print(e)
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre>
+<p> </p>
+<h3 id="json文件">2.3 JSON文件</h3>
+<p>我们使用Python中的json模块就可以将字典或列表以JSON格式保存到文件中，代码如下所示。</p>
+<pre><code><code>&quot;&quot;&quot;
+读取json文件
+version:0.1
+author:coke
+&quot;&quot;&quot;
+import json
+def main():
+    mydict = {
+        &#39;name&#39;: &#39;coke&#39;,
+        &#39;age&#39;:&#39;19&#39;,
+        &#39;qq&#39;:623105972,
+        &#39;friends&#39;:[&#39;David&#39;,&#39;Jack&#39;],
+        &#39;cars&#39;:[
+            {&quot;brand&quot;:&quot;BYD&quot;,&quot;max_speed&quot;:&quot;180&quot;},
+            {&quot;brand&quot;:&quot;BM&quot;,&quot;max_speed&quot;:&quot;190&quot;}
+            ]
+    }
+    try:
+        with open(&quot;F://data.json&quot;,&quot;w&quot;,encoding=&#39;utf-8&#39;) as fs:
+            json.dump(mydict,fs)
+    except IOError as e:
+        print(e)
+    print(&quot;保存数据完成&quot;)
+
+if __name__ == &#39;__main__&#39;:
+    main()</code></pre>
+<p><strong>json模块主要有四个比较重要的函数，分别是：</strong></p>
+<ul>
+<li><code>dump</code> - 将Python对象按照JSON格式序列化到文件中</li>
+<li><code>dumps</code> - 将Python对象处理成JSON格式的字符串</li>
+<li><code>load</code> - 将文件中的JSON数据反序列化成对象</li>
+<li><code>loads</code> - 将字符串的内容反序列化成Python对象</li>
+</ul>
+<pre><code><code>import requests
+import json
+def main():
+    resp = requests.get(&quot;http://api.tianapi.com/guonei/?key=APIKey&amp;num=10&quot;)
+    data_model = json.loads(resp.text)
+    print(data_model)
+    print(data_model[&#39;code&#39;])
+    print(data_model[&#39;msg&#39;])
+
+if __name__ == &#39;__main__&#39;:
+    main()</code></pre>
+<p> </p>
+<h2 id="文件的定位重命名和删除">3. 文件的定位，重命名和删除</h2>
+<p>在读写文件的过程中，如果想知道当前的位置，可以使用tell()来获取</p>
+<p>如果在读写文件的过程中，需要从另外一个位置进行操作的话，可以使用seek()</p>
+<p>seek(offset, from)有2个参数</p>
+<ul>
+<li>offset:偏移量</li>
+<li>from:方向
+<ul>
+<li>0:表示文件开头</li>
+<li>1:表示当前位置</li>
+<li>2:表示文件末尾</li>
+</ul></li>
+</ul>
+<p>os模块中的rename()可以完成对文件的重命名操作，remove()可以完成对文件的删除操作</p>
+<pre><code><code># -*- coding:utf-8 -*-
+&quot;&quot;&quot;
+文件的定位读写
+version:0.1
+author:coke
+&quot;&quot;&quot;
+import os
+f = open(&quot;F://a.txt&quot;,&quot;r&quot;)
+str = f.read(2)
+print(str)
+
+#查找当前位置
+position = f.tell()
+print(&quot;当前位置:&quot;,position)
+
+str = f.read(3)
+print(str)
+
+#查找当前位置
+position = f.tell()
+print(&quot;当前位置:&quot;,position)
+
+f.seek(1,0)
+position = f.tell()
+print(&quot;seek完当前位置:&quot;,position)
+f.close()
+#关闭文件流才可以 进行重命名和删除
+os.rename(&quot;F://a.txt&quot;,&quot;F://rename.txt&quot;)
+os.remove(&quot;F://b.txt&quot;)</code></pre>
+<p> </p>
+<h2 id="文件夹的相关操作">4. 文件夹的相关操作</h2>
+<p>实际开发中，有时需要用程序的方式对文件夹进行一定的操作，比如创建、删除等</p>
+<p>就像对文件操作需要os模块一样，如果要操作文件夹，同样需要os模块</p>
+<pre><code><code>import os
+from time import sleep
+#创建文件夹
+if not os.path.exists(&quot;F://tempDir&quot;):
+   os.mkdir(&quot;F://tempDir&quot;)
+#获取当前目录
+currentDir = os.getcwd()
+print(currentDir)
+print(&quot;--------------&quot;)
+#改变默认目录
+os.chdir(&quot;F://&quot;)
+#获取默认目录
+defaultDir = os.listdir(&quot;./&quot;)
+print(defaultDir)
+#过5秒删除文件
+sleep(5)
+os.rmdir(&quot;F://tempDir&quot;)</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

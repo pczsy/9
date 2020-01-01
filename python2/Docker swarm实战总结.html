@@ -1,0 +1,297 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Docker swarm实战总结' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Docker swarm实战总结</center></div><div class='banquan'>原文出处:本文由博客园博主LeoZhanggg提供。<br/>
+原文连接:https://www.cnblogs.com/leozhanggg/p/12061360.html</div><br>
+    <p>&nbsp;</p>
+<p><img src="./images/Docker swarm实战总结0.png" alt="" /></p>
+<p>&nbsp;</p>
+<hr />
+<h1><span style="color: #000080;">一、简介</span></h1>
+<p style="margin-left: 30px;"><strong><span style="color: #ff0000;">Swarm 是 Docker 官方提供的一款集群管理工具</span></strong>，其主要作用是把若干台 Docker 主机抽象为一个整体，并且通过一个入口统一管理这些 Docker 主机上的各种 Docker 资源。</p>
+<p style="margin-left: 30px;">Docker Swarm 包含两方面：一个企业级的 Docker 安全集群，以及一个微服务应用编排引擎。</p>
+<p style="margin-left: 30px;">集群方面，Swarm 将一个或多个 Docker 节点组织起来，使得用户能够以集群方式管理它们，<strong><span style="color: #ff0000;">可以自如地添加或删除节点</span></strong>。</p>
+<p style="margin-left: 30px;">编排方面，Swarm 提供了一套丰富的 API 使得部署和管理复杂的微服务应用变得易如反掌。通过将应用定义在声明式配置文件中，就可以使用原生的 Docker 命令完成部署。</p>
+<p style="margin-left: 30px;">此外，甚至还<strong><span style="color: #ff0000;">可以执行滚动升级、回滚以及扩缩容操作</span></strong>，同样基于简单的命令即可完成。</p>
+<p style="margin-left: 30px;">以往，Docker Swarm 是一个基于 Docker 引擎之上的独立产品。自 Docker 1.12 版本之后，<span style="color: #ff0000;"><strong>它已经完全集成在 Docker 引擎中</strong></span>，执行一条命令即可启用。</p>
+<p style="margin-left: 30px;">到2018年，除了原生 Swarm 应用，它还可以部署和管理 Kubernetes 应用。Swarm 和 Kubernetes 比较类似，但是更加轻，具有的功能也较 kubernetes 更少一些。</p>
+<blockquote>
+<p><span style="color: #ff0000;"><strong>集群管理:</strong>&nbsp;&nbsp;</span>docker swarm 子命令有 init, join, leave, update （docker swarm --help查看帮助）</p>
+<p><span style="color: #ff0000;"><strong>节点管理:</strong>&nbsp;&nbsp;</span>docker node子 命令有 accept, promote, demote, inspect, update, tasks, ls, rm （docker node --help查看帮助）</p>
+<p><span style="color: #ff0000;"><strong>配置管理:</strong>&nbsp;&nbsp;</span>docker config 子命令有 create, inspect, ls, rm （docker config--help查看帮助）</p>
+<p><span style="color: #ff0000;"><strong>服务管理:</strong></span>&nbsp; docker service 子命令有 create, inspect, update, remove, tasks, ls, rm, ps （docker service--help查看帮助）</p>
+<p><span style="color: #ff0000;"><strong>堆栈管理:</strong>&nbsp;</span>&nbsp;docker stack 子命令有 deploy, services, ps, rm （docker stack--help查看帮助）</p>
+</blockquote>
+<p>&nbsp;</p>
+<hr />
+<h1><span style="color: #000080;">二、部署</span></h1>
+<p style="margin-left: 30px;"><span style="color: #000080;"><img src="./images/Docker swarm实战总结1.png" alt="" width="604" height="324" /></span></p>
+<h3>　　前期工作</h3>
+<p style="margin-left: 30px;">　　准备几台机器，安装<strong><span style="color: #ff0000;">docker v1.12+</span></strong>，添加私有镜像仓库源</p>
+<blockquote>
+<p style="margin-left: 30px;">/etc/docker/daemon.json</p>
+<p style="margin-left: 30px;">{ "insecure-registries":["xxx.xxx.xxx.xxx:5000"] }</p>
+</blockquote>
+<p style="margin-left: 30px;">&nbsp;　&nbsp; 集群节点之间保证<strong><span style="color: #ff0000;">TCP 2377、TCP/UDP 7946和UDP 4789</span></strong>端口通信（或者直接关闭防火墙 systemctl stop firewalld）</p>
+<blockquote>
+<p style="margin-left: 30px;">firewall-cmd --zone=public --add-port=2377/tcp --permanent 　　 <span style="color: #008000;"># 集群管理端口</span></p>
+<p style="margin-left: 30px;">firewall-cmd --zone=public --add-port=7946/tcp --permanent 　　 <span style="color: #008000;"># 节点之间通讯端口</span><br />firewall-cmd --zone=public --add-port=7946/udp --permanent</p>
+<p style="margin-left: 30px;">firewall-cmd --zone=public --add-port=4789/tcp --permanent	　　<span style="color: #008000;">	# overlay网络通讯端口</span><br />firewall-cmd --zone=public --add-port=4789/udp --permanent</p>
+<p style="margin-left: 30px;">firewall-cmd --reload</p>
+
+
+
+
+
+
+</blockquote>
+<p>　　</p>
+<h3>　　初始化swarm</h3>
+<blockquote>
+<p style="margin-left: 30px;">docker swarm init \　　　　　　　　<span style="color: #008000;">#&nbsp;默认初始化节点为manager</span></p>
+<p style="margin-left: 30px;">--advertise-addr 192.168.89.14 \ 　　<span style="color: #008000;"># 多网卡的情况下，指定需要使用的ip</span></p>
+<p style="margin-left: 30px;">--listen-addr 192.168.89.14:2377　　 	<span style="color: #008000;"># 指定监听的 ip 与 port</span></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</blockquote>
+<p>　　<img src="./images/Docker swarm实战总结2.png" alt="" /></p>
+<p>&nbsp;</p>
+<h3>&nbsp;　　添加工作节点</h3>
+<p>　　　　--token 初始化时获取，或者通过命令获取（<strong>docker swarm join-token worker</strong>）</p>
+<blockquote>
+<p style="margin-left: 30px;">docker swarm join \</p>
+<p style="margin-left: 30px;">--advertise-addr 192.168.89.15 \<br />--listen-addr 192.168.89.15:2377 \　　<span style="color: #008000;">#&nbsp;可不加，根据实际需求</span></p>
+<p style="margin-left: 30px;">--token SWMTKN-1-29ynh5uyfiiospy4fsm4pd4xucyji2rn0oj4b4ak4s7a37syf9-ajkrv2ctjr5cmxzuij75tbrmz \　　<span style="color: #008000;"># 节点token</span></p>
+<p style="margin-left: 30px;">192.168.89.14:2377　　<span style="color: #008000;"># 管理节点</span></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</blockquote>
+<p>　　</p>
+<h3>　　管理节点</h3>
+<blockquote>
+<p style="margin-left: 30px;">docker node ls 　　<span style="color: #008000;"># 查看节点</span></p>
+<p style="margin-left: 30px;">docker node rm　　		<span style="color: #008000;"># 移除节点</span></p>
+<p style="margin-left: 30px;">docker swarm leave　　<span style="color: #008000;">	# 退出节点(对应节点上运行)</span></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</blockquote>
+<p style="margin-left: 30px;"><img src="./images/Docker swarm实战总结3.png" alt="" /></p>
+<p>&nbsp;　　更详细部署推荐&gt;&gt;&gt;&nbsp;<a href="https://www.jianshu.com/p/028b40ca4f2a" target="_blank">Docker Swarm集群部署实践</a></p>
+<p>&nbsp;</p>
+<hr />
+<h1><span style="color: #000080;">三、Docker config</span></h1>
+<p style="margin-left: 30px;"><strong><span style="color: #ff0000;">17.06引入了群体服务配置</span></strong>，使您可以在服务映像之外或运行中的容器之外存储非敏感信息，例如配置文件。这使您可以保持映像尽可能通用，而无需将安装文件绑定安装到容器中或使用环境变量。</p>
+<p style="margin-left: 30px;">可以随时在服务中添加或删除配置，并且服务可以共享配置。您甚至可以将配置与环境变量或标签结合使用，以实现最大的灵活性。配置值可以是通用字符串或二进制内容（<span style="color: #ff0000;"><strong>最大500 kb</strong></span>）。</p>
+<p style="margin-left: 30px;">注意：Docker配置<strong><span style="color: #ff0000;">仅适用于群集服务</span></strong>，不适用于独立容器。</p>
+<p style="margin-left: 30px;">将配置添加到群集时，Docker会通过双向TLS连接将配置发送到群集管理器。该<strong><span style="color: #ff0000;">配置存储在Raft日志中</span></strong>，该日志已加密。整个Raft日志会在其他管理器之间复制，以确保对配置的高可用性保证与其他集群管理数据一样。</p>
+<p style="margin-left: 30px;">当您授予对配置的新创建或正在运行的服务访问权限时，该配置将作为文件安装在容器中。容器中安装点的位置默认为<span style="color: #ff0000;"><strong>/&lt;config-name&gt;</strong></span>Linux容器中的位置。</p>
+<blockquote>
+<p style="margin-left: 30px;">&nbsp;docker config create jmdiservice-application.properties ~/local/application.properties　　<span style="color: #008000;"># 为创建服务所引用</span></p>
+
+
+
+
+
+
+
+
+
+
+
+</blockquote>
+<p style="margin-left: 30px;"><img src="./images/Docker swarm实战总结4.png" alt="" /></p>
+<p>&nbsp;</p>
+<hr />
+<h1><span style="color: #000080;">四、Docker service</span></h1>
+<p style="margin-left: 30px;"><img src="./images/Docker swarm实战总结5.png" alt="" /></p>
+<p style="margin-left: 30px;">服务是自 Docker 1.12 后新引入的概念，并且仅适用于 Swarm 模式。</p>
+<p style="margin-left: 30px;"><strong><span style="color: #ff0000;">使用服务仍能够配置大多数熟悉的容器属性</span></strong>，比如容器名、端口映射、接入网络和镜像。</p>
+<p style="margin-left: 30px;">此外还增加了额外的特性，比如可以声明应用服务的期望状态，将其告知 Docker 后，Docker 会负责进行服务的部署和管理。</p>
+<p style="margin-left: 30px;">更多概念推荐&gt;&gt;&gt;&nbsp;<a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/bigberg/p/8761047.html">Docker管理工具-Swarm</a></p>
+<h3 style="margin-left: 30px;">&nbsp;</h3>
+<h3 style="margin-left: 30px;">服务创建</h3>
+<blockquote>
+<pre><code><span>docker service create \
+--with-registry-<span>auth \
+--<span>mode global \
+--<span>name jmdiservice \
+--config source=jmdiservice-application.properties,target=/root/<span>application.properties \
+--mount type=bind,source=/opt/lib,destination=/root/<span>lib \
+--env JAVA_OPTS="-Xms1024m -Xmx1024m"<span> \
+--publish 20036:20036<span> \
+-td xx.xx.xx.xx:5000/zwx/jmdiservice:1123　　　　</span></span></span></span></span></span></span></span></pre>
+</blockquote>
+<h3 style="margin-left: 30px;">命令详解：</h3>
+<p style="margin-left: 30px;">--with-registry-auth：将registry身份验证详细信息发送给集群代理。</p>
+<p style="margin-left: 30px;">--mode global：全局模式，在这种模式下，每个节点上仅运行一个副本。<br />　　　另一种是复制模式(--replicas 3)，这种模式会部署期望数量的服务副本，并尽可能均匀地将各个副本分布在整个集群中。</p>
+<p style="margin-left: 30px;">--name：服务名称。（避免使用符号，容易解析错误）</p>
+<p style="margin-left: 30px;">--config：指定要向服务公开的配置。（添加配置参考docker config create）</p>
+<p style="margin-left: 30px;">--mount：将文件系统挂载附加到服务。（需要保留/读取的容器外信息）</p>
+<p style="margin-left: 30px;">--env：设置环境变量。</p>
+<p style="margin-left: 30px;">--publish：将端口发布为节点端口。（默认把需要发布的端口映射到本地）</p>
+<p style="margin-left: 30px;">-td：分配伪TTY，并后台运行。</p>
+<p style="margin-left: 30px;"><strong>注意：</strong>镜像地址、名称、标签一定填写正确</p>
+<p>&nbsp;</p>
+<h3>　　服务更新：</h3>
+<blockquote>
+<p style="margin-left: 30px;">docker service update --args "ping www.baidu.com" redis&nbsp; 　　<span style="color: #008000;"># 添加参数</span><br />docker service scale redis=4　　　　<span style="color: #008000;"># 为服务扩(缩)容scale</span><br />docker service update --image redis:3.0.7 redis　　<span style="color: #008000;"># 更新服务的镜像版本</span><br />docker service update --rollback redis　<span style="color: #008000;">　# 回滚服务</span></p>
+
+</blockquote>
+<p>&nbsp;</p>
+<hr />
+<h1><span style="color: #000080;">五、Docker stack</span></h1>
+<p style="margin-left: 30px;">大规模场景下的多服务部署和管理是一件很难的事情，Docker Stack由此而生。</p>
+<p style="margin-left: 30px;"><strong><span style="color: #ff0000;">Stack 通过提供期望状态、滚动升级、简单易用、扩缩容、健康检查等特性简化了应用的管理</span></strong>，这些功能都封装在一个完美的声明式模型当中。</p>
+<p style="margin-left: 30px;">Stack 能够在单个声明文件中定义复杂的多服务应用，还提供了简单的方式来部署应用并管理其完整的生命周期：<strong><span style="color: #ff0000;">初始化部署 -&gt; 健康检查 -&gt; 扩容 -&gt; 更新 -&gt; 回滚</span></strong>。</p>
+<p style="margin-left: 30px;">&nbsp;</p>
+<p style="margin-left: 30px;">步骤很简单，在 Compose 文件中定义应用，然后通过 docker stack deploy 命令完成部署和管理。</p>
+<blockquote>
+<p style="margin-left: 30px;">export logpath=/home/jhmyPro/logs　　　　　　<br />export tag=latest　　　　　　　　　　　　　　<span style="color: #008000;"># 使用环境变量，增强可用性</span><br /><strong><span style="color: #ff0000;">docker stack deploy --with-registry-auth -c docker-compose.yml QS　　　　</span></strong></p>
+
+
+
+
+
+
+
+
+</blockquote>
+<p style="margin-left: 30px;"><strong><span style="color: #ff0000;"><img src="./images/Docker swarm实战总结6.png" alt="" width="980" height="94" /></span></strong></p>
+<p style="margin-left: 30px;">&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;"># file: docker-compose.yml<br /></span><br />version: <span style="color: #800000;">"</span><span style="color: #800000;">3.7</span><span style="color: #800000;">"</span><span style="color: #000000;">
+services:
+  JmDiService:  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 服务名</span>
+    image: xx.xx.xx.xx:5000/zwx/jmdiservice:<span style="color: #800080;">${tag}</span><span style="color: #000000;">
+    
+    environment:    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 环境变量</span>
+      LOG_PATH: <span style="color: #800080;">${logpath}　　　　</span><span style="color: #000000;">
+      PKG_NAME: </span><span style="color: #800000;">"</span><span style="color: #800000;">JmDiService</span><span style="color: #800000;">"</span><span style="color: #000000;">
+      JAVA_OPTS: </span><span style="color: #800000;">"</span><span style="color: #800000;">-Xms512m -Xmx1024m</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    
+    networks:    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 网络设置</span>
+<span style="color: #000000;">      overlay:
+    
+    ports:  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 端口映射 [宿主机:容器]</span>
+      - 20036:20036<span style="color: #000000;">
+    
+    configs:    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 读取配置 [配置名:容器]</span>
+      - source: JmDiService-<span style="color: #000000;">application.properties
+        target: </span>/root/<span style="color: #000000;">application.properties
+    
+    volumes:    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 挂载数据卷 [宿主机:容器]</span>
+      - <span style="color: #800080;">${logpath}</span>:<span style="color: #800080;">${logpath}</span>
+      - /opt/lib:/root/<span style="color: #000000;">lib
+      </span>- /usr/local/nginx/html/clientexe:/usr/local/nginx/html/<span style="color: #000000;">clientexe
+      
+    deploy:     </span><span style="color: #008000;">#</span><span style="color: #008000;"> 部署设置</span>
+<span style="color: #000000;">      mode: replicated
+      replicas: </span>3<span style="color: #000000;">
+      
+      restart_policy:   </span><span style="color: #008000;">#</span><span style="color: #008000;"> 重启策略 [条件,延时,最大次数,检测时间]</span>
+        condition: on-<span style="color: #000000;">failure
+        delay: 5s
+        max_attempts: </span>3<span style="color: #000000;">
+        window: 30s
+      
+      update_config:    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 升级配置 [并发数,延时,失败处理,监听时间,更新规则]</span>
+        parallelism: 1<span style="color: #000000;">
+        delay: 5s
+        failure_action: rollback
+        monitor: 5s
+        order: start</span>-<span style="color: #000000;">first
+        
+      resources:    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 资源控制 [cpu,mem]</span>
+<span style="color: #000000;">        limits:
+          </span><span style="color: #008000;">#</span><span style="color: #008000;">cpus: '0.2'</span>
+<span style="color: #000000;">          memory: 1024M
+
+configs:　　　　　　<span style="color: #008000;"># 定义配置</span>
+  JmDiService</span>-<span style="color: #000000;">application.properties:
+    external: </span><span style="color: #0000ff;">true</span><span style="color: #000000;">
+    
+networks:　　　　　<span style="color: #008000;"># 定义网络</span>
+  overlay:</span></pre>
+</div>
+<p>&nbsp;　　更多参数定义推荐&gt;&gt;&gt;　<a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/wutao666/p/11332186.html">docker-compose编排参数详解</a></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<blockquote>
+<p><span style="background-color: #ccffcc;">作者：<a href="https://www.cnblogs.com/leozhanggg/" target="_blank"><span style="background-color: #ccffcc;">Leozhang</span></a>gg</span></p>
+<p><span style="background-color: #ccffcc;">出处：<a class="ng-star-inserted" href="https://www.cnblogs.com/leozhanggg/p/12061360.html" target="_blank">https://www.cnblogs.com/leozhanggg/p/12061360.html</a></span></p>
+<p><span style="background-color: #ccffcc;">本文版权归作者和博客园共有，欢迎转载，但未经作者同意必须保留此段声明，且在文章页面明显位置给出原文连接，否则保留追究法律责任的权利。</span></p>
+</blockquote>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,557 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Web基础了解版05-Servlet' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Web基础了解版05-Servlet</center></div><div class='banquan'>原文出处:本文由博客园博主远离颠倒梦想提供。<br/>
+原文连接:https://www.cnblogs.com/Open-ing/p/12075074.html</div><br>
+    <h1 class="md-end-block md-heading md-focus" style="text-align: center;"><span class="md-plain md-expand">Servlet</span></h1>
+<h2 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">Servlet？</span></h2>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">从广义上来讲，Servlet规范是Sun公司制定的一套技术标准，包含与Web应用相关的一系列接口，是Web应用实现方式的宏观解决方案。而具体的Servlet容器负责提供标准的实现。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">从狭义上来讲，Servlet指的是javax.servlet.Servlet接口及其子接口，也可以指实现了Servlet接口的实现类。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">Servlet（<span><strong>Server Applet</strong><span class="md-plain">）作为服务器端的一个组件，它的本意是&ldquo;服务器端的小程序&rdquo;。</span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>Servlet的实例对象由Servlet容器负责创建；</strong></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>Servlet的方法由容器在特定情况下调用；</strong></span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-expand"><strong>Servlet容器会在Web应用卸载时销毁Servlet对象的实例。</strong></span></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">操作步骤</span></h3>
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">使用Servlet接口的方式：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">① 搭建Web开发环境</span></p>
+<p class="md-end-block md-p"><span class="md-plain">② 创建动态Web工程</span></p>
+<p class="md-end-block md-p"><span class="md-plain">③ 创建javax.servlet.Servlet接口的实现类：com.atguigu.servlet.MyFirstServlet</span></p>
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">④ 在service(ServletRequest, ServletResponse)方法中编写代码</span></p>
+<p><span class="md-tab md-expand"><span class="md-plain">⑤ 在web.xml配置文件中<span><strong><span class="md-plain">注册</span></strong><span class="md-plain md-expand">MyFirstServlet</span></span></span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 声明一个Servlet，配置的是Servlet的类信息 </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">servlet</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 这是Servlet的别名，一个名字对应一个Servlet。相当于变量名 </span><span style="color: #008000;">--&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">servlet-name</span><span style="color: #0000ff;">&gt;</span>MyFirstServlet<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">servlet-name</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> Servlet的全类名，服务器会根据全类名找到这个Servlet </span><span style="color: #008000;">--&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">servlet-class</span><span style="color: #0000ff;">&gt;</span>com.servlet.MyFirstServlet<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">servlet-class</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">servlet</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 建立Servlet的请求映射信息 </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">servlet-mapping</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> Servlet的别名，说明这个Servlet将会响应下面url-pattern的请求 </span><span style="color: #008000;">--&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">servlet-name</span><span style="color: #0000ff;">&gt;</span>MyFirstServlet<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">servlet-name</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> Servlet响应的请求路径。如果访问这个路径，这个Servlet就会响应 </span><span style="color: #008000;">--&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">url-pattern</span><span style="color: #0000ff;">&gt;</span>/MyFirstServlet<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">url-pattern</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">servlet-mapping</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<blockquote>
+<p class="md-end-block md-p md-focus"><span class="md-plain">说明：</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-tag md-raw-inline">&lt;url-pattern&gt;<span class="md-plain">：这个url-pattern可以配置多个，这时表示的就是访问这些url都会触发这个Servlet进行响应，运行浏览器，访问刚才配置的url路径，Servlet的service方法就会被调用。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-tag md-raw-inline">&lt;url-pattern&gt;<span class="md-plain">中的文本内容必须以 / 或 *. 开始书写路径。相当于将资源映射到项目根目录下形成虚拟的资源文件。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-tag md-raw-inline">&lt;servlet-mapping&gt;<span class="md-plain">中的<span class="md-tag md-raw-inline">&lt;url-pattern&gt;<span class="md-plain md-expand">可以声明多个，可以通过任意一个都可以访问。但是开发中一般只会配置一个。</span></span></span></span></p>
+</li>
+</ul>
+</blockquote>
+<p class="md-end-block md-p"><span class="md-tab"> <span class="md-plain">⑥ 在WebContent目录下创建index.html</span></span></p>
+<p class="md-end-block md-p"><span class="md-tab"> <span class="md-plain">⑦ 在index.html中加入超链接 <span>&lt;<span class="md-plain">a href="MyFirstServlet"&gt;To Servlet<span class="md-tag md-raw-inline">&lt;/a&gt;</span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-tab"> <span class="md-plain">⑧ 点击超链接测试Servlet</span></span></p>
+<p>&nbsp;如果配置文件一旦修改，需要重启服务器来重新部署web项目。</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">Servlet作用</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">接收请求 【解析请求报文中的数据：请求参数】</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">处理请求 【DAO和数据库交互】</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">完成响应 【设置响应报文】</span></p>
+</li>
+</ul>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Web基础了解版05-Servlet0.png" alt="" /></p>
+<h2 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">Servlet生命周期</span></h2>
+<p>&nbsp;简单的叙述生命周期，就是对象在容器中从开始创建到销毁的过程。</p>
+<p>&nbsp;Servlet对象是Servlet容器创建的，生命周期方法都是由容器调用的。这里指的就是Tomcat</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">① Servlet对象的创建：构造器</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">默认情况下，<span><strong>Servlet容器第一次收到HTTP请求时创建对应Servlet对象。</strong></span></span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">容器之所以能做到这一点是由于我们在注册Servlet时提供了全类名，容器使用反射技术创建了Servlet的对象。</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">② Servlet对象初始化：init()</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">Servlet容器<span><strong>创建Servlet对象之后，会调用init(ServletConfig config)</strong><span class="md-plain">方法。</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">作用：是在Servlet对象创建后，执行一些初始化操作。例如，读取一些资源文件、配置文件，或建立某种连接（比如：数据库连接）</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">init()方法只在创建对象时执行一次，以后再接到请求时，就不执行了</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">在javax.servlet.Servlet接口中，public void init(ServletConfig config)方法要求容器将ServletConfig的实例对象传入，这也是我们获取ServletConfig的实例对象的根本方法。</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">③ 处理请求：service()</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">在javax.servlet.Servlet接口中，定义了<span><strong>service(ServletRequest req, ServletResponse res)</strong><span class="md-plain">方法处理HTTP请求。</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">在每次接到请求后都会执行。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">Servlet的作用，主要在此方法中体现。</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">同时要求容器将ServletRequest对象和ServletResponse对象传入。</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain">④ Servlet对象销毁：destroy()</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">服务器重启、服务器停止执行或Web应用卸载时会销毁Servlet对象，会调用public void destroy()方法。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain md-expand">此方法用于销毁之前执行一些诸如释放缓存、关闭连接、保存内存数据持久化等操作。</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain">Servlet请求过程</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">第一次请求</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">调用构造器，创建对象</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">执行init()方法</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">执行service()方法</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">后面请求</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain md-expand">执行service()方法</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">对象销毁前</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">执行destroy()方法</span></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">ServletConfig接口</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-expand"><strong>ServletConfig接口封装了Servlet配置信息</strong><span class="md-plain">，这一点从接口的名称上就能够看出来。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>每一个Servlet都有一个唯一对应的ServletConfig对象</strong><span class="md-plain">，代表当前Servlet的配置信息。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">对象由Servlet容器创建，并传入生命周期方法init(ServletConfig config)中。可以直接获取使用。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">代表当前Web应用的ServletContext对象也封装到了ServletConfig对象中，使ServletConfig对象成为了获取ServletContext对象的一座桥梁。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">ServletConfig对象的主要功能</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>获取Servlet名称：getServletName()</strong></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>获取全局上下文ServletContext对象：getServletContext()</strong></span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-expand"><strong>获取Servlet初始化参数：getInitParameter(String) / getInitParameterNames()。</strong></span></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">ServletContext接口</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">Web容器在启动时，它会为<span><strong>每个Web应用程序都创建一个唯一对应的ServletContext对象</strong><span class="md-plain">，意思是Servlet上下文，<span><strong>代表当前Web应用。</strong></span></span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">由于<span><strong>一个Web应用程序中的所有Servlet都共享同一个ServletContext对象</strong><span class="md-plain">，所以ServletContext对象也被称为 application 对象（Web应用程序对象）。</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>对象由Servlet容器在项目启动时创建</strong><span class="md-plain">，通过ServletConfig对象的getServletContext()方法获取。在项目卸载时销毁。</span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">ServletContext对象的主要功能</span></p>
+</li>
+</ul>
+<p class="md-list-item"><span class="md-plain">① 获取项目的上下文路径(带/的项目名): <span class="md-expand"><strong>getContextPath()</strong></span></span></p>
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">② 获取虚拟路径所映射的本地真实路径：<span><strong>getRealPath(String path)</strong></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">虚拟路径：浏览器访问Web应用中资源时所使用的路径。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">本地路径：资源在文件系统中的实际保存路径。</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">作用：将用户上传的文件通过流写入到服务器硬盘中。</span></p>
+</li>
+</ul>
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">③ 获取WEB应用程序的全局初始化参数（基本不用）</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">设置Web应用初始化参数的方式是在web.xml的根标签下加入如下代码</span></p>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">web-app</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> Web应用初始化参数 </span><span style="color: #008000;">--&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">context-param</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">param-name</span><span style="color: #0000ff;">&gt;</span>ParamName<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">param-name</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">param-value</span><span style="color: #0000ff;">&gt;</span>ParamValue<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">param-value</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">context-param</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">web-app</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>获取Web应用初始化参数</p>
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">④ 作为域对象共享数据</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">作为最大的域对象在整个项目的不同web资源内共享数据。</span></p>
+</li>
+</ul>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Web基础了解版05-Servlet1.png" alt="" /></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">setAttribute(key,value)：以后可以在任意位置取出并使用</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">getAttribute(key)：取出设置的value值</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">实现类</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">实现类体系</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">GenericServlet实现Servlet接口</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">HttpServlet继承GenericServlet</span></p>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">创建Servlet的最终方式</span></p>
+<ul>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">继承HttpServlet</span></p>
+</li>
+</ul>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">GenericServlet抽象类</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">GenericServlet对Servlet功能进行了封装和完善，重写了init(ServletConfig config)方法，用来获取ServletConfig对象。此时如果GenericServlet的子类（通常是自定义Servlet）又重写了init(ServletConfig config)方法有可能导致ServletConfig对象获取不到，所以子类不应该重写带参数的这个init()方法。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">如果想要进行初始化操作，可以重写GenericServlet提供的无参的init()方法，这样就不会影响ServletConfig对象的获取。</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">将service(ServletRequest req,ServletResponse res)保留为抽象方法，让使用者仅关心业务实现即可。</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">HttpServlet抽象类</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">专门用来处理Http请求的Servlet。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">对GenericServlet进行进一步的封装和扩展，在service(ServletRequest req, ServletResponse res)方法中，将ServletRequest和ServletResponse转换为HttpServletRequest和HttpServletResponse，根据不同HTTP请求类型调用专门的方法进行处理。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span><strong>今后在实际使用中继承HttpServlet抽象类创建自己的Servlet实现类即可。</strong><span class="md-plain">重写doGet(HttpServletRequest req, HttpServletResponse resp)和doPost(HttpServletRequest req, HttpServletResponse resp)方法实现请求处理，不再需要重写service(ServletRequest req, ServletResponse res)方法了。</span></span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">又因为我们业务中get，post的处理方式又都是一样的，所以我们只需要写一种方法即可，使用另外一种方法调用我们写好的doXXX方法。web.xml配置与之前相同。</span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">HttpServletRequest接口</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">该接口是ServletRequest接口的子接口，封装了HTTP请求的相关信息。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">浏览器请求服务器时会封装请求报文交给服务器，服务器接受到请求会将请求报文解析生成request对象。</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">由Servlet容器创建其实现类对象并传入service(HttpServletRequest req, HttpServletResponse res)方法中。</span></p>
+</li>
+</ul>
+<h3>&nbsp;功能</h3>
+<p style="text-align: left;">　　1.使用HttpServletRequest对象获取请求参数，即浏览器向服务器提交的数据</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">一个name对应一个值</span>
+String userId = request.getParameter("userId");</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">一个name对应一组值</span>
+String[] soccerTeams = request.getParameterValues("soccerTeam"<span style="color: #000000;">);
+</span><span style="color: #0000ff;">for</span>(<span style="color: #0000ff;">int</span> i = 0; i &lt; soccerTeams.length; i++<span style="color: #000000;">){
+    System.out.println(</span>"team "+i+"="+<span style="color: #000000;">soccerTeams[i]);
+}</span></pre>
+</div>
+<p>　　2.获取url地址参数</p>
+<div class="cnblogs_code">
+<pre><code>String path = request.getContextPath();<span style="color: #008000;">//</span><span style="color: #008000;">重要</span>
+System.out.println("上下文路径："+<span style="color: #000000;">path);
+System.out.println(</span>"端口号："+<span style="color: #000000;">request.getServerPort());
+System.out.println(</span>"主机名："+<span style="color: #000000;">request.getServerName());
+System.out.println(</span>"协议："+request.getScheme());</pre>
+</div>
+<p>　　3.获取请求头信息</p>
+<div class="cnblogs_code">
+<pre><code>String header = request.getHeader("User-Agent"<span style="color: #000000;">);
+System.out.println(</span>"user-agent:"+<span style="color: #000000;">header);
+String referer </span>= request.getHeader("Referer"<span style="color: #000000;">);
+System.out.println(</span>"上个页面的地址："+referer);<span style="color: #008000;">//</span><span style="color: #008000;">登录失败，返回登录页面让用户继续登录</span></pre>
+</div>
+<p>　　4.请求的转发</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">获取请求转发对象</span>
+RequestDispatcher dispatcher = request.getRequestDispatcher("success.html"<span style="color: #000000;">);
+dispatcher.forward(request, response);</span><span style="color: #008000;">//</span><span style="color: #008000;">发起转发</span></pre>
+</div>
+<p>　　5.向请求域中保存数据</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">将数据保存到request对象的属性域中</span>
+request.setAttribute("attrName", "attrValueInRequest"<span style="color: #000000;">);
+</span><span style="color: #008000;">//</span><span style="color: #008000;">两个Servlet要想共享request对象中的数据，必须是转发的关系</span>
+request.getRequestDispatcher("/ReceiveServlet").forward(request, response);</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">从request属性域中获取数据</span>
+Object attribute = request.getAttribute("attrName"<span style="color: #000000;">);
+System.out.println(</span>"attrValue="+attribute);</pre>
+</div>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">HttpServletResponse接口</span></h3>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">该接口是ServletResponse接口的子接口，封装了服务器针对于HTTP响应的相关信息。(暂时只有服务器的配置信息，没有具体的和响应体相关的内容)</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">由Servlet容器创建其实现类对象，并传入service(HttpServletRequest req, HttpServletResponse res)方法中。</span></p>
+</li>
+</ul>
+<h3>功能</h3>
+<p>　　1.使用PrintWriter对象向浏览器输出数据</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">通过PrintWriter对象向浏览器端发送响应信息</span>
+PrintWriter writer =<span style="color: #000000;"> res.getWriter();
+writer.write(</span>"Servlet response"<span style="color: #000000;">);
+writer.close();</span></pre>
+</div>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">写出的数据可以是页面、页面片段、字符串等</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">当写出的数据包含中文时，浏览器接收到的响应数据就可能有乱码。为了避免乱码，可以使用Response对象在向浏览器输出数据前设置响应头。</span></p>
+</li>
+</ul>
+<p>　　2.设置响应头</p>
+<div class="cnblogs_code">
+<pre><code>response.setHeader("Content-Type", "text/html;charset=UTF-8");</pre>
+</div>
+<ul>
+<li>设置好以后，会在浏览器的响应报文中看到设置的响应头中的信息。</li>
+</ul>
+<p>　　3.重定向请求</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">注意路径问题，加上/会失败，会以主机地址为起始，重定向一般需要加上项目名</span>
+response.sendRedirect(&ldquo;success.html&rdquo;);</pre>
+</div>
+<ul>
+<li>&nbsp;通过重定向将页面的地址交给浏览器并设置响应状态码为302，浏览器会自动进行跳转。</li>
+</ul>
+<h2 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">转发与重定向</span></h2>
+<p>&nbsp;<img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Web基础了解版05-Servlet2.png" alt="" /></p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">请求转发</span></h3>
+<ol>
+<li>&nbsp;<span class="md-plain md-expand">第一个Servlet接收到了浏览器端的请求，进行了一定的处理，然后没有立即对请求进行响应，而是将请求&ldquo;交给下一个Servlet&rdquo;继续处理，下一个Servlet处理完成之后对浏览器进行了响应。<span class="md-expand"><strong><span class="md-plain">在服务器内部将请求&ldquo;交给&rdquo;其它组件继续处理就是请求的转发。</span></strong></span></span></li>
+<li>&nbsp;转发的情况下，两个Servlet可以共享同一个Request对象中保存的数据。</li>
+<li>&nbsp;当需要将后台获取的数据传送到JSP上显示的时候，就可以先将数据存放到Request对象中，再转发到JSP从属性域中获取。此时由于是&ldquo;转发&rdquo;，所以它们二者共享Request对象中的数据。</li>
+<li>&nbsp;转发的情况下，可以访问WEB-INF下的资源。</li>
+<li>&nbsp;<strong><span class="md-plain">转发以&ldquo;/&rdquo;开始表示项目根路径，重定向以&rdquo;/&rdquo;开始表示主机地址。</span></strong></li>
+</ol>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">1.使用RequestDispatcher对象封装目标资源的虚拟路径</span>
+    RequestDispatcher dispatcher = request.getRequestDispatcher("/index.html"<span style="color: #000000;">);
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">2.调用RequestDispatcher对象的forward()方法&ldquo;前往&rdquo;目标资源
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">[注意：传入的参数必须是传递给当前Servlet的service方法的
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">那两个ServletRequest和ServletResponse对象]</span>
+<span style="color: #000000;">    dispatcher.forward(request, response);
+}</span></pre>
+</div>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">请求重定向</span></h3>
+<ol>
+<li><span class="md-plain md-expand">第一个Servlet接收到了浏览器端的请求，进行了一定的处理，然后给浏览器一个特殊的响应消息，这个特殊的响应消息会通知浏览器去访问另外一个资源，这个动作是服务器和浏览器自动完成的。<span><strong><span class="md-plain">整个过程中浏览器端会发出两次请求</span></strong><span class="md-plain">，且在<span><strong><span class="md-plain">浏览器地址栏里面能够看到地址的改变</span></strong><span class="md-plain md-expand">，改变为下一个资源的地址。</span></span></span></span></span></li>
+<li>重定向的情况下，原Servlet和目标资源之间就不能共享请求域数据了。</li>
+<li>HttpServletResponse代表HTTP响应，对象由Servlet容器创建。</li>
+</ol>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">　　 //</span><span style="color: #008000;">1.调用HttpServletResponse对象的sendRedirect()方法
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">2.传入的参数是目标资源的虚拟路径</span>
+    response.sendRedirect("index.html");</pre>
+</div>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">对比请求的转发与重定向</span></h3>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th>&nbsp;</th><th><span class="td-span"><span class="md-plain">转发</span></span></th><th><span class="td-span"><span class="md-plain">重定向</span></span></th></tr>
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">浏览器感知</span></span></td>
+<td><span class="td-span"><span class="md-plain">在服务器内部完成，浏览器感知不到</span></span></td>
+<td><span class="td-span"><span class="md-plain">服务器以302状态码通知浏览器访问新地址，浏览器有感知</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">浏览器地址栏</span></span></td>
+<td><span class="td-span"><span class="md-plain">不改变</span></span></td>
+<td><span class="td-span"><span class="md-plain">改变</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">整个过程发送请求次数</span></span></td>
+<td><span class="td-span"><span class="md-plain">一次</span></span></td>
+<td><span class="td-span"><span class="md-plain">两次</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">执行效率</span></span></td>
+<td><span class="td-span"><span class="md-plain">效率高</span></span></td>
+<td><span class="td-span"><span class="md-plain">效率低</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">API（或发起者）</span></span></td>
+<td><span class="td-span"><span class="md-plain">Request对象</span></span></td>
+<td><span class="td-span"><span class="md-plain">Response对象</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">能否共享request对象数据</span></span></td>
+<td><span class="td-span"><span class="md-plain">能</span></span></td>
+<td><span class="td-span"><span class="md-plain">否</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">WEB-INF下的资源</span></span></td>
+<td><span class="td-span"><span class="md-plain">能访问</span></span></td>
+<td><span class="td-span"><span class="md-plain">不能访问</span></span></td>
+</tr>
+<tr class="md-end-block md-focus-container">
+<td><span class="td-span"><span class="md-plain">目标资源</span></span></td>
+<td><span class="td-span md-focus"><span class="md-plain md-expand">必须是当前web应用中的资源</span></span></td>
+<td><span class="td-span"><span class="md-plain">不局限于当前web应用</span></span></td>
+</tr>
+</tbody>
+</table>
+<p>说明：默认情况下，浏览器是不能访问服务器web-inf下的资源的，而服务器是可以访问的。</p>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">字符编码问题</span></h3>
+<p>解决乱码的方法：就是统一字符编码</p>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain md-expand"> GET请求乱码</span></h4>
+<ul>
+<li>GET请求参数是在地址后面的。我们需要修改tomcat的配置文件。需要在server.xml文件修改Connector标签，添加URIEncoding="utf-8"属性。</li>
+<li>一旦配置好以后，可以解决当前工作空间中所有的GET请求的乱码问题。</li>
+</ul>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">POST</span><span class="md-plain md-expand">请求乱码</span></h4>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">POSTt请求服务器解析出现问题，解决方法：在获取参数值之前，设置请求的解码格式，使其和页面保持一致。</span></p>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>request.setCharacterEncoding("utf-8");</pre>
+</div>
+<ul>
+<li>POST请求乱码问题的解决，只适用于当前的操作所在的类中。不能类似于GET请求一样统一解决。因为请求体有可能会上传文件。</li>
+</ul>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">响应乱码</span></h3>
+<ul>
+<li>向浏览器发送响应的时候，要告诉浏览器，我使用的字符集是哪个，浏览器就会按照这种方式来解码</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>//方法一：<br />response.setHeader("Content-Type", "text/html;charset=utf-8");</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>//方法二：<br />response.setContentType("text/html;charset=utf-8");</pre>
+</div>
+<h3 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">路径设置问题</span></h3>
+<p><strong><span class="md-plain">相对路径和绝对路径</span></strong></p>
+<p><span class="md-expand"><strong><span class="md-plain">相对路径：虚拟路径如果不以&ldquo;/&rdquo;开始，就是相对路径</span></strong><span class="md-plain md-expand">，浏览器会以当前资源所在的虚拟路径为基准对相对路径进行解析，从而生成最终的访问路径。</span></span></p>
+<p><strong><span class="md-plain">绝对路径：虚拟路径以&ldquo;/&rdquo;开始，就是绝对路径。</span></strong></p>
+<p><span class="md-expand"><strong><span class="md-plain">① 在服务器端</span></strong><span class="md-plain md-expand">：虚拟路径最开始的&ldquo;/&rdquo;表示当前Web应用的根目录。只要是服务端解析的绝对路径，都是以web根目录为起始的。由服务器解析的路径包括：（1） web.xml的配置路径、（2）request转发的路径。</span></span></p>
+<p><span class="md-expand"><strong><span class="md-plain">② 在浏览器端</span></strong><span class="md-plain">：虚拟路径最开始的&ldquo;/&rdquo;表示当前主机地址。</span></span></p>
+<p><span class="md-expand"><span class="md-plain"><span class="md-softbreak"><span class="md-plain">例如：链接地址&ldquo;/Path/dir/b.html&rdquo;经过浏览器解析后为：<span class="md-softbreak"> <span class="md-plain">相当于<span class="md-link md-expand">http://localhost:8989/Path/dir/b.html</span></span></span></span></span></span></span></p>
+<p><span class="md-plain md-expand">由浏览器解析的路径包括：</span></p>
+<p><span class="md-plain md-expand"><span class="md-softbreak"> <span class="md-plain">（1）重定向操作：response.sendRedirect("/xxx")<span class="md-softbreak"> <span class="md-plain">（2）所有HTML标签：<span>&lt;<span class="md-plain">a href="/xxx"&gt; 、<span>&lt;<span class="md-plain md-expand">form action="/xxx"&gt; 、link、img、script等</span></span></span></span></span></span></span></span></span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">在浏览器端，除了使用绝对路径之外，我们还可以使用base标签+相对路径的方式来确定资源的访问有效。</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">base标签影响当前页面中的所有相对路径，不会影响绝对路径。相当于给相对路径设置了一个基准地址。</span></p>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 给页面中的相对路径设置基准地址 </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">base </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="http://localhost:8080/Test_Path/"</span><span style="color: #0000ff;">/&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>总结：</strong></p>
+<p> * /的有无<br />	 *		有: 采用的是绝对路径<br />	 *		无: 采用的是相对路径<br />	 *	/的含义：<br />	 *		用服务器解析代表：当前项目下 (http://localhost:8080/上下文项目名/)<br />	 *		用浏览器解析代表：当前主机下(http://localhost:8080/)<br />	 *	/的几种使用位置：<br />	 *		用在转发：采用服务器解析    (相对和绝对没有区别)<br />	 *		用在重定向：采用浏览器解析 <br />	 *			相对路径：response.sendRedirect("pages/user/login_success.html");<br />	 *			局对路径：response.sendRedirect(request.getContextPath()+"/pages/user/login_success.html");<br />	 *		用在页面上：采用浏览器解析<br />	 *			建议采用绝对路径去加载静态资源(css/js/image/video...)<br />	 *			方式一：&lt;link href="/上下文项目名/static/css/style.css" type="text/css" rel="stylesheet"  &gt;<br />	 *			方式二：在head标签中新增一个base标签并设置href属性  ★<br />	 *				&lt;base href="/BookStore02/"&gt;   在当前页面中所有的路径钱统一添加指定前缀</p>
+<h3 class="md-end-block md-heading md-focus"><a href="https://www.cnblogs.com/Open-ing/articles/12077947.html" target="_blank"><span class="md-plain md-expand">导入外部工程</span></a></h3>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

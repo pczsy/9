@@ -1,0 +1,145 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修requests-html库render的使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>requests-html库render的使用</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11694967.html</div><br>
+    <h2 id="一.render的使用">一.render的使用</h2>
+<pre><code><code>from requests_html  import HTMLSession
+
+session  =HTMLSession()
+response = session.get(&#39;https://www.cnblogs.com/pythonywy/&#39;)
+
+print(response.html.render())</code></pre>
+<ul>
+<li>进行js注入</li>
+<li>模拟人操作浏览器</li>
+</ul>
+<h2 id="二.render的参数">二.render的参数</h2>
+<h3 id="scriptstr">1.script(str)</h3>
+<p>执行的js代码</p>
+<p>语法:<code>response.html.render(script='js代码字符串格式')</code></p>
+<h3 id="scrolldownint">2.scrolldown(int)</h3>
+<ul>
+<li><p>滑动滑块</p></li>
+<li><p>和sleep联用为多久滑动一次</p></li>
+</ul>
+<p>语法:<code>response.html.render(scrolldown=页面向下滚动的次数)</code></p>
+<h3 id="retriesint">3.retries(int)</h3>
+<p>加载页面失败的次数</p>
+<h3 id="waitfloat">4.wait(float)</h3>
+<p>加载页面的等待时间（秒），防止超时（可选）</p>
+<h3 id="sleepint">5.sleep(int)</h3>
+<p>在页面初次渲染之后的等待时间</p>
+<h3 id="timeoutint-or-float">6.timeout(int or float)</h3>
+<p>页面加载时间上线</p>
+<h3 id="keep_pagebool">7.keep_page(bool)</h3>
+<p>如果为真，允许你用r.html.page访问页面</p>
+<h3 id="reloadbool">8.reload(bool)</h3>
+<p>如果为假，那么页面不会从浏览器中加载，而是从内存中加载</p>
+<h2 id="三.r.html.page与浏览器交互">三.r.html.page与浏览器交互</h2>
+<h3 id="基本语法">1.基本语法</h3>
+<pre><code><code>from requests_html  import HTMLSession
+
+session  =HTMLSession()
+response = session.get(&#39;https://www.cnblogs.com/pythonywy/&#39;)
+
+print(response.html.render(keep_page=true))
+
+async def run():
+    #交互语句
+    await r.html.page.XXX
+
+ 
+
+try:
+    session.loop.run_until_complete(run())
+finally:
+    session.close()</code></pre>
+<h3 id="键盘事件">2.键盘事件</h3>
+<ul>
+<li>keyboard.down('键盘名称'):按下键盘不弹起(与键盘有点不太down('h')只会出现一个h而不是hhhhhhh....)</li>
+<li>keyboard.up('键盘名称'):抬起按键</li>
+<li>keyboard.press('键盘名称'):按下+弹起</li>
+<li>keyboard.type('输入的字符串内容'，{‘delay’:100}) delay为每个子输入后延迟时间单位为<code>ms</code></li>
+</ul>
+<h3 id="鼠标事件">3.鼠标事件</h3>
+<p><code>点击</code></p>
+<ul>
+<li>click('css选择器',{ 'button'：'left', 'clickCount':1,'delay':0})
+<ul>
+<li>button为鼠标的按键<code>left</code>, <code>right</code>, or <code>middle</code>,</li>
+<li>clickCount:点击次数默认次数为1</li>
+<li>delay:点击延迟时间,单位是毫秒</li>
+</ul></li>
+<li>mouse.click(x, y,{ 'button'：'left', 'clickCount':1,'delay':0})
+<ul>
+<li>x,y:muber数据类型,代表点击对象的坐标</li>
+</ul></li>
+</ul>
+<p><code>点下去不抬起</code></p>
+<ul>
+<li>mouse.down({'button':xxx,clickCount:xxx})</li>
+</ul>
+<p><code>抬起鼠标</code></p>
+<ul>
+<li>mouse.up({'button':xxx,clickCount:xxx})</li>
+</ul>
+<h3 id="其他">4.其他</h3>
+<p><code>等待</code></p>
+<ul>
+<li><p>waitFor('选择器, 方法 或者 超时时间')</p>
+<ul>
+<li>选择器: css 选择器或者一个xpath 根据是不是<code>//</code>开头</li>
+<li>方法:时候此方法是<a href="https://zhaoqize.github.io/puppeteer-api-zh_CN/#?product=Puppeteer&amp;version=v1.19.0&amp;show=api-pagewaitforfunctionpagefunction-options-args">page.waitForFunction()</a>的简写</li>
+<li>超时时间:单位毫秒</li>
+</ul></li>
+</ul>
+<p><code>等待元素加载</code></p>
+<p>waitForSelector('css选择器')</p>
+<p><code>获取x,y坐标</code></p>
+<pre><code><code>    mydic =await r.html.page.evaluate(&#39;&#39;&#39;() =&gt;{ 
+        var a = document.querySelector(&#39;#kw&#39;)   #对象的css选择器
+        var b = a.getBoundingClientRect()
+        return {&#39;x&#39;:b.x,&#39;y&#39;:b.y , &#39;width&#39;:b.width , &#39;height&#39;:b.height }
+        }&#39;&#39;&#39;)</code></pre>
+<p><code>执行js代码</code></p>
+<p>evaluate('js代码字符串格式')</p>
+<p><code>输入内容</code></p>
+<p>type('css选择器'，’内容‘，{’delay‘：100})</p>
+<p><code>聚焦</code></p>
+<p>focus('css选择器')</p>
+<p><code>移动动到</code></p>
+<p>hover('css选择器')</p>
+<p><code>获取cookies</code></p>
+<p>cookies()</p>
+<p><code>设置页面大小</code></p>
+<p>setViewport({'width': 1366, 'height': 768})</p>
+<p><code>截图</code></p>
+<p>screenshot({'path':保存本地路径,'clip':{'x':1,'y':1,'width':100,'height':100}})</p>
+<ul>
+<li>x:图片的x坐标</li>
+<li>y:图片的y坐标</li>
+<li>width: 图片宽</li>
+<li>height:图片高</li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

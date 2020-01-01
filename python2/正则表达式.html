@@ -1,0 +1,238 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修正则表达式' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>正则表达式</center></div><div class='banquan'>原文出处:本文由博客园博主飞熊入梦提供。<br/>
+原文连接:https://www.cnblogs.com/fly-hero/p/11777232.html</div><br>
+    <h3 id="简介动机">1 简介/动机</h3>
+<p><strong>正则表达式</strong> ：为高级的文本模式匹配、抽取、与/或文本形式的搜索和替换功能提供了基础。<br />
+Python 通过标准的re模块来支持正则表达式。</p>
+<p><strong>注意</strong>：此处我们提到的搜索和匹配意义不一样</p>
+<p><strong>你的第一个正则表达式</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>正则表达式</th>
+<th style="text-align: center;">匹配的字符串</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>foo</td>
+<td style="text-align: center;">foo</td>
+</tr>
+<tr class="even">
+<td>Python</td>
+<td style="text-align: center;">Python</td>
+</tr>
+<tr class="odd">
+<td>abc123</td>
+<td style="text-align: center;">abc123</td>
+</tr>
+<tr class="even">
+<td>666</td>
+<td style="text-align: center;">666</td>
+</tr>
+</tbody>
+</table>
+<h3 id="符号和字符">2 符号和字符</h3>
+<p><strong>元字符</strong> 赋予正则表达式强大的功能和灵活性。</p>
+<p><strong>举例</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>表示法</th>
+<th>描述</th>
+<th>正则表达式示例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>literal</td>
+<td>匹配文本字符串的字面值literal</td>
+<td>fool</td>
+</tr>
+<tr class="even">
+<td>re1/re2</td>
+<td>匹配正则表达式re1或者re2</td>
+<td>fool/bar</td>
+</tr>
+<tr class="odd">
+<td>.</td>
+<td>匹配任何字符(除\n)</td>
+<td>b.b</td>
+</tr>
+<tr class="even">
+<td>^</td>
+<td>匹配字符串起始部分</td>
+<td>^Dear</td>
+</tr>
+<tr class="odd">
+<td>$</td>
+<td>匹配字符串终止部分</td>
+<td>/bin/*sh$</td>
+</tr>
+<tr class="even">
+<td>*</td>
+<td>匹配0次或多次前面出现的表达式</td>
+<td>[A-Za-z0-9]*</td>
+</tr>
+<tr class="odd">
+<td>+</td>
+<td>匹配1次或者多次前面出现的正则表达式</td>
+<td>[a-z]+.com</td>
+</tr>
+<tr class="even">
+<td>?</td>
+<td>匹配0次或者1次前面出现的正则表达式</td>
+<td>gool?</td>
+</tr>
+<tr class="odd">
+<td>{N}</td>
+<td>匹配N次前面出现的表达式</td>
+<td>[0-9]{3}</td>
+</tr>
+<tr class="even">
+<td>{M,N}</td>
+<td>匹配M~N次前面出现的正则表达式</td>
+<td>[0-9]{5,9}</td>
+</tr>
+<tr class="odd">
+<td>[...]</td>
+<td>匹配来自字符集任意单一字符</td>
+<td>[aeiou]</td>
+</tr>
+<tr class="even">
+<td>[..x-y..]</td>
+<td>匹配x-y范围中的任意单一字符</td>
+<td>[0-9],[A-Za-z]</td>
+</tr>
+<tr class="odd">
+<td>[^...]</td>
+<td>不匹配此字符集出现的任意一个字符</td>
+<td>[^aeiou][^A-Za-z]</td>
+</tr>
+<tr class="even">
+<td>(*|+|?|{})?</td>
+<td>用于匹配上面频繁出现符号的非贪婪版本</td>
+<td>.*?[a-z]</td>
+</tr>
+<tr class="odd">
+<td>(...)</td>
+<td>匹配封闭式的正则表达式，然后另存为子组</td>
+<td>([0-9]{3})?,f(oo|u)bar</td>
+</tr>
+<tr class="even">
+<td>\d</td>
+<td>匹配任何十进制数字,\D与之相反</td>
+<td>data\d+.txt</td>
+</tr>
+<tr class="odd">
+<td>\w</td>
+<td>匹配任何字母数字字符，\W与之相反</td>
+<td>[A-Za-z</td>
+</tr>
+<tr class="even">
+<td>\s</td>
+<td>匹配任何空格字符，与[\n\t\r\v\f]相同(\S与之相反)</td>
+<td>of\sthe</td>
+</tr>
+<tr class="odd">
+<td>\b</td>
+<td>匹配任何单词边界(\B与之相反)</td>
+<td>\bThe\b</td>
+</tr>
+<tr class="even">
+<td>\N</td>
+<td>匹配已保存的子组 N (参见上面的(...)</td>
+<td>price:\16</td>
+</tr>
+<tr class="odd">
+<td>\c</td>
+<td>逐字匹配任何特殊字符c</td>
+<td>\.,\*</td>
+</tr>
+<tr class="even">
+<td>A(\Z)</td>
+<td>匹配字符串的起始（结束）</td>
+<td>\ADear</td>
+</tr>
+</tbody>
+</table>
+<h4 id="使用择一匹配符号匹配多个正则表达式模式">2.1 使用择一匹配符号匹配多个正则表达式模式</h4>
+<p><strong>择一匹配的管道符号(|)表示从”从多个模式选择其一的操作</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>正则表达式模式</th>
+<th>匹配的字符串</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>at | home</td>
+<td>at、home</td>
+</tr>
+<tr class="even">
+<td>r2d2 | \c3po</td>
+<td>r2d2、c3po</td>
+</tr>
+<tr class="odd">
+<td>bat | bet | bit</td>
+<td>bat、bet、bit</td>
+</tr>
+</tbody>
+</table>
+<p>择一匹配符号(|) 也称作并(union)或逻辑或(logical OR)</p>
+<h4 id="匹配任意单个字符">2.2 匹配任意单个字符</h4>
+<p>点号（.）匹配除了换行符（\n）以外的任意字符。</p>
+<p><strong>注意：匹配句点或者句号，必须使用反斜杠转义句点符号的功能（\.）</strong></p>
+<h4 id="从字符串起始或者结尾或者单词边界匹配">2.3 从字符串起始或者结尾或者单词边界匹配</h4>
+<p>匹配字符串的开始位置：^、\A<br />
+匹配字符串的末尾位置：$、\Z</p>
+<p><strong>注意：匹配一个字符串（^Subject:hi$）</strong></p>
+<p>匹配一个单词的边界：\b, \B</p>
+<p><strong>注意：\bthe表示任何以the为起始的字符串<br />
+\Bthe表示任何包含但不以the为起始的字符串</strong></p>
+<h4 id="创建字符集">2.4 创建字符集</h4>
+<p>[ ] 用来创建特定字符集，它的功能类似 |，例如[ab] = a | b</p>
+<p><strong>注意：[ab][c] 匹配 ac 或 bc, 不同于 ab | c</strong></p>
+<h4 id="限定范围和否定">2.5 限定范围和否定</h4>
+<p>除了单字符以外，字符集还支持匹配指定的字符范围，涉及连字符（-）和脱字符（^）。</p>
+<p><strong>注意：[a-z]表示a-z任意一个；[^aeiou]表示一个非元音字符</strong></p>
+<h4 id="使用闭包操作符实现存在性和频数匹配">2.6 使用闭包操作符实现存在性和频数匹配</h4>
+<p>闭包操作符：*、+</p>
+<p><strong>注意：贪婪匹配时默认匹配尽可能多字符，闭包操作符是贪婪的，？是非贪婪的</strong></p>
+<h4 id="表示字符集的特殊字符">2.7 表示字符集的特殊字符</h4>
+<p>特殊字符也可以表示字符集，例如 \d 表示 [0-9]，\w 表示 [A-Za-z0-9]等。</p>
+<p><strong>注意：这些特殊字符的大写表示意义恰恰相反，表不匹配</strong></p>
+<h4 id="使用圆括号指定分组">2.8 使用圆括号指定分组</h4>
+<p>圆括号的两个功能：</p>
+<ol>
+<li>对正则表达式进行分组</li>
+<li>匹配子组</li>
+</ol>
+<p><strong>注意：匹配子组是为了看到匹配表达模式的字符串各部分内容，例如，(\w+)-(\d+)可以分别访问每一个子组</strong></p>
+<h4 id="扩展表示法">2.9 扩展表示法</h4>
+<p>扩展表示法的模式：(?p<name>)表一个分组</p>
+<p><strong>注意：扩展表示法往往表条件，例如，(?=.com) 表示如果后面跟着 &quot;.com&quot; 才做匹配操作</strong></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,286 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修开发必学的验证码，教你从零写一个验证码' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>开发必学的验证码，教你从零写一个验证码</center></div><div class='banquan'>原文出处:本文由博客园博主上海小胖提供。<br/>
+原文连接:https://www.cnblogs.com/moonhmily/p/11437800.html</div><br>
+    <p><img src="./images/开发必学的验证码，教你从零写一个验证码0.png" /></p>
+<p>这周一写了一篇《2000字谏言，给那些想学Python的人，建议收藏后细看！》给大家讲了如何快速学习python。</p>
+<p>其中就有说到我们为什么不要执迷于框架、模块的调用，而要自己先去造轮子。那今天就给大家造一个。</p>
+<p>验证码是web开发中不可缺少的元素，而python又提供了非常多的验证码模块帮助大家快速生成各种验证码。</p>
+<p>那你知道验证码生成的原理吗？所谓知其然，还要知其所以然。面试中，面试官不会因为你对框架很熟悉就夸赞你。</p>
+<p>那今天小胖就带大家一层一层拨开验证码的衣服，看看其中的小奥秘 -&lt;-</p>
+<h3 id="演示环境">演示环境</h3>
+<ul>
+<li>操作系统：windows10</li>
+<li>python版本：python 3.7</li>
+<li>代码编辑器：pycharm 2018.2</li>
+<li>使用第三方模块：pillow</li>
+</ul>
+<h3 id="验证码的必须元素">验证码的必须元素</h3>
+<ol>
+<li>一张图片</li>
+<li>文本</li>
+<li>干扰元素
+<ul>
+<li>线条干扰</li>
+<li>小圆点干扰</li>
+</ul></li>
+</ol>
+<h3 id="熟悉pillow库">熟悉pillow库</h3>
+<p>我们既然需要使用pillow库制作验证码，那么首先我们先来熟悉一下我们需要用到的方法。</p>
+<ol>
+<li>Image.new(): 这个方法可以生成一张图片，有三个参数。
+<ul>
+<li>mode:颜色空间模式，可以是<code>'RGBA','RGB','L'</code>等等模式</li>
+<li>size:图片尺寸，接收一个两个整数的元祖</li>
+<li>color:图片的填充颜色，可以是<code>red，green</code>等，也可以是rgb的三个整数的元祖。也就是背景颜色</li>
+</ul></li>
+</ol>
+<pre><code><code>from PIL import Image
+
+captcha = Image.new(&#39;RGB&#39;, (1080, 900), (255,255,255))</code></pre>
+<p>上面代码创建了一个亿RGB为颜色空间模式，尺寸为1080*900，背景颜色为白色的图片。</p>
+<ol>
+<li>Image.save(): 保存图片到本地
+<ul>
+<li>fp: 本地文件名</li>
+<li>format: 可选参数，制定文件后缀名。</li>
+</ul></li>
+</ol>
+<pre><code><code>from PIL import Image
+
+captcha = Image.new(&#39;RGB&#39;, (1080, 900), (255,255,255))
+
+# captcha.save(&#39;captcha.png&#39;)
+captcha.save(&#39;captcha&#39;, format=&#39;png&#39;)</code></pre>
+<p>上面两种方式保存效果是一样的。</p>
+<ol>
+<li><p>Image.show():显示图片，会调用电脑自带的显示图片的软件。</p></li>
+<li>ImageFont.truetype(): 加载一个字体文件。生成一个字体对象。</li>
+</ol>
+<pre><code><code>from PIL import ImageFont
+#                        字体文件路径 字体大小
+font = ImageFont.truetype(&#39;simkai.ttf&#39;, 16)</code></pre>
+<ol>
+<li>ImageDraw.Draw(): 生成画笔对象。</li>
+</ol>
+<pre><code><code>from PIL import Image, ImageDraw
+
+captcha = Image.new(&#39;RGB&#39;, (1080, 900), &#39;red&#39;)
+draw = ImageDraw.Draw(captcha)</code></pre>
+<p>上面就创建了一个在captcha这张图片上的画笔，我们在这个图片上画任何东西都会使用这个画笔对象。</p>
+<ol>
+<li>ImageDraw.Draw().text():在图片上绘制给定的字符</li>
+</ol>
+<pre><code><code>from PIL import Image, ImageDraw, ImageFont
+
+captcha = Image.new(&#39;RGB&#39;, (1080, 900), &#39;red&#39;)
+font = ImageFont.truetype(&#39;simkai.ttf&#39;, 16)
+draw = ImageDraw.Draw(captcha)
+
+#      字符绘制位置  绘制的字符    制定字体      字符颜色
+draw.text((0,0), &#39;hello world&#39;, font=font, fill=&#39;black&#39;)</code></pre>
+<ol>
+<li>ImageDraw.Draw().line():在图片上绘制线条</li>
+</ol>
+<pre><code><code>from PIL import Image, ImageDraw, ImageFont
+
+captcha = Image.new(&#39;RGB&#39;, (1080, 900), &#39;red&#39;)
+draw = ImageDraw.Draw(captcha)
+
+#         线条起点  线条终点
+draw.line([(0,0),(1080,900)], fill=&#39;black&#39;)</code></pre>
+<ol>
+<li>ImageDraw.Draw().point(): 在图片上绘制点</li>
+</ol>
+<pre><code><code>from PIL import Image, ImageDraw, ImageFont
+
+captcha = Image.new(&#39;RGB&#39;, (1080, 900), &#39;red&#39;)
+font = ImageFont.truetype(&#39;simkai.ttf&#39;, 16)
+draw = ImageDraw.Draw(captcha)
+
+#           点的位置      颜色
+draw.point((500,500), fill=&#39;black&#39;)</code></pre>
+<p>制作我们的验证码我们就会使用到上面的方法。当然，pillow肯定不止这些方法，这里我们就只列举这些了。</p>
+<h3 id="制作验证码">制作验证码</h3>
+<ol>
+<li>首先我们定义一个类，初始化一些需要的参数。</li>
+</ol>
+<pre><code><code>
+import string
+
+class Captcha():
+    &#39;&#39;&#39;
+    captcha_size: 验证码图片尺寸
+    font_size: 字体大小
+    text_number: 验证码中字符个数
+    line_number: 线条个数
+    background_color: 验证码的背景颜色
+    sources: 取样字符集。验证码中的字符就是随机从这个里面选取的
+    save_format: 验证码保存格式
+    &#39;&#39;&#39;
+    def __init__(self, captcha_size=(150,100), font_size=30,text_number=4, line_number=4, background_color=(255, 255, 255), sources=None, save_format=&#39;png&#39;):
+        self.text_number = text_number
+        self.line_number = line_number
+        self.captcha_size = captcha_size
+        self.background_color = background_color
+        self.font_size = font_size
+        self.format = save_format
+        if sources:
+            self.sources = sources
+        else:
+            self.sources = string.ascii_letters + string.digits</code></pre>
+<p>这里说一下string模块。</p>
+<ul>
+<li>string.ascii_letters: 得到a-zA-Z所有字符</li>
+<li>string.digits: 得到0-9所有数字</li>
+</ul>
+<ol>
+<li>随机从sources获取字符</li>
+</ol>
+<pre><code><code>import random
+
+def get_text(self):
+    text = random.sample(self.sources,k=self.text_number)
+    return &#39;&#39;.join(text)</code></pre>
+<p>random.sample()方法：从第一个参数中随机获取字符。获取个数有第二个参数指定。</p>
+<ol>
+<li>随机获取绘制字符的颜色</li>
+</ol>
+<pre><code><code>
+def get_font_color(self):
+    font_color = (random.randint(0, 150), random.randint(0, 150), random.randint(0, 150))
+    return font_color</code></pre>
+<ol>
+<li>随机获取干扰线条的颜色</li>
+</ol>
+<pre><code><code>def get_line_color(self):
+    line_color = (random.randint(0, 250), random.randint(0, 255), random.randint(0, 250))
+    return line_color</code></pre>
+<ol>
+<li>编写绘制文字的方法</li>
+</ol>
+<pre><code><code>def draw_text(self,draw, text, font, captcha_width, captcha_height, spacing=20):
+    &#39;&#39;&#39;
+    在图片上绘制传入的字符
+    :param draw: 画笔对象
+    :param text: 绘制的所有字符
+    :param font: 字体对象
+    :param captcha_width: 验证码的宽度 
+    :param captcha_height: 验证码的高度
+    :param spacing: 每个字符的间隙
+    :return: 
+    &#39;&#39;&#39;
+    # 得到这一窜字符的高度和宽度
+    text_width, text_height = font.getsize(text)
+    # 得到每个字体的大概宽度
+    every_value_width = int(text_width / 4)
+
+    # 这一窜字符的总长度
+    text_length = len(text)
+    # 每两个字符之间拥有间隙，获取总的间隙
+    total_spacing = (text_length-1) * spacing
+
+    if total_spacing + text_width &gt;= captcha_width:
+        raise ValueError(&quot;字体加中间空隙超过图片宽度!&quot;)
+    
+    # 获取第一个字符绘制位置
+    start_width = int( (captcha_width - text_width - total_spacing) / 2 )
+    start_height = int( (captcha_height - text_height) / 2 )
+
+    # 依次绘制每个字符
+    for value in text:
+        position = start_width, start_height
+        print(position)
+        # 绘制text
+        draw.text(position, value, font=font, fill=self.get_font_color())
+        # 改变下一个字符的开始绘制位置
+        start_width = start_width + every_value_width + spacing</code></pre>
+<ol>
+<li>绘制线条的方法</li>
+</ol>
+<pre><code><code>def draw_line(self, draw, captcha_width, captcha_height):
+    &#39;&#39;&#39;
+    绘制线条
+    :param draw: 画笔对象 
+    :param captcha_width: 验证码的宽度 
+    :param captcha_height: 验证码的高度
+    :return: 
+    &#39;&#39;&#39;
+    # 随机获取开始位置的坐标
+    begin = (random.randint(0,captcha_width/2), random.randint(0, captcha_height))
+    # 随机获取结束位置的坐标
+    end = (random.randint(captcha_width/2,captcha_width), random.randint(0, captcha_height))
+    draw.line([begin, end], fill=self.get_line_color())</code></pre>
+<ol>
+<li>绘制小圆点</li>
+</ol>
+<pre><code><code>def draw_point(self, draw, point_chance, width, height):
+    &#39;&#39;&#39;
+    绘制小圆点
+    :param draw: 画笔对象
+    :param point_chance: 绘制小圆点的几率 概率为 point_chance/100
+    :param width: 验证码宽度
+    :param height: 验证码高度
+    :return:
+    &#39;&#39;&#39;
+    # 按照概率随机绘制小圆点
+    for w in range(width):
+        for h in range(height):
+            tmp = random.randint(0, 100)
+            if tmp &lt; point_chance:
+                draw.point((w, h), fill=self.get_line_color())</code></pre>
+<ol>
+<li>制作验证码</li>
+</ol>
+<pre><code><code>def make_captcha(self):
+    # 获取验证码的宽度， 高度
+    width, height = self.captcha_size
+    # 生成一张图片
+    captcha = Image.new(&#39;RGB&#39;,self.captcha_size,self.background_color)
+    # 获取字体对象
+    font = ImageFont.truetype(&#39;simkai.ttf&#39;,self.font_size)
+    # 获取画笔对象
+    draw = ImageDraw.Draw(captcha)
+    # 得到绘制的字符
+    text = self.get_text(
+
+    # 绘制字符
+    self.draw_text(draw, text, font, width, height)
+
+    # 绘制线条
+    for i in range(self.line_number):
+        self.draw_line(draw, width, height)
+
+    # 绘制小圆点 10是概率 10/100， 10%的概率
+    self.draw_point(draw,10,width,height)
+
+    # 保存图片
+    captcha.save(&#39;captcha&#39;,format=self.format)
+    # 显示图片
+    captcha.show()</code></pre>
+<p>这样，我们就生成了我们的图片验证码了，效果图.</p>
+<p><img src="./images/开发必学的验证码，教你从零写一个验证码1.png" /></p>
+<p>代码已全部上传至Github：<a href="https://github.com/MiracleYoung/You-are-Pythonista/tree/master/PythonExercise/App/captcha_project" class="uri">https://github.com/MiracleYoung/You-are-Pythonista/tree/master/PythonExercise/App/captcha_project</a></p>
+<p>关注公众号「<strong>Python专栏</strong>」，后台回复「<strong>机器学习电子书</strong>」获取100本免费机器学习相关的电子书哦～</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

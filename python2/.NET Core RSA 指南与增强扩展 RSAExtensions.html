@@ -1,0 +1,478 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修.NET Core RSA 指南与增强扩展 RSAExtensions' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>.NET Core RSA 指南与增强扩展 RSAExtensions</center></div><div class='banquan'>原文出处:本文由博客园博主晓晨Master提供。<br/>
+原文连接:https://www.cnblogs.com/stulzq/p/12053976.html</div><br>
+    <h2 id="一.-前言">一. 前言</h2>
+<p>RSA 作为最常用的非对称加密算法，在我们的实际使用中还是比较常见的，特别是对接支付十有八九都会遇到，或者是其他需要数据安全的业务场景。在 .NET Framework 以及 .NET Core &lt;3.0 时，.NET 自带的 RSA 对象仅支持XML标准形式表示的Key，这和其他语言对接其他无疑出现了许多难度，比如 Java 常用的 key 格式是 PKCS#8，JavaScript 一般使用 PKCS#1，万变不离其宗，这些 Key 虽然格式不一样，只要我们将它们导入到 .NET RSA 对象，就都能支持。以前我们主要依赖于一个第三方库 BouncyCastle 来实现这些支持。</p>
+<p>前面我基于 BouncyCastle 封装了一个组件来支持 PKCS#1 和 PKCS#8，对于项目低于 .NET Core 3.0 的可以使用下面的解决方案：</p>
+<ul>
+<li><p><a href="https://www.cnblogs.com/stulzq/p/8260873.html">.NET Core RSA密钥的xml、pkcs1、pkcs8格式转换和JavaScript、Java等语言进行对接</a></p></li>
+<li><p><a href="https://www.cnblogs.com/stulzq/p/9131074.html">开源工具 DotnetRSA 快速生成和转换RSA秘钥</a></p></li>
+</ul>
+<p>现在 .NET Core 3.0 官方增加了对 PKCS#1和 PKCS#8（密码） Key 导入和导出支持，这真的是非常 Nice，详情请看后文分解。</p>
+<h2 id="二.-rsa-key-认知">二. RSA Key 认知</h2>
+<p>这里主要介绍三种常用格式的 Key ，XML、PKCS#1、PKCS#8</p>
+<p>XML 私钥：</p>
+<pre><code><code>&lt;RSAKeyValue&gt;
+  &lt;Modulus&gt;09Hvw+dbHzi8x+9A1b2S0/128nA61ZyiaazJcDCUety4yHg0cdp5NOnyH35njYR4u2XO5l4GptwzJQfkEzCNoAniofBkb/WMQjvUhJ30eVpa7p/aq+4cgnMYuwYRCOLAB3jpldzIvii1+BOr3oLeT+1blK9f8u3T5liIxV3DBFxEWbnhQWHMgYXpDBIV9cjVhLYZLznefoWZ8N9bVdg1aucgYSWiPbURdfZusyS2fUJgiDLu63KQw8Bhc9cIMnUh6fq2UIBMk1mg/zuKyuMzCM8FX/VvleXJwS11LAgkEhtkOKQXo2xB65+zxPAUl0mKWGKSP9gY8p0+cav4nFCSLQ==&lt;/Modulus&gt;
+  &lt;Exponent&gt;AQAB&lt;/Exponent&gt;
+  &lt;P&gt;6ZEU55sugjc/qcPW0u0fSxy5tJYI+8tFsKfw/5AAm4pq2SVfDQHkRODlv5Zr8DnFQz7WN2L7FL6f11qdIjO4/dF9oo5YlD+jlmTOdaZovNLT0w0KGnN3ChFnnyxyNSG33sxlwgUrBppY2W4Sh0rzNQ4VIBhGes6dHxuMg0hWCKM=&lt;/P&gt;
+  &lt;Q&gt;6ComYZkP5fJrT5tWNSTkb+UGyUwxquXWAgZB8GCkAzrc5t3QgPe+1W0bUSJOVddPX6mxx6yaM+ZMFc5pwdcyxYJ90+T/m2NNviMOC2fHB457OWr4HO0DloYHlWbniXfkOLGrWHshcbIEwbsYWnVYF3mOF2b/xDuDUB57B71Flu8=&lt;/Q&gt;
+  &lt;DP&gt;k9guL1zfV7W5KrC4btOCF32bX2AJV7kX5/amal6ww8QeVk19mTI1WBQz2c5RjMJEx4gi+PRCkqMHcr388QVkd+X/bMJF97FAz5YHyhkH+15IjzOVzaCBHXJe8TalJFSvmuwvDV1QGuHgk+FFATbENDUx0hsLofjfJC3AB+nl65k=&lt;/DP&gt;
+  &lt;DQ&gt;v80qvlDUuJUpILBlbSxYaTTeAWmoUtbkkfGXgj5k4aI8o6K3QgTrLKmh+sqLyxFBKvgnvp2TG7N0QkOwTYs7D795spgqr7Y/oQiW7sdCv7RviwUbi9Int7BtDXnhaUmaS1hFBalb/PEkSuUF/p2ZNHOg9yaJwRWlq4gy/jbZChM=&lt;/DQ&gt;
+  &lt;InverseQ&gt;EydINmQ+aX8+2W7ZxU66P+0XSYsA2M/m7eF0cn5B+N3E2TOYgwunWqjPksyprEtNlP/puf7li/g8G5j3fQ0Xy/KrVwR2emcvCZMqpjzkYhSn9KcVHUVJg/LHb7BDVx/uSZwj9Ok2qDX73PSa91DEsIPiKPQjkVw1QJJ19wlJMiQ=&lt;/InverseQ&gt;
+  &lt;D&gt;MzwYbp5LYCXtI78vQ4PzO+uXFdUnpfuZHU55+vUFNSKmX3cT2GYr4yyjMBL3ITflrA5YGUis+zdP96kM9cdMumUpuFnZMWuHXY3zPZCnTaMZU5a+4c9afgMw/CvfevK92BDbDzC0LarTOQopDE1DULns6O3ym2QDWTgY/QRM44StLMEaLjNdVhLS3lMZJPrMCtk1k044RStUkL/7yiLMUYtXV+Lpy/08dyHWdXfBcakusKw8EEZZ53skFeR6mkWT51wyKmBFf7D6rfUC+e282i8OGayu79zXvA0UutmUGa1Q9eAP8qsBrc/i++qa/X3JnfBrFyEwQBfQV3kiOM3T0Q==&lt;/D&gt;
+&lt;/RSAKeyValue&gt;</code></pre>
+<p>XML 公钥：</p>
+<pre class="shell"><code>&lt;RSAKeyValue&gt;
+  &lt;Modulus&gt;o9AYbnx0a9YHjhnaE8E8w1plNsmyqg2tW41sakkoELxRz5PlDAsmc31caXUveSzBY8obp5Jt0hF9EIqY5wzLZQ==&lt;/Modulus&gt;
+  &lt;Exponent&gt;AQAB&lt;/Exponent&gt;
+&lt;/RSAKeyValue&gt;</code></pre>
+<p>PKCS#1 私钥：</p>
+<pre class="shell"><code>MIIEpAIBAAKCAQEAv4pVuabfkk1NxEpIz4GYMpG69hyJDXAFJAIuUP3qCIhq081KRwrWW+0qQZp6MMTHHA/O+rHHTR6vfGBOo6yxcs9c4QCbnt/RhQ+bOmLizTJURiFrbgFU9q8dlpJ8OaoSBE3M2dY6wMhck+vEGSr1w7Fm+wH+IPPyKfNynPDYs3rKzNyHJfre62Vf23tB/Zd+7UC0PAEing7uERZdrRfloy95v8o2kVBIk4v2YUjEpLaMDbytBo++wMbyTHqsHtJKlCfxAZ+sb7VKQx8JlNEMals4k8gwjCTtoum34jgscb7CQ1aleAskTrQO2zkQINssrN/sr3WlEZ4ZdNXXVb/JhQIDAQABAoIBAF5o4i47CXIEdnNtJgxZ1Vn/qMbMc+VStMX16Tx0m1mPXBB/3L+9oMD42l4xtU66f2XeiOfanuDtYhQNKFXWtjRf72jcMtiRe6V5dsrFmQMJbq6OpHQ5ZdadpBjmpSKLKIxEiNdKl/UUDUW/7Q12tmK524eXiNpXQ6LX40NmF3oHDwMb7ZGnynFBKdA4ZDZWcVpL1eGY9xTJnpAmLRsI4UXBVeSIKZYZAo4I4FhvWr/mkESiWhBGCGrFMQB75t1x6wTqHPBoWjo9HJrSW66tbEeIdwNbpxzlaYqcOMd+Uk6P38lCE5J6rxRCMXjvehEqZmAYswfMNS5a5o2a/xEHElUCgYEA4NTyPS+aQDP9Vu8fpsbCyfxiPLSam9JUJm2ON3/0C6uomYVHnL72AgM7srmmQB4cA6bbvscjB5oB504bQ73ppi56SFnvjhQckCAtU0VPTtOVSUYBOQGvhCY0Lr+AJHCKYCVEZEWdGFObVTApA+QXwHlpheSe+fuMZkIjEiuZX2cCgYEA2hfoopk1b6RNbBvp9X1TfiZYW/x6Jrs9ebr3z08lawtLeSJAXPS37XqYgVUTMXxs7mcIP7AHmGuFlu9nOA6sVF1E2C1I3f6YMH8OaZCiH0/e3swqyTkYyiHBmCnh2lWGVyf8jK+OF0Y9KI+omGiyFiPTco6VS6Q16Ozd/NJK+DMCgYEAtjB5V9GiSpKWoYLGgEwifrFRHeYwP0LSRA2VKC48odRpnHYfUMqB6aGbF7pPGTgM9XyaJ1+RaFCJaFmnyF413x9cohKXB+gOOVCJyiepG7RjDex3gy11gD3BHXy7J0w3JbAtWp/6rELb5c1P/0IvaR45v3FCzknkPN0tNEU2VNMCgYEAtlOIm+6jurrMMxY/CImGtI7QDc7MO/cLFOqW44xSRuRBa3qT/mJkJbf5KR57lkJkOwaN4diC8QzquN1aGIZD0Z/Lv0JUiaqfhuOho+VTdAPs2awsFN+T9uAzncdd1o7raY+3VdIqYxDIblFzbD8Squm2iy3iaENXAmyLxSH1pPsCgYAXZincMY50iTmF9qYaS9xs44d3riKRQpty97W+igW5MqFMmmajfy8QShVliG1cU10Hsvz0hAZ6SK5gl+Zp6CHrveuEr69+aee6Xjp3hiJKCEiId9ahCpr8EBPWYTi22azBzgGiXseqMEI2UR9SS6K7OZ2TRNwWOERuBsabERZQhQ==</code></pre>
+<p>PKCS#8 私钥：</p>
+<pre><code><code>MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDLGWghUU/jAMivM53r6M01dtHIQwtDlDhfNLot5keKXRA0PD/yZ3ZZoi7W1ffvyfcuw2Db8nTGGIThFfESi7eyQdrLWqC7x8MppRtL6pYyercyApC4UhFBLTF4oUX/vecK9bHw/SuQGJtDfilZIxIfNZWpVrYpzEyAWpI6ix+pUlCA5LM9q3C6JbLsiMEvX3ypafoYUeOwx4ydEn3NwoR8EpeLzi3OHfcvo+m4yOUrLZXlMhDnMgPwyew4TOW/NsqaBvJJ+9r5hF/dcEQmpA8uvO6HJU7pClbwm0QjjjKdC/r//MHuiOFdv5b5bU0MJQGJ09tEWkEfUr/TqI2wZm/hAgMBAAECggEBAMVXX32YI3ZfqZ/LGLRD1TkQxc+/jS9R0uB3PDwjF/pSaM9Ih54Cd9WqJ7bp2upspLgUcYXldR+SbXLDviUWCxyyrmSPH8S12mUZn4dJXj2YTW7TXUkrvMZGol4i3gAbxmY4y3hslqqBrkOLT6Pj1tTqXQxYS9IbR24kExe9XLtIm/+3VcXRlW7AT2TZk1TRSjYB5OPmlYoPdQEZYk4ZL0NUNj1+HvQoeHX+b1iXJ08bP+KuTnJ+zxe6WG0x8x1cCpwOwGvEqMQ2SSyJihxw0969hPwwyeDDEWxkjaZdQt4I+aYE4KvLR75ixfkk6u5cknidmZjY0OCR2iLHbR40D/0CgYEA46+zjaa2cJEo1+7c8JSZHf+8/NAWAbo388caBIHlQ3tWDGVKbD0V+PsJPU3ZCZfIM0K1vBY0G/Ss/Pdn2CLVQwHHaVRMSAlpOdwzQdiao8dkT1B3zcVlzbInKbsc06C/3NCQZ+NKi1P2rlJ8u7tBq2Phbltwzu/KEfNe4vD2n7cCgYEA5Fr8WylpAF4o0LoOX1nZy4swvyOpG9a9yM9qilHeUVveIC7hEgNNe6kuasvmunPdF/8jOlcit2pBdg85Xu76h3g+AWK5cwnWwojeI3msAXpnej/VI5NkNGeTbJB64sX6PpmPvhMwApS6RRqpGttQ+qcO6lx6Vn5FF+jP8NxmvScCgYBC0nQd5Imyq8eS6BWLvfDaLw4mHGP5CdAWCZ8HJ6BDl9T/OlMHRT5HnlVt2oUSHaux76gqlVGhysNiUrH1avOwALunnAfvNGPfiVK5xnpMCt7TsEgY6hAguGJqCvJA4fKtOcDH3JsqHPBO5QKajjCNvniQzOFkuldRwV1duV6ILQKBgHrngZVrJ0l8ZElbKmslh/RmWPk3L0h9fq36/OOvhpGReW8m7BpuzqA1AXeXgPpva9sDhilbRqMjPFJXhVBUHWEWVYEXaqrA6+bOFYlQbkRpZhJFEulP5gnSiWVQKeOuHK7epZ/u4dMxy0NwQv3idqZBjeSTm4C7+2IP+wMvDNjXAoGBANM9wm6iiZOqZTCdMh/bnRDkChFTr8uLmbu5dtG8iXkGDhq0gX73GRrg4YL3R9oGSG/95zp5KThD94eAxZR1jrIChze77V6Y1urOMruUiluFIokoI94xUb7oh988yG2RSHzWQ3YzOGV1KqIf05j9JJvXZYcjUmB5yFWzPZVmDiwi</code></pre>
+<p>PKCS#1 公钥：</p>
+<pre><code><code>MEgCQQDQViO4nQdwtCq9sOQb99evu/Pjkhk4TpEnn+6uXMz2LaS9xmUtX8lOVCMMlzoSNdu6vPskfUgMGud2hOpcgnLdAgMBAAE=</code></pre>
+<p>PKCS#8 公钥：</p>
+<pre><code><code>MFwwDQYJKoZIhvcNAQEBBQADSwAwSAJBANFVdaJmHSwAj+5ry0MD98sSZ4nH0hgaUWcUwHF7+ptiX8lrnVGeK4yMlHpS5bgaWFwmdwXRaoAzWBWkEg5yV2ECAwEAAQ==</code></pre>
+<p>PKCS#1 和 PKCS#8 的 Key 都是通过 Base64 编码的。</p>
+<p>从肉眼很难区分 PKCS#1 和 PKCS#8 私钥，公钥可以根据长度来区分。</p>
+<p>XML Key 标准表现形式，展示了 RSA 算法的几个部分，主要是 ：Modulus、Exponent、P、Q、DP、DQ、InverseQ、D。私钥包含所有部分，公钥只包含 Modulus、Exponent 两个部分，所以有了私钥是可以推导出公钥的。</p>
+<h2 id="三.-key-pem">三. Key PEM</h2>
+<p>PEM 是对 Key 的一种格式化，使之更容易识别。基于上面的普通字符串 Key，它对字符串进行了分割，主要是加了前缀后缀以及每行分割为64个字符。</p>
+<p>PKCS#1 公钥</p>
+<pre><code><code>-----BEGIN RSA PUBLIC KEY-----
+BASE64 ENCODED DATA
+-----END RSA PUBLIC KEY-----</code></pre>
+<p>PKCS#8 公钥</p>
+<pre><code><code>-----BEGIN PUBLIC KEY-----
+BASE64 ENCODED DATA
+-----END PUBLIC KEY-----</code></pre>
+<p>PKCS#1 私钥</p>
+<pre><code><code>-----BEGIN RSA PRIVATE KEY-----
+BASE64 ENCODED DATA
+-----END RSA PRIVATE KEY-----</code></pre>
+<p>PKCS#8 私钥</p>
+<pre><code><code>-----BEGIN PRIVATE KEY-----
+BASE64 ENCODED DATA
+-----END PRIVATE KEY-----</code></pre>
+<p>例：PKCS#8 PEM 私钥</p>
+<pre><code><code>-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDXuqAQz+MyeKuC
+335rPshsHUFxLpZcBj97EiHq9qhvxMhLsMoa3YFvKlwktBoQWzZzgETls1N0H5E/
+yhV+pljN4TIubfsOQ68TUfJkr9b+S1/25KwOwUmMndqaFb/vcYj1QtWTl65OXOWL
+l3oKl7j2kwjmwtW8Smm97cEw15ijmRALP3qGvYyzL/YRIOHv+PmDpoMG0dedZRNz
+u7hdhkU/UrlaRLvDLHyUJPkM+4SJHVUa2epYFMB7OX/b4ZQR0unxIBea2HAo8byG
+qctOB41cXa6+t8dvRj2DhCXhMHGXKNU8DL9aALLmCbl2UTsJQyvNQ3FaT7TzQYsw
+gOevjFttAgMBAAECggEBALltxOAukM91QZdAm917HbMwgmvS65M2G6Kht13LnoRT
+1Qaac14cP4FaG9HArRaaEHe/LXlzZqxN5f+6qDcwrOxqQUP/bOiZ7QbiTUOWkWoL
+R/VkITCdm6aumJQRVeVu5ZZLWGGA42agGv6duV0ZhPcM833GwwkRvUpv7rsY1i7n
+ccUObhkv3ql8XjnCcz1rSSkf6W40+dp0pW2mCH6NPeT8kdtBH7mA/ZSK7ZMQbMGg
+LNdCx069o91POKP/nZ9V9Ex2Bviic2TqpilC6Z/9EryxA0HszknUMX7Lnuhr7Fsb
+n8wkvYLplebolTOrCy/athEZkGdwCrgdGFk7by/XsdECgYEA9BX0vnhr1d1A9rxz
+YYt/Xt3DqqtnQ8ETe4CldI3/XIJ3CcMI4f52dAk+Jl9V4vHu4HRKODWjJ67FDExQ
+Bu+FWUjk01rFSMmbsVJRenRyuGL4X5XTRwMCtcIcxfvYgttLVVpqCsDK2CredAxc
+u+RZ5eI0/Y4gc+BKzDIbSy1LQ2sCgYEA4kJUQ4BlIQHD2CEj49ORL/WzWk01Wi9A
+2ilQcVf/xbLeBJd04SemftHLF4ulKM6VZ4KyrTzewwM6rEw31fWo7dgxShwTdnMI
+Hn3esTdZYK6O6zQ8PuEi/q4hTx4QYXDq63pKoDRTrkQAVZdTe0ujyczPXjdAKwYF
+obd3sk606ocCgYA7tpdedZVkB7HZ6vaLOZZafgRdX3tu3vBGOY3AuvBrEFvQ3o7w
+wtD1yEEVICOh1rAq5yg1IiIdFiuMu6qkV7qWwjeA4Wb8TJ4zPkFCpPRf2Y6Ly9qZ
+N8pU7v0dDmTEdqOyaOEialH1ml87or6ZFN9NVw7BrSCRWKDT3bpBpP4RqwKBgQC/
+i5u+kaILsWzVOikiJOgTDBTMa/Sw5rQmfTdm3TLhca3XgUknm+OuFXmz8zrdMxb0
+zIbrdk64FbHET7otXo2m3ZHMxbwMWRIUjkbLDKqT2PORV2VxbjOsHEqCqlb/xxJ6
+S8uFmQcGzvbhfvzjsoN0wfkEMA4Y3j5CTAn/X/Z1XQKBgGG4qDagG1unSkpNfHfu
+qwjEjAkSR/pla4vJIaEaA94/gJ21upZfwjUUdRXJbk6W03OfSOlmy2zIeCguV+H/
+UkMOcmBqVX/tbCQy7weCQwwHU4Dluy7xJIzrgYRXIuV+3zk2D63+LAK84+ksbL61
+zCnaG86YfYxcClOZ/revxrnd
+-----END PRIVATE KEY-----</code></pre>
+<h2 id="四.-.net-core-3.0-rsa-新增功能">四. .NET Core 3.0 RSA 新增功能</h2>
+<p>.NET Core 3.0 官方增加了对 PKCS#1和 PKCS#8（密码） Key 导入和导出支持，PKCS# 1为默认格式。</p>
+<table>
+<thead>
+<tr class="header">
+<th>方法名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ExportRSAPrivateKey</td>
+<td>导出 PKCS# 1 私钥</td>
+</tr>
+<tr class="even">
+<td>ExportRSAPublicKey</td>
+<td>导出 PKCS# 1 公钥</td>
+</tr>
+<tr class="odd">
+<td>ExportPkcs8PrivateKey</td>
+<td>导出 PKCS# 8 私钥</td>
+</tr>
+<tr class="even">
+<td>ExportEncryptedPkcs8PrivateKey</td>
+<td>导出 PKCS# 8 加密私钥</td>
+</tr>
+<tr class="odd">
+<td>ImportRSAPrivateKey</td>
+<td>导入 PKCS# 1 私钥</td>
+</tr>
+<tr class="even">
+<td>ImportRSAPublicKey</td>
+<td>导入 PKCS# 1 公钥</td>
+</tr>
+<tr class="odd">
+<td>ImportPkcs8PrivateKey</td>
+<td>导入 PKCS# 8 私钥</td>
+</tr>
+<tr class="even">
+<td>ImportEncryptedPkcs8PrivateKey</td>
+<td>导入 PKCS# 8 加密私钥</td>
+</tr>
+</tbody>
+</table>
+<p>以 PKCS#1 格式为例，用法如下：</p>
+<pre class="csharp"><code>var rsa = RSA.Create();
+
+//导出
+Console.WriteLine(&quot;RSA PKCS#1 私钥：&quot;);
+Console.WriteLine(Convert.ToBase64String(rsa.ExportRSAPrivateKey()));
+Console.WriteLine(&quot;RSA PKCS#1 公钥：&quot;);
+Console.WriteLine(Convert.ToBase64String(rsa.ExportRSAPublicKey()));
+
+//导入
+rsa.ImportRSAPrivateKey(Convert.FromBase64String(&quot;MIIEogIBAAKCAQEArTLJkbnYqeNXjy1iznnEi8bZjVbP4NabvftKFMdYeCCHfeHXZEvaJFbWcybmWwfj4ZjHH+/hh1RRQVMNgQUD8uXYmdjn7bUAfeyT9ujSulEFzwM2Udm6XtnI5/K2WH9ZHEPqUqNgv0EEthV6Yz+SQYFSYO2xd+TzLMvnW/iCmgb9gQfl85L+cKVvQy2NOod3i+gbTwPM8im1fP43vqVUUE5OD+Hz1Hiwai/RJDC67ZhoSdv1Vor8t9uyg+03fa8gfPj52gFRyHh3y8d/bb1LrJwbXV3cBCLD9aw9bnW3rFRwpP+JuH9VKSpoRA3gwD3vhoz7Y8BBOsC6PSrusAm/lQIDAQABAoIBAH+yBTli+2JuUn0mqkWvM4EW0AlMKyILOHJ+1mSxgQG4gg0GuKai4ieOurfVw1r0W0hWOuHKG86KFQqDsF4ik4G/gs4TRRRWMhGlnoYZrFxgJlc1eBQq4iTSjzSsF1LyOYIEdLwO5uK7jjytYznPgga30UPTm9fYvo2VnHOLqsbiD98ljQmUa53b13wqsGBRaqLgY8cAt5maI/IUytQNKORw/OwLVkYYOuLCI6NCnUgLhvn/aQpvdcIU06xsZw+sEsSsax3idILv+4VrmlSg/8Bhi7m+2JW/ati3QeQ2TUTRhAs7XxHeTSNWnlQE/pCnlBYSWZZCOSferPh8cJwZobUCgYEAzJZaIBVRAcOhUwOd5zE57aLuT8Qxc9zWSw8iAtITc/R6QE1x8qqSHmUudhz6/yCk07x1AatwtVisWixBFmbeKqMBsEVMWgSNu/+J8G2Hndr/588ApHwNibLPkbyqS9AGg//JP69k2N3L8ykpveYupD/riE6ppTQaO7UFCzFjlvMCgYEA2LkaHln4yCS64hc7G93WkyzH77B0+H3VK05emWzOP7H7U6msN02LNFEns4f8F6qi9WjsKumnqdm3ghXGH+QvygQfRKbrN/B7bEKgWUV1rv+NzO9q25sijJk99lJGE1wuV8/T9bGHYLg3A8JInKhR+OhoEpsKsRn2geJ6lCGbgVcCgYBHO/angySQi7BJOlIppI85+egmZ/acFAGdYuiBuOnDDxXd+9k4GEIGSU6zG4YdfR1HCDBpY2s8CWMBhrUm+qxShi1ZVdeu5DUBh4lc6JY21YETEpVzsCn6jwMNCHb3LLiID3DgNs7TX+7afLOnBlWpJQR6koEpH4oezfmymwDFFwKBgGNdevwvhEE/le/TduZv79HK1mCvJvJHv1T7uaPenzHVCMZzJOK2SvzRuMI3tv2i3tRmJuIF/zmA+QJLuWsl1ENrYGq5nV8og24/ngVQM4To5rrviq7lkhGksSQe1MJLoXPhde1QWCGgVJkEmwY4plzZMd5V97D7lmo2zLzeK85BAoGAIeo1WXPc3JFb/wOAB8BvdOzyQHDZFTSawTnws3sWCNZvicWJozNfq8m4kFoG3aITUeimlb6CPqZaJabjLF/99gReDJDixAIJoU1dXY07aSrzMS6hK1lvl6eY5B5zW+wCkIpfyCQSTcVB6zQAU9MOCaokKu2zleBMVQqKWfWfz54=&quot;), out _);
+           rsa.ImportRSAPublicKey(Convert.FromBase64String(&quot;MIIBCgKCAQEArTLJkbnYqeNXjy1iznnEi8bZjVbP4NabvftKFMdYeCCHfeHXZEvaJFbWcybmWwfj4ZjHH+/hh1RRQVMNgQUD8uXYmdjn7bUAfeyT9ujSulEFzwM2Udm6XtnI5/K2WH9ZHEPqUqNgv0EEthV6Yz+SQYFSYO2xd+TzLMvnW/iCmgb9gQfl85L+cKVvQy2NOod3i+gbTwPM8im1fP43vqVUUE5OD+Hz1Hiwai/RJDC67ZhoSdv1Vor8t9uyg+03fa8gfPj52gFRyHh3y8d/bb1LrJwbXV3cBCLD9aw9bnW3rFRwpP+JuH9VKSpoRA3gwD3vhoz7Y8BBOsC6PSrusAm/lQIDAQAB&quot;), out _);</code></pre>
+<p>输出：</p>
+<p><img src="./images/.NET Core RSA 指南与增强扩展 RSAExtensions0.png" alt="image-20191217124058373" /></p>
+<p>使用是非常简单的，如果使用PKCS#8，更改一下上面示例代码的方法名就行了。</p>
+<p>使用这些API需要的项目使用的目标框架满足：</p>
+<table>
+<thead>
+<tr class="header">
+<th>平台名称</th>
+<th>支持版本号</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>.NET Core</td>
+<td>&gt;=3.0</td>
+</tr>
+<tr class="even">
+<td>.NET Standard</td>
+<td>&gt;=2.1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="五.-rsaextensions-介绍">五. RSAExtensions 介绍</h2>
+<p>从上面可以看出，.NET Core 已经原生支持了PKCS#1和PKCS#8 ，这对于和其他语言对接是十分方便的，但是美中不足的是没有对 PEM 支持，以及对 XML 格式的支持。</p>
+<p>RSAExtensions 项目就是为了弥补上面这个缺点且支持RSA大数据加密，基于 RSA 对象来添加的扩展方法，使用同样也是非常方便的。</p>
+<p>开源地址： <a href="https://github.com/stulzq/RSAExtensions" class="uri">https://github.com/stulzq/RSAExtensions</a> （希望来个Star支持一下）</p>
+<p>Nuget： <a href="https://www.nuget.org/packages/RSAExtensions" class="uri">https://www.nuget.org/packages/RSAExtensions</a></p>
+<p>RSAExtensions 功能如下：</p>
+<ul>
+<li>提供以前Framework有的XML格式的密钥导入和导出</li>
+<li>提供对PKCS#1、PKCS#8 PEM格式导入和导出支持</li>
+<li>提供对PKCS#1、PKCS#8、XML格式的统一导入和导出</li>
+<li>提供对大数据分段加密的支持</li>
+</ul>
+<p>增加的API：</p>
+<table>
+<thead>
+<tr class="header">
+<th>方法名</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ExportPrivateKey</td>
+<td>统一导出私钥，支持 PKCS#1、PKCS#8、XML以及PEM格式化</td>
+</tr>
+<tr class="even">
+<td>ExportPublicKey</td>
+<td>统一导出公钥，支持 PKCS#1、PKCS#8、XML以及PEM格式化</td>
+</tr>
+<tr class="odd">
+<td>ImportPrivateKey</td>
+<td>统一导入私钥，支持 PKCS#1、PKCS#8、XML以及PEM</td>
+</tr>
+<tr class="even">
+<td>ImportPublicKey</td>
+<td>统一导入公钥，支持 PKCS#1、PKCS#8、XML以及PEM</td>
+</tr>
+<tr class="odd">
+<td>ImportXmlPrivateKey</td>
+<td>导入XML私钥</td>
+</tr>
+<tr class="even">
+<td>ImportXmlPublicKey</td>
+<td>导入XML公钥</td>
+</tr>
+<tr class="odd">
+<td>ImportPkcs8PublicKey</td>
+<td>导入Pkcs8公钥</td>
+</tr>
+<tr class="even">
+<td>ExportXmlPrivateKey</td>
+<td>导出XML私钥</td>
+</tr>
+<tr class="odd">
+<td>ExportXmlPublicKey</td>
+<td>导出XML公钥</td>
+</tr>
+<tr class="even">
+<td>ExportPkcs8PublicKey</td>
+<td>导出Pkcs8公钥</td>
+</tr>
+<tr class="odd">
+<td>EncryptBigData</td>
+<td>大数据分段加密</td>
+</tr>
+<tr class="even">
+<td>DecryptBigData</td>
+<td>大数据分段解密</td>
+</tr>
+</tbody>
+</table>
+<h2 id="六.-rsaextensions-使用">六. RSAExtensions 使用</h2>
+<pre class="csharp"><code>using System.Security.Cryptography;
+
+var rsa=RSA.Create();</code></pre>
+<h3 id="导出">导出</h3>
+<h4 id="pkcs1-导出">PKCS#1 导出</h4>
+<pre class="csharp"><code>rsa.ExportPrivateKey(RSAKeyType.Pkcs1); //私钥
+rsa.ExportPublicKey(RSAKeyType.Pkcs1); // 公钥</code></pre>
+<p>私钥输出：</p>
+<pre><code><code>MIIEpAIBAAKCAQEAv4pVuabfkk1NxEpIz4GYMpG69hyJDXAFJAIuUP3qCIhq081KRwrWW+0qQZp6MMTHHA/O+rHHTR6vfGBOo6yxcs9c4QCbnt/RhQ+bOmLizTJURiFrbgFU9q8dlpJ8OaoSBE3M2dY6wMhck+vEGSr1w7Fm+wH+IPPyKfNynPDYs3rKzNyHJfre62Vf23tB/Zd+7UC0PAEing7uERZdrRfloy95v8o2kVBIk4v2YUjEpLaMDbytBo++wMbyTHqsHtJKlCfxAZ+sb7VKQx8JlNEMals4k8gwjCTtoum34jgscb7CQ1aleAskTrQO2zkQINssrN/sr3WlEZ4ZdNXXVb/JhQIDAQABAoIBAF5o4i47CXIEdnNtJgxZ1Vn/qMbMc+VStMX16Tx0m1mPXBB/3L+9oMD42l4xtU66f2XeiOfanuDtYhQNKFXWtjRf72jcMtiRe6V5dsrFmQMJbq6OpHQ5ZdadpBjmpSKLKIxEiNdKl/UUDUW/7Q12tmK524eXiNpXQ6LX40NmF3oHDwMb7ZGnynFBKdA4ZDZWcVpL1eGY9xTJnpAmLRsI4UXBVeSIKZYZAo4I4FhvWr/mkESiWhBGCGrFMQB75t1x6wTqHPBoWjo9HJrSW66tbEeIdwNbpxzlaYqcOMd+Uk6P38lCE5J6rxRCMXjvehEqZmAYswfMNS5a5o2a/xEHElUCgYEA4NTyPS+aQDP9Vu8fpsbCyfxiPLSam9JUJm2ON3/0C6uomYVHnL72AgM7srmmQB4cA6bbvscjB5oB504bQ73ppi56SFnvjhQckCAtU0VPTtOVSUYBOQGvhCY0Lr+AJHCKYCVEZEWdGFObVTApA+QXwHlpheSe+fuMZkIjEiuZX2cCgYEA2hfoopk1b6RNbBvp9X1TfiZYW/x6Jrs9ebr3z08lawtLeSJAXPS37XqYgVUTMXxs7mcIP7AHmGuFlu9nOA6sVF1E2C1I3f6YMH8OaZCiH0/e3swqyTkYyiHBmCnh2lWGVyf8jK+OF0Y9KI+omGiyFiPTco6VS6Q16Ozd/NJK+DMCgYEAtjB5V9GiSpKWoYLGgEwifrFRHeYwP0LSRA2VKC48odRpnHYfUMqB6aGbF7pPGTgM9XyaJ1+RaFCJaFmnyF413x9cohKXB+gOOVCJyiepG7RjDex3gy11gD3BHXy7J0w3JbAtWp/6rELb5c1P/0IvaR45v3FCzknkPN0tNEU2VNMCgYEAtlOIm+6jurrMMxY/CImGtI7QDc7MO/cLFOqW44xSRuRBa3qT/mJkJbf5KR57lkJkOwaN4diC8QzquN1aGIZD0Z/Lv0JUiaqfhuOho+VTdAPs2awsFN+T9uAzncdd1o7raY+3VdIqYxDIblFzbD8Squm2iy3iaENXAmyLxSH1pPsCgYAXZincMY50iTmF9qYaS9xs44d3riKRQpty97W+igW5MqFMmmajfy8QShVliG1cU10Hsvz0hAZ6SK5gl+Zp6CHrveuEr69+aee6Xjp3hiJKCEiId9ahCpr8EBPWYTi22azBzgGiXseqMEI2UR9SS6K7OZ2TRNwWOERuBsabERZQhQ==</code></pre>
+<h4 id="pkcs1-pem-导出">PKCS#1 PEM 导出</h4>
+<pre class="csharp"><code>rsa.ExportPrivateKey(RSAKeyType.Pkcs1,true);//私钥
+rsa.ExportPublicKey(RSAKeyType.Pkcs1,true);//公钥</code></pre>
+<p>私钥输出：</p>
+<pre><code><code>-----BEGIN RSA PRIVATE KEY-----
+MIIEpAIBAAKCAQEAtffhsp2hu1b0isDlYZ2UHd5NPLGHJYwDzWFM29EiXZq3pHDY
+CFNF5jJ+h8U4e10e9XDvVF6X02OLQVjVCZVlikRe5VmKGOU+azL5ojg1MbLOqEJr
+fd3f/vxcZ4sCIxdWNgHefPixneNldIULBor9n4IlB5so54YdPZLXxLwSXJczTbeG
+LuMRw2plKZpp8hLZTLeR42g0aIBUbBanDZuoP2ztjFthUTf+E7PbI4hmFhL4nszO
+/9KuJEvlnLtQF9shHZ5ERvgHXFbHpM9e1nz4Yr+eaTWxVF6vNBicKFrTgMNtYtS/
+6x004yVmpXdeHUBDwerIJwS7AJLXX0BC4mlDGQIDAQABAoIBADxo75+5nyCvjH2n
+7j7K7oo/68pTcXdwlS6Qt9BeDJegrojEAaQ56QG0D7eJLOgfkRCQjpOm16aQ7IEk
+OY118IDHk+12HVeIe4FhKejF2jsGjn7jlgXyK9Pd+dtSFcKKk89YLYG1mlm9TUgy
+hueEKxDSRvLQevLp3jk7z6/7c+kSpPUrsreWyq6qP+lwfmPa6k6uAwEpHKfGKmCC
+Sj3vnC2jBfG89RZFhvB9VUXqDs1Yppi1anFlymB7eJMOu33SG9hqHK/AwJpv1qM3
+ONebjyZ2rrrCxhMuR3luDdgACHpINOyeb8zkR0v+24aqHGLs3V31bGkYqITJXSkm
+udNHM2UCgYEA8cpokD3GMolB8npIDw7DcwoAW9J3rD44EDHpak+H+wNbUxHzcrwc
+ylEcIkbM5hiIyEsmkWVwsqM/UQ9v+Fl/h6AlqPE4ai4D/pbfWnlPxPuTGzm/wpWR
+sXcZJ+EAWn6MR+6fm1KeAsCRs8rBL5OKhFRXOzwdmulVg8jNGq4ijycCgYEAwKl7
+gmSj7zlY0ATesawZVM3cSmV3rp5uCN61jZkY1zzOw4uiD0dDyCIhzYJc9fp2pUSf
+plNYv58+StdoI+gJ8fd9Cp9afW7kTHXM8+SjOEwsECQKmiJZ+re+biXYJ60T9moJ
+iDGcdNvS/s/F8rSqdd31gzdNALRqYWIvZSFVA78CgYBotForfFTDtaSVOFbUDnSc
+8IvPN4kTUa49dR+7Jc2g6Yc2peNioAtnoVApl7dLPPyen8yH0gHHmeHlXGYEid0s
+AjHMwwjHEj4wlW0LZNUiXD8L3yonPVXmH8kI9+qLRZnB3JfJTzGVx4ZQ8VBPJfkp
+7MwJnrLDTp/1fZM0JoxYqQKBgQCrweykMIidqqhsuwq1ptHmcqhjgtYRzJgYPEPq
++oPUzxcd6YwOxt+8ugEcr42klSfU6rrRkxhZrOPh4Ouspx7GonbNU4der8/EAnk3
+Lav9cpsNwLPa+ajyBYE1vXNY28oiMiJRUrlCzP7rv9ufJkWZUsmfs1tot27nZpsO
+M4sRDQKBgQDvnddTAbTX+GAfkGS4t7iYPuwk2U1YplnT75fgvmgbm7Ett4PbeCBb
+FLNeGxKodTChqO50+q82qasO00He5XGo+aSiwVigxjtI/5QZGjl9WxcWUwLrSTS4
+lABg9PGeOzUZSgAVxYzXhJ2kkMtj8NhVqRvAEegjKc/tML6SDJ4coQ==
+-----END RSA PRIVATE KEY-----</code></pre>
+<h4 id="pkcs8-导出">PKCS#8 导出</h4>
+<pre class="csharp"><code>rsa.ExportPrivateKey(RSAKeyType.Pkcs8);//私钥
+rsa.ExportPublicKey(RSAKeyType.Pkcs8);//公钥</code></pre>
+<p>私钥输出：</p>
+<pre><code><code>MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDLGWghUU/jAMivM53r6M01dtHIQwtDlDhfNLot5keKXRA0PD/yZ3ZZoi7W1ffvyfcuw2Db8nTGGIThFfESi7eyQdrLWqC7x8MppRtL6pYyercyApC4UhFBLTF4oUX/vecK9bHw/SuQGJtDfilZIxIfNZWpVrYpzEyAWpI6ix+pUlCA5LM9q3C6JbLsiMEvX3ypafoYUeOwx4ydEn3NwoR8EpeLzi3OHfcvo+m4yOUrLZXlMhDnMgPwyew4TOW/NsqaBvJJ+9r5hF/dcEQmpA8uvO6HJU7pClbwm0QjjjKdC/r//MHuiOFdv5b5bU0MJQGJ09tEWkEfUr/TqI2wZm/hAgMBAAECggEBAMVXX32YI3ZfqZ/LGLRD1TkQxc+/jS9R0uB3PDwjF/pSaM9Ih54Cd9WqJ7bp2upspLgUcYXldR+SbXLDviUWCxyyrmSPH8S12mUZn4dJXj2YTW7TXUkrvMZGol4i3gAbxmY4y3hslqqBrkOLT6Pj1tTqXQxYS9IbR24kExe9XLtIm/+3VcXRlW7AT2TZk1TRSjYB5OPmlYoPdQEZYk4ZL0NUNj1+HvQoeHX+b1iXJ08bP+KuTnJ+zxe6WG0x8x1cCpwOwGvEqMQ2SSyJihxw0969hPwwyeDDEWxkjaZdQt4I+aYE4KvLR75ixfkk6u5cknidmZjY0OCR2iLHbR40D/0CgYEA46+zjaa2cJEo1+7c8JSZHf+8/NAWAbo388caBIHlQ3tWDGVKbD0V+PsJPU3ZCZfIM0K1vBY0G/Ss/Pdn2CLVQwHHaVRMSAlpOdwzQdiao8dkT1B3zcVlzbInKbsc06C/3NCQZ+NKi1P2rlJ8u7tBq2Phbltwzu/KEfNe4vD2n7cCgYEA5Fr8WylpAF4o0LoOX1nZy4swvyOpG9a9yM9qilHeUVveIC7hEgNNe6kuasvmunPdF/8jOlcit2pBdg85Xu76h3g+AWK5cwnWwojeI3msAXpnej/VI5NkNGeTbJB64sX6PpmPvhMwApS6RRqpGttQ+qcO6lx6Vn5FF+jP8NxmvScCgYBC0nQd5Imyq8eS6BWLvfDaLw4mHGP5CdAWCZ8HJ6BDl9T/OlMHRT5HnlVt2oUSHaux76gqlVGhysNiUrH1avOwALunnAfvNGPfiVK5xnpMCt7TsEgY6hAguGJqCvJA4fKtOcDH3JsqHPBO5QKajjCNvniQzOFkuldRwV1duV6ILQKBgHrngZVrJ0l8ZElbKmslh/RmWPk3L0h9fq36/OOvhpGReW8m7BpuzqA1AXeXgPpva9sDhilbRqMjPFJXhVBUHWEWVYEXaqrA6+bOFYlQbkRpZhJFEulP5gnSiWVQKeOuHK7epZ/u4dMxy0NwQv3idqZBjeSTm4C7+2IP+wMvDNjXAoGBANM9wm6iiZOqZTCdMh/bnRDkChFTr8uLmbu5dtG8iXkGDhq0gX73GRrg4YL3R9oGSG/95zp5KThD94eAxZR1jrIChze77V6Y1urOMruUiluFIokoI94xUb7oh988yG2RSHzWQ3YzOGV1KqIf05j9JJvXZYcjUmB5yFWzPZVmDiwi</code></pre>
+<h4 id="pkcs8-pem导出">PKCS#8 PEM导出</h4>
+<pre class="csharp"><code>rsa.ExportPrivateKey(RSAKeyType.Pkcs8, true);//私钥
+rsa.ExportPublicKey(RSAKeyType.Pkcs8, true);//公钥</code></pre>
+<p>私钥输出：</p>
+<pre><code><code>-----BEGIN PRIVATE KEY-----
+MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDXuqAQz+MyeKuC
+335rPshsHUFxLpZcBj97EiHq9qhvxMhLsMoa3YFvKlwktBoQWzZzgETls1N0H5E/
+yhV+pljN4TIubfsOQ68TUfJkr9b+S1/25KwOwUmMndqaFb/vcYj1QtWTl65OXOWL
+l3oKl7j2kwjmwtW8Smm97cEw15ijmRALP3qGvYyzL/YRIOHv+PmDpoMG0dedZRNz
+u7hdhkU/UrlaRLvDLHyUJPkM+4SJHVUa2epYFMB7OX/b4ZQR0unxIBea2HAo8byG
+qctOB41cXa6+t8dvRj2DhCXhMHGXKNU8DL9aALLmCbl2UTsJQyvNQ3FaT7TzQYsw
+gOevjFttAgMBAAECggEBALltxOAukM91QZdAm917HbMwgmvS65M2G6Kht13LnoRT
+1Qaac14cP4FaG9HArRaaEHe/LXlzZqxN5f+6qDcwrOxqQUP/bOiZ7QbiTUOWkWoL
+R/VkITCdm6aumJQRVeVu5ZZLWGGA42agGv6duV0ZhPcM833GwwkRvUpv7rsY1i7n
+ccUObhkv3ql8XjnCcz1rSSkf6W40+dp0pW2mCH6NPeT8kdtBH7mA/ZSK7ZMQbMGg
+LNdCx069o91POKP/nZ9V9Ex2Bviic2TqpilC6Z/9EryxA0HszknUMX7Lnuhr7Fsb
+n8wkvYLplebolTOrCy/athEZkGdwCrgdGFk7by/XsdECgYEA9BX0vnhr1d1A9rxz
+YYt/Xt3DqqtnQ8ETe4CldI3/XIJ3CcMI4f52dAk+Jl9V4vHu4HRKODWjJ67FDExQ
+Bu+FWUjk01rFSMmbsVJRenRyuGL4X5XTRwMCtcIcxfvYgttLVVpqCsDK2CredAxc
+u+RZ5eI0/Y4gc+BKzDIbSy1LQ2sCgYEA4kJUQ4BlIQHD2CEj49ORL/WzWk01Wi9A
+2ilQcVf/xbLeBJd04SemftHLF4ulKM6VZ4KyrTzewwM6rEw31fWo7dgxShwTdnMI
+Hn3esTdZYK6O6zQ8PuEi/q4hTx4QYXDq63pKoDRTrkQAVZdTe0ujyczPXjdAKwYF
+obd3sk606ocCgYA7tpdedZVkB7HZ6vaLOZZafgRdX3tu3vBGOY3AuvBrEFvQ3o7w
+wtD1yEEVICOh1rAq5yg1IiIdFiuMu6qkV7qWwjeA4Wb8TJ4zPkFCpPRf2Y6Ly9qZ
+N8pU7v0dDmTEdqOyaOEialH1ml87or6ZFN9NVw7BrSCRWKDT3bpBpP4RqwKBgQC/
+i5u+kaILsWzVOikiJOgTDBTMa/Sw5rQmfTdm3TLhca3XgUknm+OuFXmz8zrdMxb0
+zIbrdk64FbHET7otXo2m3ZHMxbwMWRIUjkbLDKqT2PORV2VxbjOsHEqCqlb/xxJ6
+S8uFmQcGzvbhfvzjsoN0wfkEMA4Y3j5CTAn/X/Z1XQKBgGG4qDagG1unSkpNfHfu
+qwjEjAkSR/pla4vJIaEaA94/gJ21upZfwjUUdRXJbk6W03OfSOlmy2zIeCguV+H/
+UkMOcmBqVX/tbCQy7weCQwwHU4Dluy7xJIzrgYRXIuV+3zk2D63+LAK84+ksbL61
+zCnaG86YfYxcClOZ/revxrnd
+-----END PRIVATE KEY-----</code></pre>
+<h4 id="xml-导出">XML 导出</h4>
+<pre class="csharp"><code>rsa.ExportPrivateKey(RSAKeyType.Xml);//私钥
+rsa.ExportPublicKey(RSAKeyType.Xml);//公钥</code></pre>
+<p>私钥输出：</p>
+<pre><code><code>&lt;RSAKeyValue&gt;
+  &lt;Modulus&gt;09Hvw+dbHzi8x+9A1b2S0/128nA61ZyiaazJcDCUety4yHg0cdp5NOnyH35njYR4u2XO5l4GptwzJQfkEzCNoAniofBkb/WMQjvUhJ30eVpa7p/aq+4cgnMYuwYRCOLAB3jpldzIvii1+BOr3oLeT+1blK9f8u3T5liIxV3DBFxEWbnhQWHMgYXpDBIV9cjVhLYZLznefoWZ8N9bVdg1aucgYSWiPbURdfZusyS2fUJgiDLu63KQw8Bhc9cIMnUh6fq2UIBMk1mg/zuKyuMzCM8FX/VvleXJwS11LAgkEhtkOKQXo2xB65+zxPAUl0mKWGKSP9gY8p0+cav4nFCSLQ==&lt;/Modulus&gt;
+  &lt;Exponent&gt;AQAB&lt;/Exponent&gt;
+  &lt;P&gt;6ZEU55sugjc/qcPW0u0fSxy5tJYI+8tFsKfw/5AAm4pq2SVfDQHkRODlv5Zr8DnFQz7WN2L7FL6f11qdIjO4/dF9oo5YlD+jlmTOdaZovNLT0w0KGnN3ChFnnyxyNSG33sxlwgUrBppY2W4Sh0rzNQ4VIBhGes6dHxuMg0hWCKM=&lt;/P&gt;
+  &lt;Q&gt;6ComYZkP5fJrT5tWNSTkb+UGyUwxquXWAgZB8GCkAzrc5t3QgPe+1W0bUSJOVddPX6mxx6yaM+ZMFc5pwdcyxYJ90+T/m2NNviMOC2fHB457OWr4HO0DloYHlWbniXfkOLGrWHshcbIEwbsYWnVYF3mOF2b/xDuDUB57B71Flu8=&lt;/Q&gt;
+  &lt;DP&gt;k9guL1zfV7W5KrC4btOCF32bX2AJV7kX5/amal6ww8QeVk19mTI1WBQz2c5RjMJEx4gi+PRCkqMHcr388QVkd+X/bMJF97FAz5YHyhkH+15IjzOVzaCBHXJe8TalJFSvmuwvDV1QGuHgk+FFATbENDUx0hsLofjfJC3AB+nl65k=&lt;/DP&gt;
+  &lt;DQ&gt;v80qvlDUuJUpILBlbSxYaTTeAWmoUtbkkfGXgj5k4aI8o6K3QgTrLKmh+sqLyxFBKvgnvp2TG7N0QkOwTYs7D795spgqr7Y/oQiW7sdCv7RviwUbi9Int7BtDXnhaUmaS1hFBalb/PEkSuUF/p2ZNHOg9yaJwRWlq4gy/jbZChM=&lt;/DQ&gt;
+  &lt;InverseQ&gt;EydINmQ+aX8+2W7ZxU66P+0XSYsA2M/m7eF0cn5B+N3E2TOYgwunWqjPksyprEtNlP/puf7li/g8G5j3fQ0Xy/KrVwR2emcvCZMqpjzkYhSn9KcVHUVJg/LHb7BDVx/uSZwj9Ok2qDX73PSa91DEsIPiKPQjkVw1QJJ19wlJMiQ=&lt;/InverseQ&gt;
+  &lt;D&gt;MzwYbp5LYCXtI78vQ4PzO+uXFdUnpfuZHU55+vUFNSKmX3cT2GYr4yyjMBL3ITflrA5YGUis+zdP96kM9cdMumUpuFnZMWuHXY3zPZCnTaMZU5a+4c9afgMw/CvfevK92BDbDzC0LarTOQopDE1DULns6O3ym2QDWTgY/QRM44StLMEaLjNdVhLS3lMZJPrMCtk1k044RStUkL/7yiLMUYtXV+Lpy/08dyHWdXfBcakusKw8EEZZ53skFeR6mkWT51wyKmBFf7D6rfUC+e282i8OGayu79zXvA0UutmUGa1Q9eAP8qsBrc/i++qa/X3JnfBrFyEwQBfQV3kiOM3T0Q==&lt;/D&gt;
+&lt;/RSAKeyValue&gt;</code></pre>
+<h3 id="导入">导入</h3>
+<h4 id="pkcs1-导入">PKCS#1 导入</h4>
+<pre class="csharp"><code>rsa.ImportPrivateKey(RSAKeyType.Pkcs1, &quot;&lt;privateKey&gt;&quot;); //私钥
+rsa.ImportPublicKey(RSAKeyType.Pkcs1, &quot;&lt;publicKey&gt;&quot;); //公钥</code></pre>
+<h4 id="pkcs1-pem-导入">PKCS#1 PEM 导入</h4>
+<pre class="csharp"><code>rsa.ImportPrivateKey(RSAKeyType.Pkcs1, &quot;&lt;privateKey&gt;&quot;,true); //私钥
+rsa.ImportPublicKey(RSAKeyType.Pkcs1, &quot;&lt;publicKey&gt;&quot;,true); //公钥</code></pre>
+<h4 id="pkcs8-导入">PKCS#8 导入</h4>
+<pre class="csharp"><code>rsa.ImportPrivateKey(RSAKeyType.Pkcs8, &quot;&lt;privateKey&gt;&quot;); //私钥
+rsa.ImportPublicKey(RSAKeyType.Pkcs8, &quot;&lt;publicKey&gt;&quot;); //公钥</code></pre>
+<h4 id="pkcs8-pem-导入">PKCS#8 PEM 导入</h4>
+<pre class="csharp"><code>rsa.ImportPrivateKey(RSAKeyType.Pkcs8, &quot;&lt;privateKey&gt;&quot;,true); //私钥
+rsa.ImportPublicKey(RSAKeyType.Pkcs8, &quot;&lt;publicKey&gt;&quot;,true); //公钥</code></pre>
+<h4 id="xml-导入">XML 导入</h4>
+<pre class="csharp"><code>rsa.ImportPrivateKey(RSAKeyType.Xml, &quot;&lt;privateKey&gt;&quot;); //私钥
+rsa.ImportPublicKey(RSAKeyType.Xml, &quot;&lt;publicKey&gt;&quot;); //公钥</code></pre>
+<h2 id="七.-rsaextensions-大数据分段加密">七. RSAExtensions 大数据分段加密</h2>
+<blockquote>
+<p>下文所说的“长度”均为字节长度。</p>
+</blockquote>
+<p>RSA算法的加密数据长度根据不同的填充算法，一般最多支持 Key 模长( modulus )相等长度的数据，如果超过这个长度将会需要对数据进行拆分加密。</p>
+<blockquote>
+<p>.NET Core 不支持 RSA_NO_PADDING 填充</p>
+</blockquote>
+<p><strong>Key 模长=KeySize/8</strong></p>
+<p>以下是我测试整理出来的 .NET Core 支持的填充算法的支持的加密数据长度：</p>
+<table>
+<thead>
+<tr class="header">
+<th>填充算法</th>
+<th>最小 KeySize</th>
+<th>最大加密数据长度</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pkcs1</td>
+<td>512</td>
+<td>模长-11</td>
+</tr>
+<tr class="even">
+<td>OaepSHA1</td>
+<td>512</td>
+<td>模长-42</td>
+</tr>
+<tr class="odd">
+<td>OaepSHA256</td>
+<td>1024</td>
+<td>模长-66</td>
+</tr>
+<tr class="even">
+<td>OaepSHA384</td>
+<td>1024</td>
+<td>模长-98</td>
+</tr>
+<tr class="odd">
+<td>OaepSHA512</td>
+<td>2048</td>
+<td>模长-130</td>
+</tr>
+</tbody>
+</table>
+<p>RSAExtensions 已经封装好了分段加密，无需关心数据长度和模长的关系，使用方法如下：</p>
+<pre class="shell"><code>var encrypt = rsa.EncryptBigData(data, &lt;填充算法&gt;); //加密
+var decrypt = rsa.DecryptBigData(encrypt, &lt;填充算法&gt;); //解密</code></pre>
+<h2 id="八.-数据加密与解密">八. 数据加密与解密</h2>
+<p>加密与解密主要使用两个方法：<code>Encrypt</code> 计算密文，<code>Decrypt</code> 根据密文解密</p>
+<p>例：</p>
+<pre class="csharp"><code>var rsa = RSA.Create();
+var data = &quot;aaa&quot;;
+var encrypt = rsa.Encrypt(Encoding.UTF8.GetBytes(data),RSAEncryptionPadding.Pkcs1); //加密
+rsa.Decrypt(encrypt, RSAEncryptionPadding.Pkcs1); //解密</code></pre>
+<p>.NET 中的RSA仅支持 公钥加密，私钥解密</p>
+<h2 id="九.-数据签名与验签">九. 数据签名与验签</h2>
+<p>签名与验签使用两个方法：<code>SignData</code> 计算数据签名，<code>VerifyData</code> 验证数据签名。使用私钥签名，公钥验签。</p>
+<p>例：</p>
+<pre class="csharp"><code>var rsa = RSA.Create();
+var data = &quot;aaa&quot;;
+var sign = rsa.SignData(Encoding.UTF8.GetBytes(data), HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1); //签名
+rsa.VerifyData(Encoding.UTF8.GetBytes(data), sign, HashAlgorithmName.SHA1, RSASignaturePadding.Pkcs1); //验签</code></pre>
+<h2 id="十.-使用技巧">十. 使用技巧</h2>
+<p>1.密钥转换</p>
+<p>从一种格式导入，使用另一种格式导出。</p>
+<p>例：私钥PKCS#1转换为PKCS#8</p>
+<pre class="c#"><code>var rsa = RSA.Create();
+rsa.ImportRSAPrivateKey(&lt;PKCS#1私钥&gt;,out _); //导入PKCS#1私钥
+rsa.ExportPkcs8PrivateKey() //导出为PKCS#8私钥</code></pre>
+<p>2.私钥导出公钥</p>
+<pre class="c#"><code>var rsa = RSA.Create();
+rsa.ImportRSAPrivateKey(&lt;PKCS#1私钥&gt;,out _); //导入PKCS#1私钥
+rsa.ExportRSAPublicKey(); //导出私钥</code></pre>
+<p>3.PKCS#8 加密私钥去密码</p>
+<pre class="csharp"><code>var rsa = RSA.Create();
+rsa.ImportEncryptedPkcs8PrivateKey(password,paivateKey); //导入加密私钥
+rsa.ExportPkcs8PrivateKey(); //导出无密码私钥</code></pre>
+<p>4.通过命令行生成转换Key</p>
+<ul>
+<li><a href="https://www.cnblogs.com/stulzq/p/9131074.html">开源工具 DotnetRSA 快速生成和转换RSA秘钥</a></li>
+</ul>
+<h2 id="十一.-常见错误">十一. 常见错误</h2>
+<p>报错代码：<code>var rsa = RSA.Create(256);</code></p>
+<p>异常：</p>
+<pre><code><code>Unhandled exception. System.Security.Cryptography.CryptographicException: Specified key is not a valid size for this algorithm.</code></pre>
+<p>解决：KeySize不够，增加 KeySize大小</p>
+<hr />
+<p>报错代码：<code>rsa.Encrypt</code></p>
+<p>异常：</p>
+<pre><code><code>Unhandled exception. Internal.Cryptography.CryptoThrowHelper+WindowsCryptographicException: 参数错误。</code></pre>
+<p>解决：KeySize不够，增加 KeySize大小或者数据过长，需要选择大数据分段加密</p>
+<hr />
+<p>报错代码：<code>rsa.Encrypt</code></p>
+<p>异常：</p>
+<pre><code><code>Unhandled exception. System.Security.Cryptography.CryptographicException: The message exceeds the maximum allowable length for the chosen options (53).</code></pre>
+<p>解决：数据过长，需要选择大数据分段加密</p>
+<hr />
+<p>报错代码：<code>rsa.Importxxxx</code>导入Key</p>
+<p>异常：</p>
+<pre><code><code>Unhandled exception. System.Security.Cryptography.CryptographicException: ASN1 corrupted data.</code></pre>
+<p>解决：导入方法与Key格式不匹配，更换导入方法</p>
+<h2 id="十二.-结束">十二. 结束</h2>
+<p>RSAExtensions 开源地址： <a href="https://github.com/stulzq/RSAExtensions" class="uri">https://github.com/stulzq/RSAExtensions</a> （希望来个Star支持一下）</p>
+<p>参考文章：</p>
+<ul>
+<li><a href="https://tls.mbed.org/kb/cryptography/asn1-key-structures-in-der-and-pem">ASN.1 key structures in DER and PEM</a></li>
+<li><a href="https://devblogs.microsoft.com/dotnet/announcing-net-core-3-0/">Announcing .NET Core 3.0</a></li>
+<li><a href="https://www.cnblogs.com/stulzq/category/1611398.html">晓晨的RSA系列文章</a></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

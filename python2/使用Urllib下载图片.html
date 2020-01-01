@@ -1,0 +1,156 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修使用Urllib下载图片' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>使用Urllib下载图片</center></div><div class='banquan'>原文出处:本文由博客园博主纪宇-年华提供。<br/>
+原文连接:https://www.cnblogs.com/jiyu-hlzy/p/11784293.html</div><br>
+    <ol>
+<li>urllib下载图片</li>
+<li>urllib3下载图片</li>
+</ol>
+<p><span style="font-size: 18px;">Urllib下载图片</span></p>
+<p>&nbsp;</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('06788e51-ee24-48ec-87d2-2554fefe81a2')"><img id="code_img_closed_06788e51-ee24-48ec-87d2-2554fefe81a2" class="code_img_closed" src="./images/使用Urllib下载图片0.png" alt="" /><img id="code_img_opened_06788e51-ee24-48ec-87d2-2554fefe81a2" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('06788e51-ee24-48ec-87d2-2554fefe81a2',event)" src="./images/使用Urllib下载图片1.png" alt="" />
+<div id="cnblogs_code_open_06788e51-ee24-48ec-87d2-2554fefe81a2" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">from</span> urllib <span style="color: #0000ff;">import</span><span style="color: #000000;"> request
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+</span><span style="color: #008080;"> 3</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #008080;"> 4</span> 
+<span style="color: #008080;"> 5</span> <span style="color: #008000;">#</span><span style="color: #008000;">   妹子图首页       下载首页的几张</span>
+<span style="color: #008080;"> 6</span> url = <span style="color: #800000;">'</span><span style="color: #800000;">https://www.mzitu.com</span><span style="color: #800000;">'</span>
+<span style="color: #008080;"> 7</span> <span style="color: #008000;">#</span><span style="color: #008000;">   Request对象添加请求头方法一：数据为字典类型</span>
+<span style="color: #008080;"> 8</span> headers =<span style="color: #000000;"> {
+</span><span style="color: #008080;"> 9</span>     <span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Mozilla/5.0 (X11; CrOS i686 4319.74.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/29.0.1547.57 Safari/537.36 </span><span style="color: #800000;">'</span>
+<span style="color: #008080;">10</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">11</span> <span style="color: #008000;">#</span><span style="color: #008000;">   创建Request实例 将url和请求头传入</span>
+<span style="color: #008080;">12</span> req = request.Request(url, headers=<span style="color: #000000;">headers)
+</span><span style="color: #008080;">13</span> 
+<span style="color: #008080;">14</span> <span style="color: #008000;">#</span><span style="color: #008000;">   发起连接，返回的是一个对象，不使用代理</span>
+<span style="color: #008080;">15</span> data =<span style="color: #000000;"> request.urlopen(req)
+</span><span style="color: #008080;">16</span> 
+<span style="color: #008080;">17</span> <span style="color: #008000;">#</span><span style="color: #008000;">   用read()方法，读取返回对象中的内容，取出每张图片的url</span>
+<span style="color: #008080;">18</span> img_urls = re.findall(<span style="color: #800000;">"</span><span style="color: #800000;">data-original='(.*?)'</span><span style="color: #800000;">"</span><span style="color: #000000;">, data.read().decode())
+</span><span style="color: #008080;">19</span> <span style="color: #008000;">#</span><span style="color: #008000;">   以数字给图片命名</span>
+<span style="color: #008080;">20</span> name = 1
+<span style="color: #008080;">21</span> <span style="color: #008000;">#</span><span style="color: #008000;">   根据每张图片的url循环下载</span>
+<span style="color: #008080;">22</span> <span style="color: #0000ff;">for</span> img_url <span style="color: #0000ff;">in</span><span style="color: #000000;"> img_urls:
+</span><span style="color: #008080;">23</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   每张图片的url</span>
+<span style="color: #008080;">24</span>     <span style="color: #0000ff;">print</span><span style="color: #000000;">(img_url)
+</span><span style="color: #008080;">25</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   创建新的Request对象，将url传入</span>
+<span style="color: #008080;">26</span>     req_img = request.Request(url=<span style="color: #000000;">img_url)
+</span><span style="color: #008080;">27</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   Request对象添加请求头方法二：数据为元组类型</span>
+<span style="color: #008080;">28</span>     req_img.add_header(<span style="color: #800000;">'</span><span style="color: #800000;">Referer</span><span style="color: #800000;">'</span><span style="color: #000000;">, url)
+</span><span style="color: #008080;">29</span>     img_data =<span style="color: #000000;"> request.urlopen(req_img)
+</span><span style="color: #008080;">30</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   判断是否存在这个目录、是否创建过一次</span>
+<span style="color: #008080;">31</span>     <span style="color: #0000ff;">if</span> name == 1 <span style="color: #0000ff;">and</span> <span style="color: #0000ff;">not</span> os.path.exists(<span style="color: #800000;">'</span><span style="color: #800000;">urllib_img_test</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+</span><span style="color: #008080;">32</span>         os.mkdir(<span style="color: #800000;">'</span><span style="color: #800000;">urllib_img_test</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">33</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   判断是否第一次进入文件夹</span>
+<span style="color: #008080;">34</span>     <span style="color: #0000ff;">if</span> name == 1<span style="color: #000000;">:
+</span><span style="color: #008080;">35</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   进入创建的文件夹</span>
+<span style="color: #008080;">36</span>         os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">urllib_img_test</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">37</span>     img_name = str(name) + <span style="color: #800000;">'</span><span style="color: #800000;">.jpg</span><span style="color: #800000;">'</span>
+<span style="color: #008080;">38</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   保存图片</span>
+<span style="color: #008080;">39</span>     with open(img_name, <span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+</span><span style="color: #008080;">40</span> <span style="color: #000000;">        f.write(img_data.read())
+</span><span style="color: #008080;">41</span>     name += 1</pre>
+</div>
+<span class="cnblogs_code_collapse">Urllib下载图片</span></div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">Urllib3下载图片</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('13f80cd0-49d2-4469-8620-64cbb9833d55')"><img id="code_img_closed_13f80cd0-49d2-4469-8620-64cbb9833d55" class="code_img_closed" src="./images/使用Urllib下载图片0.png" alt="" /><img id="code_img_opened_13f80cd0-49d2-4469-8620-64cbb9833d55" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('13f80cd0-49d2-4469-8620-64cbb9833d55',event)" src="./images/使用Urllib下载图片1.png" alt="" />
+<div id="cnblogs_code_open_13f80cd0-49d2-4469-8620-64cbb9833d55" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> urllib3
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+</span><span style="color: #008080;"> 3</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #008080;"> 4</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span> <span style="color: #008000;">#</span><span style="color: #008000;">   判断文件夹是否存在，不存在就创建</span>
+<span style="color: #008080;"> 7</span> <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> os.path.exists(<span style="color: #800000;">'</span><span style="color: #800000;">urllib3_img_test</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+</span><span style="color: #008080;"> 8</span>     os.mkdir(<span style="color: #800000;">'</span><span style="color: #800000;">urllib3_img_test</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 9</span> <span style="color: #008000;">#</span><span style="color: #008000;">   进入文件夹</span>
+<span style="color: #008080;">10</span> os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">urllib3_img_test</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">11</span> 
+<span style="color: #008080;">12</span> <span style="color: #008000;">#</span><span style="color: #008000;">   妹子图首页   下载首页几个主题里面的所有图片</span>
+<span style="color: #008080;">13</span> url = <span style="color: #800000;">'</span><span style="color: #800000;">https://www.mzitu.com</span><span style="color: #800000;">'</span>
+<span style="color: #008080;">14</span> <span style="color: #008000;">#</span><span style="color: #008000;">   禁用警告</span>
+<span style="color: #008080;">15</span> <span style="color: #000000;">urllib3.disable_warnings()
+</span><span style="color: #008080;">16</span> req =<span style="color: #000000;"> urllib3.PoolManager()
+</span><span style="color: #008080;">17</span> <span style="color: #008000;">#</span><span style="color: #008000;">   添加请求头</span>
+<span style="color: #008080;">18</span> headers =<span style="color: #000000;"> {
+</span><span style="color: #008080;">19</span>     <span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20130328 Firefox/21.0</span><span style="color: #800000;">'</span>
+<span style="color: #008080;">20</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">21</span> <span style="color: #008000;">#</span><span style="color: #008000;">   发起请求</span>
+<span style="color: #008080;">22</span> res = req.request(<span style="color: #800000;">'</span><span style="color: #800000;">get</span><span style="color: #800000;">'</span>, url, headers=<span style="color: #000000;">headers)
+</span><span style="color: #008080;">23</span> <span style="color: #008000;">#</span><span style="color: #008000;">   取出数据</span>
+<span style="color: #008080;">24</span> datas = re.findall(<span style="color: #800000;">'</span><span style="color: #800000;">&lt;li&gt;&lt;a href=.*&lt;/li&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">,res.data.decode())
+</span><span style="color: #008080;">25</span> 
+<span style="color: #008080;">26</span> <span style="color: #0000ff;">for</span> data <span style="color: #0000ff;">in</span><span style="color: #000000;"> datas:
+</span><span style="color: #008080;">27</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   进入各个主题的url    取出的两个url是一样的，选一个就行了</span>
+<span style="color: #008080;">28</span>     type_imgs = re.findall(<span style="color: #800000;">'</span><span style="color: #800000;">href="(.*?)"</span><span style="color: #800000;">'</span><span style="color: #000000;">,data)[0]
+</span><span style="color: #008080;">29</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   主题的标题，取出来做文件夹名称</span>
+<span style="color: #008080;">30</span>     type_name = re.findall(<span style="color: #800000;">"</span><span style="color: #800000;"> alt='(.*?)'</span><span style="color: #800000;">"</span><span style="color: #000000;">,data)[0]
+</span><span style="color: #008080;">31</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   判断标题里是否有+，加斜杆转义，不影响正则判断</span>
+<span style="color: #008080;">32</span>     <span style="color: #0000ff;">if</span> <span style="color: #800000;">'</span><span style="color: #800000;">+</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> type_name:
+</span><span style="color: #008080;">33</span>         type_name = type_name.replace(<span style="color: #800000;">'</span><span style="color: #800000;">+</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">\+</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">34</span>     <span style="color: #0000ff;">print</span><span style="color: #000000;">(type_name,type_imgs)
+</span><span style="color: #008080;">35</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   进入各个主题，下载主题里的所有图片</span>
+<span style="color: #008080;">36</span>     type_data = req.request(<span style="color: #800000;">'</span><span style="color: #800000;">get</span><span style="color: #800000;">'</span>,type_imgs,headers=<span style="color: #000000;">headers).data.decode()
+</span><span style="color: #008080;">37</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   图片的url</span>
+<span style="color: #008080;">38</span>     url_img = re.findall(<span style="color: #800000;">'</span><span style="color: #800000;">{}.*" &gt;&lt;img src="(.*?)".*{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(type_imgs, type_name), type_data)
+</span><span style="color: #008080;">39</span>     <span style="color: #008000;">#</span><span style="color: #008000;">   每个主题的图片数量</span>
+<span style="color: #008080;">40</span>     num = int(re.findall(<span style="color: #800000;">'</span><span style="color: #800000;">上一组.*&lt;span&gt;(.*)&lt;/span&gt;.*下一页</span><span style="color: #800000;">'</span><span style="color: #000000;">, type_data)[0])
+</span><span style="color: #008080;">41</span>     <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1, num + 1<span style="color: #000000;">):
+</span><span style="color: #008080;">42</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   每张图片的url    在主题url后面加数字</span>
+<span style="color: #008080;">43</span>         url_img = type_imgs + <span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span> +<span style="color: #000000;"> str(i)
+</span><span style="color: #008080;">44</span>         <span style="color: #0000ff;">print</span><span style="color: #000000;">(url_img)
+</span><span style="color: #008080;">45</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   对每张图片的url发起请求</span>
+<span style="color: #008080;">46</span>         temp_url = req.request(<span style="color: #800000;">'</span><span style="color: #800000;">get</span><span style="color: #800000;">'</span>, url_img, headers=<span style="color: #000000;">headers).data.decode()
+</span><span style="color: #008080;">47</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   每张图片的url</span>
+<span style="color: #008080;">48</span>         urls_img = re.findall(<span style="color: #800000;">'</span><span style="color: #800000;">{}.*src="(.*?)".*{}</span><span style="color: #800000;">'</span>.format(<span style="color: #800000;">'</span><span style="color: #800000;">https://www.mzitu.com</span><span style="color: #800000;">'</span><span style="color: #000000;">, type_name), temp_url)[0]
+</span><span style="color: #008080;">49</span>         <span style="color: #0000ff;">print</span><span style="color: #000000;">(urls_img)
+</span><span style="color: #008080;">50</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   请求头添加 referer</span>
+<span style="color: #008080;">51</span>         headers =<span style="color: #000000;"> {
+</span><span style="color: #008080;">52</span>             <span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; rv:21.0) Gecko/20130328 Firefox/21.0</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+</span><span style="color: #008080;">53</span>             <span style="color: #800000;">'</span><span style="color: #800000;">Referer</span><span style="color: #800000;">'</span><span style="color: #000000;">: url_img
+</span><span style="color: #008080;">54</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">55</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   获得图片的内容，保存到本地</span>
+<span style="color: #008080;">56</span>         img_content = req.request(<span style="color: #800000;">'</span><span style="color: #800000;">get</span><span style="color: #800000;">'</span>, urls_img, headers=<span style="color: #000000;">headers).data
+</span><span style="color: #008080;">57</span>          <span style="color: #008000;">#</span><span style="color: #008000;">   判断标题里是否有斜杆，有就去掉</span>
+<span style="color: #008080;">58</span>         <span style="color: #0000ff;">if</span> <span style="color: #800000;">'</span><span style="color: #800000;">\\</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> type_name:
+</span><span style="color: #008080;">59</span>             type_name = type_name.replace(<span style="color: #800000;">'</span><span style="color: #800000;">\\</span><span style="color: #800000;">'</span>,<span style="color: #800000;">''</span><span style="color: #000000;">)
+</span><span style="color: #008080;">60</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   判断文件夹是否存在，不存在就创建</span>
+<span style="color: #008080;">61</span>         <span style="color: #0000ff;">if</span> i ==1 <span style="color: #0000ff;">and</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> os.path.exists(type_name):
+</span><span style="color: #008080;">62</span> <span style="color: #000000;">            os.mkdir(type_name)
+</span><span style="color: #008080;">63</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   进入文件夹</span>
+<span style="color: #008080;">64</span> <span style="color: #000000;">        os.chdir(type_name)
+</span><span style="color: #008080;">65</span>         img_name = str(i) +<span style="color: #800000;">'</span><span style="color: #800000;">.jpg</span><span style="color: #800000;">'</span>
+<span style="color: #008080;">66</span>         with open(img_name, <span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+</span><span style="color: #008080;">67</span> <span style="color: #000000;">            f.write(img_content)
+</span><span style="color: #008080;">68</span>         time.sleep(0.2<span style="color: #000000;">)
+</span><span style="color: #008080;">69</span>         <span style="color: #008000;">#</span><span style="color: #008000;">   返回上一级菜单创建新的文件夹下载其它主题的图片</span>
+<span style="color: #008080;">70</span>         os.chdir(<span style="color: #800000;">'</span><span style="color: #800000;">..</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">71</span>     time.sleep(0.2)</pre>
+</div>
+<span class="cnblogs_code_collapse">Urllib3下载图片</span></div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

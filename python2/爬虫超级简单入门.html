@@ -1,0 +1,114 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修爬虫超级简单入门' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>爬虫超级简单入门</center></div><div class='banquan'>原文出处:本文由博客园博主vhao11提供。<br/>
+原文连接:https://www.cnblogs.com/hao11/p/11706502.html</div><br>
+    <p>前两天看到 某个程序猿写了个爬虫，然后公司200多人被端， 作为在入门python 的小白， 产生了兴趣，于是乎学习了下，写了一个小爬虫，做一些入门的抓爬，爬点美女图片吧 ！</p>
+<p style="margin-left: 30px;"><span style="font-size: 18pt; color: #ff0000;">let's do it</span></p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/爬虫超级简单入门0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><img src="./images/爬虫超级简单入门1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;看一眼美女，写代码的兴致就上来了</p>
+<p>爬虫是通过找到要爬的图片的url 然后进行下载， 这个url怎么找呢？</p>
+<p style="margin-left: 30px;">写过网页的应该都知道， 但是我没写过，我们打开网页后按F12弹出调试工具</p>
+<p style="margin-left: 30px;"><img src="./images/爬虫超级简单入门2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;选择network,在左侧选择一个有Request Headers 的</p>
+<p style="margin-left: 30px;">然后可以看到有 Referer, 字面意思是引用， 在此处是用来防止跨域请求，（我的理解是只能通过该网页，来获取左侧选择的文件 也就是这个页面上的元素），一会我们的请求头要用到</p>
+<p style="margin-left: 30px;">User-Agent: 用户代理，里面发现有Chrome这个单词，猜测是浏览器，于是换个火狐试了下 里面有Firefox， 这应该是浏览器代理&nbsp; 每个浏览器不同，我们用这个来伪装成浏览器访问</p>
+<div class="cnblogs_code">
+<pre><code>headers =<span style="color: #000000;"> {
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Referer</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">https://www.85814.com/meinv/gaotiaomeinv/</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">ozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.104 Safari/537.36</span><span style="color: #800000;">'</span><span style="color: #000000;">
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p style="margin-left: 30px;">&nbsp;我们把它放到一个字典中，因为后面类型要求是字典</p>
+<p style="margin-left: 30px;">接着用Request库连接下网站</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+headers </span>=<span style="color: #000000;"> {
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Referer</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">https://www.85814.com/meinv/gaotiaomeinv/</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">ozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/59.0.3071.104 Safari/537.36</span><span style="color: #800000;">'</span><span style="color: #000000;">
+}
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://www.85814.com/meinv/gaotiaomeinv/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+resp </span>= requests.get(url,headers=<span style="color: #000000;">headers)
+</span><span style="color: #0000ff;">pass</span></pre>
+</div>
+<p>&nbsp;</p>
+<p style="margin-left: 30px;">&nbsp;</p>
+<p style="margin-left: 30px;"><img src="./images/爬虫超级简单入门3.png" alt="" /></p>
+<p style="margin-left: 30px;">&nbsp;</p>
+<p style="margin-left: 30px;">可以看到 Response 为 200&nbsp; 表示连接上了</p>
+<p style="margin-left: 30px;">&nbsp;</p>
+<p style="margin-left: 30px;">很好</p>
+<p style="margin-left: 30px;">&nbsp;</p>
+<p style="margin-left: 30px;">下一步我们就要获取图片的url了， 点击开发工具左上角的元素审查，然后点击一张图</p>
+<p style="margin-left: 30px;"><img src="./images/爬虫超级简单入门4.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>可以看到，img 的alt属性对于图的标题， src就是图片的源地址，可以复制出来，在进入这个网站试试。</p>
+<p>多试几个图片的话，知道 中间的大图数据组织方式是一样的， 我们可以通过一个路径匹配来查找所有的src</p>
+<p>Ctrl+F</p>
+<p><img src="./images/爬虫超级简单入门5.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;下面是一个匹配模式，.//p[@id="l"]&nbsp;&nbsp; .//p会匹配当前页面下 所有p标签&nbsp; 这里用属性id ="i"限制， 找到主框， 然后双斜杠 在p[@id="l"]&nbsp; 下面匹配所有的img。 后面/@src 是获得所有的src 也就是url</p>
+<p>上代码</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+html </span>=<span style="color: #000000;"> etree.HTML(resp.text)
+srcs </span>= html.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">.//p[@id="l"]//img/@src</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+<p>得到的srcs是一个 list 只要遍历这个list 对每一个url 的图片进行download</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">for</span> src <span style="color: #0000ff;">in</span><span style="color: #000000;"> srcs:
+    time.sleep(</span>0.2<span style="color: #000000;">)
+    filename</span>= src.split(<span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span>)[-1<span style="color: #000000;">]
+    img </span>= requests.get(src, headers=headers,timeout=10,verify=<span style="color: #000000;">False)
+    with open( </span><span style="color: #800000;">'</span><span style="color: #800000;">imgs/</span><span style="color: #800000;">'</span>+ filename,<span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as file:
+        file.write(img.content)</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>用到了time,用来延迟，防止请求过快被服务器认作受到攻击，之前本人就被一个网站封ip了，&nbsp; 还有很多其他方法， 比如 每次用不同的 User-Agent伪装成不同的浏览器， 还有用代理ip, 之后会提到。</p>
+<p>然后在当前目录创建imgs路径，&nbsp; img.context是图片的内容。</p>
+<p>&nbsp;</p>
+<p><img src="./images/爬虫超级简单入门6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>存的是bytes 所以用'wb' 打开。</p>
+<p>运行程序 在img下就有很多美女图片了</p>
+<p>&nbsp;</p>
+<p><img src="./images/爬虫超级简单入门7.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>一个简单的爬虫就完成了。</p>
+<p><span style="color: #ff0000; font-size: 18pt;">学习尚浅，有错误或不当之处还请指正。</span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<pre><code></pre>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

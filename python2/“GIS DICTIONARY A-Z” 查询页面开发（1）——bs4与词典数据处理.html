@@ -1,0 +1,89 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修“GIS DICTIONARY A-Z” 查询页面开发（1）——bs4与词典数据处理' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>“GIS DICTIONARY A-Z” 查询页面开发（1）——bs4与词典数据处理</center></div><div class='banquan'>原文出处:本文由博客园博主hsh#17提供。<br/>
+原文连接:https://www.cnblogs.com/hsh17/p/11701686.html</div><br>
+    <p>第一天的工作：找到数据源，数据下载，数据处理。</p>
+<p>数据源："<a href="http://webhelp.esri.com/arcgisserver/9.3/java/geodatabases/definition_frame.htm">http://webhelp.esri.com/arcgisserver/9.3/java/geodatabases/definition_frame.htm</a>"。</p>
+<p>数据下载：右击网页另存为。</p>
+<p>数据处理：bs4 + 对比观察 + chrome检查元素 + 写function写方法</p>
+<p>&nbsp;一、bs4部分</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> bs4 <span style="color: #0000ff;">import</span><span style="color: #000000;"> BeautifulSoup
+soup </span>= BeautifulSoup(open(<span style="color: #800000;">'</span><span style="color: #800000;">GIS_dictionary.html</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span>,encoding=<span style="color: #800000;">'</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">'</span>),features=<span style="color: #800000;">"</span><span style="color: #800000;">lxml</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">tag标签</span>
+GlossaryTerm_list = soup.find_all(attrs={<span style="color: #800000;">'</span><span style="color: #800000;">class</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">GlossaryTerm</span><span style="color: #800000;">'</span>})<span style="color: #008000;">#</span><span style="color: #008000;">完整，1729个</span>
+Definition_list = soup.find_all(attrs={<span style="color: #800000;">'</span><span style="color: #800000;">class</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">Definition</span><span style="color: #800000;">'</span>})<span style="color: #008000;">#</span><span style="color: #008000;">缺&lt;ol&gt;</span></pre>
+</div>
+<p>二、对比观察 + 检查元素</p>
+<p>在准备GlossaryTerm和Definition的一一对应时发现二者的数量对不上。观察分析后确定是网站的前端代码对不同形式的Definition有不同的处理方法：对有多项释义的词汇使用了&lt;ol&gt;有序列表，它不能直接被bs4的属性查找选择到。</p>
+<p>三、写方法</p>
+<p>第一块：因为词组和解释在同一前端代码段内，故使用".text"和".a.attrs['name']"完成第一部分的对应。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800000;">'''</span><span style="color: #800000;">
+    完成Definition_list中已有的1610个解释的文本获取和词语对应
+</span><span style="color: #800000;">'''</span><span style="color: #000000;">
+defList </span>=<span style="color: #000000;"> []
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> Definition_list:
+    defi </span>= i.text.strip(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span>)<span style="color: #008000;">#</span><span style="color: #008000;">修饰definition</span>
+    word = i.a.attrs[<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>].replace(<span style="color: #800000;">'</span><span style="color: #800000;">_</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span> <span style="color: #800000;">'</span>)<span style="color: #008000;">#</span><span style="color: #008000;">修饰glossary</span>
+    defList.append([defi,word])  <span style="color: #008000;">#</span><span style="color: #008000;">抓取所有解释和词语在小列表，再存入大列表</span>
+    <span style="color: #0000ff;">if</span> (i.text==<span style="color: #800000;">''</span>):                <span style="color: #008000;">#</span><span style="color: #008000;">确保没有definition为空</span>
+        <span style="color: #0000ff;">print</span>(i.a.attrs[<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008000;">#</span><span style="color: #008000;">defList示例[["defi",'word'],["",''],["",''],["",'']...]</span></pre>
+</div>
+<p>第二块：定义函数func_n()，清洗&lt;ol&gt;标签内的数据。其中使用了通过中间媒介list修改string的技巧和if筛查的方法。最后对应词组和相应的解释，完成项目的数据准备工作。明日计划：数据库。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800000;">'''</span><span style="color: #800000;">
+    &lt;ol&gt;标签，将defList补充完整，从Ctrl+F得到共有119个&lt;ol&gt;标签
+    "1610+119=1729",成功！1729 == len(GlossaryTerm_list)
+</span><span style="color: #800000;">'''</span>
+<span style="color: #008000;">#</span><span style="color: #008000;">定义函数func_n</span><span style="color: #008000;">
+#</span><span style="color: #008000;">格式化&lt;ol&gt;的definition：首位加"1."；将多个连续的"\n"收为一个；在"\n"后添加"2."等序号</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> func_n(txt):
+    lstTxt </span>= list(txt)  <span style="color: #008000;">#</span><span style="color: #008000;">因为不能直接修改string，故将其打碎为list进行操作</span>
+    n =<span style="color: #000000;"> len(lstTxt)
+    newlstTxt </span>= [<span style="color: #800000;">"</span><span style="color: #800000;">1.</span><span style="color: #800000;">"</span>]  <span style="color: #008000;">#</span><span style="color: #008000;">添加首位的"1."</span>
+    count = 2
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(n-1<span style="color: #000000;">):
+        </span><span style="color: #0000ff;">if</span> lstTxt[i]==<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">and</span> lstTxt[i]!=lstTxt[i+1] <span style="color: #0000ff;">and</span> lstTxt[i+1]!=<span style="color: #800000;">'</span> <span style="color: #800000;">'</span>:  <span style="color: #008000;">#</span><span style="color: #008000;">保留单独的"\n"，在其后添加序号；排除'\n'+' '的组合</span>
+            newlstTxt.append(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            newlstTxt.append(str(count))
+            newlstTxt.append(</span><span style="color: #800000;">'</span><span style="color: #800000;">.</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            count </span>+= 1
+        <span style="color: #0000ff;">if</span> lstTxt[i]!=<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">and</span> lstTxt[i]!=lstTxt[i+1] <span style="color: #0000ff;">and</span> lstTxt[i]!=<span style="color: #800000;">'</span><span style="color: #800000;">\t</span><span style="color: #800000;">'</span>:  <span style="color: #008000;">#</span><span style="color: #008000;">放弃连续多个的"\n"、放弃所有的'\t'</span>
+<span style="color: #000000;">            newlstTxt.append(lstTxt[i])
+    newlstTxt.append(lstTxt[</span>-1])    <span style="color: #008000;">#</span><span style="color: #008000;">添加for循环里没有的最后一位</span>
+    strTxt = <span style="color: #800000;">''</span>.join(newlstTxt)     <span style="color: #008000;">#</span><span style="color: #008000;">''.join()函数将list变为string</span>
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> strTxt
+</span><span style="color: #008000;">#</span><span style="color: #008000;">实操</span>
+ol_list = soup.find_all(<span style="color: #800000;">'</span><span style="color: #800000;">ol</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">for</span> j <span style="color: #0000ff;">in</span><span style="color: #000000;"> ol_list:
+    defi_ol </span>= j.text.strip(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    defi_ol </span>=<span style="color: #000000;"> func_n(defi_ol)
+    word_ol </span>= j.a.attrs[<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>].replace(<span style="color: #800000;">'</span><span style="color: #800000;">_</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span> <span style="color: #800000;">'</span><span style="color: #000000;">)
+    defList.append([defi_ol,word_ol])</span></pre>
+</div>
+<p>&nbsp;词典数据效果：</p>
+<p><img src="./images/“GIS DICTIONARY A-Z” 查询页面开发（1）——bs4与词典数据处理0.png" alt="" width="396" height="429" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

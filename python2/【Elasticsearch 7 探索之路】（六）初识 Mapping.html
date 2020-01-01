@@ -1,0 +1,234 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修【Elasticsearch 7 探索之路】（六）初识 Mapping' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>【Elasticsearch 7 探索之路】（六）初识 Mapping</center></div><div class='banquan'>原文出处:本文由博客园博主隐峯提供。<br/>
+原文连接:https://www.cnblogs.com/TFengStorm/p/12097362.html</div><br>
+    <p>上一篇主要讲解什么是 URL Search 和 Request Body Search 的语法。本篇对 Mapping 的 Dynamic Mapping 以及手动创建 Mapping 进行讲解。</p>
+<p><strong>1.什么是 Mapping</strong></p>
+<ul>
+<li>Mapping 类似数据库中的 schema 的定义，作用如下
+<ul>
+<li>定义索引中的字段的名称</li>
+<li>定义字段的数据类型，例如字符串，数值等</li>
+<li>字段，倒排索引的相关配置，比如可以通过配置字段是否需要被索引（Analyzed or Not Analyzed,Analyzer)</li>
+</ul></li>
+<li>Mapping 会把 Json 文档映射成 Lucene 所需要的扁平格式</li>
+<li>一个 Mapping 属于一个索引的 Type，在 7.0 之后版本一个索引只有一个 Type(_doc)
+<ul>
+<li>一个 Type 有一个 Mapping 定义</li>
+<li>7.0 开始，不需要在 Mapping 定义中指定 type 信息</li>
+</ul></li>
+</ul>
+<p><strong>2.常用字段的数据类型</strong></p>
+<ul>
+<li>简单类型
+<ul>
+<li>Text / Keyword</li>
+<li>Date</li>
+<li>Integer / float/ double /long</li>
+<li>Boolean</li>
+<li>Ip</li>
+</ul></li>
+<li>复杂类型-对象和嵌套对象
+<ul>
+<li>对象类型/嵌套类型</li>
+</ul></li>
+<li>特殊类型(针对地理信息的有特殊处理)
+<ul>
+<li>geo_point &amp; geo_shape / percolator</li>
+</ul></li>
+</ul>
+<p><strong>3.1什么是 Dynamic Mapping</strong></p>
+<p>Dynamic Mapping 会自动根据文档信息，推算出字段的类型，使得你无需手动创建 Mapping。在写入文档时候，而且如果索引不存在，会自动创建索引。但是有时候推算也会错误，例如地理位置信息。当类型如果设置不对时，会导致一些功能无法正常运行，这点要特别注意。</p>
+<p>下面总结 Json 类型到 Elasticsearch 类型的自动识别</p>
+<p><strong>3.2.Json 类型和 Elasticsearch 类型转换映射</strong></p>
+<table>
+<thead>
+<tr class="header">
+<th>Json 类型</th>
+<th>Elasticsearch 类型</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>字符串</td>
+<td>1.匹配日期格式，转为 Date<br> 2.数值转为 float 或者 long,默认关闭<br>3.转为 Text，并且增加 keyword</td>
+</tr>
+<tr class="even">
+<td>布尔值</td>
+<td>boolean</td>
+</tr>
+<tr class="odd">
+<td>浮点数</td>
+<td>float</td>
+</tr>
+<tr class="even">
+<td>整 数</td>
+<td>long</td>
+</tr>
+<tr class="odd">
+<td>对 象</td>
+<td>Object</td>
+</tr>
+<tr class="even">
+<td>数 组</td>
+<td>由第一个非空数值的类型所决定</td>
+</tr>
+<tr class="odd">
+<td>空 值</td>
+<td>忽略</td>
+</tr>
+</tbody>
+</table>
+<pre><code><code>PUT mapping_test/_doc/1
+{
+  &quot;name&quot;:&quot;al&quot;,
+  &quot;age&quot;:15,
+  &quot;ageStr&quot;:&quot;15&quot;,
+  &quot;birth&quot;:&quot;2019-12-18&quot;,
+  &quot;arg&quot;:[&quot;aaa&quot;,&quot;1&quot;],
+  &quot;flag&quot;:false
+}
+
+GET mapping_test/_mapping</code></pre>
+<p><img src="./images/【Elasticsearch 7 探索之路】（六）初识 Mapping0.png" /></p>
+<p><strong>3.3.能否更改 Mapping 字段类型</strong></p>
+<ul>
+<li>新增字段情况，Dynamic 设置为 true，带有新字段的文档写入，Mapping 会更新。Dynamic 设置为 false，Mapping 不被更新，新增字段不会被索引。Dynamic 设置为 Strict，带有新字段的文档写入会直接报错。</li>
+<li>对已有字段并且存在数据情况，不支持修改字段定义，因为 ES 通过 Lucene 生成倒排索引，一旦生成就不许与修改</li>
+<li>如果实在需要修改可以通过 Reindex Api 重建索引</li>
+</ul>
+<pre><code><code>PUT mapping_test/_mapping
+{
+    &quot;dynamic&quot;:&quot;false&quot;
+}
+
+PUT mapping_test/_doc/2
+{
+  &quot;name&quot;:&quot;al&quot;,
+  &quot;age&quot;:15,
+  &quot;ageStr&quot;:&quot;15&quot;,
+  &quot;birth&quot;:&quot;2019-12-18&quot;,
+  &quot;arg&quot;:[&quot;aaa&quot;,&quot;1&quot;],
+  &quot;flag&quot;:false,
+  &quot;addCol&quot;:&quot;test&quot;
+}
+
+GET mapping_test/_search
+{
+  &quot;query&quot;: {
+    &quot;match&quot;: {
+      &quot;addCol&quot;: &quot;test&quot;
+    }
+  }
+}</code></pre>
+<p>当前设置 &quot;dynamic&quot;:&quot;false&quot;时，新增的字段查询不出结果。<br />
+<img src="./images/【Elasticsearch 7 探索之路】（六）初识 Mapping1.png" /></p>
+<p><strong>4.1.手动创建 Mapping</strong></p>
+<p>上面我们介绍了关于 Dynamic Mapping 功能，现在但我们想要手动创建一个 Mapping 该如何创建。我先看一下下面代码。</p>
+<pre><code><code>PUT student
+{
+    &quot;mappings&quot;:{
+      &quot;properties&quot;: {
+        &quot;firstName&quot;:{
+          &quot;type&quot;:&quot;text&quot;
+        },
+        &quot;lastName&quot;:{
+          &quot;type&quot;:&quot;text&quot;
+        },
+        &quot;password&quot;:{
+          &quot;type&quot;:&quot;text&quot;,
+          &quot;index&quot;:false
+        }
+    }
+    }
+}
+
+PUT student/_doc/1
+{
+  &quot;firstName&quot;:&quot;AA&quot;,
+  &quot;lastName&quot;:&quot;BB&quot;,
+  &quot;password&quot;:&quot;abc&quot;
+}
+
+POST student/_search
+{
+  &quot;query&quot;: {
+    &quot;match_phrase&quot;: {
+      &quot;password&quot;: {
+        &quot;query&quot;: &quot;abc&quot;
+      }
+    }
+  }
+}</code></pre>
+<p><img src="./images/【Elasticsearch 7 探索之路】（六）初识 Mapping2.png" /></p>
+<p>上面这个例子，就是一个比较简单手动创建例子，我们通过为每一个字段创建类型，当指定 index:false 时，ES 将不对这个字段建立倒排索引，从上图结果就可以看出。</p>
+<p><strong>4.2.Index Options</strong></p>
+<p>ES 有四种不同级别的 Index Options 配置</p>
+<ul>
+<li>docs 记录 doc id</li>
+<li>freqs 记录 doc id 和 term 频次</li>
+<li>positions 记录 doc id 和 term 频次 和 term 位置</li>
+<li>offsets 记录 doc id 和 term 频次 和 term 位置和字符偏移量</li>
+</ul>
+<p>Text 类型默认 positions，其他默认为 docs</p>
+<p><strong>4.3.copy_to</strong></p>
+<p>copy_to 是为瞒足一些特定搜素需求，将多个字段 数值拷贝到目标字段，目标字段不会出现在 _source。在 ES7 中，copy_to 已经替代 copy_to。例如下面这个例子，把 firsetName 和 lastName 合并一起搜素。</p>
+<pre><code><code>PUT student_1
+{
+    &quot;mappings&quot;:{
+      &quot;properties&quot;: {
+        &quot;firstName&quot;:{
+          &quot;type&quot;:&quot;text&quot;,
+           &quot;copy_to&quot;: &quot;fullName&quot;
+        },
+        &quot;lastName&quot;:{
+          &quot;type&quot;:&quot;text&quot;,
+           &quot;copy_to&quot;: &quot;fullName&quot;
+        },
+        &quot;password&quot;:{
+          &quot;type&quot;:&quot;text&quot;,
+          &quot;index&quot;:false
+        }
+    }
+    }
+}
+
+PUT student_1/_doc/1
+{
+  &quot;firstName&quot;:&quot;AA&quot;,
+  &quot;lastName&quot;:&quot;BB&quot;,
+  &quot;password&quot;:&quot;abc&quot;
+}
+
+Get student_1/_search?q=fullName:(AA BB)</code></pre>
+<p><img src="./images/【Elasticsearch 7 探索之路】（六）初识 Mapping3.png" /></p>
+<p><strong>5.小结</strong></p>
+<p>本篇主要对 Dynamic Mapping 以及手动创建 Mapping 进行讲解，Dynamic Mapping 有好处也有坏处，好处我们无需定义 Mapping，坏处是推算的类型不一定正确，这点要留意。如果手动创建 Mapping 比较推荐先用 Dynamic Mapping 创建生成一个临时索引，查询 Mapping 定义（标题3.2 下面的结果图）修改使用，这样可以减少工作量和出错的概率。</p>
+<p><strong>系列文章</strong><br />
+<a href="https://www.cnblogs.com/TFengStorm/p/12026562.html">【Elasticsearch 7 探索之路】（五）搜索相关 Search-API</a><br />
+<a href="https://www.cnblogs.com/TFengStorm/p/11949707.html">【Elasticsearch 7 探索之路】（四）Analyzer 分析</a><br />
+<a href="https://www.cnblogs.com/TFengStorm/p/11879004.html">【Elasticsearch 7 探索之路】（三）倒排索引</a><br />
+<a href="https://www.cnblogs.com/TFengStorm/p/11858745.html">【Elasticsearch 7 探索之路】（二）文档的 CRUD 和批量操作</a><br />
+<a href="https://www.cnblogs.com/TFengStorm/p/11652008.html">【Elasticsearch 7 搜索之路】（一）什么是 Elasticsearch？</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

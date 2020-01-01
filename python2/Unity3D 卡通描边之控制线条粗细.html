@@ -1,0 +1,54 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Unity3D 卡通描边之控制线条粗细' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Unity3D 卡通描边之控制线条粗细</center></div><div class='banquan'>原文出处:本文由博客园博主L-灵刃提供。<br/>
+原文连接:https://www.cnblogs.com/lht666/p/12013323.html</div><br>
+    <p>一、前言</p>
+<p>之前我发表过一篇<a title="Unity3D 卡通渲染 基于退化四边形的实时描边" href="https://www.cnblogs.com/lht666/p/11447199.html" target="_blank">Unity3D 卡通渲染 基于退化四边形的实时描边</a>，最重要的实时描边已经实现了，本文接下来要完善一下它。</p>
+<p>在之前的实时描边中，使用了几何着色器中的LineStream来进行绘制线条的，这样绘制线条是无法脱离底层特性来在所有平台上通用式地控制线条的粗细，这就需要我们再做文章。</p>
+<p>&nbsp;</p>
+<p>二、原理</p>
+<p>关于图形学中如何控制线条粗细这个问题，其实早就有人做了研究，文章<a href="https://zhuanlan.zhihu.com/p/61077186" target="_blank">在这</a>。</p>
+<p>借用该文章的一张图</p>
+<p><img src="./images/Unity3D 卡通描边之控制线条粗细0.png" alt="" /></p>
+<p>原理看图就一目了然，在裁剪空间中，e0和e1是线条的2个顶点，之后依次计算出二维向量ext和n，在通过这2个向量计算出4个点，再用这4个点绘制出2个三角形即可拼出这个四边形。</p>
+<p>本文在此基础上做了一点调整，如下图所示。</p>
+<p><img src="./images/Unity3D 卡通描边之控制线条粗细1.png" alt="" /></p>
+<p>简单来说就是以线的2点为中线，来绘制四边形，而不是作为四边形的一条边，因为2个点的位置顺序在本文中的几何着色器中获取到的是无序的，可能是e1误被当初e0，也可能e0被误当成e1，如果要让它们变得有序那会变得复杂，而以此为中线绘制四边形，那么就会变得很简单。接下来只要计算出四边形的4个点，再由几何着色器分裂出2个三角形，即可得到此四边形。</p>
+<p>n和ext在unity3D的Shader中是这样计算的：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">float</span> PctExtend = <span style="color: #800080;">0.01</span><span style="color: #000000;">;
+float2 ext </span>= PctExtend * (e1.xy -<span style="color: #000000;"> e0.xy);
+float2 v </span>= normalize(float3(e1.xy - e0.xy, <span style="color: #800080;">0</span><span style="color: #000000;">)).xy;
+float2 n </span>= float2(-v.y, v.x) * 线条宽度;</pre>
+</div>
+<p>从上述代码可以看出，宽度是在n的计算中控制的，我们可以把这个参数提取出来，让使用者随意调整。</p>
+<p>&nbsp;</p>
+<p>三、编码</p>
+<p>以前的代码写得比较乱，为了方便就不再整理了，编码略复杂，请自行整理。</p>
+<p>这里附上<a href="https://github.com/L-LingRen/UnitySimpleCartoonLine" target="_blank">源码</a></p>
+<p>&nbsp;</p>
+<p>四、运行</p>
+<p>效果还不错，性能做不评价，unity3d貌似内部做了优化，帧数不知为啥时高时低。</p>
+<p><img src="./images/Unity3D 卡通描边之控制线条粗细2.png" alt="" /></p>
+<p>Enjoy It，本文到此结束，谢谢！</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

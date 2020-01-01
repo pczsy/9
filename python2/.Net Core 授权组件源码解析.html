@@ -1,0 +1,141 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修.Net Core 授权组件源码解析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>.Net Core 授权组件源码解析</center></div><div class='banquan'>原文出处:本文由博客园博主郑小超提供。<br/>
+原文连接:https://www.cnblogs.com/GreenLeaves/p/12099760.html</div><br>
+    <p>前面关于.Net Core如何进行用户认证的核心流程介绍完毕之后,<a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/GreenLeaves/p/12093972.html">.Net Core 认证系统之Cookie认证源码解析</a>远程认证暂时不介绍,后期有时间,我会加上.接下去介绍认证组件是如何和授权组件一起协同工作.源码的路径如下,自行去github下载.ok,开始!</p>
+<p><img src="./images/.Net Core 授权组件源码解析0.png" alt="" /></p>
+<p>1、认证组件的执行流程</p>
+<p>Core启动认证组件的方式很简单.</p>
+<p><img src="./images/.Net Core 授权组件源码解析1.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析2.png" alt="" /></p>
+<p>&nbsp;和认证系统一样,都是以中间件的形式提供服务.</p>
+<p><img src="./images/.Net Core 授权组件源码解析3.png" alt="" /></p>
+<p>&nbsp;验证有没有注入授权组件的核心服务.&nbsp;</p>
+<p>接下去查看中间件的代码,如下:</p>
+<p><img src="./images/.Net Core 授权组件源码解析4.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析5.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析6.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析7.png" alt="" /></p>
+<p>&nbsp;校验过程就不说了,第一步:</p>
+<p><img src="./images/.Net Core 授权组件源码解析8.png" alt="" /></p>
+<p>&nbsp;从终结点元数据中读取打了Authorize的特性的控制器和方法.那么意味这此时控制器已经被注入了,所以一般services.AddMvc()和add.UseMvc()是先于认证组件注入的.</p>
+<p>且微软提示,如果你自定义了一个授权Filter,改变了认证逻辑,可能会造成错误,不建议这种方式.因为核心认证组件支持所有的业务扩展,没必要再去定义额外的Filter.</p>
+<p>接着看如下代码:</p>
+<p><img src="./images/.Net Core 授权组件源码解析9.png" alt="" /></p>
+<p>&nbsp;AuthorizationPolicy类合并了需要认证的元数据和认证策略提供类.那去找找IAuthorizationPolicyProvider接口的实现,如下</p>
+<p><img src="./images/.Net Core 授权组件源码解析10.png" alt="" /></p>
+<p>&nbsp;在注入服务的时候,微软注入了默认的实现，又是Provider模式,Core底层大量采用了这个模式,所以如果你不知道,先去补补设计模式的知识点,可以参考本人的设计模式分类.这个设计模式很简单.不看代码就能猜出大致的实现，内部肯定维护了一个键值对,Dic或者HashMap.那就去看看.</p>
+<p><img src="./images/.Net Core 授权组件源码解析11.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析12.png" alt="" /></p>
+<p>&nbsp;调用了AuthorizationOptions参数中的GetPolicy方法,对应</p>
+<p><img src="./images/.Net Core 授权组件源码解析13.png" alt="" /></p>
+<p>&nbsp;果然是个字典.这意味这我们可以通过认证参数来配置认证策略,添加策略的方法如下:</p>
+<p><img src="./images/.Net Core 授权组件源码解析14.png" alt="" /></p>
+<p>&nbsp;ok,再去看看AuthorizationPolicy的构造,其维护了两个主要的属性,后面会介绍.</p>
+<p><img src="./images/.Net Core 授权组件源码解析15.png" alt="" /></p>
+<p>&nbsp;一个认证方案的名称和一个授权条件集合,到这里可以知道认证组件可以和授权组件集成到一起使用的结论.</p>
+<p>讲到这,回到中间件</p>
+<p><img src="./images/.Net Core 授权组件源码解析16.png" alt="" /></p>
+<p>&nbsp;_prolicyProvider提供的是认证方案的名称和授权条件集合,以及需要被认证的元数据集合.</p>
+<p>接着,看看AuthorizationPolicy.CombineAsync的实现</p>
+<p><img src="./images/.Net Core 授权组件源码解析17.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析18.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析19.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析20.png" alt="" /></p>
+<p>&nbsp;跳过参数校验,分析核心代码,第一步:</p>
+<p><img src="./images/.Net Core 授权组件源码解析21.png" alt="" /></p>
+<p>&nbsp;遍历需要授权的元数据集合</p>
+<p><img src="./images/.Net Core 授权组件源码解析22.png" alt="" /></p>
+<p>&nbsp;AuthorizationPolicyBuilder,授权策略Buidler生成器,负责生成授权策略。Buidler生成器模式,不懂其移步本人设计模式分类,很简单.</p>
+<p><img src="./images/.Net Core 授权组件源码解析23.png" alt="" /></p>
+<p>&nbsp;判断需要授权元数据的Policy属性,ok,到这里.很明显.我们得看看Authorize特性</p>
+<p><img src="./images/.Net Core 授权组件源码解析24.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析25.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析26.png" alt="" /></p>
+<p>&nbsp;这个时候</p>
+<p><img src="./images/.Net Core 授权组件源码解析27.png" alt="" /></p>
+<p>&nbsp;红框里得值就为"自定义授权策略",接着通过policyProvider拿到对应得AuthorizationPolicy实例,本质就是认证策略名称为"自定义授权策略"的认证方案和授权条件集合.</p>
+<p>接着通过policyBuilder将认证策略名称为"自定义授权策略"的认证方案和授权条件集合.</p>
+<p><img src="./images/.Net Core 授权组件源码解析28.png" alt="" /></p>
+<p>&nbsp;添加到AuthorizationPolicyBuilder实例的下面两个属性中去</p>
+<p><img src="./images/.Net Core 授权组件源码解析29.png" alt="" /></p>
+<p>&nbsp;此时,当你这样设置控制器或者其下的方法</p>
+<p><img src="./images/.Net Core 授权组件源码解析30.png" alt="" /></p>
+<p>&nbsp;说明你不在采用授权组件的默认策略,所以</p>
+<p><img src="./images/.Net Core 授权组件源码解析31.png" alt="" /></p>
+<p>&nbsp;接着</p>
+<p><img src="./images/.Net Core 授权组件源码解析32.png" alt="" /></p>
+<p>&nbsp;又去判断当前需要授权元数据的Authorize特性中是否设置了Roles特性,且可以设置多个,以"，"分隔</p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析33.png" alt="" /></p>
+<p>&nbsp;到这里说明自定义策略授权和Role授权是可以共存的,可以向下面这样</p>
+<p><img src="./images/.Net Core 授权组件源码解析34.png" alt="" /></p>
+<p>接着</p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析35.png" alt="" /></p>
+<p>&nbsp;这个方法本质,就是向AuthorizationPolicyBuilder实例的<img src="./images/.Net Core 授权组件源码解析36.png" alt="" /></p>
+<p>&nbsp;追加授权条件.</p>
+<p>简单说下为什么微软要给授权组件预留Roles角色集合,因为当前市面上主流的权限设计系统都是RBAC模式,中文就是基于角色(Role)的权限管理系统.</p>
+<p>接着</p>
+<p><img src="./images/.Net Core 授权组件源码解析37.png" alt="" /></p>
+<p>&nbsp;这里和角色一样不介绍了</p>
+<p>到这里你会发现 基于认证方案授权策略+基于角色的授权策略=自定义策略的授权策略.</p>
+<p>接着,如果没有任何控制器或者方法使用授权策略,那么使用最基本的拒绝匿名访问api策略</p>
+<p><img src="./images/.Net Core 授权组件源码解析38.png" alt="" /></p>
+<p>&nbsp;核心代码如下:</p>
+<p><img src="./images/.Net Core 授权组件源码解析39.png" alt="" /></p>
+<p>&nbsp;如果当前用户未认证,则不能访问.</p>
+<p>当然这个策略也可以通过AuthorizationOptions参数进行重写.</p>
+<p><img src="./images/.Net Core 授权组件源码解析40.png" alt="" /></p>
+<p>&nbsp;最后</p>
+<p><img src="./images/.Net Core 授权组件源码解析41.png" alt="" /></p>
+<p>&nbsp;去重构建一个新的PolicyBuilder对象实例.</p>
+<p>&nbsp;接着</p>
+<p><img src="./images/.Net Core 授权组件源码解析42.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析43.png" alt="" /></p>
+<p>&nbsp;执行PolicyBuilder中的用户认证,其中做了一些重复登陆的处理.本质就是如此.</p>
+<p><img src="./images/.Net Core 授权组件源码解析44.png" alt="" /></p>
+<p>&nbsp;这段代码就可以看出.如果当前用户未登陆,则返回</p>
+<p><img src="./images/.Net Core 授权组件源码解析45.png" alt="" /></p>
+<p>&nbsp;接着回到中间件</p>
+<p><img src="./images/.Net Core 授权组件源码解析46.png" alt="" /></p>
+<p>&nbsp;认证完毕之后,如果当前元数据打了AllowAnonymous特性像下面这样</p>
+<p><img src="./images/.Net Core 授权组件源码解析47.png" alt="" /></p>
+<p>&nbsp;执行下一个中间件.但是上面的认证操作会做.</p>
+<p>最后</p>
+<p><img src="./images/.Net Core 授权组件源码解析48.png" alt="" /></p>
+<p>&nbsp;<img src="./images/.Net Core 授权组件源码解析49.png" alt="" /></p>
+<p>&nbsp;调用授权服务,进行授权校验.默认的授权服务注入点如下:</p>
+<p><img src="./images/.Net Core 授权组件源码解析50.png" alt="" /></p>
+<p><img src="./images/.Net Core 授权组件源码解析51.png" alt="" /></p>
+<p>&nbsp;构建授权上下文,接着拿到所有的授权处理器.遍历执行</p>
+<p><img src="./images/.Net Core 授权组件源码解析52.png" alt="" /></p>
+<p>&nbsp;这个参数,可配置,当一个授权策略校验失败,便不再执行接下去的授权策略.</p>
+<p>最后返回授权结果</p>
+<p><img src="./images/.Net Core 授权组件源码解析53.png" alt="" /></p>
+<p>总结:本质就是将</p>
+<p><img src="./images/.Net Core 授权组件源码解析54.png" alt="" /></p>
+<p>&nbsp;特性中的这两个参数,交给IAuthorizationHandler授权处理器处理.当然如果你制定了认证方案,那么则会去判断当前用户是否登陆.</p>
+<p>&nbsp;&nbsp;整个流程结束.纯属个人理解,能力有限,有问题,请指正,谢谢.</p>
+<p>&nbsp;</p>
+<p>接下去会写一篇动态授权的文章,这样就能将授权组件+认证组件+权限系统集合起来实现完成用户认证和api动态授权.为后期的前端后端分离架构-基于id4的password模式+JwtBear认证+identity的授权认证中心做准备.最后形成一个完整的授权认证中心.</p>
+<p>g</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

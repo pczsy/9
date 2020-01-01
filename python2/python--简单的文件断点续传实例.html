@@ -1,0 +1,158 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python--简单的文件断点续传实例' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python--简单的文件断点续传实例</center></div><div class='banquan'>原文出处:本文由博客园博主梦想一步登天提供。<br/>
+原文连接:https://www.cnblogs.com/june-L/p/11773884.html</div><br>
+    <p><span style="font-size: 18px;">一、程序说明</span></p>
+<p><img src="./images/python--简单的文件断点续传实例0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">1、文件上传目标路径：home/file</span></p>
+<p><span style="font-size: 18px;">2、目标文件：putfile.png</span></p>
+<p><span style="font-size: 18px;">3、服务端代码：put_server.py</span></p>
+<p><span style="font-size: 18px;">4、客户端代码：put_client.py</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">二、各部分代码</span></p>
+<p><span style="font-size: 18px;">1、服务端代码：put_server.py</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span>
+<span style="color: #008080;"> 2</span> <span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #008080;"> 3</span> <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 4</span> <span style="color: #800000;">实现文件断点续传的服务器端
+</span><span style="color: #008080;"> 5</span> <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 6</span> 
+<span style="color: #008080;"> 7</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #008080;"> 8</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> BASE_DIR = os.path.dirname(os.path.dirname(<span style="color: #800080;">__file__</span><span style="color: #000000;">))
+</span><span style="color: #008080;">11</span> 
+<span style="color: #008080;">12</span> home = os.path.join(BASE_DIR, <span style="color: #800000;">"</span><span style="color: #800000;">home/file</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">13</span> sk =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008080;">14</span> sk.bind((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8001<span style="color: #000000;">))
+</span><span style="color: #008080;">15</span> sk.listen(5<span style="color: #000000;">)
+</span><span style="color: #008080;">16</span> 
+<span style="color: #008080;">17</span> <span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+</span><span style="color: #008080;">18</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">Waiting....</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">19</span>     conn, addr =<span style="color: #000000;"> sk.accept()
+</span><span style="color: #008080;">20</span>     conn.sendall(bytes(<span style="color: #800000;">'</span><span style="color: #800000;">欢迎登录</span><span style="color: #800000;">'</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+</span><span style="color: #008080;">21</span>     flag =<span style="color: #000000;"> True
+</span><span style="color: #008080;">22</span>     <span style="color: #0000ff;">while</span><span style="color: #000000;"> flag:
+</span><span style="color: #008080;">23</span>         client_bytes = conn.recv(1024)   <span style="color: #008000;">#</span><span style="color: #008000;">接收客户端发送过来的内容</span>
+<span style="color: #008080;">24</span>         client_str = str(client_bytes, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;">将内容转换成字符串</span>
+<span style="color: #008080;">25</span> 
+<span style="color: #008080;">26</span>         <span style="color: #008000;">#</span><span style="color: #008000;"> 将客户端发送过来的内容以"|"拆分为:命名方法，文件名，文件大小，目标路径</span>
+<span style="color: #008080;">27</span>         func, file_name, file_byte_size, targe＿path = client_str.split(<span style="color: #800000;">'</span><span style="color: #800000;">|</span><span style="color: #800000;">'</span>, 3<span style="color: #000000;">)
+</span><span style="color: #008080;">28</span>         file_byte_size =<span style="color: #000000;"> int(file_byte_size)
+</span><span style="color: #008080;">29</span>         path =<span style="color: #000000;"> os.path.join(home, file_name)
+</span><span style="color: #008080;">30</span>         has_received =<span style="color: #000000;"> 0
+</span><span style="color: #008080;">31</span> 
+<span style="color: #008080;">32</span>         <span style="color: #008000;">#</span><span style="color: #008000;">首先判断该路径下是否已存在文件</span>
+<span style="color: #008080;">33</span>         <span style="color: #0000ff;">if</span><span style="color: #000000;"> os.path.exists(path):
+</span><span style="color: #008080;">34</span>             conn.sendall(bytes(<span style="color: #800000;">"</span><span style="color: #800000;">2003</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>))  <span style="color: #008000;">#</span><span style="color: #008000;">发送通知客户端，该文件已存在</span>
+<span style="color: #008080;">35</span>             is_continue = str(conn.recv(1024), encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;">等待客户端选择回复</span>
+<span style="color: #008080;">36</span>             <span style="color: #0000ff;">if</span> is_continue == <span style="color: #800000;">"</span><span style="color: #800000;">2004</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+</span><span style="color: #008080;">37</span>                 has_file_size =<span style="color: #000000;"> os.stat(path).st_size
+</span><span style="color: #008080;">38</span>                 conn.sendall(bytes(str(has_file_size), encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>))  <span style="color: #008000;">#</span><span style="color: #008000;">将已接收的文件大小给客户端</span>
+<span style="color: #008080;">39</span>                 has_received +=<span style="color: #000000;"> has_file_size
+</span><span style="color: #008080;">40</span>                 f = open(path, <span style="color: #800000;">'</span><span style="color: #800000;">ab</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">41</span>             <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">42</span>                 f = open(path, <span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">43</span>         <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">44</span>             conn.sendall(bytes(<span style="color: #800000;">"</span><span style="color: #800000;">2002</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+</span><span style="color: #008080;">45</span>             f = open(path, <span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">46</span> 
+<span style="color: #008080;">47</span>         <span style="color: #0000ff;">while</span> has_received &lt;<span style="color: #000000;"> file_byte_size:
+</span><span style="color: #008080;">48</span>             <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+</span><span style="color: #008080;">49</span>                 data = conn.recv(1024<span style="color: #000000;">)
+</span><span style="color: #008080;">50</span>                 <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> data:
+</span><span style="color: #008080;">51</span>                     <span style="color: #0000ff;">raise</span><span style="color: #000000;"> Exception
+</span><span style="color: #008080;">52</span>             <span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception:
+</span><span style="color: #008080;">53</span>                 flag =<span style="color: #000000;"> False
+</span><span style="color: #008080;">54</span>                 <span style="color: #0000ff;">break</span>
+<span style="color: #008080;">55</span> <span style="color: #000000;">            f.write(data)
+</span><span style="color: #008080;">56</span>             has_received +=<span style="color: #000000;"> len(data)
+</span><span style="color: #008080;">57</span>         <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">文件已接收完成！</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">58</span>         f.close()</pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">2、客户端代码：put_client.py</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span>
+<span style="color: #008080;"> 2</span> <span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #008080;"> 3</span> <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 4</span> <span style="color: #800000;">实现文件断点续传的客户端
+</span><span style="color: #008080;"> 5</span> <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 6</span> 
+<span style="color: #008080;"> 7</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #008080;"> 8</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> sys
+</span><span style="color: #008080;"> 9</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+</span><span style="color: #008080;">10</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #008080;">11</span> FILE_DIR = os.path.dirname(<span style="color: #800080;">__file__</span><span style="color: #000000;">)
+</span><span style="color: #008080;">12</span> 
+<span style="color: #008080;">13</span> ck =<span style="color: #000000;"> socket.socket()
+</span><span style="color: #008080;">14</span> ck.connect((<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>, 8001<span style="color: #000000;">))
+</span><span style="color: #008080;">15</span> <span style="color: #0000ff;">print</span>(str(ck.recv(1024), encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+</span><span style="color: #008080;">16</span> 
+<span style="color: #008080;">17</span> 
+<span style="color: #008080;">18</span> <span style="color: #008000;">#</span><span style="color: #008000;">定义一个函数，计算进度条</span>
+<span style="color: #008080;">19</span> <span style="color: #0000ff;">def</span> bar(num = 1, sum = 100<span style="color: #000000;">):
+</span><span style="color: #008080;">20</span>     rate = float(num) /<span style="color: #000000;"> float(sum)
+</span><span style="color: #008080;">21</span>     rate_num = int(rate * 100<span style="color: #000000;">)
+</span><span style="color: #008080;">22</span>     temp = <span style="color: #800000;">'</span><span style="color: #800000;">\r%d %%</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> (rate_num)
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">    sys.stdout.write(temp)
+</span><span style="color: #008080;">24</span> 
+<span style="color: #008080;">25</span> <span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+</span><span style="color: #008080;">26</span>     inp = input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入（内容格式：post|文件路径 目标路径）: \n &gt;&gt;&gt; </span><span style="color: #800000;">'</span>).strip()  <span style="color: #008000;">#</span><span style="color: #008000;">输入内容格式：命令|文件路径 目标路径</span>
+<span style="color: #008080;">27</span>     func, file_path =inp.split(<span style="color: #800000;">"</span><span style="color: #800000;">|</span><span style="color: #800000;">"</span>, 1)  <span style="color: #008000;">#</span><span style="color: #008000;">将输入的内容拆分为两部分，方法名和路径</span>
+<span style="color: #008080;">28</span>     local_path, target_path = re.split(<span style="color: #800000;">"</span><span style="color: #800000;">\s*</span><span style="color: #800000;">"</span>, file_path, 1) <span style="color: #008000;">#</span><span style="color: #008000;">再将路径部分，通过正则表达式。以空格拆分为：文件路径和上传的目标路径</span>
+<span style="color: #008080;">29</span>     file_byte_size = os.stat(local_path).st_size  <span style="color: #008000;">#</span><span style="color: #008000;">获取文件的大小</span>
+<span style="color: #008080;">30</span>     file_name = os.path.basename(local_path)   <span style="color: #008000;">#</span><span style="color: #008000;">设置文件名</span>
+<span style="color: #008080;">31</span> 
+<span style="color: #008080;">32</span>     post_info = <span style="color: #800000;">"</span><span style="color: #800000;">post|%s|%s|%s</span><span style="color: #800000;">"</span> % (file_name, file_byte_size, target_path)  <span style="color: #008000;">#</span><span style="color: #008000;">将发送的内容进行拼接</span>
+<span style="color: #008080;">33</span>     ck.sendall(bytes(post_info, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>))  <span style="color: #008000;">#</span><span style="color: #008000;">向服务器端发送内容</span>
+<span style="color: #008080;">34</span> 
+<span style="color: #008080;">35</span>     result_exist = str(ck.recv(1024), encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">36</span>     has_sent =<span style="color: #000000;"> 0
+</span><span style="color: #008080;">37</span>     <span style="color: #0000ff;">if</span> result_exist == <span style="color: #800000;">"</span><span style="color: #800000;">2003</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+</span><span style="color: #008080;">38</span>         inp = input(<span style="color: #800000;">"</span><span style="color: #800000;">文件已存在，是否续传？Y/N:</span><span style="color: #800000;">"</span><span style="color: #000000;">).strip()
+</span><span style="color: #008080;">39</span>         <span style="color: #0000ff;">if</span> inp.upper() == <span style="color: #800000;">'</span><span style="color: #800000;">Y</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+</span><span style="color: #008080;">40</span>             ck.sendall(bytes(<span style="color: #800000;">"</span><span style="color: #800000;">2004</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+</span><span style="color: #008080;">41</span>             result_continue_pos = str(ck.recv(1024), encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;">已经传输了多少的文件内容</span>
+<span style="color: #008080;">42</span>             <span style="color: #0000ff;">print</span><span style="color: #000000;">(result_continue_pos)
+</span><span style="color: #008080;">43</span>             has_sent =<span style="color: #000000;"> int(result_continue_pos)
+</span><span style="color: #008080;">44</span> 
+<span style="color: #008080;">45</span>         <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">46</span>             ck.sendall(bytes(<span style="color: #800000;">"</span><span style="color: #800000;">2005</span><span style="color: #800000;">"</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>))  <span style="color: #008000;">#</span><span style="color: #008000;">发送2005代表不续传</span>
+<span style="color: #008080;">47</span> 
+<span style="color: #008080;">48</span>     file_obj = open(local_path, <span style="color: #800000;">'</span><span style="color: #800000;">rb</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;">对文件进行读操作</span>
+<span style="color: #008080;">49</span>     file_obj.seek(has_sent)  <span style="color: #008000;">#</span><span style="color: #008000;">调整指针</span>
+<span style="color: #008080;">50</span> 
+<span style="color: #008080;">51</span>     <span style="color: #0000ff;">while</span> has_sent &lt;<span style="color: #000000;"> file_byte_size:
+</span><span style="color: #008080;">52</span>         data = file_obj.read(1024<span style="color: #000000;">)
+</span><span style="color: #008080;">53</span> <span style="color: #000000;">        ck.sendall(data)
+</span><span style="color: #008080;">54</span>         has_sent +=<span style="color: #000000;"> len(data)
+</span><span style="color: #008080;">55</span>         bar(has_sent, file_byte_size)  <span style="color: #008000;">#</span><span style="color: #008000;">进度条</span>
+<span style="color: #008080;">56</span> 
+<span style="color: #008080;">57</span> <span style="color: #000000;">    file_obj.close()
+</span><span style="color: #008080;">58</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">文件上传成功！</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

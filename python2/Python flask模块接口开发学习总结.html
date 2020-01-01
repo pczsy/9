@@ -1,0 +1,144 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python flask模块接口开发学习总结' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python flask模块接口开发学习总结</center></div><div class='banquan'>原文出处:本文由博客园博主那年故乡的明月提供。<br/>
+原文连接:https://www.cnblogs.com/tdp0108/p/12082238.html</div><br>
+    <h2>引言</h2>
+<p>Flask 是一个简单且十分强大的Python web 框架。它被称为微框架，&ldquo;微&rdquo;并不是意味着把整个Web应用放入到一个Python文件，微框架中的&ldquo;微&rdquo;是指Flask旨在保持代码简洁且易于扩展，Flask框架的主要特征是核心构成比较简单，但具有很强的扩展性和兼容性，程序员可以使用Python语言快速实现一个网站或 Web服务。因此flask能很方便构建一个web服务，给外部也可以叫做客户端提供web服务，针对flask框架这种特点我们可以很容易构建API接口，供客户端访问。</p>
+<h2>Flask接口开发示例</h2>
+<p>首先安装需要的Flask模块，如果你的环境已经安装了pip则键入：pip install flask即可安装完成</p>
+<h4>1.1 构建GET请求方法的接口</h4>
+<p>在Pycharm中新建py文件，编辑如下代码</p>
+<div class="cnblogs_Highlighter">
+<pre><code># -*- coding: utf-8 -*-
+import flask,json
+import time
+
+server = flask.Flask(__name__)   # 创建一个服务，把当前这个python文件当做一个服务
+
+@server.route('/VIID/System/Time', methods=['get'])  # @server.route()可以将普通函数转变为服务、接口的路径、请求方式，如果不写methods则默认get方法
+def Time():
+    '''查询字符串:无，消息体：无，返回结果：SystemTime'''
+    response_data = {
+                "SystemTimeObject": {
+                    "VIIDServerID": "123",
+                    "TimeMode": "1",           
+                    "LocalTime": time.strftime('%Y%m%d%H%M%S', time.localtime(time.time())),
+                }
+            }
+    return json.dumps(response_data, ensure_ascii=False)
+
+if __name__ == '__main__':
+    server.run(debug=True, port=5000, host='10.82.25.11')  #  指定访问端口、host
+</pre>
+</div>
+<p>　然后运行该py文件，则该文件运行在本地就是一个web服务，用浏览器或者postman尝试访问该服务的URL即可</p>
+<p>浏览器访问：</p>
+<p><img src="./images/Python flask模块接口开发学习总结0.png" alt="" /></p>
+<p>postman发请求访问：</p>
+<p><img src="./images/Python flask模块接口开发学习总结1.png" alt="" /></p>
+<p>浏览器或者postman请求完成后，在Pycharm的输出栏会输出如下：</p>
+<p><img src="./images/Python flask模块接口开发学习总结2.png" alt="" /></p>
+<p>其它的请求如POST、PUT、DELETE等方法，在methods参数中指明即可，不过POST、PUT、DELETE等方法不能由浏览器直接访问，因为浏览器默认访问时是get方法，可以用postman按指定的方法发请求</p>
+<h4>1.2 获取带json格式请求体的接口</h4>
+<p>有时客户端发送的请求是带json格式的，这时需要获取请求的json，编辑代码如下：</p>
+<div class="cnblogs_Highlighter">
+<pre><code>@server.route('/data',methods=['post'])
+def post_json():
+    if flask.request.is_json:
+        print(flask.request.json)
+        name = flask.request.json.get('name')            # 获取json请求体的第一个参数的值
+        age = flask.request.json.get('age')             # 获取json请求体的第二个参数的值
+        data = {'name':name,'age':age}
+        return json.dumps(data,ensure_ascii=False)
+    else:
+        return json.dumps({'msg':'请传json格式参数'},ensure_ascii=False)
+</pre>
+</div>
+<p>&nbsp;使用postman作为客户端发送带json请求体的请求，如下图：</p>
+<p><img src="./images/Python flask模块接口开发学习总结3.png" alt="" /></p>
+<h4>1.3 获取get请求中发送的参数</h4>
+<p>flask提供的方法是：</p>
+<div class="cnblogs_Highlighter">
+<pre><code> value = flask.request.args.get('name')           # 获取get请求参数name的值
+</pre>
+</div>
+<h4>1.4 构建动态URL以及响应体的重定向</h4>
+<p>很多时候，客户端请求的url是变化的，也就是带有动态参数的，flask也是可以轻松的构建提供动态参数的url资源服务并重定向响应体，代码如下：</p>
+<div class="cnblogs_Highlighter">
+<pre><code># -*- coding: utf-8 -*-
+import flask,json
+from flask import url_for,redirect
+
+server = flask.Flask(__name__)   # 创建一个服务，把当前这个python文件当做一个服务
+
+@server.route('/data')
+def data():                       #  返回data
+    data = {
+                'VideoSliceInfoObject': {
+                    'VideoID': 'esse elit',
+                    'AudioCodeFormat': 'commodo'
+                }
+    }
+    return json.dumps(data, ensure_ascii=False)
+
+@server.route('/data/&lt;ID&gt;/Info', methods=['post'])
+def data_redirect(ID):
+    return redirect(url_for('data', guest=ID))
+
+if __name__ == '__main__':
+    server.run(debug=True, port=5000, host='10.82.25.11')  #  指定访问端口、host
+</pre>
+</div>
+<p>&nbsp;后面无论postman或者客户端发送的url中的ID参数是啥，都可以响应</p>
+<h4>1.5 重新构建响应头和响应状态码</h4>
+<p>有时在与第三方系统对接时，需要返回携带响应头消息和指定的响应状态码，在flask中也是可以构建自定义的响应消息的</p>
+<div class="cnblogs_Highlighter">
+<pre><code># -*- coding: utf-8 -*-
+import flask,json
+
+server = flask.Flask(__name__)   # 创建一个服务，把当前这个python文件当做一个服务
+
+@server.route('/data',methods=['post'])
+def post_json():
+    if flask.request.is_json:
+        print(flask.request.json)
+        name = flask.request.json.get('name')            # 获取json请求体的第一个参数的值
+        age = flask.request.json.get('age')             # 获取json请求体的第二个参数的值
+        data = {'name':name,'age':age}
+        # 构建响应头域和状态码
+        resp = flask.make_response(json.dumps(data, ensure_ascii=False))
+        resp.status = "666"
+        resp.headers[
+            "python"] = "python flask"
+        return resp
+    else:
+        return json.dumps({'msg':'请传json格式参数'},ensure_ascii=False)
+
+if __name__ == '__main__':
+    server.run(debug=True, port=5000, host='10.82.25.11')  #  指定访问端口、host
+</pre>
+</div>
+<p>&nbsp;运行该py文件，在postman中发送请求，查看响应信息，如下图，变成的我们自定义设置的响应头和状态码</p>
+<p><img src="./images/Python flask模块接口开发学习总结4.png" alt="" /></p>
+<p>这样我们就完全自定义了响应的头和状态码</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

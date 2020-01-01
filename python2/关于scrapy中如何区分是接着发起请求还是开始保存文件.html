@@ -1,0 +1,98 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修关于scrapy中如何区分是接着发起请求还是开始保存文件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>关于scrapy中如何区分是接着发起请求还是开始保存文件</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11728456.html</div><br>
+    <h2 id="一.区分">一.区分</h2>
+<p>根据<code>yield</code>迭代器生成的对象是<code>request对象</code>还是<code>item对象</code></p>
+<h2 id="二.item">二.item</h2>
+<h3 id="配置tem对象">1.配置tem对象</h3>
+<p>在<code>items.py</code>文件中设置类</p>
+<pre><code><code>class MyscrapyItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    title = scrapy.Field()
+    price = scrapy.Field()
+    prostatus = scrapy.Field()</code></pre>
+<h3 id="在爬虫程序中导入该类写相应的函数">2.在爬虫程序中导入该类写相应的函数</h3>
+<pre><code><code>from myscrapy.items import MyscrapyItem
+def get_info(self,response):
+    elements_list = response.css(&#39;.product&#39;)
+    for element in elements_list:
+        title = element.css(&#39;.productTitle a::attr(title)&#39;).extract_first() #这是css选择器
+        price = element.css(&#39;.productPrice em::attr(title)&#39;).extract_first()
+        prostatus = element.css(&#39;.productStatus em::text&#39;).extract_first()
+        item = MyscrapyItem()  #实例话一个item对象
+        item[&#39;title&#39;] = title  #填写配置的参数
+        item[&#39;price&#39;] = price
+        item[&#39;prostatus&#39;] = prostatus
+        yield item</code></pre>
+<h2 id="三.再获得item参数后scrapy会自动执行pipelines.py文件中内容">三.再获得item参数后scrapy会自动执行pipelines.py文件中内容</h2>
+<h3 id="settings文件进行注册">1.settings文件进行注册</h3>
+<pre><code><code>ITEM_PIPELINES = {
+   &#39;myscrapy.pipelines.MyscrapyPipeline&#39;: 300,   #小的优先级高
+   # &#39;myscrapy.pipelines.MyscrapyPipeline1&#39;: 500,
+}
+#和中间件一个道理</code></pre>
+<h3 id="配置myscrapypipeline方法">2.配置MyscrapyPipeline方法</h3>
+<pre><code><code>#其中两个方法非常常用
+#def open_spider(self): 运行这个函数开始执行,一般都是连接数据库用
+#def close_spider(self): 运行完这个函数执行,一般都是关闭数据库用
+
+#简单拿MongoDB举例
+from pymongo import MongoClient
+
+class MyscrapyPipeline(object):
+
+    def __init__(self,HOST,PORT,USER,PWD,DB,TABLE):
+        self.HOST = HOST
+        self.PORT = PORT
+        self.USER = USER
+        self.PWD = PWD
+        self.DB = DB
+        self.TABLE = TABLE
+    #执行__init__之前执行
+    @classmethod
+    def from_crawler(cls,crawler):
+        HOST = crawler.settings.get(&#39;HOST&#39;)  #crawler.settings可以直接获得setting文件中的所有名称
+        PORT = crawler.settings.get(&#39;PORT&#39;)
+        USER = crawler.settings.get(&#39;USER&#39;)
+        PWD = crawler.settings.get(&#39;PWD&#39;)
+        DB = crawler.settings.get(&#39;DB&#39;)
+        TABLE = crawler.settings.get(&#39;TABLE&#39;)
+        return cls(HOST,PORT,USER,PWD,DB,TABLE)
+
+
+    def open_spider(self,spider):
+        self.client = MongoClient(host=self.HOST,port=self.PORT,username=self.USER,password=self.PWD)
+        print(&#39;连接数据库成功&#39;)
+
+    def close_spider(self,spider):
+        self.client.close()
+        print(&#39;关闭数据库&#39;)
+
+
+    def process_item(self, item, spider):
+        self.client[self.DB][self.TABLE].insert_one(dict(item))
+        return item</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

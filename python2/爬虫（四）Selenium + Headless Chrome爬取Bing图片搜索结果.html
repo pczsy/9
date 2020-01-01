@@ -1,0 +1,88 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修爬虫（四）Selenium + Headless Chrome爬取Bing图片搜索结果' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>爬虫（四）Selenium + Headless Chrome爬取Bing图片搜索结果</center></div><div class='banquan'>原文出处:本文由博客园博主rain_poi提供。<br/>
+原文连接:https://www.cnblogs.com/rain-poi/p/11593981.html</div><br>
+    <p>Bing图片搜索结果是动态加载的，如果我们直接用requests去访问页面爬取数据，那我们只能拿到很少的图片。所以我们使用Selenium + Headless Chrome来爬取搜索结果。在开始前，需要介绍一下xpath。</p>
+<h2>XPath</h2>
+<p>XPath即为<a href="https://baike.baidu.com/item/XML" target="_blank">XML</a>路径语言（XML Path Language），它是一种用来确定XML文档中某部分位置的语言。使用它让我们可以很方便地定位页面中的各种元素。详细使用方法可以看<a href="https://www.runoob.com/xpath/xpath-tutorial.html" target="_blank">这里</a>。</p>
+<h2>实例</h2>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+</span><span style="color: #0000ff;">from</span> selenium.webdriver.common.by <span style="color: #0000ff;">import</span><span style="color: #000000;"> By
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+
+chrome_options </span>=<span style="color: #000000;"> webdriver.ChromeOptions()
+chrome_options.add_argument(</span><span style="color: #800000;">"</span><span style="color: #800000;">--headless</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+chrome_options.add_argument(</span><span style="color: #800000;">"</span><span style="color: #800000;">--disable-gpu</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+driver </span>= webdriver.Chrome(options=<span style="color: #000000;">chrome_options)
+word </span>= <span style="color: #800000;">'</span><span style="color: #800000;">深秋壁纸</span><span style="color: #800000;">'</span><span style="color: #000000;">
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://cn.bing.com/images/search?q={}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(word)
+save_folder </span>= <span style="color: #800000;">'</span><span style="color: #800000;">imgs</span><span style="color: #800000;">'</span>
+<span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> os.path.exists(save_folder):
+    os.makedirs(save_folder)
+
+driver.get(url)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取一行图片</span>
+rows = driver.find_elements_by_class_name(<span style="color: #800000;">"</span><span style="color: #800000;">dgControl_list</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+t </span>=<span style="color: #000000;"> 0
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 只点击一次&ldquo;更多图片&rdquo;</span>
+mark =<span style="color: #000000;"> True
+</span><span style="color: #0000ff;">while</span> mark <span style="color: #0000ff;">or</span> t !=<span style="color: #000000;"> len(rows):
+    </span><span style="color: #0000ff;">if</span> t ==<span style="color: #000000;"> len(rows):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 找到class为&ldquo;mm_seemore&rdquo;的div下的第一个a标签</span>
+        element = driver.find_element_by_xpath(<span style="color: #800000;">"</span><span style="color: #800000;">//div[@class='mm_seemore']/a[1]</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 用JS模拟点击</span>
+        driver.execute_script(<span style="color: #800000;">"</span><span style="color: #800000;">arguments[0].click()</span><span style="color: #800000;">"</span><span style="color: #000000;">, element)
+        mark </span>=<span style="color: #000000;"> False
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 翻到页面底部</span>
+    driver.execute_script(<span style="color: #800000;">'</span><span style="color: #800000;">window.scrollTo(0, document.body.scrollHeight)</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    driver.implicitly_wait(</span>0.5<span style="color: #000000;">)
+    t </span>=<span style="color: #000000;"> len(rows)
+    rows </span>= driver.find_elements_by_class_name(<span style="color: #800000;">"</span><span style="color: #800000;">dgControl_list</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(t)
+
+img_url_list </span>=<span style="color: #000000;"> []
+</span><span style="color: #0000ff;">for</span> row <span style="color: #0000ff;">in</span><span style="color: #000000;"> rows:
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 找到图片所在的a标签</span>
+    a_list = row.find_elements(By.XPATH, <span style="color: #800000;">"</span><span style="color: #800000;">li/div/div/a</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">for</span> tag <span style="color: #0000ff;">in</span><span style="color: #000000;"> a_list:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取图片链接</span>
+        img_url_list.append(json.loads(tag.get_attribute(<span style="color: #800000;">'</span><span style="color: #800000;">m</span><span style="color: #800000;">'</span>))[<span style="color: #800000;">'</span><span style="color: #800000;">murl</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+driver.quit()
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(len(img_url_list)):
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        img </span>= requests.get(img_url_list[i], timeout=10<span style="color: #000000;">).content
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取图片格式</span>
+        img_format = re.search(r<span style="color: #800000;">'</span><span style="color: #800000;">\.\w+$</span><span style="color: #800000;">'</span><span style="color: #000000;">, img_url_list[i])[0]
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(e)
+        </span><span style="color: #0000ff;">continue</span><span style="color: #000000;">
+    with open(</span><span style="color: #800000;">'</span><span style="color: #800000;">{}/{}{}.{}</span><span style="color: #800000;">'</span>.format(save_folder, word, i, img_format[1:]), <span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{}{}.{}</span><span style="color: #800000;">'</span>.format(word, i, img_format[1<span style="color: #000000;">:]))
+        f.write(img)</span></pre>
+</div>
+<p>除了爬取动态页面，我们也完全可以用Selenium + Headless Chrome爬取其他页面。但是因为需要模拟浏览器，加载页面的各种文件，这种方法开销极大。所以如果不是必要，一般都使用开销更小的requests，毕竟绝大多数时候使用requests就能获取到我们想要的数据。另外，用单线程一张张获取图片很慢，如果有兴趣可以自己改成多线程来运行。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

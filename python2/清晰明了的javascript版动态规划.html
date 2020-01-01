@@ -1,0 +1,124 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修清晰明了的javascript版动态规划' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>清晰明了的javascript版动态规划</center></div><div class='banquan'>原文出处:本文由博客园博主小雨小雨丶提供。<br/>
+原文连接:https://www.cnblogs.com/xiaoyuxy/p/12078065.html</div><br>
+    <blockquote>
+<p>算法是一种艺术，给人感觉很不好接近，但是一旦你和ta熟络了，你就能发现这门艺术的内在是多么美妙且多变。</p>
+</blockquote>
+<p>对于前端来说，算法也许不是最重要的，在日常工作中，几乎很少用到。所以很多人也不是很感冒。<br />
+不过呢，有句话这么说的：面试造火箭，上班拧螺丝。咱们得先学习造火箭，才能有拧螺丝的机会。<br />
+莫得办法，既然想要拧螺丝，就要有好活的老学到老的觉悟。否则连改锥都没了。</p>
+<p>那么，看题。</p>
+<hr />
+<p>给你一个表格，像这样的:</p>
+<p><img src="./images/清晰明了的javascript版动态规划0.png" /></p>
+<p>从 (0, 0) 到 (M, N)移动，并假设，每次只能向下或者向右移动一步，那么，请问一共有多少种不同的路径。</p>
+<hr />
+<p>乍一看，好像可以遍历，依次向下或者向右找 (i + 1, j) 或者 (i, j + 1)， 直至 (N, M)</p>
+<p>比如下面这个简单版本：</p>
+<p><img src="./images/清晰明了的javascript版动态规划1.png" /></p>
+<p>有六种路径：</p>
+<p><img src="./images/清晰明了的javascript版动态规划2.png" /></p>
+<p>整理一下，相当于：</p>
+<p>从(0, 0)开始，因为我们只能向下或者向右，所以我们先选择一条路去走，比如向右，这时候我们就走到了(1, 0)</p>
+<p><img src="./images/清晰明了的javascript版动态规划3.png" /></p>
+<blockquote>
+<p>打叉的部分不代表不能走，只是代表当前流程下，我们只能选其一，也就是右</p>
+</blockquote>
+<p>然后我们在(1, 0)，继续走，可以向右或者向下，我们依然选择向右，这时候我们走到了(2, 0)</p>
+<p><img src="./images/清晰明了的javascript版动态规划4.png" /></p>
+<p>然后再往下走，直至走到(N, M)，</p>
+<p>然后(1, 0)，选择另外一条路，因为这仅仅是个 3*3 的表格，所以我们只能向下</p>
+<p><img src="./images/清晰明了的javascript版动态规划5.png" /></p>
+<p>然后继续选择一个方向走直至(M, N)。</p>
+<p>如此往复。</p>
+<p>这样的话，其实可以转换成一个递归，也就是从(i, j) =&gt; (i + 1, j) | (i, j + 1)，然后从(i + 1, j) =&gt; (x, y) 这样的一个递归方程式，不过这样性能是很差的，而且表格一旦规模变大，就会爆栈。</p>
+<p>那么，我们如何有效的解决这个问题呢？</p>
+<blockquote>
+<p>动态规划</p>
+</blockquote>
+<p>ok，我们再次观察这个表格，我们其实会发现一个规律，就是套娃。</p>
+<p>没错，表格把表格套娃了。</p>
+<p><img src="./images/清晰明了的javascript版动态规划6.png" /></p>
+<p>这样一来，参考俄罗斯套娃，每个娃娃其实都是一样的，也就是本质一样，只不过体量逐渐变大，并且最小的那个娃娃不能继续套娃，也就是最小的那个娃娃就是起点。</p>
+<p>如此一来，我们姑且可以用俄罗斯套娃来翻译一下这套题。</p>
+<p>问：N个俄罗斯套娃合体后的总重量是多少？</p>
+<p>答：由于最小的一个套娃无法继续套，并且可以得知这个套娃的重量，所以：<br />
+有二个套娃的时候，重量是最小的加上第二个<br />
+有三个套娃的时候，重量是两个套娃的重量的加上第三个<br />
+有四个套娃的时候，重量是三个套娃的重量的加上第四个<br />
+.<br />
+.<br />
+.<br />
+.<br />
+有N个套娃的时候，重量是(N - 1)个套娃的重量加上第N个</p>
+<p>由此，我们可以得到一个式子：</p>
+<p>dp(i) = dp(i - 1) + dp(i)</p>
+<hr />
+<p>有没有感觉和表格题有些许类似？</p>
+<p>我们可以任意 N * M 的右下角作为结束点，每一个都是一个套娃的角色，可能在当前环中是大套娃，但是到了下一环就成了小套娃，所以这个表格其实就是升级版的套娃。</p>
+<p><img src="./images/清晰明了的javascript版动态规划7.png" /></p>
+<p>聪明的你，是不是发现了这个升级点在哪？没错，就是一次从(1, 1)开始，每次都是套两个娃，也就是理当前结束点最近的两个娃 =&gt; (1, 0) 和 (0, 1)</p>
+<p>这样一来我们的公式自然而然就出来了，就是：</p>
+<p>dp(N, M) = dp(N - 1, M) + dp(N, M - 1)</p>
+<p>七点就是当N或者M为0的时候，也就是这个表格为一条直线，所以总路径都是1</p>
+<p>这样我们的代码也就很容易写出来了，并且效率提升，不会有爆栈的问题，还做了之前的缓存。</p>
+<pre><code><code>function taowa(table) {
+    for (let yLen = table.length, y = yLen - 1; y &gt;= 0; y--) {
+        for (
+            let xLen = table[0].length, x = xLen - 1;
+            x &gt;= 0;
+            x--
+        ) {
+            if (x == xLen - 1 || y == yLen - 1) {
+                table[y][x] = 1;
+            } else {
+                table[y][x] = table[y + 1][x] + table[y][x + 1];
+            }
+        }
+    }
+    return table[y][x];
+}</code></pre>
+<p>举个例子： 4 * 5的表格有多少种路径？</p>
+<p><img src="./images/清晰明了的javascript版动态规划8.png" /></p>
+<p>答： 35种</p>
+<p>后续看到这，聪明的你会觉得，这个也太简单了吧，没错，算法就是这样。</p>
+<blockquote>
+<p>难者不会，会者不难。</p>
+</blockquote>
+<p>然后如果稍稍加点改造，可能又会花很长时间去这种类似<code>套娃</code>的规律，因为每种套娃的方式都不一样。</p>
+<p>比如，还是这样表格，不求不同所有路径数量，将每个cell换成一个数字，求左上角到右下角的经过路径的路径内数字相加的最小值。也就是求最优解。</p>
+<p>如下图：</p>
+<p><img src="./images/清晰明了的javascript版动态规划9.png" /></p>
+<p>这道题的代码是什么呢？初学动态规划的朋友们可以一起讨论讨论</p>
+<hr />
+<p>最后，简单总结下。</p>
+<p>问题总是变幻莫测，只要你能找到其中的规律，一定能找到对应的解法。<br />
+对于动态规划这类问题，有几个特点：</p>
+<ol>
+<li>有重复子问题(套娃)</li>
+<li>单项(左上 =&gt; 右下)</li>
+<li>分析作图后，结果类似二叉树</li>
+</ol>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

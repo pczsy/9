@@ -1,0 +1,330 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修three.js各种材质的实现源码' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>three.js各种材质的实现源码</center></div><div class='banquan'>原文出处:本文由博客园博主tengge提供。<br/>
+原文连接:https://www.cnblogs.com/tengge/p/12037574.html</div><br>
+    <p>three.js常用材质：<strong>基本材质</strong>、<strong>兰伯特材质</strong>、<strong>冯氏材质</strong>、<strong>标准材质</strong>。</p>
+<p>我们可以自己使用着色器实现这些材质，用于批量渲染等用途。</p>
+<p>为了简单，假设物体只有一张漫反射贴图，场景中只存在一个环境光和一个平行光。</p>
+<h1>一、基本材质（MeshBasicMaterial）</h1>
+<p>基本材质不对光源产生反应。</p>
+<p>&nbsp;</p>
+<p><strong>顶点着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">varying vec2 vUv;
+
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    vUv </span>=<span style="color: #000000;"> uv;
+    
+    vec3 transformed </span>=<span style="color: #000000;"> vec3( position );
+    vec4 mvPosition </span>= modelViewMatrix * vec4( transformed, 1.0<span style="color: #000000;"> );
+    gl_Position </span>= projectionMatrix *<span style="color: #000000;"> mvPosition;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>片源着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">uniform vec3 diffuse;
+uniform </span><span style="color: #0000ff;">float</span><span style="color: #000000;"> opacity;
+
+uniform sampler2D map;
+
+varying vec2 vUv;
+
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    vec4 diffuseColor </span>=<span style="color: #000000;"> vec4( diffuse, opacity );
+
+    vec4 texelColor </span>=<span style="color: #000000;"> texture2D( map, vUv );
+    diffuseColor </span>*=<span style="color: #000000;"> texelColor;
+
+    gl_FragColor </span>=<span style="color: #000000;"> diffuseColor;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<h1>二、兰伯特材质（MeshLambertMaterial）</h1>
+<p>兰伯特材质只有漫反射，没有高光。</p>
+<p>&nbsp;</p>
+<p><strong>顶点着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code>uniform vec3 directColor; <span style="color: #008000;">//</span><span style="color: #008000;"> 平行光颜色</span>
+uniform vec3 directDirection; <span style="color: #008000;">//</span><span style="color: #008000;"> 平行光方向</span>
+<span style="color: #000000;">
+#define PI </span>3.14159265359<span style="color: #000000;">
+
+varying vec2 vUv;
+varying vec3 vLightFront;
+
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    vUv </span>=<span style="color: #000000;"> uv;
+
+    vec3 transformedNormal </span>= normalMatrix *<span style="color: #000000;"> vec3( normal );
+
+    vec4 mvPosition </span>= modelViewMatrix * vec4( position, 1.0<span style="color: #000000;"> );
+    gl_Position </span>= projectionMatrix *<span style="color: #000000;"> mvPosition;
+
+    </span><span style="color: #0000ff;">float</span> dotNL =<span style="color: #000000;"> dot( normalize( transformedNormal ), directDirection );
+    vLightFront </span>= clamp( dotNL, 0.0, 1.0 ) * PI *<span style="color: #000000;"> directColor;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>片源着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code>uniform vec3 diffuse; <span style="color: #008000;">//</span><span style="color: #008000;"> 物体颜色</span>
+uniform <span style="color: #0000ff;">float</span> opacity; <span style="color: #008000;">//</span><span style="color: #008000;"> 透明度</span>
+<span style="color: #000000;">
+uniform sampler2D map;
+
+uniform vec3 ambientColor; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 漫反射光颜色</span>
+<span style="color: #000000;">
+varying vec2 vUv;
+varying vec3 vLightFront;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 双向反射PI</span>
+#define RECIPROCAL_PI 0.31830988618
+
+<span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    vec4 diffuseColor </span>=<span style="color: #000000;"> vec4( diffuse, opacity );
+    
+    vec4 texelColor </span>=<span style="color: #000000;"> texture2D( map, vUv );
+    diffuseColor </span>*=<span style="color: #000000;"> texelColor;
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 出射光 = 直接漫反射 + 间接漫反射 </span>
+    vec3 outgoingLight = vLightFront + ambientColor * RECIPROCAL_PI *<span style="color: #000000;"> diffuseColor.rgb;
+
+    gl_FragColor </span>=<span style="color: #000000;"> vec4( outgoingLight, diffuseColor.a );
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<h1>三、冯氏材质（MeshPhongMaterial）</h1>
+<p>冯氏材质很重要的两个属性是<strong>高光颜色(specular)</strong>和<strong>光亮度(shininess)</strong>。</p>
+<p>&nbsp;</p>
+<p><strong>顶点着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vViewPosition;
+
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    vUv </span>=<span style="color: #000000;"> uv;
+    vNormal </span>= normalize( normalMatrix *<span style="color: #000000;"> normal );
+    
+    vec3 transformed </span>=<span style="color: #000000;"> vec3( position );
+    vec4 mvPosition </span>= modelViewMatrix * vec4( transformed, 1.0<span style="color: #000000;"> );
+    vViewPosition </span>= -<span style="color: #000000;"> mvPosition.xyz;
+
+    gl_Position </span>= projectionMatrix *<span style="color: #000000;"> mvPosition;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>片源着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;"> 参考资料：</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> BRDF-双向反射分布函数：https://baike.baidu.com/item/双向反射分布函数/22311036</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> 常见的三个光照模型：Lambert,Phong,BlinnPhong：https://blog.csdn.net/taoqilin/article/details/52800702</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> 菲涅尔公式：https://baike.baidu.com/item/菲涅耳公式/9103788</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> 菲涅尔折射率：https://baike.baidu.com/item/菲涅尔折射率/2712906</span>
+<span style="color: #000000;">
+uniform vec3 diffuse; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 物体颜色</span>
+uniform <span style="color: #0000ff;">float</span> opacity; <span style="color: #008000;">//</span><span style="color: #008000;"> 透明度</span>
+uniform vec3 specular; <span style="color: #008000;">//</span><span style="color: #008000;"> 高光颜色</span>
+uniform <span style="color: #0000ff;">float</span> shininess; <span style="color: #008000;">//</span><span style="color: #008000;"> 光亮度</span>
+<span style="color: #000000;">
+uniform sampler2D map;
+
+uniform vec3 ambientColor; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 漫反射光颜色</span>
+uniform vec3 directColor; <span style="color: #008000;">//</span><span style="color: #008000;"> 平行光颜色</span>
+uniform vec3 directDirection; <span style="color: #008000;">//</span><span style="color: #008000;"> 平行光方向</span>
+<span style="color: #000000;">
+varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vViewPosition;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 双向反射PI</span>
+#define RECIPROCAL_PI 0.31830988618
+
+<span style="color: #008000;">//</span><span style="color: #008000;"> 菲涅尔反射</span>
+vec3 F_Schlick( const <span style="color: #0000ff;">in</span> vec3 specularColor, const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span><span style="color: #000000;"> dotLH ) {
+    </span><span style="color: #0000ff;">float</span> fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) *<span style="color: #000000;"> dotLH );
+    </span><span style="color: #0000ff;">return</span> ( 1.0 - specularColor ) * fresnel +<span style="color: #000000;"> specularColor;
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> Blinn-Phong光照模型</span>
+<span style="color: #0000ff;">float</span> D_BlinnPhong( const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span> shininess, const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span><span style="color: #000000;"> dotNH ) {
+    </span><span style="color: #0000ff;">return</span> RECIPROCAL_PI * ( shininess * 0.5 + 1.0 ) *<span style="color: #000000;"> pow( dotNH, shininess );
+}
+
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 物体颜色</span>
+    vec4 diffuseColor =<span style="color: #000000;"> vec4( diffuse, opacity );
+    
+    vec4 texelColor </span>=<span style="color: #000000;"> texture2D( map, vUv );
+    diffuseColor </span>*=<span style="color: #000000;"> texelColor;
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 环境光漫反射（BRDF兰伯特漫反射）</span>
+    vec3 indirectDiffuse = ambientColor * RECIPROCAL_PI *<span style="color: #000000;"> diffuseColor.rgb;
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 法线</span>
+    vec3 normal =<span style="color: #000000;"> normalize( vNormal );
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 平行光漫反射（BRDF兰伯特漫反射）</span>
+    <span style="color: #0000ff;">float</span> dotNL = clamp( dot( normal, directDirection ), 0.0, 1.0<span style="color: #000000;"> );
+    vec3 irradiance </span>= dotNL *<span style="color: #000000;"> directColor;
+    vec3 directDiffuse </span>= irradiance * RECIPROCAL_PI *<span style="color: #000000;"> diffuseColor.rgb;
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 平行光镜面反射</span>
+    vec3 halfDir = normalize( directDirection + normalize( vViewPosition ) ); <span style="color: #008000;">//</span><span style="color: #008000;"> 半角向量</span>
+    <span style="color: #0000ff;">float</span> dotNH = clamp( dot( normal, halfDir ), 0.0, 1.0<span style="color: #000000;"> );
+    </span><span style="color: #0000ff;">float</span> dotLH = clamp( dot( directDirection, halfDir ), 0.0, 1.0<span style="color: #000000;"> );
+    vec3 F </span>= F_Schlick( specular, dotLH ); <span style="color: #008000;">//</span><span style="color: #008000;"> 菲涅尔反射</span>
+    <span style="color: #0000ff;">float</span> D = D_BlinnPhong( shininess, dotNH ); <span style="color: #008000;">//</span><span style="color: #008000;"> Blinn-Phong光照模型</span>
+    vec3 directSpecular = F * ( 0.25 *<span style="color: #000000;"> D );
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 出射光 = 环境光漫反射 + 平行光漫反射 + 平行光镜面反射</span>
+    vec3 outgoingLight = indirectDiffuse + directDiffuse +<span style="color: #000000;"> directSpecular;
+    
+    gl_FragColor </span>=<span style="color: #000000;"> vec4( outgoingLight, diffuseColor.a );
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<h1>四、标准材质（MeshStandardMaterial）</h1>
+<p>标准材质也叫物理材质或pbr材质，很重要的两个属性是<strong>金属度(metalness)</strong>和<strong>粗糙度(roughness)</strong>。</p>
+<p>&nbsp;</p>
+<p><strong>顶点着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vViewPosition;
+
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    vUv </span>=<span style="color: #000000;"> uv;
+    vNormal </span>= normalize( normalMatrix *<span style="color: #000000;"> vec3( normal ) );
+    
+    vec4 mvPosition </span>= modelViewMatrix * vec4( position, 1.0<span style="color: #000000;"> );
+    vViewPosition </span>= -<span style="color: #000000;"> mvPosition.xyz;
+    
+    gl_Position </span>= projectionMatrix *<span style="color: #000000;"> mvPosition;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>片源着色器</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;"> 参考资料：</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> BRDF-双向反射分布函数：https://baike.baidu.com/item/双向反射分布函数/22311036</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> 基于物理的渲染&mdash;更精确的微表面分布函数GGX: https://www.jianshu.com/p/be4f025aeb3c</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> 菲涅尔公式：https://baike.baidu.com/item/菲涅耳公式/9103788</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> 菲涅尔折射率：https://baike.baidu.com/item/菲涅尔折射率/2712906</span><span style="color: #008000;">
+//</span><span style="color: #008000;"> Moving Frostbite to Physically Based Rendering 3.0: https://blog.csdn.net/wodownload2/article/details/103126247</span>
+<span style="color: #000000;">
+uniform vec3 diffuse; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 物体颜色</span>
+uniform <span style="color: #0000ff;">float</span> opacity; <span style="color: #008000;">//</span><span style="color: #008000;"> 透明度</span>
+uniform <span style="color: #0000ff;">float</span> metalness; <span style="color: #008000;">//</span><span style="color: #008000;"> 金属度</span>
+uniform <span style="color: #0000ff;">float</span> roughness; <span style="color: #008000;">//</span><span style="color: #008000;"> 粗糙度</span>
+<span style="color: #000000;">
+uniform sampler2D map;
+
+uniform vec3 ambientColor; </span><span style="color: #008000;">//</span><span style="color: #008000;"> 漫反射光颜色</span>
+uniform vec3 directColor; <span style="color: #008000;">//</span><span style="color: #008000;"> 平行光颜色</span>
+uniform vec3 directDirection; <span style="color: #008000;">//</span><span style="color: #008000;"> 平行光方向</span>
+<span style="color: #000000;">
+varying vec2 vUv;
+varying vec3 vNormal;
+varying vec3 vViewPosition;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 双向反射PI</span>
+#define RECIPROCAL_PI 0.31830988618
+
+<span style="color: #008000;">//</span><span style="color: #008000;"> 菲涅尔反射</span>
+vec3 F_Schlick( const <span style="color: #0000ff;">in</span> vec3 specularColor, const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span><span style="color: #000000;"> dotLH ) {
+    </span><span style="color: #0000ff;">float</span> fresnel = exp2( ( -5.55473 * dotLH - 6.98316 ) *<span style="color: #000000;"> dotLH );
+    </span><span style="color: #0000ff;">return</span> ( 1.0 - specularColor ) * fresnel +<span style="color: #000000;"> specularColor;
+}
+
+</span><span style="color: #0000ff;">float</span> G_GGX_SmithCorrelated( const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span> alpha, const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span> dotNL, const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span><span style="color: #000000;"> dotNV ) {
+    </span><span style="color: #0000ff;">float</span> a2 =<span style="color: #000000;"> pow2( alpha );
+    </span><span style="color: #0000ff;">float</span> gv = dotNL * sqrt( a2 + ( 1.0 - a2 ) *<span style="color: #000000;"> pow2( dotNV ) );
+    </span><span style="color: #0000ff;">float</span> gl = dotNV * sqrt( a2 + ( 1.0 - a2 ) *<span style="color: #000000;"> pow2( dotNL ) );
+    </span><span style="color: #0000ff;">return</span> 0.5 / max( gv +<span style="color: #000000;"> gl, EPSILON );
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 微表面分布函数</span>
+<span style="color: #0000ff;">float</span> D_GGX( const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span> alpha, const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span><span style="color: #000000;"> dotNH ) {
+    </span><span style="color: #0000ff;">float</span> a2 =<span style="color: #000000;"> pow2( alpha );
+    </span><span style="color: #0000ff;">float</span> denom = pow2( dotNH ) * ( a2 - 1.0 ) + 1.0<span style="color: #000000;">;
+    </span><span style="color: #0000ff;">return</span> RECIPROCAL_PI * a2 /<span style="color: #000000;"> pow2( denom );
+}
+
+vec3 BRDF_Specular_GGX( const </span><span style="color: #0000ff;">in</span> vec3 directDirection, const <span style="color: #0000ff;">in</span> vec3 normal, const <span style="color: #0000ff;">in</span> viewDir, const <span style="color: #0000ff;">in</span> vec3 specularColor, const <span style="color: #0000ff;">in</span> <span style="color: #0000ff;">float</span><span style="color: #000000;"> roughness ) {
+    </span><span style="color: #0000ff;">float</span> alpha =<span style="color: #000000;"> pow2( roughness );
+    vec3 halfDir </span>= normalize( directDirection +<span style="color: #000000;"> viewDir );
+    </span><span style="color: #0000ff;">float</span> dotNL = clamp( dot( normal, directDirection ), 0.0, 1.0<span style="color: #000000;"> );
+    </span><span style="color: #0000ff;">float</span> dotNV = clamp( dot( normal, viewDir ), 0.0, 1.0<span style="color: #000000;"> );
+    </span><span style="color: #0000ff;">float</span> dotNH = clamp( dot( normal, halfDir ), 0.0, 1.0<span style="color: #000000;"> );
+    </span><span style="color: #0000ff;">float</span> dotLH = clamp( dot( directDirection, halfDir ), 0.0, 1.0<span style="color: #000000;"> );
+    vec3 F </span>=<span style="color: #000000;"> F_Schlick( specularColor, dotLH );
+    </span><span style="color: #0000ff;">float</span> G =<span style="color: #000000;"> G_GGX_SmithCorrelated( alpha, dotNL, dotNV );
+    </span><span style="color: #0000ff;">float</span> D =<span style="color: #000000;"> D_GGX( alpha, dotNH );
+    </span><span style="color: #0000ff;">return</span> F * ( G *<span style="color: #000000;"> D );
+}
+
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> main() {
+    vec4 diffuseColor </span>=<span style="color: #000000;"> vec4( diffuse, opacity );
+    
+    vec4 texelColor </span>=<span style="color: #000000;"> texture2D( map, vUv );
+    diffuseColor </span>*=<span style="color: #000000;"> texelColor;
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 法线</span>
+    vec3 normal =<span style="color: #000000;"> normalize( vNormal );
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 环境光</span>
+    vec3 indirectDiffuse = ambientColor * RECIPROCAL_PI * diffuseColor.rgb * ( 1.0 - metalness ); <span style="color: #008000;">//</span><span style="color: #008000;"> 间接漫反射</span>
+    
+    <span style="color: #008000;">//</span><span style="color: #008000;"> 平行光</span>
+    <span style="color: #0000ff;">float</span> dotNL = clamp( dot( normal, directDirection ), 0.0, 1.0<span style="color: #000000;"> );
+    vec3 irradiance </span>= dotNL *<span style="color: #000000;"> directColor;
+    vec3 specularColor </span>= mix( vec3( 0.04<span style="color: #000000;"> ), diffuseColor.rgb, metalness );
+
+    vec3 directDiffuse </span>= irradiance * RECIPROCAL_PI * diffuseColor.rgb * ( 1.0 - metalness ); <span style="color: #008000;">//</span><span style="color: #008000;"> 直接漫反射</span>
+    vec3 directSpecular = irradiance * BRDF_Specular_GGX( directDirection, normal, normalize( vViewPosition ), specularColor, clamp( roughness, 0.04, 1.0 ) ); <span style="color: #008000;">//</span><span style="color: #008000;"> 直接镜面反射</span>
+
+    <span style="color: #008000;">//</span><span style="color: #008000;"> 出射光 = 间接漫反射光 + 直接漫反射 + 直接镜面反射光</span>
+    vec3 outgoingLight = indirectDiffuse + directDiffuse +<span style="color: #000000;"> directSpecular;
+    
+    gl_FragColor </span>=<span style="color: #000000;"> vec4( outgoingLight, diffuseColor.a );
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>四种材质完整实现源码：<a href="https://gitee.com/tengge1/ShadowEditor/tree/master/ShadowEditor.Web/src/render/shader/material_simple">https://gitee.com/tengge1/ShadowEditor/tree/master/ShadowEditor.Web/src/render/shader/material_simple</a>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>参考资料</h1>
+<div>1. 基于three.js的开源三维场景编辑器<strong>：</strong><a href="https://github.com/tengge1/ShadowEditor">https://github.com/tengge1/ShadowEditor</a></div>
+<div>2. BRDF-双向反射分布函数：<a href="https://baike.baidu.com/item/双向反射分布函数/22311036">https://baike.baidu.com/item/双向反射分布函数/22311036</a></div>
+<div>
+<div>3. 常见的三个光照模型：<a href="Lambert,Phong,BlinnPhong：https://blog.csdn.net/taoqilin/article/details/52800702">Lambert,Phong,BlinnPhong：https://blog.csdn.net/taoqilin/article/details/52800702</a></div>
+<div>4. 菲涅尔公式：<a href="https://baike.baidu.com/item/菲涅耳公式/9103788">https://baike.baidu.com/item/菲涅耳公式/9103788</a></div>
+<div>5. 菲涅尔折射率：<a href="https://baike.baidu.com/item/菲涅尔折射率/2712906">https://baike.baidu.com/item/菲涅尔折射率/2712906</a></div>
+<div>
+<div>6. 基于物理的渲染&mdash;更精确的微表面分布函数GGX:&nbsp;<a href="https://www.jianshu.com/p/be4f025aeb3c">https://www.jianshu.com/p/be4f025aeb3c</a></div>
+</div>
+</div>
+<div>7. Moving&nbsp;Frostbite&nbsp;to&nbsp;Physically&nbsp;Based&nbsp;Rendering&nbsp;3.0:&nbsp;<a href="https://blog.csdn.net/wodownload2/article/details/103126247">https://blog.csdn.net/wodownload2/article/details/103126247</a></div>
+<div>&nbsp;</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

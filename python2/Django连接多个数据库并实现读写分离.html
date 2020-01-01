@@ -1,0 +1,98 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django连接多个数据库并实现读写分离' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django连接多个数据库并实现读写分离</center></div><div class='banquan'>原文出处:本文由博客园博主与鹿逐秋提供。<br/>
+原文连接:https://www.cnblogs.com/wangyueping/p/11624860.html</div><br>
+    <p>当一个项目当中有大量的数据的时候，你所有的IO操作都在一个数据库中操作，会造成项目的性能的降低。如果你能对项目中的数据进行读写分离的话，那么将大大提高你项目的性能。而Django自带的机制也对此提供了支持。我们可以简单的操作一下。<strong>（当然数据的同步还是需要运维同志的协助）</strong></p>
+<h1 id="修改配置文件">修改配置文件</h1>
+<p>Django默认的是default,我们按照它的格式直接添加一个新的配置：</p>
+<pre><code><code>DATABASES = {
+ &#39;default&#39;: {
+ &#39;ENGINE&#39;: &#39;django.db.backends.sqlite3&#39;,
+ &#39;NAME&#39;: os.path.join(BASE_DIR, &#39;db.sqlite3&#39;),
+ },
+ &#39;db2&#39;: {
+ &#39;ENGINE&#39;: &#39;django.db.backends.sqlite3&#39;,
+ &#39;NAME&#39;: os.path.join(BASE_DIR, &#39;db2.sqlite3&#39;),
+ }
+}</code></pre>
+<p>当然，如果你不想使用默认的sqlite3，想使用mysql还需要自己进行一下配置</p>
+<pre><code><code>DATABASES = {
+ &#39;default&#39;: {
+ &#39;ENGINE&#39;: &#39;django.db.backends.mysql&#39;,
+ &#39;HOST&#39;: &#39;127.0.0.1&#39;, # 主服务器的运行ip
+ &#39;PORT&#39;: 3306, # 主服务器的运行port
+ &#39;USER&#39;: &#39;django&#39;, # 主服务器的用户名
+ &#39;PASSWORD&#39;: &#39;django&#39;, # 主服务器的密码
+ &#39;NAME&#39;: &#39;djangobase&#39; # 数据表名
+ },
+ &#39;slave&#39;: {
+ &#39;ENGINE&#39;: &#39;django.db.backends.mysql&#39;, 
+ &#39;HOST&#39;: &#39;127.0.0.1&#39;,
+ &#39;PORT&#39;: 8306,
+ &#39;USER&#39;: &#39;django_slave&#39;,
+ &#39;PASSWORD&#39;: &#39;django_slave&#39;,
+ &#39;NAME&#39;: &#39;djangobase_slave&#39;
+ }
+}　　</code></pre>
+<p>在项目目录下的__init__文件中添加以下代码，将数据连接方式改为pymysql</p>
+<pre><code><code>import pymysql
+pymysql.install_as_MySQLdb()</code></pre>
+<p>将数据配置修改完之后就可以在models.py文件当中创建表，接下里就可以进行数据库迁移了</p>
+<pre><code><code>python manage.py makemigrations # 在migrations文件夹下生成记录
+python manage.py migrate --database default # 默认可以不写参数
+python manage.py migrate --database db2 # 在从库再迁移一次，就可以在上面建立相同的表</code></pre>
+<h1 id="手动读写分离">手动读写分离</h1>
+<p>在遇到数据库相关操作的话，需要手动指定要使用的相应数据库，不需要进行多余的配置，但是，当你数据的读写操作过于频繁的时候，这个方法就会略显繁琐。</p>
+<pre><code><code>from django.shortcuts import render, HttpResponse
+from app001 import models
+# Create your views here.
+def write(request):
+ models.User.objects.using(&#39;default&#39;).create(name=&#39;张三&#39;, pwd=&#39;123&#39;, phone=1234)
+ return HttpResponse(&#39;写成功&#39;)
+def read(request):
+ obj = models.User.objects.filter(id=1).using(&#39;db2&#39;).first()
+ return HttpResponse(&#39;读成功&#39;)</code></pre>
+<h1 id="自动读写分离">自动读写分离</h1>
+<p>通过配置数据库路由，来自动实现读写分离，这样就不需要每次读写都手动指定数据库。</p>
+<p>在项目的app中创建db_router.py文件,并在该文件中定义一个数据库路由类,用来进行读写分离，这个类最多提供四个方法，分别是：db_for_read、db_for_write、allow_relation、allow_migrate，以下只写了三个。</p>
+<h1 id="定义数据库路由类">定义数据库路由类</h1>
+<pre><code><code>class MasterSlaveDBRouter(object):
+ &quot;&quot;&quot;数据库主从读写分离路由&quot;&quot;&quot;
+ 
+     def db_for_read(self, model, **hints):
+     &quot;&quot;&quot;读数据库&quot;&quot;&quot;
+     return &quot;slave&quot;
+ 
+     def db_for_write(self, model, **hints):
+     &quot;&quot;&quot;写数据库&quot;&quot;&quot;
+     return &quot;default&quot;
+
+     def allow_relation(self, obj1, obj2, **hints):
+     &quot;&quot;&quot;是否运行关联操作&quot;&quot;&quot;
+     return True　　</code></pre>
+<h1 id="配置router">配置Router</h1>
+<p>在settings.py中指定DATABASE_ROUTERS</p>
+<pre class="text"><code>DATABASE_ROUTERS = [&quot;app001.db_router.MasterSlaveDBRouter&quot;]</code></pre>
+<p>可以指定多个数据库路由，比如对于读操作，Django将会循环所有路由中的db_for_read()方法，直到其中一个有返回值，然后使用这个数据库进行当前操作。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

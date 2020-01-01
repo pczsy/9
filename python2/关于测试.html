@@ -1,0 +1,66 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修关于测试' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>关于测试</center></div><div class='banquan'>原文出处:本文由博客园博主立业的博客提供。<br/>
+原文连接:https://www.cnblogs.com/shiliye/p/11655961.html</div><br>
+    <p><strong>测试用例</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> datetime
+
+</span><span style="color: #0000ff;">from</span> django.test <span style="color: #0000ff;">import</span><span style="color: #000000;"> TestCase
+</span><span style="color: #0000ff;">from</span> django.utils <span style="color: #0000ff;">import</span><span style="color: #000000;"> timezone
+
+</span><span style="color: #0000ff;">from</span> .models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Question
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> QuestionModelTests(TestCase):
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test_was_published_recently_with_future_question(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        was_published_recently() returns False for questions whose pub_date
+        is in the future.
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        time </span>= timezone.now() + datetime.timedelta(days=30<span style="color: #000000;">)
+        future_question </span>= Question(pub_date=<span style="color: #000000;">time)
+        self.assertIs(future_question.was_published_recently(), False)</span></pre>
+</div>
+<p>执行python manage.py test polls，会进行如下操作<br />&nbsp; &nbsp; 1 寻找 polls应用里的测试代码<br />&nbsp; &nbsp; 2 找django.test.TestCase 的子类，如QuestionModelTests<br />&nbsp; &nbsp; 3 创建一个特殊的数据库供测试使用，如，创建future_question，并不是在用户数据库创建，而是在一个测试数据库创建的<br />&nbsp; &nbsp; 4 在类中寻找测试方法&mdash;以 test 开头的方法<br />&nbsp; &nbsp; 5 使用assertls()方法，确认函数是否返回期望值</p>
+<p>&nbsp;</p>
+<p><strong>Client</strong></p>
+<p><strong>　　</strong>Django 提供了一个供测试使用的 Client 来模拟用户和视图层代码的交互</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp;python shell UI</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">from</span> django.test <span style="color: #0000ff;">import</span><span style="color: #000000;"> Client
+    </span><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> reverse
+    client </span>=<span style="color: #000000;"> Client()
+    response </span>= client.get(<span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    response.status_code
+    
+    response </span>= client.get(reverse(<span style="color: #800000;">'</span><span style="color: #800000;">polls:index</span><span style="color: #800000;">'</span>))  <span style="color: #008000;">#</span><span style="color: #008000;">请求应用polls的视图index</span>
+    response.status_code  <span style="color: #008000;">#</span><span style="color: #008000;">输出：200</span>
+    response.content  <span style="color: #008000;">#</span><span style="color: #008000;">输出：index视图对应html的内容</span>
+    response.context[<span style="color: #800000;">'</span><span style="color: #800000;">latest_question_list</span><span style="color: #800000;">'</span>]  <span style="color: #008000;">#</span><span style="color: #008000;">输出：&lt;QuerySet [&lt;Question: What's up?&gt;]&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong> 关于测试例</strong><br />        　　先写代码或先写测试用例，可根据实际情况来决定<br />        　　每增加一项功能，都要追加相应的测试用例，并且测试用例越多越好<br />        　　测试例过多，可能会失去控制，可在整体进行规划，可参考以下原则：<br />            　　对于每个模型和视图都建立单独的TestClass<br />            　　每个测试方法只测试一个功能<br />            　　给每个测试方法起个能描述其功能的名字<br />            <br />        　　当写完测试用例并通过后，可将其永远保留<br />        　　因为该测试用例的作用，实际上就是在监控对应的代码<br />        　　比如，将来修改其他代码时，可能无意间造成这段代码没有返回期望值<br />        　　则在修改后执行测试用例时，就会发现该bug<br /><br />    <strong>Selenium</strong>  <br />　　Selenium是一款浏览器自动化测试工具<br />　　它假装成是浏览器正在和站点进行交互，就像真人在访问网站一样<br />        　　Django提供了LiveServerTestCase与Selenium这样的工具进行交互</p>
+<p><strong>    代码覆盖率</strong><br />        　　找出代码中未被测试部分的方法是检查代码覆盖率<br />        　　它有助于找出代码中的薄弱部分和无用部分<br />        　　如果无法测试一段代码，通常说明这段代码需要被重构或者删除</p>
+<p><strong>    持续集成</strong><br />        　　对源代码进行自动化编译、测试、代码检查，以及打包程序、部署（发布）到应用服务器上</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

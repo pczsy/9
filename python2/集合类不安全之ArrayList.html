@@ -1,0 +1,180 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修集合类不安全之ArrayList' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>集合类不安全之ArrayList</center></div><div class='banquan'>原文出处:本文由博客园博主三秋叶提供。<br/>
+原文连接:https://www.cnblogs.com/simon-1024/p/12096008.html</div><br>
+    <h3 id="不安全的arraylist">1. 不安全的ArrayList</h3>
+<p>大家都知道ArrayList线程不安全，怎么个不安全法呢？上代码：</p>
+<pre><code><code>public class ContainerNotSafeDemo {
+    public static void main(String[] args) throws InterruptedException {
+        List&lt;String&gt; list = new ArrayList&lt;&gt;();
+        for (int i = 0;i&lt;5;i++){
+            new Thread(()-&gt;{
+                list.add(Thread.currentThread().getName());
+                System.out.println(Thread.currentThread().getName()+&quot;\t&quot;+list);
+            }).start();
+        }
+    }
+}
+
+//运行结果如下： 多个线程同时修改列表的元素，产生了并发修改异常
+java.util.ConcurrentModificationException
+    at java.util.ArrayList$Itr.checkForComodification(ArrayList.java:909)
+    at java.util.ArrayList$Itr.next(ArrayList.java:859)
+    at java.util.AbstractCollection.toString(AbstractCollection.java:461)
+    at java.lang.String.valueOf(String.java:2994)
+    at java.lang.StringBuilder.append(StringBuilder.java:131)
+    at juc.ContainerNotSafeDemo.lambda$main$0(ContainerNotSafeDemo.java:26)
+    at java.lang.Thread.run(Thread.java:748)</code></pre>
+<p>为啥呢？看一下<code>add()</code>方法的源码：</p>
+<pre><code><code>    public boolean add(E e) {
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        elementData[size++] = e;
+        return true;
+    }</code></pre>
+<p>可以看到仅仅是在扩容和添加操作，并没有任何的线程安全控制。所以在实际的高并发场景下，ArrayList的应用很有局限。</p>
+<h3 id="安全的解决方式">2. 安全的解决方式</h3>
+<h4 id="使用vector解决">2.1 使用Vector解决</h4>
+<p>注意到，ArrayList的add方法并没有任何保证线程安全的机制 ~ 所以不安全了。怎么解决呢？首先想到的是加锁，凑巧的是<code>Vector</code>已经为我们提供了安全的add方法：</p>
+<pre><code><code>public class ContainerNotSafeDemo {
+    public static void main(String[] args) throws InterruptedException {
+        List&lt;String&gt; list = new Vector&lt;&gt;();//修改为Vector对象
+        for (int i = 0;i&lt;3;i++){
+            new Thread(()-&gt;{
+                list.add(Thread.currentThread().getName());
+                System.out.println(Thread.currentThread().getName()+&quot;\t&quot;+list);
+            }).start();
+        }
+    }
+}
+
+//结果如下：
+Thread-0    [Thread-0]
+Thread-2    [Thread-0, Thread-2]
+Thread-1    [Thread-0, Thread-2, Thread-1]</code></pre>
+<p>这么看来，在这种情况下多线程的添加操作是没有任何问题的？那么，这么做真的可取嘛？尝试查看<code>Vector</code>的<code>add()</code>方法源码：</p>
+<pre><code><code>    public synchronized boolean add(E e) {
+        modCount++;
+        ensureCapacityHelper(elementCount + 1);
+        elementData[elementCount++] = e;
+        return true;
+    }</code></pre>
+<p>可以看到：Vector使用了<strong>synchronized</strong>关键字来保证线程安全。可是为了添加一个的操作，加了个重锁，这样做在多线程环境下会造成严重的资源浪费与性能损耗！！高并发情况下是万万不可取的。矛盾来了：ArrayList可以提升并发性，但是牺牲了线程安全性，而Vector恰恰与之相反。所以，我们在不同的场合下可以根据业务需求有所取舍。</p>
+<p><br/></p>
+<h4 id="使用collections解决">2.4 使用Collections解决</h4>
+<p>一个神奇的工具类——Collections，看一下它的结构：</p>
+<p><img src="./images/集合类不安全之ArrayList0.png" width="400" /></p>
+<p>可以看到这个工具类提供了SynchronizedList、SynchronizedMap、SynchronizedSet等看名字就很安全的类，怎么实现的嗫？看Collections.synchronizedList(List list) 方法源码：</p>
+<pre><code><code>    public static &lt;T&gt; List&lt;T&gt; synchronizedList(List&lt;T&gt; list) {
+        return (list instanceof RandomAccess ?
+                new SynchronizedRandomAccessList&lt;&gt;(list) :
+                new SynchronizedList&lt;&gt;(list));
+    }</code></pre>
+<p>我们在传值的时候传的是ArrayList的对象，ArrayList它又实现了RandomAccess，所以返回 new SynchronizedRandomAccessList&lt;&gt;(list, mutex)对象，但是：</p>
+<pre><code><code>    static class SynchronizedRandomAccessList&lt;E&gt;    
+        extends SynchronizedList&lt;E&gt;
+        implements RandomAccess {
+        ...
+        }
+ //它又继承了SynchronizedList，所以返回的还是SynchronizedList对象</code></pre>
+<p>看<code>SynchronizedList</code>它的源码怎么写：</p>
+<pre><code><code>static class SynchronizedList&lt;E&gt;
+        extends SynchronizedCollection&lt;E&gt;
+        implements List&lt;E&gt; {
+        ...
+        final List&lt;E&gt; list;
+
+        SynchronizedList(List&lt;E&gt; list) {
+            super(list);
+            this.list = list;
+        }
+        SynchronizedList(List&lt;E&gt; list, Object mutex) {
+            super(list, mutex);
+            this.list = list;
+        }
+        ...
+        ...
+        public E get(int index) {
+            synchronized (mutex) {return list.get(index);}
+        }
+        public E set(int index, E element) {
+            synchronized (mutex) {return list.set(index, element);}
+        }
+        public void add(int index, E element) {
+            synchronized (mutex) {list.add(index, element);}
+        }
+        public E remove(int index) {
+            synchronized (mutex) {return list.remove(index);}
+        }
+    ...
+ }</code></pre>
+<p>可以看到，SynchronizedList 的实现里，get, set, add 等操作都加了 mutex 对象锁，再将操作委托给最初传入的 list。mutex来自哪里？</p>
+<pre><code><code>        SynchronizedCollection(Collection&lt;E&gt; c) {
+            this.c = Objects.requireNonNull(c);
+            mutex = this;    //mutex就是这个list本身咯~
+        }
+        </code></pre>
+<p><br/></p>
+<h4 id="使用copyonwritearraylist解决">2.4 使用CopyOnWriteArrayList解决</h4>
+<p>还是下边这段代码，进行了一下简单的修改：</p>
+<pre><code><code>public class ContainerNotSafeDemo {
+    public static void main(String[] args) throws InterruptedException {
+        List&lt;String&gt; list = new CopyOnWriteArrayList&lt;&gt;();
+
+        for (int i = 0;i&lt;3;i++){
+            new Thread(()-&gt;{
+                list.add(Thread.currentThread().getName());
+                System.out.println(Thread.currentThread().getName()+&quot;\t&quot;+list);
+            }).start();
+        }
+    }
+}</code></pre>
+<p>使用到了<code>new CopyOnWriteArrayList&lt;&gt;();</code>，字面意思看来时：<strong>写时复制集合</strong>。</p>
+<p>先来了解一下Copy-On-Write(写时复制技术)：通俗的讲，写时复制技术就是不同进程访问同一资源的时候，只有在写操作，才会去复制一份新的数据，否则都是访问同一个资源。</p>
+<p>CopyOnWriteArrayList，是一个写入时复制的容器，它是如何工作的呢？简单来说，就是平时查询的时候，都不需要加锁，随便访问，只有在写入/删除的时候，才会从原来的数据复制一个副本出来，然后修改这个副本，最后把原数据替换成当前的副本。修改操作的同时，读操作不会被阻塞，而是继续读取旧的数据。这点要跟读写锁区分一下。</p>
+<p>那么java里面是如何实现的，看源码：</p>
+<pre><code><code>    /**
+     * Appends the specified element to the end of this list.【添加元素至列表末尾】
+     * @param e element to be appended to this list          【e:新增的元素】
+     * @return {@code true} (as specified by {@link Collection#add})
+     */
+    public boolean add(E e) {
+        final ReentrantLock lock = this.lock;
+        lock.lock();             //加锁
+        try {
+            Object[] elements = getArray();    //拿到旧的集合列表
+            int len = elements.length;         //拿到旧的集合列表长度
+            Object[] newElements = 
+                Arrays.copyOf(elements, len + 1);  //拷贝一份旧容器，并且扩容+1
+            newElements[len] = e;                  //填充元素
+            setArray(newElements);                 //新的集合列表替换掉旧的
+            return true;
+        } finally {
+            lock.unlock();                     
+        }
+    }</code></pre>
+<p>我们看到Java中JDK的源码实现其实也是非常的简单，往一个容器里添加元素的时候，不直接往当前容器object[]添加，而是先将当前容器object[]进行cpoy，复制出来一个新的容器object[] newElements，然后往新的容器newElements里面添加元素。添加完成之后再将原容器的引用指向新的容器setArray(newElements);。</p>
+<p>优点：对于一些读多写少的数据，这种做法的确很不错，对容器并发的读不需要加锁，因为此时容器内不会添加任何新的元素。所以CopyOnWriteArrayList也是一种读写分离的思想，读和写操作的是不同的容器。</p>
+<p>缺点：这种实现只保证数据的最终一致性，在副本未替换掉旧数据时，读到的仍然是旧数据。如果对象比较大，频繁地进行替换会消耗内存，从而引发频繁的GC，此时，应考虑其他的容器，例如ConcurrentHashMap。<br />
+<br/></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

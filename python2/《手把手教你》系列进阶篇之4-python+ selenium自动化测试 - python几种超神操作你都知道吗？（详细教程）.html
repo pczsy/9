@@ -1,0 +1,389 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）</center></div><div class='banquan'>原文出处:本文由博客园博主北京-宏哥提供。<br/>
+原文连接:https://www.cnblogs.com/du-hong/p/12034859.html</div><br>
+    <h3>1. 简介</h3>
+<p>&nbsp;　　今天分享和讲解的超神操作，对于菜鸟来说是超神的操作，对于大佬来说也就是几个简单方法的封装和调用。这里讲解和分享这部分主要是为了培养小伙伴们和童鞋们的面向对象的开发思维，对比这样做的好处让你自己身临其境的感受一番。</p>
+<h3>2.&nbsp;自定义封装一个简单的Log类</h3>
+<p>　　本文介绍如何写一个Python日志类，用来输出不同级别的日志信息到本地文件夹下的日志文件里。为什么需要日志输出呢，我们需要记录我们测试脚本到底做了什么事情，最好的办法是写事件监听。这个事件监听，对我们现在来说，还是有点复杂去理解，所以我这里，选择封装一个简单的日志类，同样达到这个效果。</p>
+<p>我们大概需要如下日志输出效果：</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）0.png" alt="" /></p>
+<h4>2.1 问题分析：</h4>
+<p>我们需要封装一个简单的日志类，主要有以下内容：</p>
+<p>1. 生成的日志文件格式是 年月日时分秒.log</p>
+<p>2. 生成的xxx.log文件存储在项目根目录下Logs文件夹下</p>
+<p>3. 这个日志类，支持INFO,ERROR两种日志级别</p>
+<p>4. 日志里，每行日志输出，如上图，时间日期+执行类名称+日志级别+日志描述</p>
+<h4>2.2 解决问题思路：</h4>
+<p>1. 在根目录下新建一个Logs的文件夹，如何获取这个Log的相对路径，前面介绍过。</p>
+<p>2. 日志的保存命名，需要系统时间，前面也介绍过时间格式化输出</p>
+<p>3. Python中有一个logging模块来支持我们自定义封装一个新日志类。</p>
+<p>4. 在脚本里，初始化一个日志类的实例对象，然后去控制输出INFO还是ERROR日志信息。</p>
+<p>自定义日志类封装如下：logger.py，新建在test包下</p>
+<h4>2.3 代码实现：</h4>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）1.png" alt="" /></p>
+<h4>2.4 参考代码：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-16
+@author: 北京-宏哥   QQ交流群：705269076
+Project: 《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python基础扫盲
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> logging
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> os.path
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Logger(object):
+
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, logger):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        指定保存日志的文件路径，日志级别，以及调用文件
+        将日志存入到指定的文件中
+        :param logger:
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个logger</span>
+        self.logger =<span style="color: #000000;"> logging.getLogger(logger)
+        self.logger.setLevel(logging.DEBUG)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个handler，用于写入日志文件</span>
+        rq = time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y%m%d%H%M</span><span style="color: #800000;">'</span><span style="color: #000000;">, time.localtime(time.time()))
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(os.getcwd())
+        log_path </span>= (os.path.dirname(os.getcwd() + <span style="color: #800000;">'</span><span style="color: #800000;">\\Logs\\</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(log_path)
+        log_name </span>= log_path + rq + <span style="color: #800000;">'</span><span style="color: #800000;">.log</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        fh </span>=<span style="color: #000000;"> logging.FileHandler(log_name)
+        fh.setLevel(logging.INFO)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 再创建一个handler，用于输出到控制台</span>
+        ch =<span style="color: #000000;"> logging.StreamHandler()
+        ch.setLevel(logging.INFO)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义handler的输出格式</span>
+        formatter = logging.Formatter(<span style="color: #800000;">'</span><span style="color: #800000;">%(asctime)s - %(name)s - %(levelname)s - %(message)s</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        fh.setFormatter(formatter)
+        ch.setFormatter(formatter)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 给logger添加handler</span>
+<span style="color: #000000;">        self.logger.addHandler(fh)
+        self.logger.addHandler(ch)
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> getlog(self):
+        </span><span style="color: #0000ff;">return</span> self.logger</pre>
+</div>
+<h4>2.5 新建日志测试类</h4>
+<p>新写一个测试日志类，相关代码如下：</p>
+<h5>2.5.1 代码实现：</h5>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）2.png" alt="" /></p>
+<h5>2.5.2 参考代码：</h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-16
+@author: 北京-宏哥   QQ交流群：705269076
+Project: 《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python基础扫盲
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+</span><span style="color: #0000ff;">from</span> test1.logger <span style="color: #0000ff;">import</span><span style="color: #000000;"> Logger
+
+mylogger </span>= Logger(logger=<span style="color: #800000;">'</span><span style="color: #800000;">test_log</span><span style="color: #800000;">'</span><span style="color: #000000;">).getlog()
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> TestMyLog(object):
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> print_log(self):
+        driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+        mylogger.info(</span><span style="color: #800000;">"</span><span style="color: #800000;">打开浏览器</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        driver.maximize_window()
+        mylogger.info(</span><span style="color: #800000;">"</span><span style="color: #800000;">最大化浏览器窗口。</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        driver.implicitly_wait(</span>8<span style="color: #000000;">)
+
+        driver.get(</span><span style="color: #800000;">"</span><span style="color: #800000;">https://www.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        mylogger.info(</span><span style="color: #800000;">"</span><span style="color: #800000;">打开百度首页。</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        time.sleep(</span>1<span style="color: #000000;">)
+        mylogger.info(</span><span style="color: #800000;">"</span><span style="color: #800000;">暂停一秒。</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        driver.quit()
+        mylogger.info(</span><span style="color: #800000;">"</span><span style="color: #800000;">关闭并退出浏览器。</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+
+testlog </span>=<span style="color: #000000;"> TestMyLog()
+testlog.print_log()</span></pre>
+</div>
+<h5>2.5.3 运行结果：</h5>
+<p>运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）3.png" alt="" /></p>
+<h5>2.5.4 文件保存结果：</h5>
+<p>运行代码后，在Logs文件夹下可以看到日志文件，如下图的结果</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）4.png" alt="" /></p>
+<p>在PyCharm里运行下这个测试类，会在根目录下的Logs文件下，新建一个日志文件，打开效果如文章开头的日志输出图。好了，关于自定义封装log类，自己好好去读下代码，理解下每行代码的意思，日志类的封装和调用就介绍到这里。</p>
+<h3 class="title-article">3. 把截图类方法封装到前面的BasePage.py</h3>
+<p>本文介绍把截图类方法封装到BasePage.py文件里，这个文件是在前面Selenium方法二次封装文章里创建的，具体代码请到前面这篇里找。我们截图类写死了把截图图片保存到根目录下的Screenshots文件夹里，图片名称是当前系统时间，图片后缀名是png。</p>
+<p>新的BasePage.py内容如下：</p>
+<h4>3.1 代码实现：</h4>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）5.png" alt="" /></p>
+<h4>3.2 参考代码：</h4>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-16
+@author: 北京-宏哥   QQ交流群：705269076
+Project: 《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python基础扫盲
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+</span><span style="color: #0000ff;">from</span> test1.logger <span style="color: #0000ff;">import</span><span style="color: #000000;"> Logger
+
+mylog </span>= Logger(logger=<span style="color: #800000;">'</span><span style="color: #800000;">BasePage</span><span style="color: #800000;">'</span><span style="color: #000000;">).getlog()
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> BasePage(object):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    主要是把常用的几个Selenium方法封装到BasePage这个类，我们这里演示以下几个方法
+    back()
+    forward()
+    get()
+    quit()
+    </span><span style="color: #800000;">"""</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, driver):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        写一个构造函数，有一个参数driver
+        :param driver:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        self.driver </span>=<span style="color: #000000;"> driver
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> back(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        浏览器后退按钮
+        :param none:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        self.driver.back()
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> forward(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        浏览器前进按钮
+        :param none:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        self.driver.forward()
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> open_url(self, url):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        打开url站点
+        :param url:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        self.driver.get(url)
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> quit_browser(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        关闭并停止浏览器服务
+        :param none:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        self.driver.quit()
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> take_screenshot(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        截图并保存在根目录下的Screenshots文件夹下
+        :param none:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        file_path </span>= os.path.dirname(os.getcwd()) + <span style="color: #800000;">'</span><span style="color: #800000;">/Screenshots/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        rq </span>= time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y%m%d%H%M%S</span><span style="color: #800000;">'</span><span style="color: #000000;">,time.localtime(time.time()))
+        screen_name </span>= file_path + rq + <span style="color: #800000;">'</span><span style="color: #800000;">.png</span><span style="color: #800000;">'</span>
+        <span style="color: #0000ff;">try</span><span style="color: #000000;"> :
+            self.driver.get_screenshot_as_file(screen_name)
+            mylog.info(</span><span style="color: #800000;">"</span><span style="color: #800000;">开始截图并保存</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+            mylog.error(</span><span style="color: #800000;">"</span><span style="color: #800000;">出现异常</span><span style="color: #800000;">"</span>,format(e))</pre>
+</div>
+<h4>3.3 新建截图类</h4>
+<p>主要看最后一个截图类方法的封装。</p>
+<p>测试类相关代码如下：</p>
+<h5>3.3.1 代码实现：</h5>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）6.png" alt="" /></p>
+<h5>3.3.2 参考代码：</h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-16
+@author: 北京-宏哥   QQ交流群：705269076
+Project: 《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python基础扫盲
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+
+</span><span style="color: #0000ff;">from</span> blog.basepage <span style="color: #0000ff;">import</span><span style="color: #000000;"> BasePage
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> TestScreenshot(object):
+    driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+    driver.maximize_window()
+    driver.implicitly_wait(</span>10<span style="color: #000000;">)
+    basepage </span>=<span style="color: #000000;"> BasePage(driver)
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test_take_screen(self):
+        self.basepage.open_url(</span><span style="color: #800000;">"</span><span style="color: #800000;">https://www.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        time.sleep(</span>1<span style="color: #000000;">)
+        self.basepage.take_screenshot()
+        self.basepage.quit_browser()
+
+test </span>=<span style="color: #000000;"> TestScreenshot()
+test.test_take_screen()</span></pre>
+</div>
+<h5>3.3.3 运行结果：</h5>
+<p>运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）7.png" alt="" /></p>
+<h5>3.3.4 截图保存结果：</h5>
+<p>运行代码后，在Screenshots文件夹下可以看到截图文件，如下图的结果</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）8.png" alt="" /></p>
+<p>运行后，可以在根目录下Screenshots文件夹里找到百度首页截图。</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）9.png" alt="" /></p>
+<p>本文就介绍了截图类方法添加到BasePage里，介绍了如何保存到根目录下的Screenshots文件夹。</p>
+<h3 class="title-article">4. Python中的继承的使用</h3>
+<p>本文开始介绍一个面向对象设计领域里，很常见的一种思想，继承。继承有很多好处，常听到的一句话就是，子类能够直接使用父类的方法，这样就可以减少子类代码量。其实，在自动化测试框架设计过程中，是很有必要把继承加入到你的测试脚本中去。接下来我们，简单写一个Python文件，来演示下继承的基本使用。</p>
+<h4>4.1 新建classA.py</h4>
+<p>1. 在test1包名下新建一个classA.py，这个就是我们的父类，里面有一个打开chrome浏览器和打开百度首页的方法。</p>
+<h5>4.1.2 代码实现：</h5>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）10.png" alt="" /></p>
+<h5>4.1.3 参考代码：</h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-16
+@author: 北京-宏哥   QQ交流群：705269076
+Project: 《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python基础扫盲
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+
+<span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> ClassA(object):
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> open_baidu(self):
+        driver </span>=<span style="color: #000000;"> webdriver.Chrome()
+        driver.maximize_window()
+        driver.get(</span><span style="color: #800000;">"</span><span style="color: #800000;">https://www.baidu.com</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        time.sleep(</span>1<span style="color: #000000;">)
+        driver.quit()</span></pre>
+</div>
+<h4>4.2 新建classB.py</h4>
+<p>1. 在test2包下新建一个classB.py文件，这个继承classA.py里的ClassA类。</p>
+<h5>4.2.1 代码实现：</h5>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）11.png" alt="" /></p>
+<h5>4.2.2 参考代码：</h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf-8🔥</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 1.先设置编码，utf-8可支持中英文，如上，一般放在第一行</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 2.注释：包括记录创建时间，创建人，项目名称。</span>
+<span style="color: #800000;">'''</span><span style="color: #800000;">
+Created on 2019-12-16
+@author: 北京-宏哥   QQ交流群：705269076
+Project: 《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python基础扫盲
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 3.导入模块</span>
+
+<span style="color: #0000ff;">from</span> test1.classA <span style="color: #0000ff;">import</span><span style="color: #000000;"> ClassA
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> ClassB(ClassA):
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> test_inherit(self):
+        self.open_baidu()
+
+test </span>=<span style="color: #000000;"> ClassB()
+test.test_inherit()</span></pre>
+</div>
+<h5>4.2.3 运行结果：</h5>
+<p>运行代码后，控制台打印如下图的结果</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）12.png" alt="" /></p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 通过上面可以看出，只需要一句代码就可以实现ClassA中的方法，这个就是继承的好处，减少了很多代码的书写，提高代码的复用。在定义ClassB的时候就要指明ClassB的父类是ClassA. 继承相关的话题就介绍到这里，将在后面自动化框架设计会再次提到。</p>
+<h3>5. 小结</h3>
+<h4>5.1 中文乱码</h4>
+<p>遇到的问题：细心地小伙伴或者同学们会发现在日志文件中的内容或出现中文乱码，如下图示：</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）13.png" alt="" /></p>
+<p>&nbsp;解决办法：在<code>FileHandler</code>&nbsp;此处要设置 encoding 格式，</p>
+<div class="cnblogs_code">
+<pre><code>fh = logging.FileHandler(log_name,encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）14.png" alt="" /></p>
+<p>&nbsp;修改后，运行代码日志文件内容如下图所示：</p>
+<p><img src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）0.png" alt="" /></p>
+<h4>5.2 路径问题</h4>
+<p>因为宏哥在代码实践的过程中这部分遇到小问题，就是日志文件和截图放不在指定的文件夹下，所以这里拿出来单独说一下。</p>
+<div class="cnblogs_code">
+<pre><code>        <span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个handler，用于写入日志文件</span>
+        rq = time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y%m%d%H%M</span><span style="color: #800000;">'</span><span style="color: #000000;">, time.localtime(time.time()))
+        </span><span style="color: #008000;">#</span><span style="color: #008000;">当前目录</span>
+        <span style="color: #0000ff;">print</span><span style="color: #000000;">(os.getcwd())
+        </span><span style="color: #008000;">#</span><span style="color: #008000;">根目录</span>
+        <span style="color: #0000ff;">print</span><span style="color: #000000;">(os.path.dirname(os.getcwd()))
+        </span><span style="color: #008000;">#</span><span style="color: #008000;">log_path = (os.path.dirname(os.getcwd())+ '\\Logs\\')</span>
+        log_path = os.getcwd() + <span style="color: #800000;">'</span><span style="color: #800000;">\\Logs\\</span><span style="color: #800000;">'</span>
+        <span style="color: #0000ff;">print</span>(log_path)</pre>
+</div>
+<p>代码说明：</p>
+<p>os.getcwd() ：获取的当前最外层调用的脚本路径，即getPath所在的目录也可描述为起始的执行目录，A调用B，起始的是A，那么获取的就是A所在的目录路径。</p>
+<p>os.path.dirname()：去掉脚本的文件名，返回目录。</p>
+<p>好了，今天的分享就到这里吧！！！谢谢各位的耐心阅读。</p>
+<p>&nbsp;</p>
+<p style="text-align: center;"><span style="font-size: 14pt;"><strong><strong>您的肯定就是我进步的动力。</strong>如果你感觉还不错，就请鼓励一下吧！记得随手点波&nbsp;<span style="font-size: 18pt;"><span style="color: #ff0000;">推荐</span>&nbsp;</span>不要忘记哦！！！</strong></span></p>
+<p style="text-align: center;"><span style="font-size: 14pt;"><strong>别忘了点<span style="font-size: 18pt; color: #ff0000;">推荐</span>留下您来过痕迹</strong></span></p>
+<p style="text-align: center;">&nbsp;</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/《手把手教你》系列进阶篇之4-python+ selenium自动化测试 - python几种超神操作你都知道吗？（详细教程）16.png" alt="" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

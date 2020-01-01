@@ -1,0 +1,334 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django -- 使用MySql数据库' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django -- 使用MySql数据库</center></div><div class='banquan'>原文出处:本文由博客园博主luizyao提供。<br/>
+原文连接:https://www.cnblogs.com/luizyao/p/11407523.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#创建数据库">1. 创建数据库</a><ul>
+        <li><a href="#使用utf8mb4编码">1.1. 使用utf8mb4编码</a><ul>
+        <li><a href="#确定mysql的配置文件">1.1.1. 确定mysql的配置文件</a></li>
+        <li><a href="#修改配置文件">1.1.2. 修改配置文件</a></li>
+        <li><a href="#重启数据库服务检查相关字段">1.1.3. 重启数据库服务，检查相关字段</a></li>
+        <li><a href="#新建数据库">1.1.4. 新建数据库</a></li>
+        </ul></li>
+        <li><a href="#使用已经存在的数据库">1.2. 使用已经存在的数据库</a><ul>
+        <li><a href="#修改已有数据库的编码">1.2.1. 修改已有数据库的编码</a></li>
+        </ul></li>
+        <li><a href="#为django项目新建一个数据库用户">1.3. 为Django项目新建一个数据库用户</a></li>
+        </ul></li>
+        <li><a href="#修改django的配置">2. 修改Django的配置</a><ul>
+        <li><a href="#修改settings.py中数据库相关">2.1. 修改settings.py中数据库相关</a></li>
+        <li><a href="#安装mysqlclient">2.2. 安装<span>mysqlclient</span></a><ul>
+        <li><a href="#安装mysql-connector-c">2.2.1. 安装mysql-connector-c</a></li>
+        <li><a href="#修复mysql-connector-c在mac-os的python3的bug">2.2.2. 修复mysql-connector-c在mac os的python3的<span>bug</span></a></li>
+        <li><a href="#使用pip安装mysqlclient">2.2.3. 使用pip安装mysqlclient</a></li>
+        <li><a href="#使用pipenv安装mysqlclient">2.2.4. 使用pipenv安装mysqlclient</a></li>
+        </ul></li>
+        <li><a href="#执行migrate操作">2.3. 执行migrate操作</a></li>
+        <li><a href="#创建一个管理员用户">2.4. 创建一个管理员用户</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<blockquote>
+<p>Django默认使用的sqlite3，这在实际的生产环境中是不推荐的；</p>
+</blockquote>
+<h1 id="创建数据库">1. 创建数据库</h1>
+<blockquote>
+<p>Linux VM_0_15_centos 3.10.0-693.el7.x86_64 #1 SMP Tue Aug 22 21:09:27 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux</p>
+</blockquote>
+<h2 id="使用utf8mb4编码">1.1. 使用utf8mb4编码</h2>
+<blockquote>
+<p>mysql的utf-8编码最多只支持3个字节，而移动端的一些表情都是以4个字节存储的；utf8mb4是一个替代的方案，建议创建数据库和表都以utf8mb4替代utf-8</p>
+</blockquote>
+<h3 id="确定mysql的配置文件">1.1.1. 确定mysql的配置文件</h3>
+<pre><code><code># 系统中my.cnf文件的位置
+[luizyao@VM_0_15_centos ~]$ locate my.cnf
+/etc/my.cnf
+/etc/my.cnf.d
+/etc/my.cnf.d/client.cnf
+/etc/my.cnf.d/mysql-clients.cnf
+/etc/my.cnf.d/server.cnf
+
+# mysql启动时，读取配置文件的目录顺序
+[luizyao@VM_0_15_centos ~]$  mysql --help | head -n 7
+mysql  Ver 15.1 Distrib 5.5.56-MariaDB, for Linux (x86_64) using readline 5.1
+Copyright (c) 2000, 2017, Oracle, MariaDB Corporation Ab and others.
+
+Usage: mysql [OPTIONS] [database]
+
+Default options are read from the following files in the given order:
+/etc/mysql/my.cnf /etc/my.cnf ~/.my.cnf</code></pre>
+<h3 id="修改配置文件">1.1.2. 修改配置文件</h3>
+<blockquote>
+<p>/etc/my.cnf</p>
+</blockquote>
+<pre class="ini"><code>[client] 
+default-character-set = utf8mb4
+
+[mysql] 
+default-character-set = utf8mb4
+
+[mysqld]
+# Settings user and group are ignored when systemd is used.
+# If you need to run mysqld under a different user or group,
+# customize your systemd unit file for mariadb according to the
+# instructions in http://fedoraproject.org/wiki/Systemd
+character-set-client-handshake = FALSE 
+character-set-server = utf8mb4 
+collation-server = utf8mb4_unicode_ci 
+init_connect=&#39;SET NAMES utf8mb4&#39;</code></pre>
+<h3 id="重启数据库服务检查相关字段">1.1.3. 重启数据库服务，检查相关字段</h3>
+<pre><code><code># 保证character_set_client、character_set_connection、character_set_database、character_set_results和character_set_server的值一定是utf8mb4
+MariaDB [(none)]&gt; SHOW VARIABLES WHERE Variable_name LIKE &#39;character_set_%&#39; OR Variable_name LIKE &#39;collation%&#39;;
++--------------------------+----------------------------+
+| Variable_name            | Value                      |
++--------------------------+----------------------------+
+| character_set_client     | utf8mb4                    |
+| character_set_connection | utf8mb4                    |
+| character_set_database   | utf8mb4                    |
+| character_set_filesystem | binary                     |
+| character_set_results    | utf8mb4                    |
+| character_set_server     | utf8mb4                    |
+| character_set_system     | utf8                       |
+| character_sets_dir       | /usr/share/mysql/charsets/ |
+| collation_connection     | utf8mb4_unicode_ci         |
+| collation_database       | utf8mb4_unicode_ci         |
+| collation_server         | utf8mb4_unicode_ci         |
++--------------------------+----------------------------+
+11 rows in set (0.02 sec)</code></pre>
+<h3 id="新建数据库">1.1.4. 新建数据库</h3>
+<pre class="sql"><code>MariaDB [(none)]&gt; create database blogproject;
+Query OK, 1 row affected (0.01 sec)
+
+--查看blogproject创建时候使用的编码，回显中注释的部分可以看出，使用的是utf8mb4编码
+MariaDB [mysql]&gt; show create database blogproject;
++-------------+----------------------------------------------------------------------------------------------------+
+| Database    | Create Database                                                                                    |
++-------------+----------------------------------------------------------------------------------------------------+
+| blogproject | CREATE DATABASE `blogproject` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci */ |
++-------------+----------------------------------------------------------------------------------------------------+
+1 row in set (0.00 sec)</code></pre>
+<h2 id="使用已经存在的数据库">1.2. 使用已经存在的数据库</h2>
+<h3 id="修改已有数据库的编码">1.2.1. 修改已有数据库的编码</h3>
+<pre class="sql"><code>MariaDB [(none)]&gt; alter database blogproject character set utf8mb4;</code></pre>
+<h2 id="为django项目新建一个数据库用户">1.3. 为Django项目新建一个数据库用户</h2>
+<pre class="sql"><code>-- 赋予这个新用户增删改查等权限，不授予drop的权限；并且，只允许本地客户端登陆；
+MariaDB [mysql]&gt; grant alter,create,delete,index,insert,select,update,trigger on blogproject.* to &lt;用户名&gt;@localhost identified by &#39;&lt;密码&gt;&#39;; 
+Query OK, 0 rows affected (0.04 sec)
+
+MariaDB [mysql]&gt; flush privileges;
+Query OK, 0 rows affected (0.03 sec)
+
+-- 检查权限，秘密默认是加密存储
+MariaDB [blogproject]&gt; show grants for &lt;用户名&gt;@localhost;
++----------------------------------------------------------------------------------------------------------------+
+| Grants for &lt;用户名&gt;@localhost                                                                                    |
++----------------------------------------------------------------------------------------------------------------+
+| GRANT USAGE ON *.* TO &#39;&lt;用户名&gt;&#39;@&#39;localhost&#39; IDENTIFIED BY PASSWORD &#39;*5102144CA406FC026831D796EA07645447677551&#39;  |
+| GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, INDEX, ALTER, TRIGGER ON `blogproject`.* TO &#39;&lt;用户名&gt;&#39;@&#39;localhost&#39; |
++----------------------------------------------------------------------------------------------------------------+
+2 rows in set (0.00 sec)</code></pre>
+<h1 id="修改django的配置">2. 修改Django的配置</h1>
+<h2 id="修改settings.py中数据库相关">2.1. 修改settings.py中数据库相关</h2>
+<pre class="python"><code>DATABASES = {
+    # &#39;default&#39;: {
+    #     &#39;ENGINE&#39;: &#39;django.db.backends.sqlite3&#39;,
+    #     &#39;NAME&#39;: os.path.join(BASE_DIR, &#39;db.sqlite3&#39;),
+    # }
+    &#39;default&#39;: {
+        &#39;ENGINE&#39;: &#39;django.db.backends.mysql&#39;,
+        &#39;NAME&#39;: &#39;blogproject&#39;,        
+        &#39;USER&#39;: &#39;&lt;用户名&gt;&#39;,
+        &#39;PASSWORD&#39;: &#39;&lt;用户名&gt;&#39;,
+        &#39;HOST&#39;: &#39;&lt;数据库服务器的IP&gt;&#39;,
+        &#39;PORT&#39;: &#39;3306&#39;,  # 默认的服务端口号
+        &#39;OPTIONS&#39;: {
+            # 存储引擎启用严格模式，非法数据值被拒绝
+            &#39;init_command&#39;: &quot;SET sql_mode=&#39;STRICT_TRANS_TABLES&#39;&quot;,  
+            &#39;charset&#39;: &#39;utf8mb4&#39;,
+        },
+    }
+}</code></pre>
+<h2 id="安装mysqlclient">2.2. 安装<a href="https://pypi.org/project/mysqlclient/" title="mysqlclient仓库">mysqlclient</a></h2>
+<blockquote>
+<p>Darwin luizyaodeMacBook-Air.local 18.6.0 Darwin Kernel Version 18.6.0: Thu Apr 25 23:16:27 PDT 2019; root:xnu-4903.261.4~2/RELEASE_X86_64 x86_64</p>
+</blockquote>
+<h3 id="安装mysql-connector-c">2.2.1. 安装mysql-connector-c</h3>
+<pre><code><code>luizyaodeMacBook-Air:~ luizyao$ brew install mysql-connector-c
+==&gt; Downloading https://mirrors.ustc.edu.cn/homebrew-bottles/bottles/mysql-conne
+######################################################################## 100.0%
+==&gt; Pouring mysql-connector-c-6.1.11.mojave.bottle.tar.gz
+🍺  /usr/local/Cellar/mysql-connector-c/6.1.11: 79 files, 15.3MB</code></pre>
+<h3 id="修复mysql-connector-c在mac-os的python3的bug">2.2.2. 修复mysql-connector-c在mac os的python3的<a href="https://bugs.mysql.com/bug.php?id=86971" title="mysql_config --libs of mysql-connector/c 6.1.0 on macOS is wrong">bug</a></h3>
+<blockquote>
+<p>/usr/local/Cellar/mysql-connector-c/6.1.11/bin/mysql_config</p>
+</blockquote>
+<pre><code><code># Create options 
+libs=&quot;-L$pkglibdir&quot;
+libs=&quot;$libs -l &quot;</code></pre>
+<p>修改为</p>
+<pre><code><code># Create options 
+libs=&quot;-L$pkglibdir&quot;
+libs=&quot;$libs -lmysqlclient -lssl -lcrypto&quot;</code></pre>
+<h3 id="使用pip安装mysqlclient">2.2.3. 使用pip安装mysqlclient</h3>
+<pre><code><code>[luizyaodeMacBook-Air:django-blog luizyao$ pip3 install mysqlclient</code></pre>
+<h3 id="使用pipenv安装mysqlclient">2.2.4. 使用pipenv安装mysqlclient</h3>
+<blockquote>
+<p>这个时候会报错，因为：because Apple has deprecated use of OpenSSL in favor of its own TLS and crypto libraries.</p>
+</blockquote>
+<pre><code><code>luizyaodeMacBook-Air:django-blog luizyao$ brew info openssl
+openssl: stable 1.0.2s (bottled) [keg-only]
+SSL/TLS cryptography library
+https://openssl.org/
+/usr/local/Cellar/openssl/1.0.2s (1,795 files, 12.0MB)
+  Poured from bottle on 2019-06-22 at 13:16:17
+From: https://mirrors.ustc.edu.cn/homebrew-core.git/Formula/openssl.rb
+==&gt; Caveats
+A CA file has been bootstrapped using certificates from the SystemRoots
+keychain. To add additional certificates (e.g. the certificates added in
+the System keychain), place .pem files in
+  /usr/local/etc/openssl/certs
+
+and run
+  /usr/local/opt/openssl/bin/c_rehash
+
+openssl is keg-only, which means it was not symlinked into /usr/local,
+because Apple has deprecated use of OpenSSL in favor of its own TLS and crypto libraries.
+
+If you need to have openssl first in your PATH run:
+  echo &#39;export PATH=&quot;/usr/local/opt/openssl/bin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
+
+For compilers to find openssl you may need to set:
+  export LDFLAGS=&quot;-L/usr/local/opt/openssl/lib&quot;
+  export CPPFLAGS=&quot;-I/usr/local/opt/openssl/include&quot;
+
+==&gt; Analytics
+install: 490,905 (30 days), 1,748,362 (90 days), 6,591,368 (365 days)
+install_on_request: 59,162 (30 days), 234,123 (90 days), 884,807 (365 days)
+build_error: 0 (30 days)</code></pre>
+<p>根据提示做如下操作</p>
+<pre><code><code>luizyaodeMacBook-Air:django-blog luizyao$ echo &#39;export PATH=&quot;/usr/local/opt/openssl/bin:$PATH&quot;&#39; &gt;&gt; ~/.bash_profile
+luizyaodeMacBook-Air:django-blog luizyao$ source ~/.bash_profile 
+luizyaodeMacBook-Air:django-blog luizyao$ export LDFLAGS=&quot;-L/usr/local/opt/openssl/lib&quot;
+luizyaodeMacBook-Air:django-blog luizyao$ export CPPFLAGS=&quot;-I/usr/local/opt/openssl/include&quot;</code></pre>
+<p>再安装mysqlclient，就能成功了</p>
+<pre><code><code>luizyaodeMacBook-Air:django-blog luizyao$ pipenv install mysqlclient
+Installing mysqlclient…
+Adding mysqlclient to Pipfile&#39;s [packages]…
+✔ Installation Succeeded 
+Pipfile.lock (cee3a5) out of date, updating to (79d06d)…
+Locking [dev-packages] dependencies…
+✔ Success! 
+Locking [packages] dependencies…
+✔ Success! 
+Updated Pipfile.lock (cee3a5)!
+Installing dependencies from Pipfile.lock (cee3a5)…
+  🐍   ▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉▉ 4/4 — 00:00:01
+To activate this project&#39;s virtualenv, run pipenv shell.
+Alternatively, run a command inside the virtualenv with pipenv run.
+</code></pre>
+<h2 id="执行migrate操作">2.3. 执行migrate操作</h2>
+<pre class="python"><code>[luizyaodeMacBook-Air:django-blog luizyao$ pipenv run python manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, auth, blog, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying auth.0010_alter_group_name_max_length... OK
+  Applying auth.0011_update_proxy_permissions... OK
+  Applying blog.0001_initial... OK
+  Applying sessions.0001_initial... OK</code></pre>
+<p>只有Applying blog.0001_initial... OK是和我们自己模型相关的，其他的是Django系统自带的一些模型， 我们可以进一步的查看数据库到底做了什么操作；</p>
+<pre class="sql"><code>luizyaodeMacBook-Air:django-blog luizyao$ pipenv run python manage.py sqlmigrate blog 0001
+BEGIN;
+--
+-- Create model Category
+--
+CREATE TABLE `blog_category` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(100) NOT NULL);
+--
+-- Create model Tag
+--
+CREATE TABLE `blog_tag` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `name` varchar(100) NOT NULL);
+--
+-- Create model Post
+--
+CREATE TABLE `blog_post` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `title` varchar(70) NOT NULL, `excerpt` varchar(200) NOT NULL, `body` longtext NOT NULL, `created_at` datetime(6) NOT NULL, `modified_at` datetime(6) NOT NULL, `author_id` integer NOT NULL, `category_id` integer NOT NULL);
+CREATE TABLE `blog_post_tag` (`id` integer AUTO_INCREMENT NOT NULL PRIMARY KEY, `post_id` integer NOT NULL, `tag_id` integer NOT NULL);
+ALTER TABLE `blog_post` ADD CONSTRAINT `blog_post_author_id_dd7a8485_fk_auth_user_id` FOREIGN KEY (`author_id`) REFERENCES `auth_user` (`id`);
+ALTER TABLE `blog_post` ADD CONSTRAINT `blog_post_category_id_c326dbf8_fk_blog_category_id` FOREIGN KEY (`category_id`) REFERENCES `blog_category` (`id`);
+ALTER TABLE `blog_post_tag` ADD CONSTRAINT `blog_post_tag_post_id_a5c00319_fk_blog_post_id` FOREIGN KEY (`post_id`) REFERENCES `blog_post` (`id`);
+ALTER TABLE `blog_post_tag` ADD CONSTRAINT `blog_post_tag_tag_id_2bbd31e4_fk_blog_tag_id` FOREIGN KEY (`tag_id`) REFERENCES `blog_tag` (`id`);
+ALTER TABLE `blog_post_tag` ADD CONSTRAINT `blog_post_tag_post_id_tag_id_ba2a5f83_uniq` UNIQUE (`post_id`, `tag_id`);
+COMMIT;</code></pre>
+<p>在数据库中可以看到Django创建的具体表；</p>
+<pre class="sql"><code>MariaDB [blogproject]&gt; show tables;
++----------------------------+
+| Tables_in_blogproject      |
++----------------------------+
+| auth_group                 |
+| auth_group_permissions     |
+| auth_permission            |
+| auth_user                  |
+| auth_user_groups           |
+| auth_user_user_permissions |
+| blog_category              |
+| blog_post                  |
+| blog_post_tag              |
+| blog_tag                   |
+| django_admin_log           |
+| django_content_type        |
+| django_migrations          |
+| django_session             |
++----------------------------+
+14 rows in set (0.00 sec)</code></pre>
+<h2 id="创建一个管理员用户">2.4. 创建一个管理员用户</h2>
+<pre><code><code>luizyaodeMacBook-Air:django-blog luizyao$ pipenv run python manage.py createsuperuser
+用户名 (leave blank to use &#39;luizyao&#39;): luizyao
+电子邮件地址: luizyao@163.com
+Password: 
+Password (again): 
+Superuser created successfully.</code></pre>
+<p>在数据库中，我们就可以看到这个管理员用户了</p>
+<pre class="sql"><code>MariaDB [blogproject]&gt; select * from auth_user;
++----+--------------------------------------------------------------------------------+------------+--------------+----------+------------+-----------+-----------------+----------+-----------+----------------------------+
+| id | password                                                                       | last_login | is_superuser | username | first_name | last_name | email           | is_staff | is_active | date_joined                |
++----+--------------------------------------------------------------------------------+------------+--------------+----------+------------+-----------+-----------------+----------+-----------+----------------------------+
+|  1 | pbkdf2_sha256$150000$ViP2waofsEQU$3oNPdGxlGPmt5Nbl/lcHJli8V9j7425ZxRfqKF18E0Q= | NULL       |            1 | luizyao  |            |           | luizyao@163.com |        1 |         1 | 2019-08-25 03:49:19.667011 |
++----+--------------------------------------------------------------------------------+------------+--------------+----------+------------+-----------+-----------------+----------+-----------+----------------------------+
+1 row in set (0.00 sec)</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,89 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修ubuntu 或centos 使用Docker搭建anaconda+python基本环境' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>ubuntu 或centos 使用Docker搭建anaconda+python基本环境</center></div><div class='banquan'>原文出处:本文由博客园博主子钦加油提供。<br/>
+原文连接:https://www.cnblogs.com/zmdComeOn/p/11799498.html</div><br>
+    <p>ubuntu 16 使用Docker安装anaconda<br /><a href="http://www.runoob.com/docker/ubuntu-docker-install.html" target="_blank">ubuntu docker 安装</a><br /><a href="http://www.runoob.com/docker/centos-docker-install.html" target="_blank">centos docker 安装</a><br />搜索可用镜像</p>
+<div class="cnblogs_Highlighter">
+<pre><code>docker search anaconda</pre>
+</div>
+<p>拉取你中意的镜像</p>
+<div class="cnblogs_Highlighter">
+<pre><code>docker pull continuumio/anaconda3 </pre>
+</div>
+<p>查看已有镜像</p>
+<div class="cnblogs_Highlighter">
+<pre><code>docker images</pre>
+</div>
+<p>启动该镜像并且运行bash命令</p>
+<div class="cnblogs_Highlighter">
+<pre><code>docker run -t -i continuumio/anaconda3 /bin/bash</pre>
+</div>
+<p>查看python版本</p>
+<div class="cnblogs_Highlighter">
+<pre><code>python</pre>
+</div>
+<p>查看已安装的库</p>
+<div class="cnblogs_Highlighter">
+<pre><code>pip list</pre>
+</div>
+<p>退出容器</p>
+<div class="cnblogs_Highlighter">
+<pre><code>exit</pre>
+</div>
+<p>删除images，通过image的id来指定删除谁</p>
+<div class="cnblogs_Highlighter">
+<pre><code>docker rmi &lt;image id&gt;</pre>
+</div>
+<p>查看已有容器</p>
+<div class="cnblogs_Highlighter">
+<pre><code>docker container ls -all</pre>
+</div>
+<p>容器重命名</p>
+<div class="cnblogs_Highlighter">
+<pre><code>docker rename 原名字 新名字</pre>
+</div>
+<p>在该容器内安装jupyter notebook</p>
+<div class="cnblogs_Highlighter">
+<pre><code>conda install ** 使用 conda 安装 库 | 卸载：conda uninstall pytorch
+
+conda install jupyter</pre>
+</div>
+<p>输入 修改 配置，因为服务器本身已经安装了 jupyter ，效果如下</p>
+<div class="cnblogs_Highlighter">
+<pre><code>jupyter notebook --generate-config</pre>
+</div>
+<p>后来查了其它博客了解到，jupyter 的启动可以指定配置文件，配置文件在任意位置都可以，基本的启动命令如下：</p>
+<div class="cnblogs_Highlighter">
+<pre><code>jupyter notebook --config=root_jupyter_config.py</pre>
+</div>
+<p>此处为了不覆盖服务器默认的jupyter 配置文件，就自己新建了root_jupyter_config.py，在里面进行配置，具体配置如下：</p>
+<div class="cnblogs_Highlighter">
+<pre><code>c.NotebookApp.ip='*' # 指定 可访问 IP 或者 使用 * 则可以用任意 IP
+c.NotebookApp.open_browser = False # 关闭自动打开浏览器
+c.NotebookApp.port = 8888 # 端口随意指定，然后在阿里云开对应端口的防火墙即可
+c.NotebookApp.password = u'sha1:d8334*******' # 复制前一步生成的密钥
+c.NotebookApp.allow_remote_access = True
+c.NotebookApp.notebook_dir = '/usr/local/mypro/pythonpro' #指定默认打开的文件夹</pre>
+</div>
+<p style="text-align: left;">备注：<br />其它jupyter 详细配置过程请移步：<br /><a href="https://www.cnblogs.com/zmdComeOn/p/11803436.html" target="_blank">远程访问阿里云服务器jupyter</a><br /><br /><span style="font-size: 12px;">　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　　原文链接：https://blog.csdn.net/sinat_28442665/article/details/85724080</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

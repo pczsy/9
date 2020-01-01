@@ -1,0 +1,192 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修类成员' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>类成员</center></div><div class='banquan'>原文出处:本文由博客园博主被放弃的程序员提供。<br/>
+原文连接:https://www.cnblogs.com/liwenhu/p/11401567.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#类的私有成员----__">1. 类的私有成员 -- __</a><ul>
+        <li><a href="#类的私有静态属性">1.1 类的私有静态属性</a></li>
+        <li><a href="#类的私有方法">1.2 类的私有方法</a></li>
+        <li><a href="#对象的私有方法">1.3 对象的私有方法</a></li>
+        </ul></li>
+        <li><a href="#类的其他方法">2. 类的其他方法</a><ul>
+        <li><a href="#类方法-classmethod">2.1 类方法 @classmethod</a></li>
+        <li><a href="#静态方法-staticmethod">2.2 静态方法 @staticmethod</a></li>
+        </ul></li>
+        <li><a href="#属性-property">3. 属性 @property</a><ul>
+        <li><a href="#装饰器法----获取修改删除">3.1 装饰器法 -- 获取、修改、删除</a></li>
+        <li><a href="#利用实例化对象的方式设置属性">3.2 利用实例化对象的方式设置属性</a></li>
+        </ul></li>
+        <li><a href="#类的内置函数">4. 类的内置函数</a><ul>
+        <li><a href="#isinstance----判断对象与类之间的关系">4.1 isinstance -- 判断对象与类之间的关系</a></li>
+        <li><a href="#issubclass----判断类与类的关系">4.2 issubclass -- 判断类与类的关系</a></li>
+        </ul></li>
+        <li><a href="#元类type-构建类">5. 元类type 构建类</a></li>
+        </ul>
+    </div>
+</div>
+<h2 id="类的私有成员----__">1. 类的私有成员 -- __</h2>
+<pre><code><code>当你遇到重要的数据,功能,(只允许本类使用的一些方法,数据)将其设置成私有成员.</code></pre>
+<h3 id="类的私有静态属性">1.1 类的私有静态属性</h3>
+<pre class="python"><code>__name = &quot;meet&quot;    # 加 __
+
+#只能在类的内部进行访问、调用，在类的外部以及派生类不能调用。</code></pre>
+<h3 id="类的私有方法">1.2 类的私有方法</h3>
+<pre class="python"><code>class A:
+    def __func(self):
+        print(&quot;in __func&quot;)
+
+# 只能在类的内部调用</code></pre>
+<h3 id="对象的私有方法">1.3 对象的私有方法</h3>
+<pre class="python"><code>class A:
+    def __init__(self, name):
+        self.__name = name
+        
+# 只能在类的内部调用</code></pre>
+<pre class="python"><code># 总结：
+类的私有成员，只能在类的内部进行访问、调用，不能在类的外部、子类使用。
+
+python所有的私有成员都是纸老虎，形态虚设。
+类在加载时，只要遇到类的私有成员（__）,都会在私有成员前加上 _类名；
+可以这样查看，但不能这样调用。</code></pre>
+<h2 id="类的其他方法">2. 类的其他方法</h2>
+<h3 id="类方法-classmethod">2.1 类方法 @classmethod</h3>
+<pre><code><code>类方法是将类本身作为对象进行操作的方法。
+类方法: 一般就是通过类名去调用的方法,并且自动将类的地址传给cls,
+但是如果通过对象调用也可以,但是传的地址还是类名地址.</code></pre>
+<pre class="python"><code># 实例化一个对象，记一次数，统计学生个数。
+class Student:
+    count = 0
+
+    def __init__(self, name, id):
+        self.name = name
+        self.id = id
+        Student.num_student()   # 调用
+
+    @classmethod
+    def num_student(cls):       # cls 接受类的地址
+        cls.count += 1
+
+    @classmethod
+    def getnum(cls):
+        return cls.count
+
+
+obj1 = Student(&quot;alex&quot;, 25412)
+obj2 = Student(&quot;meet&quot;, 25413)
+print(Student.getnum())</code></pre>
+<pre><code><code>类方法的作用：
+    1. 得到类名可以实例化对象；
+    2. 可以操作类的属性。</code></pre>
+<h3 id="静态方法-staticmethod">2.2 静态方法 @staticmethod</h3>
+<pre class="python"><code>不依赖对象与类，其实静态方法就是一个函数。 
+参数可随意，没有“self”和“cls”参数，但是方法体中不能使用类或实例的任何属性和方法；调用还需函数名。
+保证代码规范性，合理划分，以及后续维护性高。</code></pre>
+<pre class="python"><code>class A:
+    @staticmethod
+    def func():
+        print(&quot;这是静态方法！&quot;)
+print(A.func())</code></pre>
+<h2 id="属性-property">3. 属性 @property</h2>
+<pre><code><code>工作中如果遇到一些类似于属性的方法名，可以让其伪装成属性。
+property将执行一个函数需要 函数名() 变换成 函数名。
+将动态方法伪装成一个属性，使其看起来更合理。</code></pre>
+<h3 id="装饰器法----获取修改删除">3.1 装饰器法 -- 获取、修改、删除</h3>
+<pre class="python"><code>class Foo:
+    @property
+    def AAA(self):
+        print(&#39;get的时候运行我啊&#39;)
+
+    @AAA.setter
+    def AAA(self,value):
+        print(value)
+        print(&#39;set的时候运行我啊&#39;)
+
+    @AAA.deleter
+    def AAA(self):
+        print(&#39;delete的时候运行我啊&#39;)
+obj = Foo()
+obj.AAA         # 不加（）
+obj.AAA = &quot;aaa&quot;  # 操作命令，不是改变AAA的值，而是执行被AAA.setter装饰器装饰的函数
+del obj.AAA     # 操作命令，不是删除AAA，而是执行被AAA.deleter装饰器装饰的函数</code></pre>
+<h3 id="利用实例化对象的方式设置属性">3.2 利用实例化对象的方式设置属性</h3>
+<pre class="python"><code>class Foo:
+    def get_AAA(self):
+        print(&#39;get的时候运行我啊&#39;)
+
+    def set_AAA(self,value):
+        print(value)
+        print(&#39;set的时候运行我啊&#39;)
+
+    def delete_AAA(self):
+        print(&#39;delete的时候运行我啊&#39;)
+        
+    AAA=property(get_AAA,set_AAA,delete_AAA) 
+    #内置property三个参数与get,set,delete一一对应
+
+obj=Foo()
+obj.AAA     # 不加（）
+obj.AAA=&#39;aaa&#39;   # 操作命令，不是改变AAA的值，而是执行set_AAA函数
+del obj.AAA     # 操作命令，不是删除AAA，而是执行delete_AAA函数</code></pre>
+<h2 id="类的内置函数">4. 类的内置函数</h2>
+<h3 id="isinstance----判断对象与类之间的关系">4.1 isinstance -- 判断对象与类之间的关系</h3>
+<pre class="python"><code>class A:
+    pass
+class B(A):
+    pass
+class C(B):
+    pass
+
+obj = B()
+print(isinstance(obj, B))    # True
+print(isinstance(obj, A))   # True
+print(isinstance(obj, C))   # False
+
+# isinstance(obj,class) 判断obj是否是class类的实例化对象，或者obj是否是class派生类的实例化对象，返回Ture/False.</code></pre>
+<h3 id="issubclass----判断类与类的关系">4.2 issubclass -- 判断类与类的关系</h3>
+<pre class="python"><code>class A:
+    pass
+
+class B(A):
+    pass
+
+class C(B):
+    pass
+ 
+print(issubclass(B, A))     # True
+print(issubclass(C, A))     # True
+print(issubclass(B, C))     # False
+
+# issubclass(cls1,cls2) 判断cls1类是否是cls2的派生类，或者是否是cls2派生类的派生  （判断cls1类是否是cls2的子孙类）</code></pre>
+<h2 id="元类type-构建类">5. 元类type 构建类</h2>
+<pre class="python"><code>type元类：获取对象从属于的类
+Python原则是：一切皆对象，其实类也可以理解为&#39;对象&#39;,而type元类又称作构建类，python中大多数内置的类（包括object）以及自己定义的类，都是由type元类创造的。</code></pre>
+<pre class="python"><code>type(str)   # &lt;class &#39;type&#39;&gt;
+print(type(object))     # &lt;class &#39;type&#39;&gt;
+print(isinstance(object, type))     # True
+# object类是type元类的一个实例化对象
+print(issubclass(type,object))      # True
+# object类是type元类的父类</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

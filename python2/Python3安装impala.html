@@ -1,0 +1,55 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python3安装impala' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python3安装impala</center></div><div class='banquan'>原文出处:本文由博客园博主feiquan提供。<br/>
+原文连接:https://www.cnblogs.com/feiquan/p/11345323.html</div><br>
+    <p><span style="font-size: 18px;"><strong>步骤：</strong></span></p>
+<p><strong>1.安装<a href="https://visualstudio.microsoft.com/downloads/">Visual C++</a>，目前最新是2019版</strong></p>
+<p>　　安装工作负载c++桌面开发</p>
+<p>　　<img src="./images/Python3安装impala0.png" alt="" /></p>
+<p><strong>2.pip3安装模块</strong></p>
+<div class="cnblogs_code">
+<pre><code>pip3 install pure-sasl==<span style="color: #800080;">0.5</span>.<span style="color: #800080;">1</span><span style="color: #000000;">
+pip3 install thrift</span>-sasl==<span style="color: #800080;">0.2</span>.<span style="color: #800080;">1</span> --no-<span style="color: #000000;">deps
+pip3 install thrift</span>==<span style="color: #800080;">0.9</span>.<span style="color: #800080;">3</span><span style="color: #000000;">
+pip3 install impyla</span>==<span style="color: #800080;">0.14</span>.<span style="color: #800080;">1</span><span style="color: #000000;">
+pip3 install bitarray</span>==<span style="color: #800080;">0.8</span>.<span style="color: #800080;">3</span><span style="color: #000000;">
+pip3 install thriftpy</span>==<span style="color: #800080;">0.3</span>.<span style="color: #800080;">9</span></pre>
+</div>
+<p><span style="color: #ff0000;">安装时报错：</span></p>
+<p># TypeError: can't concat str to bytes</p>
+<p><strong>3.改错</strong></p>
+<p>编辑 　　<span style="color: #800000;">python安装目录/site-packages/thrift_sasl/__init__.py</span></p>
+<p># 定位到错误的最后一条，在init.py第94行 (注意代码的缩进)</p>
+<div class="cnblogs_code">
+<pre><code>header = <span style="color: #0000ff;">struct</span>.pack(<span style="color: #800000;">"</span><span style="color: #800000;">&gt;BI</span><span style="color: #800000;">"</span><span style="color: #000000;">, status, len(body))
+self._trans.write(header </span>+ body)</pre>
+</div>
+<p>更改为：</p>
+<div class="cnblogs_code">
+<pre><code>header = <span style="color: #0000ff;">struct</span>.pack(<span style="color: #800000;">"</span><span style="color: #800000;">&gt;BI</span><span style="color: #800000;">"</span><span style="color: #000000;">, status, len(body))
+</span><span style="color: #0000ff;">if</span>(type(body) <span style="color: #0000ff;">is</span><span style="color: #000000;"> str):
+    body </span>=<span style="color: #000000;"> body.encode() 
+self._trans.write(header </span>+ body)</pre>
+</div>
+<p><strong>4.重新pip安装</strong></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

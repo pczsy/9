@@ -1,0 +1,193 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修三分钟学会在ASP.NET Core MVC 中使用Cookie' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>三分钟学会在ASP.NET Core MVC 中使用Cookie</center></div><div class='banquan'>原文出处:本文由博客园博主张子浩提供。<br/>
+原文连接:https://www.cnblogs.com/ZaraNet/p/12099286.html</div><br>
+    <h2>一.Cookie是什么？</h2>
+<p>　　我的朋友问我cookie是什么，用来干什么的，可是我居然无法清楚明白简短地向其阐述cookie，这不禁让我陷入了沉思：为什么我无法解释清楚，我对学习的方法产生了怀疑！所以我们在学习一个东西的时候，一定要做到知其然知其所以然。</p>
+<blockquote>
+<p>　　HTTP协议本身是无状态的。什么是无状态呢，即服务器无法判断用户身份。Cookie实际上是一小段的文本信息）。客户端向服务器发起请求，如果服务器需要记录该用户状态，就使用response向客户端浏览器颁发一个Cookie。客户端浏览器会把Cookie保存起来。当浏览器再请求该网站时，浏览器把请求的网址连同该Cookie一同提交给服务器。服务器检查该Cookie，以此来辨认用户状态。</p>
+</blockquote>
+<p>　　打个比方，这就犹如你办理了银行卡，下次你去银行办业务，直接拿银行卡就行，不需要身份证。</p>
+<h2>二.在.NET Core中尝试</h2>
+<p>　　废话不多说，干就完了，现在我们创建ASP.NET Core MVC项目，撰写该文章时使用的.NET Core SDK 3.0 构建的项目，创建完毕之后我们无需安装任何包，</p>
+<p>　　但是我们需要在Startup中添加一些配置，用于Cookie相关的。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">public const string CookieScheme = "YourSchemeName";</span>
+        <span style="color: #0000ff;">public</span><span style="color: #000000;"> Startup(IConfiguration configuration)
+        {
+            Configuration </span>=<span style="color: #000000;"> configuration;
+        }
+        </span><span style="color: #0000ff;">public</span> IConfiguration Configuration { <span style="color: #0000ff;">get</span><span style="color: #000000;">; }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> This method gets called by the runtime. Use this method to add services to the container.</span>
+        <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> ConfigureServices(IServiceCollection services)
+        {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">CookieAuthenticationDefaults.AuthenticationScheme Cookies Default Value
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">you can change scheme</span>
+<span style="color: #000000;">            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options </span>=&gt;<span style="color: #000000;"> {
+                    options.LoginPath </span>= <span style="color: #800000;">"</span><span style="color: #800000;">/LoginOrSignOut/Index/</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+                });
+            services.AddControllersWithViews();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> is able to also use other services.
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">services.AddSingleton&lt;IConfigureOptions&lt;CookieAuthenticationOptions&gt;, ConfigureMyCookie&gt;();</span>
+        }</pre>
+</div>
+<p>在其中我们配置登录页面，其中&nbsp;<span class="cnblogs_code">AddAuthentication</span>&nbsp;中是我们的方案名称，这个是做什么的呢？很多小伙伴都懵懵懂懂表示很懵逼啊，我看很多人也是都写得默认，那它到底有啥用，经过我看AspNetCore源码发现它这个是可以做一些配置的。看下面的代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">internal</span> <span style="color: #0000ff;">class</span> ConfigureMyCookie : IConfigureNamedOptions&lt;CookieAuthenticationOptions&gt;<span style="color: #000000;">
+    {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> You can inject services here</span>
+        <span style="color: #0000ff;">public</span><span style="color: #000000;"> ConfigureMyCookie()
+        {}
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> Configure(<span style="color: #0000ff;">string</span><span style="color: #000000;"> name, CookieAuthenticationOptions options)
+        {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> Only configure the schemes you want
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">if (name == Startup.CookieScheme)
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">{
+                </span><span style="color: #008000;">//</span><span style="color: #008000;"> options.LoginPath = "/someotherpath";
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">}</span>
+<span style="color: #000000;">        }
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> Configure(CookieAuthenticationOptions options)
+            </span>=&gt;<span style="color: #000000;"> Configure(Options.DefaultName, options);
+    }</span></pre>
+</div>
+<p>在其中你可以定义某些策略，随后你直接改变&nbsp;<span class="cnblogs_code">CookieScheme</span>&nbsp;的变量就可以替换某些配置，在配置中一共有这几项，这无疑是帮助我们快速使用Cookie的好帮手~点个赞。</p>
+<p><br /><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/三分钟学会在ASP.NET Core MVC 中使用Cookie0.png" alt="" /></p>
+<p>在源码中可以看到Cookie默认保存的时间是14天，这个时间我们可以去选择，支持TimeSpan的那些类型。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span><span style="color: #000000;"> CookieAuthenticationOptions()
+        {
+            ExpireTimeSpan </span>= TimeSpan.FromDays(<span style="color: #800080;">14</span><span style="color: #000000;">);
+            ReturnUrlParameter </span>=<span style="color: #000000;"> CookieAuthenticationDefaults.ReturnUrlParameter;
+            SlidingExpiration </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+            Events </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> CookieAuthenticationEvents();
+        }</span></pre>
+</div>
+<p>接下来LoginOrOut Controller，我们模拟了登录和退出，通过&nbsp;<span class="cnblogs_code">SignInAsync</span>&nbsp;和&nbsp;<span class="cnblogs_code">SignOutAsync</span>&nbsp;方法。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">[HttpPost]
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">async</span> Task&lt;IActionResult&gt;<span style="color: #000000;"> Login(LoginModel loginModel)
+        {
+            </span><span style="color: #0000ff;">if</span> (loginModel.Username == <span style="color: #800000;">"</span><span style="color: #800000;">haozi zhang</span><span style="color: #800000;">"</span> &amp;&amp;<span style="color: #000000;">
+                loginModel.Password </span>== <span style="color: #800000;">"</span><span style="color: #800000;">123456</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">var</span> claims = <span style="color: #0000ff;">new</span> List&lt;Claim&gt;<span style="color: #000000;">
+                 {
+                 </span><span style="color: #0000ff;">new</span><span style="color: #000000;"> Claim(ClaimTypes.Name, loginModel.Username)
+                 };
+                ClaimsPrincipal principal </span>= <span style="color: #0000ff;">new</span> ClaimsPrincipal(<span style="color: #0000ff;">new</span> ClaimsIdentity(claims, <span style="color: #800000;">"</span><span style="color: #800000;">login</span><span style="color: #800000;">"</span><span style="color: #000000;">));
+                </span><span style="color: #0000ff;">await</span><span style="color: #000000;"> HttpContext.SignInAsync(principal);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">Just redirect to our index after logging in. </span>
+                <span style="color: #0000ff;">return</span> Redirect(<span style="color: #800000;">"</span><span style="color: #800000;">/Home/Index</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+            }
+            </span><span style="color: #0000ff;">return</span> View(<span style="color: #800000;">"</span><span style="color: #800000;">Index</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+        }
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;summary&gt;</span>
+        <span style="color: #808080;">///</span><span style="color: #008000;"> this action for web lagout 
+        </span><span style="color: #808080;">///</span> <span style="color: #808080;">&lt;/summary&gt;</span>
+<span style="color: #000000;">        [HttpGet]
+        </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> IActionResult Logout()
+        {
+            Task.Run(</span><span style="color: #0000ff;">async</span> () =&gt;<span style="color: #000000;">
+            {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">注销登录的用户，相当于ASP.NET中的FormsAuthentication.SignOut  </span>
+                <span style="color: #0000ff;">await</span><span style="color: #000000;"> HttpContext.SignOutAsync();
+            }).Wait();
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> View();
+        }</span></pre>
+</div>
+<p>就拿出推出的源码来看，其中获取了Handler的某些信息，随后将它转换为&nbsp;<span class="cnblogs_code">IAuthenticationSignOutHandler</span>&nbsp;接口类型，这个接口 as 接口，像是在地方实现了这个接口，然后将某些运行时的值引用传递到该接口上。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">virtual</span> <span style="color: #0000ff;">async</span> Task SignOutAsync(HttpContext context, <span style="color: #0000ff;">string</span><span style="color: #000000;"> scheme, AuthenticationProperties properties)
+        {
+            </span><span style="color: #0000ff;">if</span> (scheme == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">var</span> defaultScheme = <span style="color: #0000ff;">await</span><span style="color: #000000;"> Schemes.GetDefaultSignOutSchemeAsync();
+                scheme </span>= defaultScheme?<span style="color: #000000;">.Name;
+                </span><span style="color: #0000ff;">if</span> (scheme == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                {
+                    </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> InvalidOperationException($<span style="color: #800000;">"</span><span style="color: #800000;">No authenticationScheme was specified, and there was no DefaultSignOutScheme found. The default schemes can be set using either AddAuthentication(string defaultScheme) or AddAuthentication(Action&lt;AuthenticationOptions&gt; configureOptions).</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+                }
+            }
+            </span><span style="color: #0000ff;">var</span> handler = <span style="color: #0000ff;">await</span><span style="color: #000000;"> Handlers.GetHandlerAsync(context, scheme);
+            </span><span style="color: #0000ff;">if</span> (handler == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">await</span><span style="color: #000000;"> CreateMissingSignOutHandlerException(scheme);
+            }
+            </span><span style="color: #0000ff;">var</span> signOutHandler = handler <span style="color: #0000ff;">as</span><span style="color: #000000;"> IAuthenticationSignOutHandler;
+            </span><span style="color: #0000ff;">if</span> (signOutHandler == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">await</span><span style="color: #000000;"> CreateMismatchedSignOutHandlerException(scheme, handler);
+            }
+            </span><span style="color: #0000ff;">await</span><span style="color: #000000;"> signOutHandler.SignOutAsync(properties);
+        }</span></pre>
+</div>
+<p>其中&nbsp;<span class="cnblogs_code">GetHandlerAsync</span>&nbsp;中根据认证策略创建了某些实例，这里不再多说，因为源码深不见底，我也说不太清楚...只是想表达一下看源码的好处和坏处....</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">async</span> Task&lt;IAuthenticationHandler&gt; GetHandlerAsync(HttpContext context, <span style="color: #0000ff;">string</span><span style="color: #000000;"> authenticationScheme)
+        {
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (_handlerMap.ContainsKey(authenticationScheme))
+            {
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> _handlerMap[authenticationScheme];
+            }
+
+            </span><span style="color: #0000ff;">var</span> scheme = <span style="color: #0000ff;">await</span><span style="color: #000000;"> Schemes.GetSchemeAsync(authenticationScheme);
+            </span><span style="color: #0000ff;">if</span> (scheme == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+            }
+            </span><span style="color: #0000ff;">var</span> handler = (context.RequestServices.GetService(scheme.HandlerType) ??<span style="color: #000000;">
+                ActivatorUtilities.CreateInstance(context.RequestServices, scheme.HandlerType))
+                </span><span style="color: #0000ff;">as</span><span style="color: #000000;"> IAuthenticationHandler;
+            </span><span style="color: #0000ff;">if</span> (handler != <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            {
+                </span><span style="color: #0000ff;">await</span><span style="color: #000000;"> handler.InitializeAsync(scheme, context);
+                _handlerMap[authenticationScheme] </span>=<span style="color: #000000;"> handler;
+            }
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> handler;
+        }</span></pre>
+</div>
+<p>最后我们在页面上想要获取登录的信息，可以通过&nbsp;<span class="cnblogs_code">HttpContext.User.Claims</span>&nbsp;中的签名信息获取。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@using Microsoft.AspNetCore.Authentication
+</span>&lt;h2&gt;HttpContext.User.Claims&lt;/h2&gt;
+&lt;dl&gt;<span style="color: #000000;">
+    @foreach (</span><span style="color: #0000ff;">var</span> claim <span style="color: #0000ff;">in</span><span style="color: #000000;"> User.Claims)
+    {
+        </span>&lt;dt&gt;@claim.Type&lt;/dt&gt;
+        &lt;dd&gt;@claim.Value&lt;/dd&gt;<span style="color: #000000;">
+    }
+</span>&lt;/dl&gt;
+&lt;h2&gt;AuthenticationProperties&lt;/h2&gt;
+&lt;dl&gt;<span style="color: #000000;">
+    @foreach (</span><span style="color: #0000ff;">var</span> prop <span style="color: #0000ff;">in</span> (<span style="color: #0000ff;">await</span><span style="color: #000000;"> Context.AuthenticateAsync()).Properties.Items)
+    {
+        </span>&lt;dt&gt;@prop.Key&lt;/dt&gt;
+        &lt;dd&gt;@prop.Value&lt;/dd&gt;<span style="color: #000000;">
+    }
+</span>&lt;/dl&gt;</pre>
+</div>
+<h2>三.最后效果以及源码地址</h2>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/三分钟学会在ASP.NET Core MVC 中使用Cookie1.png" alt="" width="1023" height="477" /></p>
+<p>&nbsp;GitHub地址：<a href="https://github.com/zaranetCore/aspNetCore_JsonwebToken/tree/master/src/Identity.Cookie/DotNetCore_Cookie_Sample">https://github.com/zaranetCore/aspNetCore_JsonwebToken/tree/master/src/Identity.Cookie/DotNetCore_Cookie_Sample</a></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

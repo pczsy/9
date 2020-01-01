@@ -1,0 +1,381 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python — 装饰器、迭代器' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python — 装饰器、迭代器</center></div><div class='banquan'>原文出处:本文由博客园博主一直努力的小羊提供。<br/>
+原文连接:https://www.cnblogs.com/yangjie0906/p/11215825.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#装饰器">1 装饰器</a></li>
+        <li><a href="#迭代器">2 迭代器</a></li>
+        <li><a href="#可迭代对象">3 可迭代对象</a></li>
+        </ul>
+    </div>
+</div>
+<h3 id="装饰器">1 装饰器</h3>
+<h4 id="目的应用场景">1.1目的、应用场景：</h4>
+<ul>
+<li><p>目的：</p>
+<p>在不改变原函数内部代码的基础上，在函数执行前后自定义功能。</p></li>
+<li><p>应用场景：</p>
+<p>想要为函数扩展功能时，可以选择用装饰器。</p></li>
+</ul>
+<h4 id="编写装饰器和应用">1.2 编写装饰器和应用</h4>
+<ul>
+<li><ol>
+<li><p>基本装饰器</p>
+<pre><code><code># 装饰器的编写格式     （双层嵌套函数）
+def 外层函数(参数):
+   def 内层函数(*arg,**kwarg)
+       return 参数(*arg,**kwarg)
+   return 内层函数
+
+#装饰器的应用格式
+@外层函数
+def 要装饰的函数()
+   pass
+
+# 执行函数，自动触发装饰器了
+要装饰的函数()</code></pre>
+<p>练习题</p>
+<pre><code><code>def func(arg):
+    def inner():
+        print(&#39;before&#39;)
+        v = arg()
+        print(&#39;after&#39;)
+        return v 
+    return inner 
+
+def index():
+    print(&#39;123&#39;)
+    return &#39;666&#39;
+
+
+# 示例一
+v1 = index() # 执行index函数，打印123并返回666赋值给v1.
+
+# 示例二
+v2 = func(index) # v2是inner函数，arg=index函数
+index = 666 
+v3 = v2()
+
+# 示例三
+v4 = func(index)
+index = v4  # index ==&gt; inner 
+index()
+
+# 示例四
+index = func(index)
+index()</code></pre>
+<pre><code><code>def func(arg):
+    def inner():
+        v = arg()
+   return v 
+    return inner 
+
+# 第一步：执行func函数并将下面的函数参数传递，相当于：func(index)
+# 第二步：将func的返回值重新赋值给下面的函数名。 index = func(index)
+@func 
+def index():
+    print(123)
+    return 666
+
+print(index)</code></pre>
+<pre><code><code># 计算函数执行时间
+
+def wrapper(func):
+  def inner():
+        start_time = time.time()
+        v = func()
+        end_time = time.time()
+        print(end_time-start_time)
+        return v
+    return inner
+
+@wrapper
+def func1():
+    time.sleep(2)
+    print(123)
+@wrapper
+def func2():
+    time.sleep(1)
+    print(123)
+
+def func3():
+    time.sleep(1.5)
+    print(123)
+
+func1()</code></pre>
+<p>注：问题：为什么要加*arg、**kwarg</p>
+<p>理解：</p></li>
+</ol></li>
+<li><p>变量赋值</p>
+<p>```python<br />
+def func():<br />
+print(1)</p>
+<p>v1 = func<br />
+func = 666<br />
+```</p>
+<ul>
+<li><p>看看到底return的是什么？</p></li>
+<li><p>自己有找自己的，自己没有到上一级作用域去找</p></li>
+</ul></li>
+</ul>
+<p>背会：</p>
+<p><code>python      @xx  # index = xx(index) def index():          pass index()</code></p>
+<ul>
+<li><ol>
+<li><p>关于参数</p>
+<pre><code><code>def x(func):
+    def inner(a1):
+        return func(a1)
+    return inner 
+
+@x
+def index(a1):
+   pass</code></pre>
+<pre><code><code>def x(func):
+    def inner(a1,a2):
+        return func(a1,a2)
+    return inner 
+
+@x
+def index(a1,a2):
+   pass
+
+# index = inner
+index(1,2)
+
+# ################################### 参数统一的目的是为了给原来的index函数传参
+def x(func):
+    def inner(a1,a2):
+        return func()
+    return inner 
+
+@x
+def index():
+   pass
+# func = 原来的index函数u
+# index = inner
+index(1,2)</code></pre>
+<p>如果给好几个函数写一个统一的装饰器，怎么办？</p>
+<pre><code><code>def x1(func):
+    def inner(*args,**kwargs):
+        return func(*args,**kwargs)
+    return inner 
+
+@x1
+def f1():
+    pass
+
+@x1
+def f2(a1):
+    pass
+@x1
+def f3(a1,a2):
+    pass </code></pre>
+<p>装饰器建议写法：</p>
+<pre><code><code>def x1(func):
+    def inner(*args,**kwargs):
+        data = func(*args,**kwargs)
+        return data
+    return inner </code></pre></li>
+</ol></li>
+<li><ol>
+<li><p>带参数的装饰器</p>
+<pre><code><code># 第一步：执行 v1 = uuu(9)
+# 第二步：ret = v1(index)
+# 第三步：index = ret 
+@uuu(9)
+def index():
+    pass</code></pre>
+<pre><code><code># ################## 普通装饰器 #####################
+def wrapper(func):
+    def inner(*args,**kwargs):
+        print(&#39;调用原函数之前&#39;)
+        data = func(*args,**kwargs) # 执行原函数并获取返回值
+        print(&#39;调用员函数之后&#39;)
+        return data
+    return inner 
+
+@wrapper
+def index():
+    pass
+
+# ################## 带参数装饰器 #####################
+def x(counter):
+    def wrapper(func):
+        def inner(*args,**kwargs):
+            data = func(*args,**kwargs) # 执行原函数并获取返回值
+            return data
+        return inner 
+   return wrapper 
+
+@x(9)
+def index():
+    pass</code></pre>
+<p>练习题</p>
+<pre><code><code># 写一个带参数的装饰器，实现：参数是多少，被装饰的函数就要执行多少次，把每次结果添加到列表中，最终返回列表。
+def xxx(counter):![](https://img2018.cnblogs.com/blog/1646753/201907/1646753-20190719213053775-1588807446.png)
+
+
+    print(&#39;x函数&#39;)
+    def wrapper(func):
+        print(&#39;wrapper函数&#39;)
+        def inner(*args,**kwargs):
+            v = []
+            for i in range(counter):
+                data = func(*args,**kwargs) # 执行原函数并获取返回值
+                v.append(data)
+            return v
+        return inner
+    return wrapper
+
+@xxx(5)
+def index():
+    return 8
+
+v = index()
+print(v)
+
+# 写一个带参数的装饰器，实现：参数是多少，被装饰的函数就要执行多少次，并返回最后一次执行的结果
+def xxx(counter):
+    print(&#39;x函数&#39;)
+    def wrapper(func):
+        print(&#39;wrapper函数&#39;)
+        def inner(*args,**kwargs):
+            for i in range(counter):
+                data = func(*args,**kwargs) # 执行原函数并获取返回值
+            return data
+        return inner
+    return wrapper
+
+@xxx(5)
+def index():
+    return 8
+
+v = index()
+print(v)
+# 写一个带参数的装饰器，实现：参数是多少，被装饰的函数就要执行多少次，并返回执行结果中最大的值。
+def xxx(counter):
+    print(&#39;x函数&#39;)
+    def wrapper(func):
+        print(&#39;wrapper函数&#39;)
+        def inner(*args,**kwargs):
+            value = 0
+            for i in range(counter):
+                data = func(*args,**kwargs) # 执行原函数并获取返回值
+                if data &gt; value:
+                    value = data 
+            return value
+        return inner
+    return wrapper
+
+@xxx(5)
+def index():
+    return 8
+
+v = index()
+print(v)</code></pre>
+<pre><code><code>def x(counter):
+    print(&#39;x函数&#39;)
+    def wrapper(func):
+        print(&#39;wrapper函数&#39;)
+        def inner(*args,**kwargs):
+            if counter:
+                return 123
+            return func(*args,**kwargs)
+        return inner
+    return wrapper
+
+@x(True)
+def fun990():
+    pass
+
+@x(False)
+def func10():
+    pass</code></pre></li>
+</ol></li>
+</ul>
+<h3 id="迭代器">2 迭代器</h3>
+<p>自己不会写迭代器，只需要会用。</p>
+<p>任务：请展示列表中所有的数据</p>
+<ul>
+<li><ol>
+<li><p>while + 索引 + 计数器</p></li>
+<li><p>迭代器，对 某种对象(str/list/tuple/dict/set类创建的对象)-可迭代对象中的元素进行逐一获取</p>
+<p>表象：具有_ _ next _ _方法且每次调用都获取可迭代对象中的元素（从前到后一个一个获取）。</p>
+<ul>
+<li><ol>
+<li><p>先将某对象（如列表）转换成迭代器</p>
+<p>v1 = iter([11,22,33,44])</p>
+<p>v1 = [11,22,33,44]_ _ iter _ <em>() </em></p></li>
+<li><p>迭代器想要获取每个值：反复调用(val = v1._ _ next _ _())</p>
+<pre><code><code>v1 = [11,22,33,44]
+
+# 列表转换成迭代器
+v2 = iter(v1)
+result1 = v2.__next__()
+print(result1)
+result2 = v2.__next__()
+print(result2)
+result3 = v2.__next__()
+print(result3)
+result4 = v2.__next__()
+print(result4)
+result5 = v2.__next__()   # v1只有4个元素，第五次获取就会报错：StopIteration
+print(result5)
+
+v1 = &quot;alex&quot;
+v2 = iter(v1)
+while True:
+    try:
+        val = v2.__next__()
+        print(val)
+    except Exception as e:
+        break</code></pre></li>
+<li><p>直到报错：StopIteration错误，表示已经迭代完毕。</p>
+<p><img src="./images/python — 装饰器、迭代器0.png" /></p></li>
+<li><p>如何判断一个对象是否是可迭代对象：内部是否有_ _ next _ _方法。</p></li>
+</ol></li>
+</ul></li>
+<li><p>for循环：</p>
+<pre><code><code>v1 = [11,22,33,44]
+
+# 1.内部会将v1转换成迭代器
+# 2.内部反复执行 迭代器.__next__()
+# 3.取完不报错
+for item in v1:
+    print(item)</code></pre></li>
+</ol></li>
+</ul>
+<h3 id="可迭代对象">3 可迭代对象</h3>
+<ul>
+<li><ol>
+<li><p>内部具有_ _ iter _ _()方法且返回一个迭代器</p>
+<pre><code><code>v1 = [11,22,33,44]
+result = v1.__iter__()</code></pre></li>
+<li><p>可以被for循环的</p></li>
+</ol></li>
+</ul>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

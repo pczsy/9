@@ -1,0 +1,147 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django和前端用ajax传输json等数据' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django和前端用ajax传输json等数据</center></div><div class='banquan'>原文出处:本文由博客园博主破竹提供。<br/>
+原文连接:https://www.cnblogs.com/pozhu15/p/11328509.html</div><br>
+    <p>需要传输的是下图中所有的input中客户端设置的数据</p>
+<p><img src="./images/Django和前端用ajax传输json等数据0.png" alt="" /></p>
+<p>整个页面是用js生成，代码不长，但是用了许多拼接，看起来开比较乱，页面的核心就是下面的部分，有一些关键参数部分就不放了，可以跳过这个</p>
+<p><img src="./images/Django和前端用ajax传输json等数据1.png" alt="" /></p>
+<p>下面开始重点，将表单中的数据以json在ajax发送给后端</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">function btnChange(values) {
+    var argList</span>=[<span style="color: #800000;">"</span><span style="color: #800000;">xxx</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">xxx</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">xxx</span><span style="color: #800000;">"</span>,<span style="color: #000000;">,
+       // 。。。这里的关键参数删了</span><span style="color: #000000;">
+        ];  
+    var dict </span>=<span style="color: #000000;"> {}; 
+    </span><span style="color: #0000ff;">for</span> (var i=0;i&lt;argList.length;i++<span style="color: #000000;">)
+    {
+        dict[argList[i]</span>+<span style="color: #800000;">"</span><span style="color: #800000;">qxl</span><span style="color: #800000;">"</span>]=$(<span style="color: #800000;">"</span><span style="color: #800000;">input[name=</span><span style="color: #800000;">"</span>+argList[i]+<span style="color: #800000;">"</span><span style="color: #800000;">qxl]</span><span style="color: #800000;">"</span><span style="color: #000000;">).val();
+        dict[argList[i]</span>+<span style="color: #800000;">"</span><span style="color: #800000;">kkx</span><span style="color: #800000;">"</span>]=$(<span style="color: #800000;">"</span><span style="color: #800000;">input[name=</span><span style="color: #800000;">"</span>+argList[i]+<span style="color: #800000;">"</span><span style="color: #800000;">kkx]</span><span style="color: #800000;">"</span><span style="color: #000000;">).val();
+    } 
+    console.log(dict); 
+    
+    $.ajax({
+        beforeSend : function(XMLHttpRequest){
+            </span>//XMLHttpRequest.setRequestHeader(<span style="color: #800000;">"</span><span style="color: #800000;">aadfasdfsdfasdsasasdcccc</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">ajax</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+        },
+
+        url:</span><span style="color: #800000;">"</span><span style="color: #800000;">/visualPage/getWarningSet/</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        type: </span><span style="color: #800000;">"</span><span style="color: #800000;">POST</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        dataType: </span><span style="color: #800000;">"</span><span style="color: #800000;">json</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        data:dict,
+        complete: function (data) {
+         </span>//console.log(<span style="color: #800000;">'</span><span style="color: #800000;">aaa</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        },
+        success:function(data){
+            console.log(data);
+           </span>// window.open(<span style="color: #800000;">"</span><span style="color: #800000;">/visualPage/returnWarning</span><span style="color: #800000;">"</span>,<span style="color: #800000;">""</span>,<span style="color: #800000;">"</span><span style="color: #800000;">width=800,height=600</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+            </span>// $(<span style="color: #800000;">"</span><span style="color: #800000;">.text</span><span style="color: #800000;">"</span><span style="color: #000000;">).text(data.message);
+        },        
+    });     
+     console.log(values.name);   </span>//slice(0,-3<span style="color: #000000;">) 
+    var warningshow</span>=document.getElementById(<span style="color: #800000;">"</span><span style="color: #800000;">warning</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+    warningshow.style.display</span>=<span style="color: #800000;">'</span><span style="color: #800000;">block</span><span style="color: #800000;">'</span><span style="color: #000000;">;
+
+}</span></pre>
+</div>
+<pre><code>url为请求的地址，type提交类型(post,get等)，dataType这里用json表示提交的数据格式为json，<br />data这里是要提交的数据，以字典形式，success为服务器成功响应后要执行的函数，</pre>
+<p>这里的格式和,分割符一定要注意，格式不对不会发送成功</p>
+<p>再看视图里面</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.views.decorators.csrf <span style="color: #0000ff;">import</span><span style="color: #000000;"> csrf_exempt
+@csrf_exempt
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> getWarningSet(request):
+    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> request.is_ajax():
+        </span><span style="color: #008000;">#</span><span style="color: #008000;">print(request.POST)</span>
+        elename1=<span style="color: #000000;">[
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">xxx</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">xxx</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">xxx</span><span style="color: #800000;">"</span>,<span style="color: #000000;">
+            #这里省略关键参数</span><span style="color: #000000;">
+        ] 
+        k</span>=<span style="color: #000000;">0
+        </span><span style="color: #0000ff;">while</span> k&lt;<span style="color: #000000;">len(elename1):
+            startArgsSet[elename1[k]][</span><span style="color: #800000;">"</span><span style="color: #800000;">qxl</span><span style="color: #800000;">"</span>]=request.POST.get(elename1[k]+<span style="color: #800000;">'</span><span style="color: #800000;">qxl</span><span style="color: #800000;">'</span>, <span style="color: #800000;">''</span><span style="color: #000000;">)
+            startArgsSet[elename1[k]][</span><span style="color: #800000;">"</span><span style="color: #800000;">kkx</span><span style="color: #800000;">"</span>]=request.POST.get(elename1[k]+<span style="color: #800000;">'</span><span style="color: #800000;">kkx</span><span style="color: #800000;">'</span>, <span style="color: #800000;">''</span><span style="color: #000000;">)
+            k</span>+=1<span style="color: #000000;">
+        bxml</span>=dicttoxml.dicttoxml(startArgsSet,custom_root=<span style="color: #800000;">'</span><span style="color: #800000;">warning</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        xml</span>=bxml.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        dom</span>=<span style="color: #000000;">parseString(xml)
+        pxml</span>=dom.toprettyxml(indent=<span style="color: #800000;">'</span>   <span style="color: #800000;">'</span><span style="color: #000000;">)
+        f</span>=open(os.path.join(settings.BASE_DIR,<span style="color: #800000;">'</span><span style="color: #800000;">visualModule/xmlData/warning.xml</span><span style="color: #800000;">'</span>),<span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span>,encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        f.write(pxml)
+        f.close()</span>
+    <span style="color: #0000ff;">return</span> <span style="color: #800000;">'</span><span style="color: #800000;">HTTP_</span><span style="color: #800000;">'<br />　　<br /></span></pre>
+</div>
+<pre><code><span>is_ajax()可以判断是否是ajax请求，如果前段是用get来发送不用检测</span></pre>
+<p>直接用request.POST.get（"json中的键值"）即可获取对应数据</p>
+<p>一般通过&nbsp;<code>return</code>&nbsp;<code class="python plain">JsonResponse(name_dict)这样来响应给前段数据，我这里没有进行这一步，只返回了一个字符串</code></p>
+<pre><code>return 'HTTP_'，</pre>
+<p><code class="python plain">这里是直接将数据转换为xml存储到服务器，只是为了序列化用户的设置，会有别的视图函数来专门解析xml到字典发送到前端，所以我使用ajax只是为了实时存储用户设置，并不会立即反馈给用户。<br /></code></p>
+<p><code class="python plain">ajax可以用来来传输json，字典，字符串，数组等格式的数据</code></p>
+<p>下面是ajax另一种格式，比上面的格式简化多了</p>
+<div class="cnblogs_code">
+<pre><code>$.get("/add/",{'a':a,'b':b}, <span style="color: #0000ff;">function</span><span style="color: #000000;">(ret){
+            $(</span>'#result'<span style="color: #000000;">).html(ret);
+        })</span></pre>
+</div>
+<p>还有JavaScript原生的用法，需要的可以自行选择</p>
+<div class="cnblogs_code">
+<pre><code> <span style="color: #0000ff;">var</span><span style="color: #000000;"> xmlhttp;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">创建ajax对象</span>
+    <span style="color: #0000ff;">if</span><span style="color: #000000;"> (window.XMLHttpRequest)
+    {</span><span style="color: #008000;">//</span><span style="color: #008000;"> code for IE7+, Firefox, Chrome, Opera, Safari</span>
+        xmlhttp=<span style="color: #0000ff;">new</span><span style="color: #000000;"> XMLHttpRequest();
+    }
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+    {</span><span style="color: #008000;">//</span><span style="color: #008000;"> code for IE6, IE5</span>
+        xmlhttp=<span style="color: #0000ff;">new</span> ActiveXObject("Microsoft.XMLHTTP"<span style="color: #000000;">);
+    } 
+    
+     </span><span style="color: #008000;">//</span><span style="color: #008000;">onreadystatechange 事件中的就绪状态时执行的函数：</span>
+    xmlhttp.onreadystatechange=<span style="color: #0000ff;">function</span><span style="color: #000000;">()
+    {
+        </span><span style="color: #0000ff;">if</span> (xmlhttp.readyState==4 &amp;&amp; xmlhttp.status==200<span style="color: #000000;">)
+        {
+            document.getElementById(</span>"myDiv").innerHTML=<span style="color: #000000;">xmlhttp.responseText;
+            
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">xml</span>
+            xmlDoc=<span style="color: #000000;">xmlhttp.responseXML;
+            txt</span>=""<span style="color: #000000;">;
+            x</span>=xmlDoc.getElementsByTagName("ARTIST"<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">for</span> (i=0;i&lt;x.length;i++<span style="color: #000000;">)
+            {
+                txt</span>=txt + x[i].childNodes[0].nodeValue + "&lt;br&gt;"<span style="color: #000000;">;
+            }
+            document.getElementById(</span>"myDiv").innerHTML=<span style="color: #000000;">txt;
+        }
+    }
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">向服务器发送请求</span>
+    xmlhttp.open("POST","ajax_test.html",<span style="color: #0000ff;">true</span><span style="color: #000000;">);
+    xmlhttp.setRequestHeader(</span>"Content-type","application/x-www-form-urlencoded"<span style="color: #000000;">);
+    xmlhttp.send(</span>"fname=Henry&amp;lname=Ford");</pre>
+</div>
+<p>&nbsp;</p>
+<pre><code></pre>
+<pre><code></pre>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

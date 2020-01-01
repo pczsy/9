@@ -1,0 +1,174 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修迭代器，三元表达式，字典生成式，生成器' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>迭代器，三元表达式，字典生成式，生成器</center></div><div class='banquan'>原文出处:本文由博客园博主SetCreed提供。<br/>
+原文连接:https://www.cnblogs.com/setcreed/p/11581430.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#迭代器">迭代器</a><ul>
+        <li><a href="#可迭代对象">可迭代对象</a></li>
+        <li><a href="#迭代器对象">迭代器对象</a></li>
+        <li><a href="#for循环原理">for循环原理</a></li>
+        </ul></li>
+        <li><a href="#三元表达式">三元表达式</a></li>
+        <li><a href="#列表推导式">列表推导式</a></li>
+        <li><a href="#字典生成式">字典生成式</a></li>
+        <li><a href="#zip方法">zip()方法</a></li>
+        <li><a href="#生成器">生成器</a><ul>
+        <li><a href="#生成器表达式">生成器表达式</a></li>
+        </ul></li>
+        <li><a href="#递归">递归</a></li>
+        </ul>
+    </div>
+</div>
+<h1 id="迭代器">迭代器</h1>
+<h2 id="可迭代对象">可迭代对象</h2>
+<p>python中一切皆对象</p>
+<p>凡是有<code>__iter__</code>方法的对象，都是可迭代对象</p>
+<p>可迭代的对象：Python内置str、list、tuple、dict、set、file都是可迭代对象。</p>
+<pre><code><code>lt = [1,2,3,4]
+print(lt.__iter__())
+
+# 打印结果：
+&lt;list_iterator object at 0x00000211EB7565C0&gt;</code></pre>
+<h2 id="迭代器对象">迭代器对象</h2>
+<p>含有<code>__iter__</code>和<code>__next__</code>方法的对象就是迭代器对象</p>
+<p>为什么要有迭代器对象：提供了 不依赖索引取值的手段</p>
+<pre><code><code>dic = {&#39;a&#39;:1, &#39;b&#39;:2, &#39;c&#39;:3}
+dic_iter = dic.__iter__()
+print(dic_iter.__next__())
+print(dic_iter.__next__())
+print(dic_iter.__next__())</code></pre>
+<p>如果值取干净了，就会报错<code>StopIteration</code></p>
+<p>总结：</p>
+<p>迭代器对象：执行可迭代对象的<code>__iter__</code>方法，拿到的返回值就是迭代器对象。</p>
+<p>特点：</p>
+<ol>
+<li>内置<code>__next__</code>方法，执行该方法会拿到迭代器对象中的一个值</li>
+<li>内置有<code>__iter__</code>方法，执行该方法会拿到迭代器本身</li>
+<li>文件本身就是迭代器对象。</li>
+</ol>
+<p>缺点：</p>
+<ol>
+<li>取值麻烦，只能一个一个取，并且只能往后取，值取了就没了</li>
+<li>无法使用len()方法获取长度</li>
+</ol>
+<h2 id="for循环原理">for循环原理</h2>
+<p>for循环称为迭代器循环，in后面必须是可迭代对象</p>
+<pre><code><code>
+​```python
+dic = {&#39;a&#39;:1, &#39;b&#39;:2, &#39;c&#39;:3}
+dic_iter = dic.__iter__()
+while True:
+    try:
+        print(dic_iter.__next__())
+    except Exception:
+        break
+​```</code></pre>
+<p>总结：</p>
+<ul>
+<li>含有<code>__iter__</code>方法的就是可迭代对象，除了数字类型，其它都是可迭代对象。可迭代对象使用<code>__iter__</code>就会变成迭代器。</li>
+<li>含有<code>__next__</code>方法的就是迭代器对象，只有文件是迭代器对象。迭代器使用<code>__iter__</code>依然是迭代器</li>
+</ul>
+<h1 id="三元表达式">三元表达式</h1>
+<pre><code><code>x = 10
+y = 20
+
+if x &gt; y:
+    print(x)
+else:
+    print(y)
+    
+    
+    
+print(x if x &gt; y else y)   # 三元表达式</code></pre>
+<h1 id="列表推导式">列表推导式</h1>
+<pre><code><code>lt = [i for i in range(10)]
+print(lt)</code></pre>
+<h1 id="字典生成式">字典生成式</h1>
+<pre><code><code>dic = {i:i for i in range(10)}
+print(dic)</code></pre>
+<h1 id="zip方法">zip()方法</h1>
+<pre><code><code>res = zip([1,2,3],[&#39;a&#39;,&#39;b&#39;,&#39;c&#39;])    # res是一个迭代器，__next__返回元组
+print(res.__next__())
+print(res.__next__())
+print(res.__next__())
+
+# 打印结果：
+(1, &#39;a&#39;)
+(2, &#39;b&#39;)
+(3, &#39;c&#39;)</code></pre>
+<p>利用两个列表快速生成一个字典</p>
+<pre><code><code>lt1 = [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]
+lt2 = [1, 2, 3]
+res = zip(lt1, lt2)
+dic = {k: v for k, v in res}
+print(dic)
+
+# 打印结果：
+{&#39;a&#39;: 1, &#39;b&#39;: 2, &#39;c&#39;: 3}</code></pre>
+<h1 id="生成器">生成器</h1>
+<p>生成器：</p>
+<ul>
+<li>含有yield关键字的函数叫生成器。</li>
+<li>生成器本质上就是一个自定义的迭代器</li>
+</ul>
+<pre><code><code>def f():
+    yield 1   # 一个yield相当于一个next，可以暂停函数
+    yield 2
+
+f = f()
+print(f.__next__())
+print(f.__next__())</code></pre>
+<h2 id="生成器表达式">生成器表达式</h2>
+<pre><code><code>f = (i for i in range(10))
+for i in f:
+    print(i)</code></pre>
+<p>生成器表达式节省内存，能一个个取出值---&gt; 相当于老母鸡下蛋</p>
+<p>列表推导式，一下子就取出----&gt; 相当于一筐鸡蛋</p>
+<p>yield与return的比较：</p>
+<ul>
+<li>yield可以暂停函数，通过next取值</li>
+<li>return可以终止函数，通过调用函数拿到值</li>
+</ul>
+<h1 id="递归">递归</h1>
+<p>函数f内部直接或间接调用函数f本身</p>
+<pre><code><code>def f():   # 死递归
+    a = 1
+    print(a)
+    f()
+f()</code></pre>
+<p>每一次递归，不会结束函数，并且每一次递归都会开辟内存空间，如果一直开辟内存空间，内存就炸掉了，最多递归1000次。</p>
+<p>真正的递归必须要有退出条件</p>
+<pre><code><code>count = 0
+def func():
+    global count
+    count += 1
+    print(count)
+    if count == 100:
+        return 
+    func()
+
+func()</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

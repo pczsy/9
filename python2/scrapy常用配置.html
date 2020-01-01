@@ -1,0 +1,86 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修scrapy常用配置' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>scrapy常用配置</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11728817.html</div><br>
+    <h2 id="一.基本配置">一.基本配置</h2>
+<h3 id="项目名称">1.项目名称</h3>
+<h3 id="爬虫应用路径">2.爬虫应用路径</h3>
+<p>SPIDER_MODULES = ['Amazon.spiders']<br />
+NEWSPIDER_MODULE = 'Amazon.spiders'</p>
+<h3 id="客户端user-agent请求头">3.客户端User-Agent请求头</h3>
+<p>USER_AGENT = 'Amazon (+<a href="http://www.yourdomain.com" class="uri">http://www.yourdomain.com</a>)'</p>
+<h3 id="是否遵循爬虫协议">4.是否遵循爬虫协议</h3>
+<p>ROBOTSTXT_OBEY = False</p>
+<h3 id="是否支持cookiecookiejar进行操作cookie">5.是否支持cookie，cookiejar进行操作cookie</h3>
+<p>COOKIES_ENABLED = True</p>
+<h3 id="telnet用于查看当前爬虫的">6.Telnet用于查看当前爬虫的</h3>
+<p>TELNETCONSOLE_ENABLED = False<br />
+TELNETCONSOLE_HOST = '127.0.0.1'<br />
+TELNETCONSOLE_PORT = [6023,]</p>
+<h3 id="全局设置使用的请求头">7.全局设置使用的请求头</h3>
+<pre><code><code>DEFAULT_REQUEST_HEADERS = {  
+&#39;Accept&#39;: &#39;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#39;,  
+&#39;Accept-Language&#39;: &#39;en&#39;,
+}</code></pre>
+<h3 id="局部设置使用的请求头">8.局部设置使用的请求头</h3>
+<pre class="python"><code>#爬虫程序类中设置
+    custom_settings = {
+        &#39;DEFAULT_REQUEST_HEADERS&#39; : {
+            &#39;Accept&#39;: &#39;text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8&#39;,
+            &#39;Accept-Language&#39;: &#39;en&#39;,
+            &quot;User-Agent&quot;:&#39;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.142 Safari/537.36&#39;
+        }
+    }
+</code></pre>
+<h2 id="二.并发和延迟">二.并发和延迟</h2>
+<h3 id="下载器总共最大处理的并发请求数">1.下载器总共最大处理的并发请求数</h3>
+<p>CONCURRENT_REQUESTS = 32<code>默认值16</code></p>
+<h3 id="每个域名能够被执行的最大并发请求数目">2.每个域名能够被执行的最大并发请求数目</h3>
+<p>CONCURRENT_REQUESTS_PER_DOMAIN = 16<code>默认值8</code></p>
+<h3 id="能够被单个ip处理的并发请求数">3.能够被单个IP处理的并发请求数</h3>
+<p><code>默认值0，代表无限制，需要注意两点</code></p>
+<ul>
+<li>如果不为零，那CONCURRENT_REQUESTS_PER_DOMAIN将被忽略，即并发数的限制是按照每个IP来计算，而不是每个域名</li>
+<li>该设置也影响DOWNLOAD_DELAY，如果该值不为零，那么DOWNLOAD_DELAY下载延迟是限制每个IP而不是每个域<br />
+CONCURRENT_REQUESTS_PER_IP = 16</li>
+</ul>
+<h3 id="如果没有开启智能限速">4.如果没有开启智能限速</h3>
+<p><code>这个值就代表一个规定死的值，代表对同一网址延迟请求的秒数</code></p>
+<p>DOWNLOAD_DELAY = 3</p>
+<h3 id="延迟">5.延迟</h3>
+<p><code>开启True，默认False</code><br />
+AUTOTHROTTLE_ENABLED = True<br />
+<code>起始的延迟</code><br />
+AUTOTHROTTLE_START_DELAY = 5<br />
+<code>最小延迟</code><br />
+DOWNLOAD_DELAY = 3<br />
+<code>最大延迟</code><br />
+AUTOTHROTTLE_MAX_DELAY = 10</p>
+<p><code>每秒并发请求数的平均值</code></p>
+<p>AUTOTHROTTLE_TARGET_CONCURRENCY = 16.0<code>不能高于 CONCURRENT_REQUESTS_PER_DOMAIN或CONCURRENT_REQUESTS_PER_IP</code></p>
+<h3 id="调试">6.调试</h3>
+<p>AUTOTHROTTLE_DEBUG = True<br />
+CONCURRENT_REQUESTS_PER_DOMAIN = 16<br />
+CONCURRENT_REQUESTS_PER_IP = 16</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

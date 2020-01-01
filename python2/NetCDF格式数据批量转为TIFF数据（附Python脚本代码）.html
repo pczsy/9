@@ -1,0 +1,165 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修NetCDF格式数据批量转为TIFF数据（附Python脚本代码）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>NetCDF格式数据批量转为TIFF数据（附Python脚本代码）</center></div><div class='banquan'>原文出处:本文由博客园博主DQTDQT提供。<br/>
+原文连接:https://www.cnblogs.com/xsman/p/11298685.html</div><br>
+    <p>博客小序：NetCDF格式数据广泛应用于科学数据的存储，最近几日自己利用python处理了一些NetCDF数据，特撰此博文以记之。<br />
+参考博客：<br />
+<a href="https://www.cnblogs.com/shoufengwei/p/9068379.html" class="uri">https://www.cnblogs.com/shoufengwei/p/9068379.html</a><br />
+<a href="https://blog.csdn.net/EWBA_GIS_RS_ER/article/details/84076201" class="uri">https://blog.csdn.net/EWBA_GIS_RS_ER/article/details/84076201</a><br />
+<a href="http://www.clarmy.net/2018/11/01/python%E8%AF%BB%E5%8F%96nc%E6%96%87%E4%BB%B6%E7%9A%84%E5%85%A5%E9%97%A8%E7%BA%A7%E6%93%8D%E4%BD%9C/">http://www.clarmy.net/2018/11/01/python%E8%AF%BB%E5%8F%96nc%E6%96%87%E4%BB%B6%E7%9A%84%E5%85%A5%E9%97%A8%E7%BA%A7%E6%93%8D%E4%BD%9C/</a></p>
+<h2 id="netcdf数据简介">1.NetCDF数据简介</h2>
+<p>NetCDF官方文档<br />
+<a href="https://www.unidata.ucar.edu/software/netcdf/docs/netcdf_introduction.html" class="uri">https://www.unidata.ucar.edu/software/netcdf/docs/netcdf_introduction.html</a></p>
+<h2 id="python对netcdf数据基本操作">2.Python对NetCDF数据基本操作</h2>
+<p>python中专门用于处理NetCDF数据的库为netCDF4库，需在自己的python路径中安装</p>
+<pre><code><code>In[1]:import netCDF4 as nc #模块导入 
+
+In[2]:data = &#39;F:\\data___python_test\\nc_to_tif\\nc\\ndvi3g_geo_v1_1990_0106.nc4&#39;
+      nc_data = nc.Dataset(data)    #利用.Dataset()方法读取nc数据
+      nc_data
+Out[2]: &lt;type &#39;netCDF4._netCDF4.Dataset&#39;&gt;
+
+In[3]:nc_data.variables  #以存储ndvi的nc数据为例，查看nc文件包含的变量
+Out[3]:OrderedDict([(u&#39;lon&#39;, &lt;type &#39;netCDF4._netCDF4.Variable&#39;&gt;
+          float64 lon(lon)
+          unlimited dimensions: 
+          current shape = (4320,)
+          filling on, default _FillValue of 9.96920996839e+36 used),
+         (u&#39;lat&#39;, &lt;type &#39;netCDF4._netCDF4.Variable&#39;&gt;
+          float64 lat(lat)
+          unlimited dimensions: 
+          current shape = (2160,)
+          filling on, default _FillValue of 9.96920996839e+36 used),
+         (u&#39;time&#39;, &lt;type &#39;netCDF4._netCDF4.Variable&#39;&gt;
+          float64 time(time)
+          unlimited dimensions: 
+          current shape = (12,)
+          filling on, default _FillValue of 9.96920996839e+36 used),
+         (u&#39;satellites&#39;, &lt;type &#39;netCDF4._netCDF4.Variable&#39;&gt;
+          int16 satellites(time)
+          unlimited dimensions: 
+          current shape = (12,)
+          filling on, default _FillValue of -32767 used),
+         (u&#39;ndvi&#39;, &lt;type &#39;netCDF4._netCDF4.Variable&#39;&gt;
+          int16 ndvi(time, lat, lon)
+              units: 1
+              scale: x 10000
+              missing_value: -5000.0
+              valid_range: [-0.3  1. ]
+          unlimited dimensions: 
+          current shape = (12, 2160, 4320)
+          filling on, default _FillValue of -32767 used),
+         (u&#39;percentile&#39;, &lt;type &#39;netCDF4._netCDF4.Variable&#39;&gt;
+          int16 percentile(time, lat, lon)
+              units: %
+              scale: x 10
+              flags: flag 0: from data                flag 1: spline interpolation     flag 2: possible snow/cloud cover
+              valid_range: flag*2000 + [0 1000]
+          unlimited dimensions: 
+          current shape = (12, 2160, 4320)
+          filling on, default _FillValue of -32767 used)])
+
+In[4]:ndvi = nc_data.variables[&#39;ndvi&#39;] #单独查看nc文件中存储的变量信息
+      ndvi
+Out[4]:&lt;type &#39;netCDF4._netCDF4.Variable&#39;&gt;
+       int16 ndvi(time, lat, lon)
+       units: 1
+       scale: x 10000
+       missing_value: -5000.0
+       valid_range: [-0.3  1. ]
+       unlimited dimensions: 
+       current shape = (12, 2160, 4320)
+       filling on, default _FillValue of -32767 used</code></pre>
+<h2 id="代码利用python将netcdf文件转存为tiff文件">3.代码——利用Python将NetCDF文件转存为Tiff文件</h2>
+<p>此代码是自己在处理NDVI数据时所写的脚本，目的是将每一期NDVI的NC格式数据提取并另存为12期的TIFF数据，便于后期分析处理。</p>
+<pre><code><code># -*- coding: utf-8 -*-
+
+# 模块导入  
+import numpy as np
+import netCDF4 as nc
+from osgeo import gdal,osr,ogr
+import os
+import glob
+
+# 单个nc数据ndvi数据读取为多个tif文件，并将ndvi值化为-1-1之间
+def NC_to_tiffs(data,Output_folder):
+    nc_data_obj = nc.Dataset(data)
+    Lon = nc_data_obj.variables[&#39;lon&#39;][:]
+    Lat = nc_data_obj.variables[&#39;lat&#39;][:]
+    ndvi_arr = np.asarray(nc_data_obj.variables[&#39;ndvi&#39;])  #将ndvi数据读取为数组
+    ndvi_arr_float = ndvi_arr.astype(float)/10000 #将int类型改为float类型,并化为-1 - 1之间
+
+    #影像的左上角和右下角坐标
+    LonMin,LatMax,LonMax,LatMin = [Lon.min(),Lat.max(),Lon.max(),Lat.min()] 
+
+    #分辨率计算
+    N_Lat = len(Lat) 
+    N_Lon = len(Lon)
+    Lon_Res = (LonMax - LonMin) /(float(N_Lon)-1)
+    Lat_Res = (LatMax - LatMin) / (float(N_Lat)-1)
+
+    for i in range(len(ndvi_arr[:])):
+        #创建.tif文件
+        driver = gdal.GetDriverByName(&#39;GTiff&#39;)
+        out_tif_name = Output_folder + &#39;\\&#39;+ data.split(&#39;\\&#39;)[-1].split(&#39;.&#39;)[0] + &#39;_&#39; + str(i+1) + &#39;.tif&#39;
+        out_tif = driver.Create(out_tif_name,N_Lon,N_Lat,1,gdal.GDT_Float32) 
+     
+        # 设置影像的显示范围
+        #-Lat_Res一定要是-的
+        geotransform = (LonMin,Lon_Res, 0, LatMax, 0, -Lat_Res)
+        out_tif.SetGeoTransform(geotransform)
+        
+        #获取地理坐标系统信息，用于选取需要的地理坐标系统
+        srs = osr.SpatialReference()
+        srs.ImportFromEPSG(4326) # 定义输出的坐标系为&quot;WGS 84&quot;，AUTHORITY[&quot;EPSG&quot;,&quot;4326&quot;]
+        out_tif.SetProjection(srs.ExportToWkt()) # 给新建图层赋予投影信息
+
+        #数据写出
+        out_tif.GetRasterBand(1).WriteArray(ndvi_arr_float[i]) # 将数据写入内存，此时没有写入硬盘
+        out_tif.FlushCache() # 将数据写入硬盘
+        out_tif = None # 注意必须关闭tif文件
+
+def main():
+    Input_folder = &#39;F:\\data___python_test\\nc_to_tif\\nc&#39;
+    Output_folder = &#39;F:\\data___python_test\\nc_to_tif\\tif_result&#39;
+
+    # 读取所有nc数据
+    data_list = glob.glob(Input_folder + &#39;\\*.nc4&#39;)
+
+    for i in range(len(data_list)):
+        data = data_list[i]
+        NC_to_tiffs(data,Output_folder)
+        print data + &#39;-----转tif成功&#39;
+    
+    print&#39;----转换结束----&#39;
+
+main()</code></pre>
+<hr />
+<p>本文作者：DQTDQT<br />
+限于作者水平有限，如文中存在任何错误，欢迎不吝指正、交流。</p>
+<p>联系方式：<br />
+QQ:1426097423<br />
+E-mail：duanquntaoyx@163.com</p>
+<p>本文版权归作者和博客园共有，欢迎转载、交流，但未经作者同意必须保留此段声明，且在文章页面明显位置给出原文链接，如果觉得本文对您有益，欢迎点赞、探讨。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

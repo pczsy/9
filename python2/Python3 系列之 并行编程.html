@@ -1,0 +1,815 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python3 系列之 并行编程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python3 系列之 并行编程</center></div><div class='banquan'>原文出处:本文由博客园博主hippieZhou提供。<br/>
+原文连接:https://www.cnblogs.com/hippieZhou/p/10205308.html</div><br>
+    <h2 id="进程和线程">进程和线程</h2>
+<p>进程是程序运行的实例。一个进程里面可以包含多个线程，因此同一进程下的多个线程之间可以共享线程内的所有资源，它是操作系统动态运行的基本单元；每一个线程是进程下的一个实例，可以动态调度和独立运行，由于线程和进程有很多类似的特点，因此，线程又被称为轻量级的进程。线程的运行在进程之下，进程的存在依赖于线程；</p>
+<h2 id="开胃菜">开胃菜</h2>
+<p>基于 <strong>Python3</strong> 创建一个简单的进程示例</p>
+<pre><code><code>from threading import Thread
+from time import sleep
+
+
+class CookBook(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+        self.message = &quot;Hello Parallel Python CookBook!!\n&quot;
+
+    def print_message(self):
+        print(self.message)
+
+    def run(self):
+        print(&quot;Thread Starting\n&quot;)
+        x = 0
+        while x &lt; 10:
+            self.print_message()
+            sleep(2)
+            x += 1
+        print(&quot;Thread Ended!\n&quot;)
+
+
+print(&quot;Process Started&quot;)
+hello_python = CookBook()
+
+hello_python.start()
+print(&quot;Process Ended&quot;)</code></pre>
+<blockquote>
+<p>需要注意的是，永远不要让线程在后台默默执行，当其执行完毕后要及时释放资源。</p>
+</blockquote>
+<h2 id="基于线程的并行">基于线程的并行</h2>
+<p>多线程编程一般使用共享内存空间进行线程间的通信，这就使管理内存空间成为多线程编程的关键。Python 通过标准库 <strong>threading</strong> 模块来管理线程，具有以下的组件：</p>
+<ul>
+<li>线程对象</li>
+<li>Lock 对象</li>
+<li>RLock 对象</li>
+<li>信号对象</li>
+<li>条件对象</li>
+<li>事件对象</li>
+</ul>
+<h2 id="定义一个线程">定义一个线程</h2>
+<h3 id="基本语法">基本语法</h3>
+<p>示例代码如下所示</p>
+<pre><code><code>import threading
+
+
+def function(i):
+    print(&quot;function called by thread: {0}&quot;.format(i))
+    return
+
+
+threads = []
+for i in range(5):
+    t = threading.Thread(target=function, args=(i,))
+    threads.append(t)
+    t.start()
+
+lambda t, threads: t.join()</code></pre>
+<blockquote>
+<p>需要注意的是，线程创建后并不会自动运行，需要主动调用 <strong>start()</strong> 方法来启动线程，<strong>join()</strong> 会让调用它的线程被阻塞直到执行结束。（PS：可通过调用 <strong>t.setDaemon(True)</strong> 使其为后台线程避免主线程被阻塞）</p>
+</blockquote>
+<h3 id="线程定位">线程定位</h3>
+<p>示例代码如下所示</p>
+<pre><code><code>import threading
+import time
+
+
+def first_function():
+    print(&quot;{0} is starting&quot;.format(threading.currentThread().getName()))
+    time.sleep(2)
+    print(&quot;{0} is Exiting&quot;.format(threading.currentThread().getName()))
+
+
+def second_function():
+    print(&quot;{0} is starting&quot;.format(threading.currentThread().getName()))
+    time.sleep(2)
+    print(&quot;{0} is Exiting&quot;.format(threading.currentThread().getName()))
+
+
+def third_function():
+    print(&quot;{0} is starting&quot;.format(threading.currentThread().getName()))
+    time.sleep(2)
+    print(&quot;{0} is Exiting&quot;.format(threading.currentThread().getName()))
+
+if __name__ == &quot;__main__&quot;:
+    t1 = threading.Thread(target=first_function,name=&quot;first&quot;)
+    t2 = threading.Thread(target=second_function,name=&quot;second&quot;)
+    t3 = threading.Thread(target=third_function,name=&quot;third&quot;)
+
+    t1.start()
+    t2.start()
+    t3.start()
+    t1.join()
+    t2.join()
+    t3.join()</code></pre>
+<blockquote>
+<p>通过设置 <strong>threading.Thread()</strong> 函数的 <em>name</em> 参数来设置线程名称，通过 <strong>threading.currentThread().getName()</strong> 来获取当前线程名称；线程的默认名称会以 <strong>Thread-{i}</strong> 格式来定义</p>
+</blockquote>
+<h3 id="自定义一个线程对象">自定义一个线程对象</h3>
+<p>示例代码如下所示</p>
+<pre><code><code>import threading
+import time
+
+exitFlag = 0
+
+
+class myThread(threading.Thread):
+    def __init__(self, threadID, name, counter):
+        threading.Thread.__init__(self)
+        self.threadID = threadID
+        self.name = name
+        self.counter = counter
+
+    def run(self):
+        print(&quot;Starting:{0}&quot;.format(self.name))
+        print_time(self.name, self.counter, 5)
+        print(&quot;Exiting:{0}&quot;.format(self.name))
+
+
+def print_time(threadName, delay, counter):
+    while counter:
+        if exitFlag:
+            thread.exit()
+        time.sleep(delay)
+        print(&quot;{0} {1}&quot;.format(threadName, time.ctime(time.time())))
+        counter -= 1
+
+
+t1 = myThread(1, &quot;Thread-1&quot;, 1)
+t2 = myThread(2, &quot;Thread-2&quot;, 1)
+
+t1.start()
+t2.start()
+
+t1.join()
+t2.join()
+
+print(&quot;Exiting Main Thread.&quot;)</code></pre>
+<blockquote>
+<p>如果想自定义一个线程对象，首先就是要定义一个继承 <strong>threading.Thread</strong> 类的子类，实现<strong>构造函数</strong>， 并重写 <strong>run()</strong> 方法即可。</p>
+</blockquote>
+<h3 id="线程同步">线程同步</h3>
+<h4 id="lock">Lock</h4>
+<p>示例代码如下所示</p>
+<pre><code><code>import threading
+
+shared_resource_with_lock = 0
+shared_resource_with_no_lock = 0
+COUNT = 100000
+shared_resource_lock = threading.Lock()
+
+
+def increment_with_lock():
+    global shared_resource_with_lock
+    for i in range(COUNT):
+        shared_resource_lock.acquire()
+        shared_resource_with_lock += 1
+        shared_resource_lock.release()
+
+
+def decrement_with_lock():
+    global shared_resource_with_lock
+    for i in range(COUNT):
+        shared_resource_lock.acquire()
+        shared_resource_with_lock -= 1
+        shared_resource_lock.release()
+
+
+def increment_without_lock():
+    global shared_resource_with_no_lock
+    for i in range(COUNT):
+        shared_resource_with_no_lock += 1
+
+
+def decrement_wthout_lock():
+    global shared_resource_with_no_lock
+    for i in range(COUNT):
+        shared_resource_with_no_lock -= 1
+
+
+if __name__ == &quot;__main__&quot;:
+    t1 = threading.Thread(target=increment_with_lock)
+    t2 = threading.Thread(target=decrement_with_lock)
+    t3 = threading.Thread(target=increment_without_lock)
+    t4 = threading.Thread(target=decrement_wthout_lock)
+    t1.start()
+    t2.start()
+    t3.start()
+    t4.start()
+    t1.join()
+    t2.join()
+    t3.join()
+    t4.join()
+    print(&quot;the value of shared variable with lock management is :{0}&quot;.format(
+        shared_resource_with_lock))
+    print(&quot;the value of shared variable with race condition is :{0}&quot;.format(
+        shared_resource_with_no_lock))</code></pre>
+<blockquote>
+<p>通过 <strong>threading.Lock()</strong> 方法我们可以拿到线程锁，一般有两种操作方式：<strong>acquire()</strong> 和 <strong>release()</strong> 在两者之间是加锁状态，如果释放失败的话会显示 <strong>RuntimError()</strong> 的异常。</p>
+</blockquote>
+<h4 id="rlock">RLock</h4>
+<p>RLock 也叫递归锁，和 <strong>Lock</strong> 的区别在于：谁拿到谁释放,是通过 <strong>threading.RLock()</strong> 来拿到的；</p>
+<p>示例代码如下所示</p>
+<pre><code><code>import threading
+import time
+
+
+class Box(object):
+    lock = threading.RLock()
+
+    def __init__(self):
+        self.total_items = 0
+
+    def execute(self, n):
+        Box.lock.acquire()
+        self.total_items += n
+        Box.lock.release()
+
+    def add(self):
+        Box.lock.acquire()
+        self.execute(1)
+        Box.lock.release()
+
+    def remove(self):
+        Box.lock.acquire()
+        self.execute(-1)
+        Box.lock.release()
+
+
+def adder(box, items):
+    while items &gt; 0:
+        print(&quot;adding 1 item in the box&quot;)
+        box.add()
+        time.sleep(1)
+        items -= 1
+
+
+def remover(box, items):
+    while items &gt; 0:
+        print(&quot;removing 1 item in the box&quot;)
+        box.remove()
+        time.sleep(1)
+        items -= 1
+
+
+if __name__ == &quot;__main__&quot;:
+    items = 5
+    print(&quot;putting {0} items in the box&quot;.format(items))
+    box = Box()
+    t1 = threading.Thread(target=adder, args=(box, items))
+    t2 = threading.Thread(target=remover, args=(box, items))
+
+    t1.start()
+    t2.start()
+
+    t1.join()
+    t2.join()
+    print(&quot;{0} items still remain in the box&quot;.format(box.total_items))</code></pre>
+<h4 id="信号量">信号量</h4>
+<p>示例代码如下所示</p>
+<pre><code><code>import threading
+import time
+import random
+
+semaphore = threading.Semaphore(0)
+
+
+def consumer():
+    print(&quot;Consumer is waiting.&quot;)
+    semaphore.acquire()
+    print(&quot;Consumer notify:consumed item numbers {0}&quot;.format(item))
+
+
+def producer():
+    global item
+    time.sleep(10)
+    item = random.randint(0, 10000)
+    print(&quot;producer notify:produced item number {0}&quot;.format(item))
+    semaphore.release()
+
+
+if __name__ == &quot;__main__&quot;:
+    for i in range(0, 5):
+        t1 = threading.Thread(target=producer)
+        t2 = threading.Thread(target=consumer)
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+
+    print(&quot;program terminated.&quot;)</code></pre>
+<blockquote>
+<p>信号量初始化为 0 ，然后在两个并行线程中，通过调用 <strong>semaphore.acquire()</strong> 函数会阻塞消费者线程，直到 <strong>semaphore.release()</strong> 在生产者中被调用，这里模拟了<strong>生产者-消费者</strong> 模式来进行了测试；如果信号量的计数器到了0，就会阻塞 acquire() 方法，直到得到另一个线程的通知。如果信号量的计数器大于0，就会对这个值-1然后分配资源。</p>
+</blockquote>
+<h4 id="使用条件进行线程同步">使用条件进行线程同步</h4>
+<p>解释条件机制最好的例子还是生产者-消费者问题。在本例中，只要缓存不满，生产者一直向缓存生产；只要缓存不空，消费者一直从缓存取出（之后销毁）。当缓冲队列不为空的时候，生产者将通知消费者；当缓冲队列不满的时候，消费者将通知生产者。</p>
+<p>示例代码如下所示</p>
+<pre><code><code>from threading import Thread, Condition
+import time
+
+items = []
+condition = Condition()
+
+
+class consumer(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+
+    def consume(self):
+        global condition
+        global items
+        condition.acquire()
+        if len(items) == 0:
+            condition.wait()
+            print(&quot;Consumer notify:no item to consum&quot;)
+        items.pop()
+        print(&quot;Consumer notify: consumed 1 item&quot;)
+        print(&quot;Consumer notify: item to consume are:{0}&quot;.format(len(items)))
+
+        condition.notify()
+        condition.release()
+
+    def run(self):
+        for i in range(0, 20):
+            time.sleep(2)
+            self.consume()
+
+
+class producer(Thread):
+    def __init__(self):
+        Thread.__init__(self)
+
+    def produce(self):
+        global condition
+        global items
+        condition.acquire()
+        if len(items) == 10:
+            condition.wait()
+            print(&quot;Producer notify:items producted are:{0}&quot;.format(len(items)))
+            print(&quot;Producer notify:stop the production!!&quot;)
+        items.append(1)
+        print(&quot;Producer notify:total items producted:{0}&quot;.format(len(items)))
+        condition.notify()
+        condition.release()
+
+    def run(self):
+        for i in range(0, 20):
+            time.sleep(1)
+            self.produce()
+
+
+if __name__ == &quot;__main__&quot;:
+    producer = producer()
+    consumer = consumer()
+    producer.start()
+    consumer.start()
+    producer.join()
+    consumer.join()</code></pre>
+<blockquote>
+<p>通过 <strong>condition.acquire()</strong> 来获取锁对象，<strong>condition.wait()</strong> 会使当前线程进入阻塞状态，直到收到 <strong>condition.notify()</strong> 信号，同时，调用信号的通知的对象也要及时调用 <strong>condition.release()</strong> 来释放资源；</p>
+</blockquote>
+<h4 id="使用事件进行线程同步">使用事件进行线程同步</h4>
+<p>事件是线程之间用于通信的对。有的线程等待信号，有的线程发出信号。</p>
+<p>示例代码如下所示</p>
+<pre><code><code>import time
+from threading import Thread, Event
+import random
+
+items = []
+event = Event()
+
+
+class consumer(Thread):
+    def __init__(self, items, event):
+        Thread.__init__(self)
+        self.items = items
+        self.event = event
+
+    def run(self):
+        while True:
+            time.sleep(2)
+            self.event.wait()
+            item = self.items.pop()
+            print(&#39;Consumer notify:{0} popped from list by {1}&#39;.format(
+                item, self.name))
+
+
+class producer(Thread):
+    def __init__(self, integers, event):
+        Thread.__init__(self)
+        self.items = items
+        self.event = event
+
+    def run(self):
+        global item
+        for i in range(100):
+            time.sleep(2)
+            item = random.randint(0, 256)
+            self.items.append(item)
+            print(&#39;Producer notify: item  N° %d appended to list by %s&#39; %
+                  (item, self.name))
+            print(&#39;Producer notify: event set by %s&#39; % self.name)
+            self.event.set()
+            print(&#39;Produce notify: event cleared by %s &#39; % self.name)
+            self.event.clear()
+
+
+if __name__ == &quot;__main__&quot;:
+    t1 = producer(items, event)
+    t2 = consumer(items, event)
+    t1.start()
+    t2.start()
+    t1.join()
+    t2.join()</code></pre>
+<h4 id="使用-with-语法简化代码">使用 <strong>with</strong> 语法简化代码</h4>
+<pre><code><code>import threading
+import logging
+
+logging.basicConfig(level=logging.DEBUG,
+                    format=&#39;(%(threadName)-10s) %(message)s&#39;)
+
+
+def threading_with(statement):
+    with statement:
+        logging.debug(&quot;%s acquired via with&quot; % statement)
+
+
+def Threading_not_with(statement):
+    statement.acquire()
+    try:
+        logging.debug(&quot;%s acquired directly &quot; % statement)
+    finally:
+        statement.release()
+
+
+if __name__ == &quot;__main__&quot;:
+    lock = threading.Lock()
+    rlock = threading.RLock()
+    condition = threading.Condition()
+    mutex = threading.Semaphore(1)
+    threading_synchronization_list = [lock, rlock, condition, mutex]
+
+    for statement in threading_synchronization_list:
+        t1 = threading.Thread(target=threading_with, args=(statement,))
+        t2 = threading.Thread(target=Threading_not_with, args=(statement,))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()</code></pre>
+<h4 id="使用-queue-进行线程通信">使用 <strong>queue</strong> 进行线程通信</h4>
+<p><strong>Queue</strong> 常用的方法有以下四个：</p>
+<ul>
+<li>put()：往 queue 中添加一个元素</li>
+<li>get()：从 queue 中删除一个元素，并返回该元素</li>
+<li>task_done()：每次元素被处理的时候都需要调用这个方法</li>
+<li>join()：所有元素都被处理之前一直阻塞</li>
+</ul>
+<pre><code><code>from threading import Thread, Event
+from queue import Queue
+import time
+import random
+
+
+class producer(Thread):
+    def __init__(self, queue):
+        Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        for i in range(10):
+            item = random.randint(0, 256)
+            self.queue.put(item)
+            print(&quot;Producer notify: item item N° %d appended to queue by %s&quot; %
+                  (item, self.name))
+            time.sleep(1)
+
+
+class consumer(Thread):
+    def __init__(self, queue):
+        Thread.__init__(self)
+        self.queue = queue
+
+    def run(self):
+        while True:
+            item = self.queue.get()
+            print(&#39;Consumer notify : %d popped from queue by %s&#39; %
+                  (item, self.name))
+            self.queue.task_done()
+
+
+if __name__ == &quot;__main__&quot;:
+    queue = Queue()
+    t1 = producer(queue)
+    t2 = consumer(queue)
+    t3 = consumer(queue)
+    t4 = consumer(queue)
+    t1.start()
+    t2.start()
+    t3.start()
+    t4.start()
+    t1.join()
+    t2.join()
+    t3.join()
+    t4.join()</code></pre>
+<h2 id="基于进程的并行">基于进程的并行</h2>
+<p><strong>multiprocessing</strong> 是 Python 标准库中的模块，实现了共享内存机制。</p>
+<h2 id="异步编程">异步编程</h2>
+<h3 id="使用-concurrent.futures-模块">使用 <strong>concurrent.futures</strong> 模块</h3>
+<p>该模块具有线程池和进程池，管理并行编程任务、处理非确定性的执行流程、进程/线程同步等功能；此模块由以下部分组成</p>
+<ul>
+<li>concurrent.futures.Executor: 这是一个虚拟基类，提供了异步执行的方法。</li>
+<li>submit(function, argument): 调度函数（可调用的对象）的执行，将 argument 作为参数传入。</li>
+<li>map(function, argument): 将 argument 作为参数执行函数，以 异步 的方式。</li>
+<li>shutdown(Wait=True): 发出让执行者释放所有资源的信号。</li>
+<li>concurrent.futures.Future: 其中包括函数的异步执行。Future对象是submit任务（即带有参数的functions）到executor的实例。</li>
+</ul>
+<p>示例代码如下所示</p>
+<pre><code><code>import concurrent.futures
+import time
+
+number_list = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+
+def evaluate_item(x):
+    result_item = count(x)
+    return result_item
+
+
+def count(number):
+    for i in range(0, 1000000):
+        i = i + 1
+    return i * number
+
+
+if __name__ == &quot;__main__&quot;:
+    # 顺序执行
+    start_time = time.time()
+    for item in number_list:
+        print(evaluate_item(item))
+    print(&quot;Sequential execution in &quot; + str(time.time() - start_time), &quot;seconds&quot;)
+    # 线程池执行
+    start_time_1 = time.time()
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(evaluate_item, item)
+                   for item in number_list]
+        for future in concurrent.futures.as_completed(futures):
+            print(future.result())
+    print(&quot;Thread pool execution in &quot; +
+          str(time.time() - start_time_1), &quot;seconds&quot;)
+    # 线程池执行
+    start_time_2 = time.time()
+    with concurrent.futures.ProcessPoolExecutor(max_workers=5) as executor:
+        futures = [executor.submit(evaluate_item, item)
+                   for item in number_list]
+        for future in concurrent.futures.as_completed(futures):
+            print(future.result())
+    print(&quot;Process pool execution in &quot; +
+          str(time.time() - start_time_2), &quot;seconds&quot;)</code></pre>
+<h4 id="使用-asyncio-管理事件循环">使用 Asyncio 管理事件循环</h4>
+<p>Python 的 Asyncio 模块提供了管理事件、协程、任务和线程的方法，以及编写并发代码的原语。此模块的主要组件和概念包括：</p>
+<ul>
+<li>事件循环: 在Asyncio模块中，每一个进程都有一个事件循环。</li>
+<li>协程: 这是子程序的泛化概念。协程可以在执行期间暂停，这样就可以等待外部的处理（例如IO）完成之后，从之前暂停的地方恢复执行。</li>
+<li>Futures: 定义了 Future 对象，和 concurrent.futures 模块一样，表示尚未完成的计算。</li>
+<li>Tasks: 这是Asyncio的子类，用于封装和管理并行模式下的协程。</li>
+</ul>
+<p>Asyncio 提供了以下方法来管理事件循环：</p>
+<ul>
+<li>loop = get_event_loop(): 得到当前上下文的事件循环。</li>
+<li>loop.call_later(time_delay, callback, argument): 延后 time_delay 秒再执行 callback 方法。</li>
+<li>loop.call_soon(callback, argument): 尽可能快调用 callback, call_soon() 函数结束，主线程回到事件循环之后就会马上调用 callback 。</li>
+<li>loop.time(): 以float类型返回当前时间循环的内部时间。</li>
+<li>asyncio.set_event_loop(): 为当前上下文设置事件循环。</li>
+<li>asyncio.new_event_loop(): 根据此策略创建一个新的时间循环并返回。</li>
+<li>loop.run_forever(): 在调用 stop() 之前将一直运行。</li>
+</ul>
+<p>示例代码如下所示</p>
+<pre><code><code>import asyncio
+import datetime
+import time
+
+
+def fuction_1(end_time, loop):
+    print(&quot;function_1 called&quot;)
+    if(loop.time() + 1.0) &lt; end_time:
+        loop.call_later(1, fuction_2, end_time, loop)
+    else:
+        loop.stop()
+
+
+def fuction_2(end_time, loop):
+    print(&quot;function_2 called&quot;)
+    if(loop.time() + 1.0) &lt; end_time:
+        loop.call_later(1, function_3, end_time, loop)
+    else:
+        loop.stop()
+
+
+def function_3(end_time, loop):
+    print(&quot;function_3 called&quot;)
+    if(loop.time() + 1.0) &lt; end_time:
+        loop.call_later(1, fuction_1, end_time, loop)
+    else:
+        loop.stop()
+
+
+def function_4(end_time, loop):
+    print(&quot;function_4 called&quot;)
+    if(loop.time() + 1.0) &lt; end_time:
+        loop.call_later(1, function_4, end_time, loop)
+    else:
+        loop.stop()
+
+
+loop = asyncio.get_event_loop()
+
+end_loop = loop.time() + 9.0
+loop.call_soon(fuction_1, end_loop, loop)
+loop.run_forever()
+loop.close()</code></pre>
+<h4 id="使用-asyncio-管理协程">使用 Asyncio 管理协程</h4>
+<p>示例代码如下所示</p>
+<pre><code><code>import asyncio
+import time
+from random import randint
+
+
+@asyncio.coroutine
+def StartState():
+    print(&quot;Start State called \n&quot;)
+    input_val = randint(0, 1)
+    time.sleep(1)
+    if input_val == 0:
+        result = yield from State2(input_val)
+    else:
+        result = yield from State1(input_val)
+    print(&quot;Resume of the Transition:\nStart State calling&quot; + result)
+
+
+@asyncio.coroutine
+def State1(transition_value):
+    outputVal = str(&quot;State 1 with transition value=%s \n&quot; % (transition_value))
+    input_val = randint(0, 1)
+    time.sleep(1)
+    print(&quot;...Evaluating...&quot;)
+    if input_val == 0:
+        result = yield from State3(input_val)
+    else:
+        result = yield from State2(input_val)
+
+
+@asyncio.coroutine
+def State2(transition_value):
+    outputVal = str(&quot;State 2 with transition value= %s \n&quot; %
+                    (transition_value))
+    input_Val = randint(0, 1)
+    time.sleep(1)
+    print(&quot;...Evaluating...&quot;)
+    if (input_Val == 0):
+        result = yield from State1(input_Val)
+    else:
+        result = yield from State3(input_Val)
+    result = &quot;State 2 calling &quot; + result
+    return outputVal + str(result)
+
+
+@asyncio.coroutine
+def State3(transition_value):
+    outputVal = str(&quot;State 3 with transition value = %s \n&quot; %
+                    (transition_value))
+    input_val = randint(0, 1)
+    time.sleep(1)
+    print(&quot;...Evaluating...&quot;)
+    if(input_val == 0):
+        result = yield from State1(input_val)
+    else:
+        result = yield from State2(input_val)
+    result = &quot;State 3 calling &quot; + result
+    return outputVal + str(result)
+
+
+@asyncio.coroutine
+def EndState(transition_value):
+    outputVal = str(&quot;End State With transition value = %s \n&quot; %
+                    (transition_value))
+    print(&quot;...Stop Computation...&quot;)
+    return outputVal
+
+
+if __name__ == &quot;__main__&quot;:
+    print(&quot;Finites State Machine simulation with Asyncio Coroutine&quot;)
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(StartState())</code></pre>
+<h4 id="使用-asyncio-控制任务">使用 Asyncio 控制任务</h4>
+<p>示例代码如下所示</p>
+<pre><code><code>import asyncio
+
+
+@asyncio.coroutine
+def factorial(number):
+    f = 1
+    for i in range(2, number + 1):
+        print(&quot;Asyncio.Task:Compute factorial(%s)&quot; % (i))
+        yield from asyncio.sleep(1)
+        f *= i
+    print(&quot;Asyncio.Task - factorial(%s) = %s&quot; % (number, f))
+
+
+@asyncio.coroutine
+def fibonacci(number):
+    a, b = 0, 1
+    for i in range(number):
+        print(&quot;Asyncio.Task:Complete fibonacci (%s)&quot; % (i))
+        yield from asyncio.sleep(1)
+        a, b = b, a+b
+    print(&quot;Asyncio.Task - fibonaci (%s)= %s&quot; % (number, a))
+
+
+@asyncio.coroutine
+def binomialCoeff(n, k):
+    result = 1
+    for i in range(1, k+1):
+        result = result * (n-i+1) / i
+        print(&quot;Asyncio.Task:Compute binomialCoeff (%s)&quot; % (i))
+        yield from asyncio.sleep(1)
+    print(&quot;Asyncio.Task - binomialCoeff (%s,%s) = %s&quot; % (n, k, result))
+
+
+if __name__ == &quot;__main__&quot;:
+    tasks = [asyncio.Task(factorial(10)), asyncio.Task(
+        fibonacci(10)), asyncio.Task(binomialCoeff(20, 10))]
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(asyncio.wait(tasks))
+    loop.close()</code></pre>
+<h4 id="使用asyncio和futures">使用Asyncio和Futures</h4>
+<p>示例代码如下所示</p>
+<pre><code><code>import asyncio
+import sys
+
+
+@asyncio.coroutine
+def first_coroutine(future, N):
+    count = 0
+    for i in range(1, N + 1):
+        count = count + i
+    yield from asyncio.sleep(4)
+    future.set_result(
+        &quot;first coroutine (sum of N integers) result = &quot; + str(count))
+
+
+@asyncio.coroutine
+def second_coroutine(future, N):
+    count = 1
+    for i in range(2, N + 1):
+        count *= i
+    yield from asyncio.sleep(3)
+    future.set_result(&quot;second coroutine (factorial) result = &quot; + str(count))
+
+
+def got_result(future):
+    print(future.result())
+
+
+if __name__ == &quot;__main__&quot;:
+    N1 = 1
+    N2 = 1
+    loop = asyncio.get_event_loop()
+    future1 = asyncio.Future()
+    future2 = asyncio.Future()
+    tasks = [
+        first_coroutine(future1, N1),
+        second_coroutine(future2, N2)
+    ]
+    future1.add_done_callback(got_result)
+    future2.add_done_callback(got_result)
+    loop.run_until_complete(asyncio.wait(tasks))
+    loop.close()</code></pre>
+<h2 id="分布式编程">分布式编程</h2>
+<p>略</p>
+<h2 id="gpu-编程">GPU 编程</h2>
+<p>略</p>
+<h2 id="相关参考">相关参考</h2>
+<ul>
+<li><a href="https://python-parallel-programmning-cookbook.readthedocs.io/zh_CN/latest/index.html">Python并行编程 中文版</a></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

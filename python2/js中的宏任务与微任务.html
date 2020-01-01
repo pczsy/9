@@ -1,0 +1,210 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修js中的宏任务与微任务' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>js中的宏任务与微任务</center></div><div class='banquan'>原文出处:本文由博客园博主拿饭盒当烟灰缸提供。<br/>
+原文连接:https://www.cnblogs.com/yinzhida/p/12009738.html</div><br>
+    <p>如果你已经知道了js中存在宏任务和微任务，那么你一定已经了解过promise了。因为在js中promise是微任务的一个入口。<br />
+先来看一道题：</p>
+<pre><code><code>setTimeout(function(){
+    console.log(&#39;setTimeout&#39;)
+});
+
+new Promise(function(resolve, reject){
+    console.log(&#39;pormise body&#39;);
+    resolve();
+}).then(function(){
+    console.log(&#39;promise then&#39;)
+});
+
+console.log(&#39;main&#39;);</code></pre>
+<p>这题的答案是:</p>
+<pre><code><code>promise body
+main
+promise then
+setTimeout</code></pre>
+<p>promise body出现在第一行一点也不意外，意外的是，setTimeout出现在了promise then的后边。<br />
+ <br />
+setTimeout和promise then都是异步调用，setTimeout又定义在promise之前，如果没有意外，应该是先输出setTimeout才对，但这里却恰恰相反。<br />
+ <br />
+这里涉及到的知识点，就是宏任务与微任务了。标记一下上边的代码：</p>
+<pre><code><code>setTimeout(function(){ // 同步代码，语句1
+    console.log(&#39;setTimeout&#39;) // 宏任务，语句2
+});
+
+new Promise(function(resolve, reject){
+    console.log(&#39;pormise body&#39;); // 同步代码，语句3
+    resolve(); // 同步代码，语句4
+}).then(function(){
+    console.log(&#39;promise then&#39;) // 微任务，语句5
+});
+
+console.log(&#39;main&#39;); // 同步代码，语句6</code></pre>
+<p>那么他们运行的规则是怎样的呢？<br />
+ <br />
+原来，宏任务与微任务，都各自有一个调用队列（先进先出）。<br />
+ <br />
+遇到宏任务，微任务，则将他们推入各自的调用队列。需要注意的是，同步代码也是宏任务。<br />
+ <br />
+宏任务执行完一个，则去清空微任务队列，微任务清空后再去执行下一个宏任务。<br />
+ <br />
+这个过程颇像去医院诊室排队看大夫的情景：<br />
+如果有一个病人A叫到号以后，又被大夫安排先去做检查，那么做完检查以后病人A回到诊室门口，可以直接等待当前正在看病的病人B与大夫交谈结束后，将检查结果交给大夫，而不用再次排队。<br />
+ <br />
+我们来把上面的代码一行一行解读一下：<br />
+ <br />
+首先定义两个队列,宏任务队列：MacroQqueue， 微任务队列： MicroQueue<br />
+ <br />
+第一步，先按同步代码顺序运行<br />
+同步代码，语句1： 添加一个宏任务，将语句2推入MacroQueue。 // MacroQueue: [{task: 语句2}]<br />
+同步代码，语句3： 打印promise body<br />
+同步代码，语句4： 添加一个微任务，将语句5推入MicroQueue。 // MicroQueue: [{task: 语句5}]<br />
+同步代码，语句6： 打印main。 // 同步代码（宏任务）完成<br />
+ <br />
+第二步，开始清空微任务队列<br />
+微任务： 语句5,从MicroQueue跳出，打印promise then。 // 微任务队列全部清空<br />
+ <br />
+第三步，开始清空宏任务队列<br />
+宏任务：语句2，从MacroQqueue跳出，打印setTimeout // 宏任务队列全部清空<br />
+ <br />
+第四步：开始清空微任务队列<br />
+队列为空...<br />
+ <br />
+一轮循环完成。开始下一轮，如此循环下去。<br />
+ <br />
+通过上面的讲解，大家应该能对宏任务，微任务的运行机制有了一定的了解了吧。那么都有哪些常见的宏任务与微任务呢？<br />
+请看下表：<br />
+ </p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">宏任务</th>
+<th style="text-align: center;">浏览器</th>
+<th style="text-align: right;">nodejs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">同步代码</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: right;">✅</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">I/O</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: right;">✅</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">setTimeout</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: right;">✅</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">setInterval</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: right;">✅</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">setImmediate</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: right;">✅</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">requestAnimationFrame</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: right;">❌</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">微任务</th>
+<th style="text-align: center;">浏览器</th>
+<th style="text-align: right;">nodejs</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">process.nextTick</td>
+<td style="text-align: center;">❌</td>
+<td style="text-align: right;">✅</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">MutationObserver</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: right;">❌</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Promise （async/await）</td>
+<td style="text-align: center;">✅</td>
+<td style="text-align: right;">✅</td>
+</tr>
+</tbody>
+</table>
+<p>好了，我们来一道复杂一点的题练练手：</p>
+<pre><code><code>console.log(&#39;sync statement 1&#39;);
+Promise.resolve().then(function() {
+    console.log(&#39;micro task 1&#39;);
+    setTimeout(function() {
+        console.log(&#39;macro task 1&#39;);
+    }, 0);
+}).then(function() {
+    console.log(&#39;micro task 2&#39;);
+});
+
+setTimeout(function() {
+    console.log(&#39;macro task 2&#39;)
+    Promise.resolve().then(function(){
+        console.log(&#39;micro task 3&#39;);
+    })
+}, 0)
+console.log(&#39;sync statement 2&#39;);
+
+//输出：
+// sync statement 1
+// sync statement 2
+// micro task 1
+// micro task 2
+// macro task 2
+// micro task 3
+// macro task 1</code></pre>
+<p>标注一下方便大家分析：</p>
+<pre><code><code>console.log(&#39;sync statement 1&#39;); // 同步代码，语句1
+Promise.resolve().then(function() { // 同步代码，语句2，注册了一个微任务
+    console.log(&#39;micro task 1&#39;); // 微任务，语句3
+    setTimeout(function() { // 微任务，语句4，同时注册了一个宏任务
+        console.log(&#39;macro task 1&#39;); // 宏任务，语句5
+    }, 0);
+}).then(function() {
+    console.log(&#39;micro task 2&#39;); // 微任务，语句6
+});
+
+setTimeout(function() { // 同步代码，语句7
+    console.log(&#39;macro task 2&#39;) // 宏任务，语句8
+    Promise.resolve().then(function(){ // 宏任务，语句9，同时注册了一个微任务
+        console.log(&#39;micro task 3&#39;); // 微任务，语句10
+    })
+}, 0)
+console.log(&#39;sync statement 2&#39;); // 同步代码，语句11</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

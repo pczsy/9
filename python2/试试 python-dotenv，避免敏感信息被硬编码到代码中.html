@@ -1,0 +1,124 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修试试 python-dotenv，避免敏感信息被硬编码到代码中' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>试试 python-dotenv，避免敏感信息被硬编码到代码中</center></div><div class='banquan'>原文出处:本文由博客园博主liuzhijun提供。<br/>
+原文连接:https://www.cnblogs.com/zhijun/p/11393200.html</div><br>
+    我们开发的每个系统都离不开配置信息，例如数据库密码、Redis密码、邮件配置、各种第三方配置信息，这些信息都非常敏感，一旦泄露出去后果非常严重，被泄露的原因一般是程序员将配置信息和代码混在一起导致的。
+
+判断一个系统是否正确地将配置排除在代码之外，一个简单的方法是看该系统的代码是否可以立刻开源，而不用担心会暴露任何敏感信息。
+
+所以我们做的第一件事情就是将配置信息与代码解耦，根据不同的部署环境（开发环境、测试环境、预发布、生产环境）各使用一套配置文件，然后将配置信息集中到配置文件中。
+
+例如在 django 最佳实践里面，就有这种做法，每个部署环境都有一个独立的配置文件，因为每个部署环境所需要的配置各不相同。
+
+```python
+├── settings
+│   ├── __init__.py
+│   ├── base.py
+│   ├── local.py
+│   ├── production.py
+│   └── test.py
+
+```
+系统启动的时候，根据指定的环境变量决定加载哪个配置文件。
+```python
+if __name__ == "__main__":
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "settings.local")
+```
+
+这样就完了吗？
+
+不，因为配置信息还是和项目代码捆绑在一起，如果配置文件与代码同步到版本控制系统又担心敏感信息泄露。
+
+前面只是将配置与代码解耦，但是代码与敏感配置信息并没有完全隔离。
+
+
+一个更好的办法就是将配置存储于环境变量中，环境变量可以非常方便地在不同的部署间做修改，却不动一行代码，而这些信息同步到代码库的概率微乎其微。
+
+在代码中我们通过读取环境变量中的配置信息来获取该值。
+
+```python
+settings.py
+MAIL_SERVER = os.getenv('MAIL_SERVER')
+MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+```
+现在哪怕代码开源出去，也没人知道密码是什么。
+
+将配置信息保存在变量环境中，有好几种方式，一种就是手动在命令行挨个设置到环境变量中，类似于：
+
+```python
+EXPORT SECRET_KEY=xxxxx
+EXPORT SQLALCHEMY_DATABASE_URI=XXXX
+EXPORT ACCESSKEYID=XXXXX
+```
+这种方式很麻烦，每次启动都需要设，虽然你也可以写到类似 .bashrc 这样的文件中。
+
+第二种方式是把配置信息写在supervisor中，如果你的系统是用supervisor来管理进程的话，supervisor 中可以设置环境变量，如：
+
+```python
+[program:xxxx]
+environment=
+        KEY=value,
+        Key2=value2,
+        key3="val.&"
+```
+
+但是这种方式与 supervisor 的本身配置耦合在一起，用起来比较混乱。
+
+而今天推荐的这个工具 `python-dotenv` 就可以完全独立于其它配置，只针对应用本身使用的配置信息，你只需要把配置信息全部写入到项目根目录的 `.env` 文件中
+
+例如这样：
+
+```
+REDIS_ADDRESS=localhost:6379
+MEANING_OF_LIFE=42
+MULTILINE_VAR="hello\nworld"
+```
+
+这个文件我们不放在git版本控制系统中。然后用一行代码来加载配置信息到环境变量中
+
+```python
+# settings.py
+from dotenv import load_dotenv
+load_dotenv()
+```
+加载完成后就可以通过 `os.getenv` 方法去获取所有的配置信息。
+
+```python
+# settings.py
+import os
+SECRET_KEY = os.getenv("EMAIL")
+DATABASE_PASSWORD = os.getenv("DATABASE_PASSWORD")
+```
+这样就完全将敏感信息脱离于代码，同时代码与配置也进行了解耦。 python-dov 的安装用普通的pip安装即可
+
+```python
+pip install -U python-dotenv
+```
+
+这种使用方式在 django、flask 应用开发中很常见，而且他们基于此库也做了自己的扩展，例如 flask 中可以用 `.flaskenv` 来代替 `.env` 文件。
+
+
+
+无
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

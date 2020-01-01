@@ -1,0 +1,298 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修小白学 Python 爬虫（20）：Xpath 进阶' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>小白学 Python 爬虫（20）：Xpath 进阶</center></div><div class='banquan'>原文出处:本文由博客园博主极客挖掘机提供。<br/>
+原文连接:https://www.cnblogs.com/babycomeon/p/12052478.html</div><br>
+    <p><img src="./images/小白学 Python 爬虫（20）：Xpath 进阶0.png" /></p>
+<blockquote>
+<p>人生苦短，我用 Python</p>
+</blockquote>
+<p>前文传送门：</p>
+<p><a href="https://www.geekdigging.com/2019/11/13/3303836941/">小白学 Python 爬虫（1）：开篇</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/20/2586166930/">小白学 Python 爬虫（2）：前置准备（一）基本类库的安装</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/21/1005563697/">小白学 Python 爬虫（3）：前置准备（二）Linux基础入门</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/22/3679472340/">小白学 Python 爬虫（4）：前置准备（三）Docker基础入门</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/24/334078215/">小白学 Python 爬虫（5）：前置准备（四）数据库基础</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/25/1881661601/">小白学 Python 爬虫（6）：前置准备（五）爬虫框架的安装</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/26/1197821400/">小白学 Python 爬虫（7）：HTTP 基础</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/27/101847406/">小白学 Python 爬虫（8）：网页基础</a></p>
+<p><a href="https://www.geekdigging.com/2019/11/28/1668465912/">小白学 Python 爬虫（9）：爬虫基础</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/01/2475257648/">小白学 Python 爬虫（10）：Session 和 Cookies</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/02/2333822325/">小白学 Python 爬虫（11）：urllib 基础使用（一）</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/03/819896244/">小白学 Python 爬虫（12）：urllib 基础使用（二）</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/04/2992515886/">小白学 Python 爬虫（13）：urllib 基础使用（三）</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/05/104488944/">小白学 Python 爬虫（14）：urllib 基础使用（四）</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/07/2788855167/">小白学 Python 爬虫（15）：urllib 基础使用（五）</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/09/1691033431/">小白学 Python 爬虫（16）：urllib 实战之爬取妹子图</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/10/1910005577/">小白学 Python 爬虫（17）：Requests 基础使用</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/11/1468953802/">小白学 Python 爬虫（18）：Requests 进阶操作</a></p>
+<p><a href="https://www.geekdigging.com/2019/12/12/3568648672/">小白学 Python 爬虫（19）：Xpath 基操</a></p>
+<h2 id="引言">引言</h2>
+<p>文接上篇，我们接着聊，上篇我们介绍了 Xpath 一些常用的匹配方式， DOM 节点我们可以匹配出来了，这并不是我们的最终目的，我们是要从这些节点中取出来我们想要的数据。本篇我们接着介绍如何使用 Xpath 获取数据。</p>
+<h2 id="文本获取">文本获取</h2>
+<p>我们先尝试下获取第一篇文章的题目，获取节点中的文本我们可以使用 <code>text()</code> 来进行获取，如图：</p>
+<p><img src="./images/小白学 Python 爬虫（20）：Xpath 进阶1.png" /></p>
+<p>代码如下：</p>
+<pre><code><code>from lxml import etree
+import requests
+
+response = requests.get(&#39;https://www.geekdigging.com/&#39;)
+html_str = response.content.decode(&#39;UTF-8&#39;)
+html = etree.HTML(html_str)
+
+result_1 = html.xpath(&#39;/html/body/section/div/div/main/article[1]/div[2]/div/h3/a/text()&#39;)
+print(result_1)</code></pre>
+<p>结果如下：</p>
+<pre><code><code>[&#39;小白学 Python 爬虫（18）：Requests 进阶操作&#39;]</code></pre>
+<p>哇，上面示例里面的表达式好长啊，这个怎么写出来的，怎么写的稍后再说，先介绍一下这个表达式的意思，仔细看一下，这个表达式其实是从整个 HTML 源代码的最外层的 <code>&lt;html&gt;</code> 标签写起，一层一层的定位到了我们所需要的节点，然后再使用 <code>text()</code> 方法获取了其中的文本内容。</p>
+<p>关于这个表达式怎么来的，肯定不是小编写的，这么写讲实话是有点傻，完全没必要从整个文档的最外层开始写。</p>
+<p>其实这个是 Chrome 帮我们生成的，具体操作可见下图：</p>
+<p><img src="./images/小白学 Python 爬虫（20）：Xpath 进阶2.png" /></p>
+<p>这时 Chrome 会自动帮我们把这个节点的表达式 copy 到当前的剪切板上，只需要我们在程序里 <code>ctrl + v</code> 一下。</p>
+<h2 id="属性获取">属性获取</h2>
+<p>有些情况下，我们可能不止需要节点中的文本数据，可能还会需要节点中的属性数据，比如上面的示例，我们除了想知道文章标题，其实还想知道文章的跳转路径：</p>
+<pre><code><code>result_2 = html.xpath(&#39;/html/body/section/div/div/main/article[1]/div[2]/div/h3/a/@href&#39;)
+print(result_2)</code></pre>
+<p>结果如下：</p>
+<pre><code><code>[&#39;/2019/12/11/1468953802/&#39;]</code></pre>
+<p>这里需要注意的是，此处和属性匹配的方法不同，属性匹配是中括号加属性名和值来限定某个属性，如 <code>[@class=&quot;container&quot;]</code> ，而此处的 <code>@href</code> 指的是获取节点的某个属性，二者需要做好区分。</p>
+<h2 id="属性多值匹配">属性多值匹配</h2>
+<p>某些时候吧，某些节点的某个属性可能有多个值，这个多见于 <code>class</code> 属性，由于某些编码习惯以及某些其他原因，这个属性经常性会出现多个值，这时如果只使用其中的一个值的话，就无法匹配了。</p>
+<p><img src="./images/小白学 Python 爬虫（20）：Xpath 进阶3.png" /></p>
+<p>如果这么写的话：</p>
+<pre><code><code>result_3 = html.xpath(&#39;//div[@class=&quot;post-head&quot;]&#39;)
+print(result_3)</code></pre>
+<p>结果如下：</p>
+<pre><code><code>[]</code></pre>
+<p>可以看到，这里没有匹配到任何节点，这时，我们可以使用一个函数：<code>contains()</code> ，上面的示例可以改成这样：</p>
+<pre><code><code>result_3 = html.xpath(&#39;//div[contains(@class, &quot;post-head&quot;)]&#39;)
+print(result_3)</code></pre>
+<p>这样通过 <code>contains()</code> 方法，第一个参数传入属性名称，第二个参数传入属性值，只要此属性包含所传入的属性值，就可以进行匹配了。</p>
+<h2 id="多属性匹配">多属性匹配</h2>
+<p>除了上面的一个属性有多个值的情况，还经常会出现需要使用多个属性才能确定一个唯一的节点。</p>
+<p>这时，我们可以使用运算符来进行处理。</p>
+<p><img src="./images/小白学 Python 爬虫（20）：Xpath 进阶4.png" /></p>
+<p>还是这个示例，我们获取 <code>&lt;img&gt;</code> 这个节点，如果只是使用 class 属性来进行获取，会获得很多个节点：</p>
+<pre><code><code>result_4 = html.xpath(&#39;//img[@class=&quot;img-ajax&quot;]&#39;)
+print(result_4)</code></pre>
+<p>结果如下：</p>
+<pre><code><code>[&lt;Element img at 0x1984505a788&gt;, &lt;Element img at 0x1984505a7c8&gt;, &lt;Element img at 0x1984505a808&gt;, &lt;Element img at 0x1984505a848&gt;, &lt;Element img at 0x1984505a888&gt;, &lt;Element img at 0x1984505a908&gt;, &lt;Element img at 0x1984505a948&gt;, &lt;Element img at 0x1984505a988&gt;, &lt;Element img at 0x1984505a9c8&gt;, &lt;Element img at 0x1984505a8c8&gt;, &lt;Element img at 0x1984505aa08&gt;, &lt;Element img at 0x1984505aa48&gt;]</code></pre>
+<p>如果我们加上 alt 属性一起进行匹配的话，就可以获得唯一的节点：</p>
+<pre><code><code>result_4 = html.xpath(&#39;//img[@class=&quot;img-ajax&quot; and @alt=&quot;小白学 Python 爬虫（18）：Requests 进阶操作&quot;]&#39;)
+print(result_4)</code></pre>
+<p>结果如下：</p>
+<pre><code><code>[&lt;Element img at 0x299905e6a48&gt;]</code></pre>
+<p>Xpath 支持很多的运算符，详细见下表（来源：https://www.w3school.com.cn/xpath/xpath_operators.asp）</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">运算符</th>
+<th style="text-align: left;">描述</th>
+<th style="text-align: left;">实例</th>
+<th style="text-align: left;">返回值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">|</td>
+<td style="text-align: left;">计算两个节点集</td>
+<td style="text-align: left;">//book | //cd</td>
+<td style="text-align: left;">返回所有拥有 book 和 cd 元素的节点集</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">+</td>
+<td style="text-align: left;">加法</td>
+<td style="text-align: left;">6 + 4</td>
+<td style="text-align: left;">10</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">-</td>
+<td style="text-align: left;">减法</td>
+<td style="text-align: left;">6 - 4</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">*</td>
+<td style="text-align: left;">乘法</td>
+<td style="text-align: left;">6 * 4</td>
+<td style="text-align: left;">24</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">div</td>
+<td style="text-align: left;">除法</td>
+<td style="text-align: left;">8 div 4</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">=</td>
+<td style="text-align: left;">等于</td>
+<td style="text-align: left;">price=9.80</td>
+<td style="text-align: left;">如果 price 是 9.80，则返回 true。如果 price 是 9.90，则返回 false。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">!=</td>
+<td style="text-align: left;">不等于</td>
+<td style="text-align: left;">price!=9.80</td>
+<td style="text-align: left;">如果 price 是 9.90，则返回 true。如果 price 是 9.80，则返回 false。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">&lt;</td>
+<td style="text-align: left;">小于</td>
+<td style="text-align: left;">price&lt;9.80</td>
+<td style="text-align: left;">如果 price 是 9.00，则返回 true。如果 price 是 9.90，则返回 false。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">&lt;=</td>
+<td style="text-align: left;">小于或等于</td>
+<td style="text-align: left;">price&lt;=9.80</td>
+<td style="text-align: left;">如果 price 是 9.00，则返回 true。如果 price 是 9.90，则返回 false。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">&gt;</td>
+<td style="text-align: left;">大于</td>
+<td style="text-align: left;">price&gt;9.80</td>
+<td style="text-align: left;">如果 price 是 9.90，则返回 true。如果 price 是 9.80，则返回 false。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">&gt;=</td>
+<td style="text-align: left;">大于或等于</td>
+<td style="text-align: left;">price&gt;=9.80</td>
+<td style="text-align: left;">如果 price 是 9.90，则返回 true。如果 price 是 9.70，则返回 false。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">or</td>
+<td style="text-align: left;">或</td>
+<td style="text-align: left;">price=9.80 or price=9.70</td>
+<td style="text-align: left;">如果 price 是 9.80，则返回 true。如果 price 是 9.50，则返回 false。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">and</td>
+<td style="text-align: left;">与</td>
+<td style="text-align: left;">price&gt;9.00 and price&lt;9.90</td>
+<td style="text-align: left;">如果 price 是 9.80，则返回 true。如果 price 是 8.50，则返回 false。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">mod</td>
+<td style="text-align: left;">计算除法的余数</td>
+<td style="text-align: left;">5 mod 2</td>
+<td style="text-align: left;">1</td>
+</tr>
+</tbody>
+</table>
+<h2 id="按顺序选择">按顺序选择</h2>
+<p>有些时候，我们匹配出来很多的节点，但是我们只想获取其中的某一个节点，比如第一个或者最后一个，这时可以使用中括号传入索引的方法获取特定次序的节点。</p>
+<p>我们还是文章的题目为例，我们先获取所有的文章题目，再进行选择，示例代码如下：</p>
+<pre><code><code>result_5 = html.xpath(&#39;//article/div/div/h3[@class=&quot;post-title&quot;]/a/text()&#39;)
+print(result_5)
+result_6 = html.xpath(&#39;//article[1]/div/div/h3[@class=&quot;post-title&quot;]/a/text()&#39;)
+print(result_6)
+result_7 = html.xpath(&#39;//article[last()]/div/div/h3[@class=&quot;post-title&quot;]/a/text()&#39;)
+print(result_7)
+result_8 = html.xpath(&#39;//article[position() &lt; 5]/div/div/h3[@class=&quot;post-title&quot;]/a/text()&#39;)
+print(result_8)</code></pre>
+<p>结果如下：</p>
+<pre><code><code>[&#39;小白学 Python 爬虫（18）：Requests 进阶操作&#39;, &#39;小白学 Python 爬虫（17）：Requests 基础使用&#39;, &#39;小白学 Python 爬虫（16）：urllib 实战之爬取妹子图&#39;, &#39;如何用 Python 写一个简易的抽奖程序&#39;, &#39;小白学 Python 爬虫（15）：urllib 基础使用（五）&#39;, &#39;我们真的在被 APP “窃听” 么？&#39;, &#39;小白学 Python 爬虫（14）：urllib 基础使用（四）&#39;, &#39;小白学 Python 爬虫（13）：urllib 基础使用（三）&#39;, &#39;小白学 Python 爬虫（12）：urllib 基础使用（二）&#39;, &#39;小白学 Python 爬虫（11）：urllib 基础使用（一）&#39;, &#39;老司机大型车祸现场&#39;, &#39;小白学 Python 爬虫（10）：Session 和 Cookies&#39;]
+[&#39;小白学 Python 爬虫（18）：Requests 进阶操作&#39;]
+[&#39;小白学 Python 爬虫（10）：Session 和 Cookies&#39;]
+[&#39;小白学 Python 爬虫（18）：Requests 进阶操作&#39;, &#39;小白学 Python 爬虫（17）：Requests 基础使用&#39;, &#39;小白学 Python 爬虫（16）：urllib 实战之爬取妹子图&#39;, &#39;如何用 Python 写一个简易的抽奖程序&#39;]</code></pre>
+<p>第一次，我们选取了当前页面所有的文章的题目。</p>
+<p>第二次，我们选择了当前页面第一篇文章的题目，这里注意下，中括号中传入数字1即可，这里的开始是以 1 为第一个的，不是程序中的 0 为第一个。</p>
+<p>第三次，我们使用 <code>last()</code> 函数，获取了最后一篇文章的题目。</p>
+<p>第四次，我们选择了位置小于 5 的文章题目。</p>
+<h2 id="节点轴">节点轴</h2>
+<p>轴可定义相对于当前节点的节点集。</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">轴名称</th>
+<th style="text-align: left;">结果</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">ancestor</td>
+<td style="text-align: left;">选取当前节点的所有先辈（父、祖父等）。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">ancestor-or-self</td>
+<td style="text-align: left;">选取当前节点的所有先辈（父、祖父等）以及当前节点本身。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">attribute</td>
+<td style="text-align: left;">选取当前节点的所有属性。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">child</td>
+<td style="text-align: left;">选取当前节点的所有子元素。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">descendant</td>
+<td style="text-align: left;">选取当前节点的所有后代元素（子、孙等）。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">descendant-or-self</td>
+<td style="text-align: left;">选取当前节点的所有后代元素（子、孙等）以及当前节点本身。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">following</td>
+<td style="text-align: left;">选取文档中当前节点的结束标签之后的所有节点。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">namespace</td>
+<td style="text-align: left;">选取当前节点的所有命名空间节点。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">parent</td>
+<td style="text-align: left;">选取当前节点的父节点。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">preceding</td>
+<td style="text-align: left;">选取文档中当前节点的开始标签之前的所有节点。</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">preceding-sibling</td>
+<td style="text-align: left;">选取当前节点之前的所有同级节点。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">self</td>
+<td style="text-align: left;">选取当前节点。</td>
+</tr>
+</tbody>
+</table>
+<p>我们以 <code>ancestor</code> 轴来做示例：</p>
+<pre><code><code># 节点轴示例
+# 获取所有祖先节点
+result_9 = html.xpath(&#39;//article/ancestor::*&#39;)
+print(result_9)
+# 获取祖先节点 main 节点
+result_10 = html.xpath(&#39;//article/ancestor::main&#39;)
+print(result_10)</code></pre>
+<p>结果如下：</p>
+<pre><code><code>[&lt;Element html at 0x2a266171208&gt;, &lt;Element body at 0x2a266171248&gt;, &lt;Element section at 0x2a266171288&gt;, &lt;Element div at 0x2a2661712c8&gt;, &lt;Element div at 0x2a266171308&gt;, &lt;Element main at 0x2a266171388&gt;]
+[&lt;Element main at 0x2a266171388&gt;]</code></pre>
+<p>关于节点轴就先介绍到这里，更多的轴的用法可以参考：https://www.w3school.com.cn/xpath/xpath_axes.asp 。</p>
+<h2 id="示例代码">示例代码</h2>
+<p>本系列的所有代码小编都会放在代码管理仓库 Github 和 Gitee 上，方便大家取用。</p>
+<p><a href="https://github.com/meteor1993/python-learning/tree/master/python-spider/xpath-demo" title="示例代码-Github">示例代码-Github</a></p>
+<p><a href="https://gitee.com/inwsy/python-learning/tree/master/python-spider/xpath-demo" title="示例代码-Gitee">示例代码-Gitee</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

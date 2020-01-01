@@ -1,0 +1,67 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修JDBC导致的反序列化攻击' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>JDBC导致的反序列化攻击</center></div><div class='banquan'>原文出处:本文由博客园博主Welk1n提供。<br/>
+原文连接:https://www.cnblogs.com/Welk1n/p/12056097.html</div><br>
+    <h4 id="背景">背景</h4>
+<p>上周BlackHat Europe 2019的议题<a href="https://www.blackhat.com/eu-19/briefings/schedule/index.html#new-exploit-technique-in-java-deserialization-attack-17321">《New Exploit Technique In Java Deserialization Attack》</a>中提到了一个通过注入JDBC URL实现反序列化攻击的场景，简单分析一下。</p>
+<h4 id="分析">分析</h4>
+<p>当java应用使用<strong>MySQL Connector/J</strong>（官方的JDBC驱动，本文基于其8.0+版本）连接mysql时会导致潜在的反序列化攻击风险，JDBC URL的格式如下：protocol//[hosts]/[database]?properties，具体可看<a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-jdbc-url-format.html">mysql官方文档</a>，示例：jdbc:mysql://localhost:3306/test?useSSL=true</p>
+<p>其中，protocol、host、database都比较好理解，URL中的properties可以设定MySQL Connector/J连接mysql服务器的具体方式，关于properties的<a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-reference-configuration-properties.html">官方文档地址</a>，其中和本文相关的连接属性有两个，分别是<strong>autoDeserialize</strong>和<strong>queryInterceptors</strong>，前者是设定MySQL Connector/J是否反序列化BLOB类型的数据，后者是拦截器，在查询执行时触发，由com.mysql.cj.protocol.a.NativeProtocol#sendQueryPacket方法源码可知，会在执行查询语句前后分别调用拦截器的preProcess和postProcess方法。</p>
+<p>接下来定位下反序列化的触发点，在mysql-connector-java组件下全局搜索关键字“.readObject()”，定位到com.mysql.cj.jdbc.result.ResultSetImpl类中的getObject(int columnIndex)方法，部分核心代码如下：</p>
+<pre><code><code>public Object getObject(int columnIndex) throws SQLException {
+……
+case BLOB:
+  byte[] data = getBytes(columnIndex);
+  if (this.connection.getPropertySet().getBooleanProperty(PropertyDefinitions.PNAME_autoDeserialize).getValue()) {
+     Object obj = data;
+     // Serialized object?
+     try {
+       ByteArrayInputStream bytesIn = new ByteArrayInputStream(data);
+       ObjectInputStream objIn = new ObjectInputStream(bytesIn);
+       obj = objIn.readObject();
+     }
+  }
+}</code></pre>
+<p>变量data即为mysql返回结果集，当JDBC URL中设定属性autoDeserialize为true时，会对类型为bit、binary以及blob的数据进行反序列化，如何触发getObject(int columnIndex)方法的调用呢？议题中给出的调用链如下：</p>
+<pre class="sh"><code>&gt; com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor#preProcess/postProcess
+&gt; com.mysql.cj.jdbc.interceptors.ServerStatusDiffInterceptor#populateMapWithSessionStatusValues
+&gt; com.mysql.cj.jdbc.util.ResultSetUtil#resultSetToMap
+&gt; com.mysql.cj.jdbc.result.ResultSetImpl#getObject
+
+</code></pre>
+<p>ServerStatusDiffInterceptor即为此前提到过的拦截器，在JDBC URL中设定属性queryInterceptors为ServerStatusDiffInterceptor时，执行查询语句会调用拦截器的preProcess和postProcess方法，进而通过上述调用链最终调用getObject(int columnIndex)方法。</p>
+<p>实际利用还有一个问题，最终调用getObject方法的对象是数据库返回的结果集，由populateMapWithSessionStatusValues方法可知：</p>
+<pre><code><code>try {
+    toPopulate.clear();
+
+    stmt = this.connection.createStatement();
+    rs = stmt.executeQuery(&quot;SHOW SESSION STATUS&quot;);
+    ResultSetUtil.resultSetToMap(toPopulate, rs);
+}</code></pre>
+<p>这个结果集是执行SQL语句“SHOW SESSION STATUS”后数据库返回的值，SQL语句“SHOW SESSION STATUS”返回当前数据库连接的状态值，实际是读取系统表INFORMATION_SCHEMA.SESSION_VARIABLES的值，也可能是PERFORMANCE_SCHEMA.SESSION_VARIABLES（Mysql版本差异导致）。但是mysql中INFORMATION_SCHEMA和PERFORMANCE_SCHEMA都是不允许被修改的，所以需要想办法操纵返回的数据。</p>
+<h4 id="利用条件">利用条件</h4>
+<p>1.本质上还是Java原生的反序列化利用，所以需要环境中有可用的Gadget；</p>
+<p>2.需要能伪造相关系统表的数据，将“SHOW SESSION STATUS”的执行结果设置为我们精心构造的反序列化数据，或者基于mysql连接协议，自定义返回数据，后面有时间的时候会写写这块儿；</p>
+<p>3.可控的JDBC URL；</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,1022 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修单链表-Python实现-jupyter-&gt;markdown 格式测试' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>单链表-Python实现-jupyter-&gt;markdown 格式测试</center></div><div class='banquan'>原文出处:本文由博客园博主小陈同学的数据之路提供。<br/>
+原文连接:https://www.cnblogs.com/chenjieyouge/p/11617475.html</div><br>
+    <h3 id="单链表引入">单链表引入</h3>
+<ul>
+<li>顺序表</li>
+<li>理解Python变量的本质: <strong>变量存储的不是值,是值的地址</strong></li>
+<li>理解Python的 &quot;=&quot;表示的是<strong>指向</strong>关系</li>
+<li>案例: 交换a,b的值, a=10, b=20
+<ul>
+<li>a, b = 20, 10</li>
+<li>t0: a这块内存(也有id), 存储的是10这个值的地址(可能是0x111), b存储的是20这个值(整型4个字节)的地址(可能是0x222)</li>
+<li>t1: a现在指向b的值的地址(a存储0x222), b指向(存储)10的地址(0x111)</li>
+</ul></li>
+<li>Pyhton变量的本质: 指针. 所以Pyhton在定义变量时不必声明变量类型, 因为Pyhton变量根本就不直接存储值, 存储的是值的地址, 通过地址去取值.</li>
+<li>真正理解: Pyhton 一切皆对象(存地址嘛, 变量, 容器, 函数, 类...都只是一块地址而已), so 常看到把一个类, 一个函数<strong>=</strong>给一个变量,就不足为奇了.</li>
+</ul>
+<pre><code><code>a, b = 10, 20 
+print(&#39;交换前&#39;,a,b)
+# 交换: 从等号右边开始看, 即把b存储20的地址,现在用a变量存储; 
+# 将a变量存储10的地址,现在用b去指向, 从而实现了a,b互相交换
+# 本质上, 10,20这两个值的地址并未改变, 只是其被引用的变量改变了而已, 改变的是引用
+a, b = b, a
+print(&#39;交换后&#39;,a, b)</code></pre>
+<pre><code><code>交换前 10 20
+交换后 20 10</code></pre>
+<pre><code><code># 函数也是一块内存地址而已
+
+def add(x, y):
+    return x + y
+
+print(add(3,4))</code></pre>
+<pre><code><code>7</code></pre>
+<pre><code><code>f = add  # 将函数赋值给一个变量f, 即用f来指向这块函数的地址
+print(f(3,4))</code></pre>
+<pre><code><code>7</code></pre>
+<h3 id="构造节点类">构造节点类</h3>
+<ul>
+<li>为什么要用类: 节点 = 数据取 + 指针区(指向下一个节点的地址)</li>
+<li>类: 属性 + 操作的封装</li>
+</ul>
+<h4 id="插入-python3定义类用不用继承object的区别">插入: Python3定义类用不用继承object的区别</h4>
+<pre><code><code># Python3 编写类的是在, object 有无的区别
+
+class A:
+    name = &quot;youge&quot;
+
+    
+class B(object):
+    name = &#39;youge&#39;
+    
+    
+if __name__ == &#39;__main__&#39;:
+    
+    a, b = A(), B()
+    
+    print(&#39;无object的类拥有:&#39;, dir(a))
+    print(&#39;有object的类拥有:&#39;, dir(b))</code></pre>
+<pre><code><code>无object的类拥有: [&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__dir__&#39;, &#39;__doc__&#39;, &#39;__eq__&#39;, &#39;__format__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;, &#39;__gt__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__init_subclass__&#39;, &#39;__le__&#39;, &#39;__lt__&#39;, &#39;__module__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;name&#39;]
+有object的类拥有: [&#39;__class__&#39;, &#39;__delattr__&#39;, &#39;__dict__&#39;, &#39;__dir__&#39;, &#39;__doc__&#39;, &#39;__eq__&#39;, &#39;__format__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;, &#39;__gt__&#39;, &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__init_subclass__&#39;, &#39;__le__&#39;, &#39;__lt__&#39;, &#39;__module__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, &#39;__sizeof__&#39;, &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;__weakref__&#39;, &#39;name&#39;]</code></pre>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;&quot;节点类&quot;&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  # Pyhton 的 &quot;=&quot; 就直接想象成 ----&gt; 指向即可(指向下一个节点对象)</code></pre>
+<pre><code><code>node1 = Node(123)  # 实例化一个节点对象
+
+print(&#39;这是一个节点对象, 包含属性和操作&#39;, node1)
+
+print(f&#39;该节点的数据是:{node1.data}, 指向的节点对象是:{node1.next}&#39;)</code></pre>
+<pre><code><code>这是一个节点对象, 包含属性和操作 &lt;__main__.Node object at 0x0000021B939406A0&gt;
+该节点的数据是:123, 指向的节点对象是:None</code></pre>
+<h3 id="单链表类adt">单链表类ADT</h3>
+<ul>
+<li>is_empty() 判断链表是否为空</li>
+<li>lenghth() 链表的长度(元素个数)</li>
+<li>travel 遍历整个链表</li>
+<li>add(item) 从链表头部增加元素(值)</li>
+<li>append(item) 从链表尾部增加元素</li>
+<li>insert(pos, item) 从指定位置(下标)增加元素</li>
+<li>remove(item) 删除节点</li>
+<li>search(item)</li>
+<li>都是对象方法, 非类方法, 实现时先结构化写出来pass慢慢去实现</li>
+</ul>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def is_empty(self):
+        pass
+    
+    def length(self):
+        pass
+    
+    def travel(self):
+        pass
+    
+    def add(self, item):
+        pass
+    
+    def append(self, item):
+        pass
+    
+    def insert(self, pos, item):
+        pass 
+    
+    def remove(self, item):
+        pass 
+    
+    def search(item):
+        pass
+    
+
+    
+# 调用  
+s_lst = SingleLinkList()
+s_lst.is_empty()
+s_lst.length()
+s_lst.travel()
+s_lst.add(123)
+....</code></pre>
+<h4 id="头节点-将一个节点挂在到单链表中来">头节点: 将一个节点挂在到单链表中来</h4>
+<ul>
+<li>链表必须要有一个<strong>对象属性</strong>来作为头节点</li>
+</ul>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    
+    # 头节点可能为空
+    # 用户可能是先创建一个节点, 作为链表的头节点
+    def __init__(self, node=None):
+        self.head = node  # 内部使用维护的,不用给外部访问, 应该设为私有变量
+        self.next = None
+        
+        
+# call
+node1 = Node(111)
+sl_obj = SingleLinkList(node1)  # 将head节点作为链表的头节点
+
+print(&#39;将节点对象传给链表的head属性:&#39;, sl_obj.head)
+print(&#39;属性是一个对象, 访问值用对象.属性来访问:&#39;, sl_obj.head.data)</code></pre>
+<pre><code><code>将节点对象传给链表的head属性: &lt;__main__.Node object at 0x0000021B93710828&gt;
+属性是一个对象, 访问值用对象.属性来访问: 111</code></pre>
+<h4 id="为什么需要两个类">为什么需要两个类</h4>
+<ul>
+<li>理解Node类和SingleListLink类 的运作过程
+<ul>
+<li>节点类创建节点, 链表类&quot;串联&quot;上节点</li>
+</ul></li>
+</ul>
+<pre><code><code># 分析:
+
+link = SigleLinkList()  # 包含一个 __head -&gt; None
+node = Node(111)  # 包含 (111,None) 
+# 目的: 让链表的 __head属性去指向(111, None)这个节点
+# 让 __head -&gt; None 变为 __head -&gt; (111,None), 正好Python的 --&gt; 指向关系, 其实就是 &quot;=&quot;
+</code></pre>
+<h4 id="is_empyt-实现">is_empyt 实现</h4>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        pass</code></pre>
+<h4 id="length实现">length实现</h4>
+<pre><code><code># 分析
+
+# (__head)-&gt; (111, None)-&gt;(222,None)-&gt;(333,None)-&gt;(444,None)
+
+# 需要一个游标(指针)cur 从头数到尾, 并对节点计数
+# cur-&gt;__head, 计数, cur-&gt;111, 计数,判断111的next是否存在, 存在则cur-&gt;nex....循环
+</code></pre>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        # 让指针(游标cur)有首先指向头节点对象 cur -&gt; __head 
+        # 即 cur, __head 都指向了头节点对象
+        cur = self.__head
+        # 开始计数, 让指针一边移动, 则一边计数
+        count = 0 
+        # while 循环,让游标移动, 停止条件是当指针指向当前节点的next值为None时
+        # 关于count取值, 0:cur=None, 1:cur.next == None (指针指向哪为位置)
+        while cur != None:
+            count += 1 
+            # 实现指针的&quot;移动&quot;: Python中其实就是&quot;=&quot;表示 &quot;-&gt;&quot; , 注意&#39;=&#39;要从右往左看
+            cur = cur.next  # 右到左: 将当前节点的next, 让cur去指向
+        return count
+            </code></pre>
+<h4 id="travel-实现">travel 实现</h4>
+<ul>
+<li>也是变量每个节点, 打印出该节点的数据而已</li>
+</ul>
+<pre><code><code># 分析
+
+# 也是游标移动, while的终止条件是当 cur==None时即可</code></pre>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        # 让指针(游标cur)有首先指向头节点对象 cur -&gt; __head 
+        # 即 cur, __head 都指向了头节点对象
+        cur = self.__head
+        # 开始计数, 让指针一边移动, 则一边计数
+        count = 0 
+        # while 循环,让游标移动, 停止条件是当指针指向当前节点的next值为None时
+        # 关于count取值, 0:cur=None, 1:cur.next == None (指针指向哪为位置)
+        while cur != None:
+            count += 1 
+            # 实现指针的&quot;移动&quot;: Python中其实就是&quot;=&quot;表示 &quot;-&gt;&quot; , 注意&#39;=&#39;要从右往左看
+            cur = cur.next  # 右到左: 将当前节点的next, 让cur去指向
+        return count
+            
+        
+    def travel(self):
+        &quot;&quot;&quot;元素遍历&quot;&quot;&quot;
+        # cur-&gt;__head
+        cur = self.__head
+        # 移动, 然后print节点的元素, 当cur==None时终止
+        while cur != None:
+            print(cur.data)
+            cur = cur.next
+        </code></pre>
+<h4 id="append-实现尾插法">append 实现(尾插法)</h4>
+<ul>
+<li>尾部插入元素: 即遍历到最后一节点, 将其next指向插入的元素节点即可</li>
+<li>首先要将用户给定的元素(值), 作为一个节点对象(data,next)</li>
+<li>__ head -&gt; 111 -&gt;222 -&gt;None -&gt; (333, None)</li>
+</ul>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        # 让指针(游标cur)有首先指向头节点对象 cur -&gt; __head 
+        # 即 cur, __head 都指向了头节点对象
+        cur = self.__head
+        # 开始计数, 让指针一边移动, 则一边计数
+        count = 0 
+        # while 循环,让游标移动, 停止条件是当指针指向当前节点的next值为None时
+        # 关于count取值, 0:cur=None, 1:cur.next == None (指针指向哪为位置)
+        while cur != None:
+            count += 1 
+            # 实现指针的&quot;移动&quot;: Python中其实就是&quot;=&quot;表示 &quot;-&gt;&quot; , 注意&#39;=&#39;要从右往左看
+            cur = cur.next  # 右到左: 将当前节点的next, 让cur去指向
+        return count
+            
+        
+    def travel(self):
+        &quot;&quot;&quot;元素遍历&quot;&quot;&quot;
+        # cur-&gt;__head
+        cur = self.__head
+        # 移动, 然后print节点的元素, 当cur==None时终止
+        while cur != None:
+            print(cur.data, end=&#39; &#39; )
+            cur = cur.next
+        
+    def append(self, item):
+        &quot;&quot;&quot;尾部添加元素&quot;&quot;&quot;
+        node = Node(item)  # 用户只关心值, 不关心指针
+        # 从头往后遍历
+        cur = self.__head
+        # 考虑空链表情况 if cur is None:
+        if self.is_empty():
+            # 直接将 __head -&gt; node即可
+            self.__head = node
+        else:
+            while cur.next != None:
+                cur = cur.next
+            # 将尾节点的next -&gt; node
+            cur.next = node
+</code></pre>
+<h4 id="is_empty-length-travel-测试">is_empty, length, travel 测试</h4>
+<pre><code><code># 测试
+l = SingleLinkList()
+
+print(l.is_empty())
+print(l.length())
+
+l.append(0)
+print(l.is_empty())
+print(l.length())
+
+for i in range(8):
+    l.append(i)
+
+l.travel()</code></pre>
+<pre><code><code>True
+0
+False
+1
+0 0 1 2 3 4 5 6 7 </code></pre>
+<h4 id="add-实现头插法">add 实现(头插法)</h4>
+<ul>
+<li>构建要插入的节点对象</li>
+<li>头插的<strong>顺序是先让新元素的next-&gt;其余节点, 然后链表的__ head -&gt; node</strong></li>
+</ul>
+<pre><code><code># 分析
+# link:  head-&gt;(111, None)-&gt;(222,None)
+
+# 目标: head-&gt;(000, None)-&gt;(111, None)-&gt;(222,None)
+# 1. (000, Next)-&gt;(111, None)-&gt;(222,None)
+# 2. __head -&gt; (000, Next)-&gt;.....</code></pre>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        # 让指针(游标cur)有首先指向头节点对象 cur -&gt; __head 
+        # 即 cur, __head 都指向了头节点对象
+        cur = self.__head
+        # 开始计数, 让指针一边移动, 则一边计数
+        count = 0 
+        # while 循环,让游标移动, 停止条件是当指针指向当前节点的next值为None时
+        # 关于count取值, 0:cur=None, 1:cur.next == None (指针指向哪为位置)
+        while cur != None:
+            count += 1 
+            # 实现指针的&quot;移动&quot;: Python中其实就是&quot;=&quot;表示 &quot;-&gt;&quot; , 注意&#39;=&#39;要从右往左看
+            cur = cur.next  # 右到左: 将当前节点的next, 让cur去指向
+        return count
+            
+        
+    def travel(self):
+        &quot;&quot;&quot;元素遍历&quot;&quot;&quot;
+        # cur-&gt;__head
+        cur = self.__head
+        # 移动, 然后print节点的元素, 当cur==None时终止
+        while cur != None:
+            print(cur.data, end=&#39; &#39; )
+            cur = cur.next
+        
+    def append(self, item):
+        &quot;&quot;&quot;尾部添加元素&quot;&quot;&quot;
+        node = Node(item)  # 用户只关心值, 不关心指针
+        # 从头往后遍历
+        cur = self.__head
+        # 考虑空链表情况 if cur is None:
+        if self.is_empty():
+            # 直接将 __head -&gt; node即可
+            self.__head = node
+        else:
+            while cur.next != None:
+                cur = cur.next
+            # 将尾节点的next -&gt; node
+            cur.next = node
+
+    def add(self, item):
+        &quot;&quot;&quot;从头部插入元素&quot;&quot;&quot;
+        node = Node(item)
+        # 顺序很关键, 先node的next指向原先 __head所指向的节点, 然后再更新__head-&gt;node
+        node.next = self.__head.next
+        self.__head = node
+        
+    </code></pre>
+<pre><code><code># 测试
+l = SingleLinkList()
+
+print(l.is_empty())
+print(l.length())
+
+l.append(0)
+print(l.is_empty())
+print(l.length())
+
+for i in range(8):
+    l.append(i)
+
+# 头插入一个 666 
+l.add(666)
+l.travel()</code></pre>
+<pre><code><code>True
+0
+False
+1
+666 0 1 2 3 4 5 6 7 </code></pre>
+<h4 id="insert-实现">insert 实现</h4>
+<ul>
+<li>从任意位置插入元素: 如何定位pos(下标)</li>
+<li>找到要插入的位置下标: count计数</li>
+<li>用该位置的<strong>该node的next-&gt;当前位置节点, 前一个节点的Next指向该node, 注意顺序哦</strong></li>
+</ul>
+<pre><code><code># 分析
+# link: (111, None)-&gt;(222,None)-&gt;(333,None)
+
+# 目标: (111, None)-&gt;(222,None)-&gt;(444,None)-&gt;(333,None)
+
+# 顺序: (444,None)-&gt;(333,None); ...(222,None)-&gt;(444,None)
+</code></pre>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        # 让指针(游标cur)有首先指向头节点对象 cur -&gt; __head 
+        # 即 cur, __head 都指向了头节点对象
+        cur = self.__head
+        # 开始计数, 让指针一边移动, 则一边计数
+        count = 0 
+        # while 循环,让游标移动, 停止条件是当指针指向当前节点的next值为None时
+        # 关于count取值, 0:cur=None, 1:cur.next == None (指针指向哪为位置)
+        while cur != None:
+            count += 1 
+            # 实现指针的&quot;移动&quot;: Python中其实就是&quot;=&quot;表示 &quot;-&gt;&quot; , 注意&#39;=&#39;要从右往左看
+            cur = cur.next  # 右到左: 将当前节点的next, 让cur去指向
+        return count
+            
+        
+    def travel(self):
+        &quot;&quot;&quot;元素遍历&quot;&quot;&quot;
+        # cur-&gt;__head
+        cur = self.__head
+        # 移动, 然后print节点的元素, 当cur==None时终止
+        while cur != None:
+            print(cur.data, end=&#39; &#39; )
+            cur = cur.next
+        
+    def append(self, item):
+        &quot;&quot;&quot;尾部添加元素&quot;&quot;&quot;
+        node = Node(item)  # 用户只关心值, 不关心指针
+        # 从头往后遍历
+        cur = self.__head
+        # 考虑空链表情况 if cur is None:
+        if self.is_empty():
+            # 直接将 __head -&gt; node即可
+            self.__head = node
+        else:
+            while cur.next != None:
+                cur = cur.next
+            # 将尾节点的next -&gt; node
+            cur.next = node
+
+    def add(self, item):
+        &quot;&quot;&quot;从头部插入元素&quot;&quot;&quot;
+        node = Node(item)
+        # 顺序很关键, 先node的next指向原先 __head所指向的节点, 然后再更新__head-&gt;node
+        node.next = self.__head.next
+        self.__head = node
+        
+    def insert(self, pos, item):
+        &quot;&quot;&quot;从任意位置插入元素&quot;&quot;&quot;
+        # 考虑pos特殊情况
+        if pos &lt;= 0:
+            self.add(item)
+        elif pos &gt; (self.length()-1):  # 不能包含 ==, 因为insert是前插入哦
+            self.append(item)
+        else:
+            node = Node(item)
+            # 前一个节点, 引入一个游标 pre 表示前一个节点
+            pre = self.__head
+
+            count = 0
+            while count &lt; (pos-1):  # 到该位置的前一个节点时终止
+                count += 1
+                pre = pre.next  # 移动
+            # 当循环结束后,pre指向(pos-1) 对该位置的前一个节点操作: 
+            # 1. 先用node.next -&gt; 原先节点指向的node
+            # 2. pre的next -&gt; node
+            node.next = pre.next
+            pre.next = node</code></pre>
+<pre><code><code># 测试
+l = SingleLinkList()
+
+print(l.is_empty())
+print(l.length())
+
+l.append(0)
+print(l.is_empty())
+print(l.length())
+
+for i in range(8):
+    l.append(i)
+
+# 头插入一个 666 
+l.add(666)
+
+# inset
+l.insert(-1, 999)
+l.insert(2, 6699)
+l.insert(888,999)
+l.insert(5,&#39;cj&#39;)
+
+l.travel()</code></pre>
+<pre><code><code>True
+0
+False
+1
+999 0 6699 1 2 cj 3 4 5 6 7 999 
+</code></pre>
+<h4 id="search实现">search实现</h4>
+<ul>
+<li>游标去遍历, 比对值</li>
+</ul>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        # 让指针(游标cur)有首先指向头节点对象 cur -&gt; __head 
+        # 即 cur, __head 都指向了头节点对象
+        cur = self.__head
+        # 开始计数, 让指针一边移动, 则一边计数
+        count = 0 
+        # while 循环,让游标移动, 停止条件是当指针指向当前节点的next值为None时
+        # 关于count取值, 0:cur=None, 1:cur.next == None (指针指向哪为位置)
+        while cur != None:
+            count += 1 
+            # 实现指针的&quot;移动&quot;: Python中其实就是&quot;=&quot;表示 &quot;-&gt;&quot; , 注意&#39;=&#39;要从右往左看
+            cur = cur.next  # 右到左: 将当前节点的next, 让cur去指向
+        return count
+            
+        
+    def travel(self):
+        &quot;&quot;&quot;元素遍历&quot;&quot;&quot;
+        # cur-&gt;__head
+        cur = self.__head
+        # 移动, 然后print节点的元素, 当cur==None时终止
+        while cur != None:
+            print(cur.data, end=&#39; &#39; )
+            cur = cur.next
+        
+    def append(self, item):
+        &quot;&quot;&quot;尾部添加元素&quot;&quot;&quot;
+        node = Node(item)  # 用户只关心值, 不关心指针
+        # 从头往后遍历
+        cur = self.__head
+        # 考虑空链表情况 if cur is None:
+        if self.is_empty():
+            # 直接将 __head -&gt; node即可
+            self.__head = node
+        else:
+            while cur.next != None:
+                cur = cur.next
+            # 将尾节点的next -&gt; node
+            cur.next = node
+
+    def add(self, item):
+        &quot;&quot;&quot;从头部插入元素&quot;&quot;&quot;
+        node = Node(item)
+        # 顺序很关键, 先node的next指向原先 __head所指向的节点, 然后再更新__head-&gt;node
+        node.next = self.__head.next
+        self.__head = node
+        
+    def insert(self, pos, item):
+        &quot;&quot;&quot;从任意位置插入元素&quot;&quot;&quot;
+        # 考虑pos特殊情况
+        if pos &lt;= 0:
+            self.add(item)
+        elif pos &gt; (self.length()-1):  # 不能包含 ==, 因为insert是前插入哦
+            self.append(item)
+        else:
+            node = Node(item)
+            # 前一个节点, 引入一个游标 pre 表示前一个节点
+            pre = self.__head
+
+            count = 0
+            while count &lt; (pos-1):  # 到该位置的前一个节点时终止
+                count += 1
+                pre = pre.next  # 移动
+            # 当循环结束后,pre指向(pos-1) 对该位置的前一个节点操作: 
+            # 1. 先用node.next -&gt; 原先节点指向的node
+            # 2. pre的next -&gt; node
+            node.next = pre.next
+            pre.next = node
+            
+    def search(self, item):
+        &quot;&quot;&quot;查找元素&quot;&quot;&quot;
+        cur = self.__head
+        # 循环遍历比较值即可
+        while cur != None:
+            if cur.data == item:
+                return True
+            else:
+                # 记得移动游标 ,不然就死循环了
+                cur = cur.next
+        return False
+    </code></pre>
+<h4 id="remove实现">remove实现</h4>
+<ul>
+<li>删除某个元素, 删掉第一次找到的那个元素哦</li>
+<li>原理: cur找到该节点后, 用pre.next -&gt; cur.next 即可</li>
+<li>即需要<strong>两个游标: pre 和cur</strong></li>
+</ul>
+<hr />
+<p>但其实, 只需要pre就能达到效果呢</p>
+<ul>
+<li>pre.next -&gt; node.next 即** pre.next -&gt; pre.next.next**</li>
+</ul>
+<pre><code><code>class Node(object):
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None  
+
+class SingleLinkList(object):
+    &quot;&quot;&quot;单链表&quot;&quot;&quot;
+    def __init__(self, node=None):
+        self.__head = node 
+        self.next = None
+    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        # 只要 __head指向的节点是None即链表为空
+        return self.__head == None
+    
+    def length(self):
+        &quot;&quot;&quot;链表的长度&quot;&quot;&quot;
+        # 让指针(游标cur)有首先指向头节点对象 cur -&gt; __head 
+        # 即 cur, __head 都指向了头节点对象
+        cur = self.__head
+        # 开始计数, 让指针一边移动, 则一边计数
+        count = 0 
+        # while 循环,让游标移动, 停止条件是当指针指向当前节点的next值为None时
+        # 关于count取值, 0:cur=None, 1:cur.next == None (指针指向哪为位置)
+        while cur != None:
+            count += 1 
+            # 实现指针的&quot;移动&quot;: Python中其实就是&quot;=&quot;表示 &quot;-&gt;&quot; , 注意&#39;=&#39;要从右往左看
+            cur = cur.next  # 右到左: 将当前节点的next, 让cur去指向
+        return count
+            
+        
+    def travel(self):
+        &quot;&quot;&quot;元素遍历&quot;&quot;&quot;
+        # cur-&gt;__head
+        cur = self.__head
+        # 移动, 然后print节点的元素, 当cur==None时终止
+        while cur != None:
+            print(cur.data, end=&#39; &#39; )
+            cur = cur.next
+        
+    def append(self, item):
+        &quot;&quot;&quot;尾部添加元素&quot;&quot;&quot;
+        node = Node(item)  # 用户只关心值, 不关心指针
+        # 从头往后遍历
+        cur = self.__head
+        # 考虑空链表情况 if cur is None:
+        if self.is_empty():
+            # 直接将 __head -&gt; node即可
+            self.__head = node
+        else:
+            while cur.next != None:
+                cur = cur.next
+            # 将尾节点的next -&gt; node
+            cur.next = node
+
+    def add(self, item):
+        &quot;&quot;&quot;从头部插入元素&quot;&quot;&quot;
+        node = Node(item)
+        # 顺序很关键, 先node的next指向原先 __head所指向的节点, 然后再更新__head-&gt;node
+        node.next = self.__head.next
+        self.__head = node
+        
+    def insert(self, pos, item):
+        &quot;&quot;&quot;从任意位置插入元素&quot;&quot;&quot;
+        # 考虑pos特殊情况
+        if pos &lt;= 0:
+            self.add(item)
+        elif pos &gt; (self.length()-1):  # 不能包含 ==, 因为insert是前插入哦
+            self.append(item)
+        else:
+            node = Node(item)
+            # 前一个节点, 引入一个游标 pre 表示前一个节点
+            pre = self.__head
+
+            count = 0
+            while count &lt; (pos-1):  # 到该位置的前一个节点时终止
+                count += 1
+                pre = pre.next  # 移动
+            # 当循环结束后,pre指向(pos-1) 对该位置的前一个节点操作: 
+            # 1. 先用node.next -&gt; 原先节点指向的node
+            # 2. pre的next -&gt; node
+            node.next = pre.next
+            pre.next = node
+            
+    def search(self, item):
+        &quot;&quot;&quot;查找元素&quot;&quot;&quot;
+        cur = self.__head
+        # 循环遍历比较值即可
+        while cur != None:
+            if cur.data == item:
+                return True
+        return False
+    
+    def remove(self, item):
+        &quot;&quot;&quot;删除首次找到的该元素-两个游标&quot;&quot;&quot;
+        pre = None
+        cur = self.__head
+        while cur != None:
+            if cur.data == item:
+                # 判断是否为 head
+                if cur == self.__head:
+                    self.__head = cur.next
+                else:
+                    # 删除: pre.next -&gt; cur.next
+                    pre.next = cur.next
+                break
+            else:
+               # 移动: pre移动一次, cur也移动一次, 顺序: 必须先移动pre, 才能跟上cur的节奏哦
+                pre = cur
+                cur = cur.next
+</code></pre>
+<pre><code><code># 测试
+l = SingleLinkList()
+
+print(l.is_empty())
+print(l.length())
+
+l.append(0)
+print(l.is_empty())
+print(l.length())
+
+for i in range(8):
+    l.append(i)
+
+# 头插入一个 666 
+l.add(666)
+
+# inset
+l.insert(-1, 999)
+l.insert(2, 6699)
+l.insert(888,999)
+l.insert(5,&#39;cj&#39;)
+# 遍历
+l.travel()
+
+l.remove(999)
+# l.remove(&#39;aaa&#39;)</code></pre>
+<pre><code><code>True
+0
+False
+1
+999 0 6699 1 2 cj 3 4 5 6 7 999 
+</code></pre>
+<pre><code><code>l.travel()</code></pre>
+<pre><code><code>0 6699 1 2 cj 3 4 5 6 7 999 
+</code></pre>
+<pre><code><code>l.remove(999)
+l.travel()</code></pre>
+<pre><code><code>0 6699 1 2 cj 3 4 5 6 7 
+</code></pre>
+<h3 id="单链表完整实现">单链表完整实现</h3>
+<ul>
+<li>object Python3是默认继承的</li>
+<li>理解<strong>指向</strong>在Python中就是&quot;=&quot;, 从右往左看</li>
+<li>要在头脑中有画面感, 毕竟, &quot;=&quot;就是'-&gt;'指针呀</li>
+</ul>
+<pre><code><code>class Node:
+    &quot;&quot;&quot;节点类&quot;&quot;&quot;
+    def __init__(self, data=None):
+        self.data = data
+        self.next = None
+        
+class SingleLinkList:
+    &quot;&quot;&quot;单链表类&quot;&quot;&quot;
+    def __init__(self, node=None):
+        &quot;&quot;&quot;构造链表的头节点&quot;&quot;&quot;
+        self.__head = node
+        
+    @property    
+    def is_empty(self):
+        &quot;&quot;&quot;链表是否为空&quot;&quot;&quot;
+        return self.__head == None
+    
+    @property
+    def length(self):
+        &quot;&quot;&quot;链表中元素的个数&quot;&quot;&quot;
+        current = self.__head
+        count = 0 
+        while current is not None:
+            count += 1 
+            # 游标不断向后移动
+            current = current.next
+        return count
+    
+    def travel(self):
+        &quot;&quot;&quot;遍历列表元素&quot;&quot;&quot;
+        current = self.__head
+        while current != None:
+            print(current.data)
+            current = current.next
+            
+    def append(self, item):
+        &quot;&quot;&quot;尾部插入元素&quot;&quot;&quot;
+        node = Node(item)
+        current = self.__head
+        if self.is_empty:
+            self.__head = node
+        else:
+            while current.next is not None:
+                current = current.next
+            current.next = node
+    
+    def add(self, item):
+        &quot;&quot;&quot;头部插入元素&quot;&quot;&quot;
+        node = Node(item)
+        if self.is_empty:
+            self.__head = node
+        else:
+            # 插入顺序,脑海里要有画面感
+            node.next = self.__head
+            self.__head = node
+
+    def insert(self, position, item):
+        &quot;&quot;&quot;从指定位置插入元素&quot;&quot;&quot;
+        if position &lt;= 0:
+            self.add(item)
+        elif position &gt; (self.length-1):
+            self.append(item)
+        else:
+            node = Node(item)
+            prior = self.__head
+            count = 0
+            while count &lt; (position-1):
+                count += 1
+                prior = prior.next
+            # 此时prior已定位到当前位置前一个节点
+            node.next = prior.next
+            prior.next = node
+    
+    def search(self, item):
+        &quot;&quot;&quot;搜索元素并范围其位置-首次被找到&quot;&quot;&quot;
+        position = 0 
+        current = self.__head
+        while current:
+            position += 1 
+            if current.data == item:
+                return position-1
+            else:
+                # 记得移动游标,不然就死循环了
+                current = current.next
+        return False
+    
+    def remove(self, item):
+        &quot;&quot;&quot;删除元素-首次被找到&quot;&quot;&quot;
+        # 删除: prior.next -&gt; prior.next.next 或者: prior.next = cur.next
+#         prior = self.__head
+#         position = self.search(item)
+#         if position:
+#             count = 0
+#             while prior:
+#                 count += 1
+#                 if count == position-1
+#                 prior = prior.next
+                
+#         return 
+
+        # 这里采用: prior.next = cur.next
+        prior = None
+        current = self.__head
+        while current:
+            if current.data == item:
+                # 判断是否为头节点
+                if current == self.__head:
+                    self.__head = current.next
+                else:
+                    prior.next = current.next
+                break 
+            else:
+                # prior先移动一次,到current的位置, 然后current再往后移动一次
+                prior = current
+                current = current.next
+</code></pre>
+<pre><code><code>l = SingleLinkList()
+l.is_empty</code></pre>
+<pre><code><code>True
+</code></pre>
+<pre><code><code>l.append(1)
+l.add(0)
+l.append(&#39;cj&#39;)
+l.insert(999,666)
+l.travel()
+l.search(&#39;cj&#39;)</code></pre>
+<pre><code><code>0
+1
+cj
+666
+</code></pre>
+<pre><code><code>2
+</code></pre>
+<pre><code><code>l.add(333)
+l.travel()</code></pre>
+<pre><code><code>333
+333
+333
+0
+1
+cj
+666
+</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

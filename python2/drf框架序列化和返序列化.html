@@ -1,0 +1,266 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修drf框架序列化和返序列化' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>drf框架序列化和返序列化</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11455508.html</div><br>
+    <h1 id="自我总结">0903自我总结</h1>
+<h1 id="drf框架序列化和反序列化">drf框架序列化和反序列化</h1>
+<p><code>from rest_framework import serializers</code></p>
+<h2 id="一.自己对于序列化和反序列化使用的分类">一.自己对于序列化和反序列化使用的分类</h2>
+<p>前后端交互主要有<code>get</code>,<code>post</code>,<code>puch</code>,<code>put</code>,<code>deleter</code></p>
+<p>其中用到序列化的<code>get</code></p>
+<p>用到反序列化的剩下四中</p>
+<h2 id="二.序列化的使用">二.序列化的使用</h2>
+<h3 id="首先我们要根据我们定义的模型一一对应定义一个继承serializers.serializer的类">1.首先我们要根据我们定义的模型一一对应定义一个继承<code>serializers.Serializer</code>的类</h3>
+<pre><code><code>class UserSerializer(serializers.Serializer):
+    username = serializers.CharField()
+    #不需要的字段=serializers.CharField(write_only=True)
+    sex = serializers.IntegerField()
+
+    gender = serializers.SerializerMethodField()
+    def get_gender(self, user_obj):
+        return user_obj.get_sex_display()
+    
+    icon = serializers.SerializerMethodField() #SerializerMethodField为自定义字段
+    def get_icon(self, user_obj):
+        icon_url = &#39;http://127.0.0.1:8000{}{}&#39;.format(settings.MEDIA_URL, user_obj.icon)
+        return icon_url</code></pre>
+<p>自定义字段,拿<code>gander</code>字段举例在models中是</p>
+<pre><code><code>SEX_CHOICES = [
+    (0, &#39;男&#39;),     #choices选择中,括号里前者表示填写的值,后者表示对应的值
+    (1, &#39;女&#39;),
+]
+# 为choices的字段，获取值后的映射关系 get_字段名_display()
+sex = models.IntegerField(choices=SEX_CHOICES, default=0)</code></pre>
+<pre><code><code>def get_gender(self, user_obj):
+    return user_obj.get_sex_display()</code></pre>
+<pre><code><code>基于GET请求的get_固定写法
+def get_model类中有字段(self,obj):
+    #逻辑处理
+    return 修改后的代码</code></pre>
+<p><code>需要序列化字段</code></p>
+<ul>
+<li><code>在不做任何处理的情况下</code>我们定义的类里面的字段必须在model类中必须存在该字段</li>
+<li>参与序列化的属性名必须与model类的属性相同</li>
+<li>只出现在序列化中不出现在反序列化中我们要加只读属性<code>read_only=True</code></li>
+<li>如果我们Serializer类中定义字段类型为<code>SerializerMethodField</code>及<code>自定义字段类型不用遵守类里面的字段必须在model类中必须存在该字段</code></li>
+</ul>
+<p><code>不需要序列化字段</code></p>
+<ul>
+<li>不需要序列化的属性字段在序列化类中不需要声明</li>
+<li>不需要序列化的属性字段在序列化类中设置只写属性<code>write_only=True</code></li>
+</ul>
+<h3 id="在views视图中">2.在views视图中</h3>
+<pre><code><code>from rest_framework.views import APIView
+class UserAPIView(APIView):
+     def get(self, request, *args, **kwargs):
+        user_obj = models.User.objects.all().frist
+        user_obj_data = &#39;&#39;&#39;我们自定义的Serializer类&#39;&#39;&#39;(user_obj).data
+        return APIResponse(0, &#39;ok&#39;, results=user_obj_data)</code></pre>
+<ul>
+<li>获取models中的对象</li>
+<li>我们自定义的Serializer类传入models中的对象然后<code>.data</code></li>
+<li>如果models中对象为多个Serializer传入models中的对象以外<code>many=True</code>还需传入这个参数</li>
+<li><code>many</code>这个参数默认是False所有我们序列化单个参数时候不需要传入<code>many</code></li>
+<li>序列化数据可以为状态User类的多个对象的<code>单列集合</code>,不能是多列集合</li>
+</ul>
+<p><code>注</code>:</p>
+<ul>
+<li>单列集合<code>[a,b,c.....]</code> |<code>{a,b,c.....}</code>|<code>(a,b,c.....)</code>|<code>QuerySet</code></li>
+<li>多列集合<code>{k1:v1,k2:v2.......}</code></li>
+</ul>
+<h2 id="三反序列化的使用">三反序列化的使用</h2>
+<h3 id="首先我们要根据我们定义的模型一一对应定义一个继承serializers.serializer的类-1">1.首先我们要根据我们定义的模型一一对应定义一个继承<code>serializers.Serializer</code>的类</h3>
+<pre><code><code>class UserDeserializer(serializers.Serializer):
+    username = serializers.CharField(
+        min_length=3,
+        error_messages={
+            &#39;min_length&#39;: &#39;用户名太短&#39;
+        }
+    )
+    password = serializers.CharField(
+        min_length=3,
+        error_messages={
+            &#39;min_length&#39;: &#39;密码太短&#39;
+        }
+    )
+    re_password = serializers.CharField(
+        min_length=3,
+        required=True,
+        error_messages={
+            &#39;min_length&#39;: &#39;确认密码太短&#39;,
+            &#39;required&#39;: &#39;确认密码不能为空&#39;
+        }
+    )</code></pre>
+<p><code>相较于序列化定义</code>反序列化中增加了条件的筛选</p>
+<p><code>注意点</code>:如果类的字段值应用在反序列化,我们可以在他的字段的属性上加上<code>write_only=True</code></p>
+<p>里面所提及的字段必须传入</p>
+<p>常用的约数条件<code>与django中from组件约数条件有点类似</code>:</p>
+<ul>
+<li><code>error_messages</code> 错误信息的属性</li>
+<li><code>required</code>是否为空</li>
+<li><code>max_length</code> 最长</li>
+<li><code>min_length</code> 最短</li>
+<li><code>invalid</code> 格式</li>
+</ul>
+<h4 id="局部钩子">局部钩子</h4>
+<pre><code><code>class UserDeserializer(serializers.Serializer):
+    .......
+    def validate_字段名称(self,value):
+        #代码块
+        if 情况不满足:
+            raise serializers.ValidationError(&#39;异常信息&#39;) #抛出异常
+            return value
+        #也就是对字段数据进行二次处理</code></pre>
+<h4 id="全局钩子">全局钩子</h4>
+<pre><code><code> class UserDeserializer(serializers.Serializer):
+    .......
+    def validate(self, attrs):
+        #attrs是所有字段的一个类似字典的集合
+        #我们要其中某个字段
+        attrs.get(&#39;字段名&#39;)
+        return attrs
+       # 最终结果抛出异常或者返回attrs</code></pre>
+<h3 id="内容新增使用">2.内容新增使用</h3>
+<p>我们如果想自定义create的相关内容我们可以<code>Serializer类中</code>再加个<code>create</code>方法</p>
+<pre><code><code>class UserDeserializer(serializers.Serializer):
+    .......
+    def create(self, validated_data):
+        try:
+            return modles中的类.objects.create(**validated_data)
+        except:
+            raise IOError(&#39;数据库入库失败&#39;)</code></pre>
+<p>我们更具需求可以先自定义一个APIResponse,继承rest_framework中的Response也可以直接使用他自带的</p>
+<p>自定义APIResponse,<code>建议自定义</code></p>
+<pre><code><code>from rest_framework.response import Response
+&quot;&quot;&quot;
+Response({
+    &#39;status&#39;: 0,
+    &#39;msg&#39;: &#39;ok&#39;,
+    &#39;results&#39;: [],
+    &#39;token&#39;: &#39;&#39;
+}, headers={}, status=200, content_type=&quot;&quot;)
+
+APIResponse(0, &#39;ok&#39;, results, status, headers, content_type)
+&quot;&quot;&quot;
+
+class APIResponse(Response):
+    def __init__(self, data_status, data_msg, results=None,
+                 status=None, headers=None, content_type=None, **kwargs):
+        data = {
+            &#39;status&#39;: data_status,
+            &#39;msg&#39;: data_msg
+        }
+        if results is not None:
+            data[&#39;results&#39;] = results
+        data.update(kwargs)
+        super().__init__(data=data, status=status, headers=headers, content_type=content_type)</code></pre>
+<p>在视图函数中的设置</p>
+<pre><code><code>class UserAPIView(APIView):
+    def post(self, request, *args, **kwargs):  #一般都是post请求
+        request_data = request.data
+        user_ser = &#39;&#39;&#39;我们自定义的Serializer类&#39;&#39;&#39;(data=request_data) #传入request.data
+        
+        
+        if user_ser.is_valid():  # 自定义处理校验成功的逻辑
+            user_obj = user_ser.save()
+            return APIResponse(0, &#39;ok&#39;,
+                results=serializers.UserSerializer(user_obj).data
+            )
+        else:  # 自定义返回错误信息
+            return APIResponse(1, &#39;failed&#39;, results=user_ser.errors)</code></pre>
+<h3 id="内容修改使用">3.内容修改使用</h3>
+<p>我们如果想自定义update的相关内容我们可以<code>Serializer类中</code>再加个<code>update</code>方法</p>
+<pre><code><code>class UserDeserializer(serializers.Serializer):
+         .......
+    def update(self, instance, validated_data):
+        # instance自定义传入的要更新的原数据（pk | obj | queryset）
+        # validated_data校验通过后的新数据
+        # instance的值外部反序列化传入要更新的自定义标识决定
+        instance.update(**validated_data)
+        return instance.first()</code></pre>
+<p>在视图函数中的设置</p>
+<p><code>单整体改</code></p>
+<pre><code><code>class UserV2APIView(APIView):
+    
+    def put(self, request, *args, **kwargs):
+        pk = kwargs.get(&#39;pk&#39;)
+        if not pk:
+            return APIResponse(1, &#39;pk error&#39;)
+
+        user_query = models.User.objects.filter(pk=pk, is_delete=False)
+        if not user_query:
+            return APIResponse(1, &#39;user error&#39;)
+
+        # 第一种：user_query完成数据的更新
+        # user_query = models.User.objects.filter(pk=pk)
+        # user_query.update(**kwargs)
+
+        # 第二种：user_obj完成数据的更新
+        # user_obj = models.User.objects.filter(pk=pk).first()  # type: models.User
+        # user_obj.username = &#39;new_username&#39;
+        # ...
+        # user_obj.save()
+  
+
+       #这里的instance必须传参（pk | obj | queryset）
+        request_data = request.data
+        user_ser = serializers.UserV2Serializer(instance=user_query, data=request_data)
+        if user_ser.is_valid():
+            # save的返回值是由update内部自定义的返回值决定
+            user_obj = user_ser.save()
+            return APIResponse(0, &#39;ok&#39;,
+                results=serializers.UserV2Serializer(user_obj).data
+            )
+        else:
+            return APIResponse(1, &#39;failed&#39;, user_ser.errors)</code></pre>
+<p><code>单删</code>或<code>单体修改</code></p>
+<p>现在数据都是很重要的一般情况下不会吧数据删除只会做个标记字段<code>其本质还是局部更新</code></p>
+<pre><code><code>    def delete(self, request, *args, **kwargs):
+        pk = kwargs.get(&#39;pk&#39;)
+        if not pk:
+            return APIResponse(1, &#39;pk error&#39;)
+        user_obj = models.User.objects.filter(pk=pk, is_delete=False).first()
+        if not user_obj:
+            return APIResponse(1, &#39;删除失败&#39;)
+        user_obj.is_delete = True
+        user_obj.save()
+        return APIResponse(0, &#39;删除成功&#39;)</code></pre>
+<h2 id="四.model字段修订与时区修改">四.model字段修订与时区修改</h2>
+<p><code>model.py</code></p>
+<pre><code><code>    create_time = models.DateTimeField(auto_now_add=True, null=True)
+    is_delete = models.BooleanField(default=False)</code></pre>
+<p><code>setting.py</code></p>
+<p>时区相关设置</p>
+<pre><code><code>LANGUAGE_CODE = &#39;zh-hans&#39;   #其中 zh-Hans是简体中文  zh-Hant是繁体中文
+
+TIME_ZONE = &#39;Asia/Shanghai&#39;  #上海时间
+
+USE_I18N = True   #国际化支持 I18N
+
+USE_L10N = True
+
+USE_TZ = False   #USE_TZ设置为True,Django会使用系统默认设置的时区即America/Chicago,此时的TIME_ZONE不管有没有设置都不起作用。</code></pre>
+<p>注意点:</p>
+<p>USE_TZ为<code>True</code>,<code>TIME_ZONE</code>不管有没有设置都不起作用</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

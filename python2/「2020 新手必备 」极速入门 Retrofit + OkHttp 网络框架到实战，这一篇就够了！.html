@@ -1,0 +1,618 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！</center></div><div class='banquan'>原文出处:本文由博客园博主__yuanhao提供。<br/>
+原文连接:https://www.cnblogs.com/yuanhao-1999/p/12095983.html</div><br>
+    <h1 id="老生常谈">老生常谈</h1>
+<ul>
+<li>什么是 <code>Retrofit</code> ？</li>
+<li><code>Retrofit</code> 早已不是什么新技术了，想必看到这篇博客的大家都早已熟知，这里就不啰嗦了，简单介绍下：<br />
+<img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！0.png" alt="retrofit" /></li>
+<li>Retrofit 是一个针对 Java 和 Android 的设计的 <code>REST</code> 客户机。它通过基于 <code>REST</code> 的 web 服务检索和上传 JSON (或其他结构化数据)变得相对容易。在使用中，您可以配置用于数据序列化的转换器。对于 JSON ，通常使用<code>Gson</code> ，但是可以添加自定义转换器来处理 <code>XML</code> 或其他协议。Retrofit 对 HTTP 请求使用 <code>OkHttp</code> 库。</li>
+</ul>
+<blockquote>
+<p>A type-safe HTTP client for Android and Java</p>
+</blockquote>
+<ul>
+<li>好了介绍结束，想必大家的大刀都饥渴难耐了，那么我们直接开始吧</li>
+</ul>
+<h1 id="本文流程">本文流程</h1>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！1.png" alt="福利" /></p>
+<h1 id="依赖注入">依赖注入</h1>
+<ul>
+<li>so Easy 不用说了吧</li>
+<li>在 app module 下的 <code>build.gradle</code> 中添加以下依赖：</li>
+</ul>
+<pre><code><code>// OkHttp3
+api &#39;com.squareup.okhttp3:okhttp:3.10.0&#39;
+api &#39;com.squareup.okio:okio:1.8.0&#39;
+// Retrofit
+api &#39;com.squareup.retrofit2:retrofit:2.7.0&#39;
+// Gson 服务器数据交互
+api &#39;com.google.code.gson:gson:2.8.6&#39;</code></pre>
+<blockquote>
+<p>依赖注入很简单， Retrofit 一直是结合 <code>OkHttp</code> 和 Gson（无所谓什么 JSON 解析器都行，这里就用 <code>Gson</code> 了）<br />
+我这里专门找了最新的版本库，so～ 大家直接用即可</p>
+</blockquote>
+<ul>
+<li>别急，前面也说了 <code>Retrofit</code> 是结合 <code>OkHttp</code> 做网络请求用的，所以悉心提醒记得开下网络权限：</li>
+</ul>
+<pre><code><code>&lt;uses-permission android:name=&quot;android.permission.INTERNET&quot; /&gt;</code></pre>
+<h1 id="全面进击">全面进击</h1>
+<ul>
+<li>网上关于 <code>Retrofit</code> 的教程可谓琳瑯满目，但是总给人一种云里雾里的感觉</li>
+<li>所以本文的亮点就在于，我会通过我自己实际项目的代码来给大家介绍 Retrofit 到底牛在哪</li>
+</ul>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！2.png" alt="亮点" /></p>
+<h2 id="retrofit-开始之前">Retrofit 开始之前</h2>
+<ul>
+<li>这里我将以我的一个开源项目 <a href="https://github.com/FishInWater-1999/FIWKeepApp">FIWKeepApp</a> 的登录模块举例</li>
+<li>在 <code>Retrofit</code> 出现之前，原始社会的我们一般是这样进行网络请求的：</li>
+</ul>
+<pre><code><code>    public void login2() {
+        OkHttpClient okHttpClient = new OkHttpClient();
+        //Form表单格式的参数传递
+        FormBody formBody = new FormBody
+            .Builder()
+            //设置参数名称和参数值
+            .add(&quot;username&quot;,mAccountEdit.getText().toString())
+            .add(&quot;password&quot;,mPasswordEdit.getText().toString())
+            .build();
+        Request request = new Request
+            .Builder()
+            //Post请求的参数传递
+            .post(formBody)
+            .url(&quot;http://hyh.hljdx.net:8080/SitUpWebServer/login&quot;)
+            .build();
+        okHttpClient.newCall(request).enqueue(new Callback() {
+            @Override
+            public void onFailure(okhttp3.Call call, IOException e) {
+                Log.d(&quot;my_Test&quot;, e.getMessage());
+            }
+
+            @Override
+            public void onResponse(okhttp3.Call call, Response response) throws IOException {
+                String result = response.body().toString();
+                UserBean userBean = JSON.parseObject(result, UserBean.class);
+                Log.d(&quot;my_Test&quot;,userBean.getUser_head_img());
+                response.body().close();
+            }
+        });
+    }</code></pre>
+<ul>
+<li>有没有一种云里雾里的感觉？</li>
+<li>首先你得先将要发送的表单信息封装为 <code>Post</code> 请求的 <code>Body</code> 对象，那么有的同学会问什么是 <code>POST</code> ，什么是 <code>Body</code>？这个问题建议大家 <code>Google</code> 下，这里我建议大家学一些后端或者计网的知识，很简单也很有必要</li>
+<li>接着你需要再封装一个 <code>Request</code> 对象，也就是我们的请求体，在这里设置信息要提交到哪去</li>
+<li>最后调用 <code>okHttpClient</code> 的相应方法，将前面实现的东西组合发送，并在回调里接收</li>
+<li>所以，这一步步，又是封装 <code>FormBody</code> 又是封装 <code>Request</code> ，搞了半天还要用 <code>okHttpClient</code> 发送，一套下来头晕眼花，那么如何解决呢？</li>
+<li>那么 <code>Retrofit</code> 救世主就出现了</li>
+</ul>
+<h1 id="retrofit-实现">Retrofit 实现</h1>
+<ul>
+<li>还是我项目中的登录模块，我将其改为 <code>Retrofit</code> 的形式</li>
+<li>同样完成上面的功能，如果用 <code>Retrofit</code> 实现只需要：</li>
+</ul>
+<pre><code><code>    // baseUrl() 设置路由地址
+    Retrofit retrofit = new Retrofit
+        .Builder()
+        .baseUrl(ApiUtils.BASE_URL)
+        .addConverterFactory(GsonConverterFactory.create())
+        .build();
+        
+    // 设置参数
+    Call&lt;UserBean&gt; call = retrofit.create(UserMgrService.class)
+        .login( mAccountEdit.getText().toString(),
+            mPasswordEdit.getText().toString());
+            
+    // 回调
+    call.enqueue(new Callback&lt;UserBean&gt;() {
+        @Override
+        public void onResponse(Call&lt;UserBean&gt; call, Response&lt;UserBean&gt; response) {
+            Log.d(&quot;123123&quot;, &quot;msg--&quot; + response.body().getUser_head_img());
+        }
+
+        @Override
+        public void onFailure(Call&lt;UserBean&gt; call, Throwable t) {
+            // 失败时做处理
+        }
+    });</code></pre>
+<ul>
+<li>如上就实现了和纯 <code>okHttp</code> 代码一样的功能</li>
+<li>大家可能会觉得，这也没简单多少啊 ？但细心观察发现，第一步 <code>Retrofit</code> 的实例化过程，只要服务器不换代码几乎是不变的，所以我们完全可以将它封装</li>
+</ul>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！3.png" alt="优点" /></p>
+<ul>
+<li>而且大家有没有发现，如果单单使用 <code>OkHttp</code> 我们的返回值是一个 <code>Response</code> 对象，我们还需要在其中提取相应 <code>JSON</code> 对象，进行类型转换，而在 <code>Retrofit</code> 中，由于使用了数据解析器，所以这一大块代码都省略了</li>
+<li>还有很多优点，这里就不唠叨了，我们直接开始学习使用之路吧！</li>
+</ul>
+<h1 id="实现流程">实现流程</h1>
+<ul>
+<li>那么现在就给大家解释下使用的每个步骤</li>
+</ul>
+<h2 id="创建接口">创建接口</h2>
+<ul>
+<li>首先我们要创建 UserMgrService 接口</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-12-21
+ */
+public interface UserMgrService {
+
+    /**
+     * GET 用 Query
+     */
+    @GET(&quot;login&quot;)
+    Call&lt;UserBean&gt; login(@Query(&quot;username&quot;) String username, @Query(&quot;password&quot;) String password);
+
+}</code></pre>
+<ul>
+<li>从 <code>@GET()</code> 注解就可以猜到，这将会是一个 <code>Get</code> 请求</li>
+<li>我们在看方法体，返回值会是一个封装了 <code>UserBean</code> 的 <code>Call&lt;&gt;</code> 对象</li>
+<li>参数有两个，分别是 <code>String username</code> 和 <code>String password</code></li>
+<li>与平常方法不同的是，这两个参数各自带上了 <code>@Query(&quot;...&quot;)</code> 注解</li>
+<li>通过 <code>@Query(&quot;...&quot;)</code> 里的参数我们发现，这与 <code>okHttp</code> 创建 <code>FormBody</code> 时，<code>add</code> 的参数不谋而合</li>
+</ul>
+<blockquote>
+<p>看到这里想必大家都明白了，如果大家还不明白什么是 Get 请求，以及 @Query(&quot;...&quot;) 里的 username 和 password 是怎么的话，我这里简单说下<br />
+比如说我们现在随便打开一个网页，就拿百度图片里搜索 Github 页面为例：</p>
+</blockquote>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！4.png" alt="百度图片 GITHUB" /></p>
+<ul>
+<li>后端写服务器的同学会通过这些参数，像 <code>HashMap get(“key”)</code> 方法取值一样拿出来</li>
+</ul>
+<h4 id="post">POST</h4>
+<ul>
+<li>这样解释，想必大家就明白了</li>
+<li>除了 <code>GET</code> 方法之外 还有一种 <code>POST</code> 方法，相比于使用 <code>GET</code> ，使用 <code>POST</code> 有很多其他的优点，这里就不多说了</li>
+<li>他使用和 <code>GET</code> 的思路一样，如果用 <code>POST</code> 那么我们的代码将会是这样的：</li>
+</ul>
+<pre><code><code>public interface UserMgrService {
+
+    /**
+     * POST 用 Field
+     */
+    @POST(&quot;login&quot;)
+    @FormUrlEncoded
+    Call&lt;UserBean&gt; login(@Field(&quot;username&quot;) String username, @Field(&quot;password&quot;) String password);
+
+}</code></pre>
+<ul>
+<li>就是把注解换了套名字，然后在 <code>@POST(&quot;...&quot;)</code> 下再加上一个 <code>@FormUrlEncoded</code> 注解</li>
+<li>这里就不多说了，我们直接进入下一步</li>
+</ul>
+<h2 id="生成-retrofit-对象">生成 Retrofit 对象</h2>
+<ul>
+<li>我们先看下怎么创建和设置的：</li>
+</ul>
+<pre><code><code>// baseUrl() 设置路由地址
+Retrofit retrofit = new Retrofit
+    .Builder()
+    .baseUrl(ApiUtils.BASE_URL)
+    .addConverterFactory(GsonConverterFactory.create())
+    .build();</code></pre>
+<ul>
+<li>这里主要是两步，设置 <code>baseUrl</code> 、设置数据解析器</li>
+<li>老样子什么是 <code>baseUrl</code> ？就拿我之前用 <code>OkHttp</code> 设置的那个 url 为例</li>
+</ul>
+<pre><code><code>http://hyh.hljdx.net:8080/SitUpWebServer/login</code></pre>
+<ul>
+<li>大家可以这么理解：上面的这个 <code>url = baseurl + @GET(&quot;...&quot;)</code> 注解里传入的字符串</li>
+<li>如果我们前面设置的是 <code>@GET(&quot;login&quot;)</code> 那这里 <code>baseurl</code> 就是：<code>http://hyh.hljdx.net:8080/SitUpWebServer/</code> 是不是一下子就明白了，但是其他博客不照顾新人，从没说清楚</li>
+<li>然后就是数据解析器，大家应该还记得刚开始的时候我们导入了一个三方库：</li>
+</ul>
+<pre><code><code>// Gson 服务器数据交互
+api &#39;com.google.code.gson:gson:2.8.6&#39;</code></pre>
+<ul>
+<li>我们和服务器的数据，都是以 <code>JSON</code> 的形式交互的，比如 <code>Bing</code> 每日壁纸接口</li>
+</ul>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！5.png" alt="JSON" /></p>
+<ul>
+<li>设置了这个数据解析器，就可以把返回的信息自动封装为相应的对象，明白了吧</li>
+</ul>
+<blockquote>
+<p>具体这个对象怎么获得，大家可以联系后端，或者百度搜下 JsonFormat 插件使用或者 JSON 对象生成器，门路很多这里都告诉你们啦</p>
+</blockquote>
+<h2 id="生成接口对象">生成接口对象</h2>
+<ul>
+<li>老样子，先看看代码</li>
+</ul>
+<pre><code><code>UserMgrService service = retrofit.create(UserMgrService.class);</code></pre>
+<ul>
+<li>过于简单，调用前面 <code>retrofit</code> 对象的 <code>create()</code> 方法传入接口的 <code>class</code> 文件即可</li>
+</ul>
+<h2 id="获得-call-对象">获得 Call 对象</h2>
+<ul>
+<li>由刚开始的代码我们知道</li>
+<li>我们向服务器发送请求需要调用 <code>call</code> 对象的 <code>enqueue()</code> 方法</li>
+<li>那么 <code>Call</code> 对象怎么获得呢？其实很简单：</li>
+</ul>
+<pre><code><code>Call&lt;UserBean&gt; call = service.login( mAccountEdit.getText().toString(), mPasswordEdit.getText().toString());</code></pre>
+<ul>
+<li>说白了就是，直接调用接口的相应方法，他返回的直接就是一个 <code>Call</code> 对象</li>
+</ul>
+<h2 id="发送请求">发送请求</h2>
+<ul>
+<li>请求分两种 同步的和异步的</li>
+</ul>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！6.png" alt="比较" /></p>
+<ul>
+<li>由于请求是耗时的，假设我们发送同步请求 ，在请求就过返回之前，应用界面会进去阻塞状态</li>
+<li>说白了就是会卡，甚至卡死。。。所以说这种请求很少用到</li>
+<li>虽然不用，但负责的我还是也给大家代码：</li>
+</ul>
+<pre><code><code>Response&lt;UserBean&gt; response = call.execute();
+Log.d(&quot;123123&quot;, &quot;msg--&quot; + response.body().getUser_head_img());</code></pre>
+<ul>
+<li>具体就不说了，就是调用 <code>call</code> 的 <code>execute()</code> 会返回一个值</li>
+<li>这个值就是请求结果，大家直接用就是（ 但是在这个只没返回，比如网速慢时，手机会卡在那动不了甚至 <code>ANR</code> ）</li>
+<li>这里我介绍下异步请求：</li>
+</ul>
+<pre><code><code>// 回调
+call.enqueue(new Callback&lt;UserBean&gt;() {
+    @Override
+    public void onResponse(Call&lt;UserBean&gt; call, Response&lt;UserBean&gt; response) {
+        Log.d(&quot;123123&quot;, &quot;msg--&quot; + response.body().getUser_head_img());
+    }
+
+    @Override
+    public void onFailure(Call&lt;UserBean&gt; call, Throwable t) {
+        // 失败时做处理
+    }
+});</code></pre>
+<ul>
+<li>这就是异步方法，直接调用 <code>call</code> 的 <code>enqueue</code> 方法，传入一个 <code>Callback</code> 接口即可</li>
+<li>调用后系统自动释放资源，不会阻塞，等到请求结果返回时</li>
+<li>就会自动调用 <code>onResponse</code> 方法，方法 里的 <code>response</code> 就是处理好的结果</li>
+<li>本文代码运行后结果 <a href="https://github.com/FishInWater-1999/PictureRepository/blob/master/Dec-22-2019%2015-23-28.gif">Demo Example</a> 是不是特别简单！</li>
+</ul>
+<h1 id="登录功能实战">登录功能实战</h1>
+<ul>
+<li>到这里想必大家都已经学会了 <code>Retrofit</code> 的使用</li>
+<li>那么现在我就拿登录功能举例，看看如何在项目中引用 <code>Retrofit</code></li>
+<li>实战部分先置条件是 <code>MVP</code> + <code>ButterKnife</code>，大家很容易在网上找到资料，这就不赘述了</li>
+</ul>
+<h2 id="搭建-model-层">搭建 Model 层</h2>
+<ul>
+<li>创建接口 <code>ILoginModel</code></li>
+<li>接口对外暴露 username password 和 一个监听回调接口 (接口通过泛型传入)</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-11-12
+ */
+public interface IBaseLog&lt;L&gt; {
+
+    /**
+     * 登录 Api
+     * @param userAccount
+     * @param mPassword
+     * @param loginCallback
+     */
+    void login(String userAccount, String mPassword, L loginCallback);
+
+}</code></pre>
+<ul>
+<li>实现回调接口</li>
+<li>观察者模式，当请求信息返回后动态通知 P 层</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-12-23
+ */
+public interface IBaseRetCallback&lt;T&gt; {
+
+    void onSucceed(Response&lt;T&gt; response);
+
+    void onFailed(Throwable t);
+
+}</code></pre>
+<ul>
+<li>创建 <code>LoginModel</code> 实现 <code>ILoginModel</code> 接口</li>
+<li>实现 <code>login</code> 方法，请求成功后回调 <code>IBaseRetCallback</code> 监听</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-11-12
+ */
+public class LogViewModel implements IBaseLog&lt;IBaseRetCallback&lt;UserBean&gt;&gt; {
+
+    private final String TAG = &quot;LogViewModel&quot;;
+
+    @Override
+    public void login(String userAccount, String userPassword, final IBaseRetCallback&lt;UserBean&gt; retCallback) {
+        // baseUrl() 设置路由地址
+        Retrofit retrofit = new Retrofit
+                .Builder()
+                .baseUrl(ApiUtils.BASE_URL)
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        // 设置参数
+        UserMgrService service = retrofit.create(UserMgrService.class);
+        retrofit2.Call&lt;UserBean&gt; call = service.login( userAccount, userPassword);
+        // 回调
+        call.enqueue(new Callback&lt;UserBean&gt;() {
+            @Override
+            public void onResponse(retrofit2.Call&lt;UserBean&gt; call, Response&lt;UserBean&gt; response) {
+                retCallback.onSucceed(response);
+            }
+
+            @Override
+            public void onFailure(retrofit2.Call&lt;UserBean&gt; call, Throwable t) {
+                // 失败时做处理
+                retCallback.onFailed(t);
+            }
+        });
+    }
+
+}</code></pre>
+<h2 id="搭建-presenter-层">搭建 Presenter 层</h2>
+<ul>
+<li>首先实现 <code>Presenter</code> 层基类</li>
+<li>同样的，要搭建 <code>Presenter</code> 层基类，首先要实现器接口</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-11-12
+ */
+public interface IBasePresenter&lt;V&gt; {
+
+    /**
+     * 绑定
+     * @param mLogView
+     */
+    void attachView(V mLogView);
+
+    /**
+     * 解绑
+     */
+    void detachView();
+
+    /**
+     * 登录
+     * @param userName
+     * @param userPassword
+     * @param resultListener
+     */
+    void login(String userName, String userPassword, V resultListener);
+
+}</code></pre>
+<ul>
+<li>编写抽象类 <code>BasePresenter</code> 实现 <code>IBasePresenter</code> 接口</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-11-12
+ */
+public abstract class BasePresenter&lt;V&gt; implements IBasePresenter&lt;V&gt; {
+
+    private V view;
+
+    @Override
+    public void attachView(V mLogView) {
+        this.view = mLogView;
+    }
+
+    @Override
+    public void detachView() {
+        this.view = null;
+    }
+
+    @Override
+    public V getLoginVew() {
+        return this.view;
+    }
+
+}</code></pre>
+<ul>
+<li>然后就到了我们具体的 <code>LogPresenter</code> 类的实现</li>
+<li><code>LogPresenter</code> 类需要持有 View 层和 Model 层接口</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-11-12
+ */
+public class LogPresenter extends BasePresenter&lt;ILoginView&gt; {
+
+    private IBaseLog logViewModel;
+
+    public LogPresenter(IBaseLog logViewModel) {
+        this.logViewModel = logViewModel;
+    }
+
+    @Override
+    public void login(String userName, String userPassword, final ILoginView iLoginView) {
+        logViewModel.login(userName, userPassword, new IBaseRetCallback&lt;UserBean&gt;() {
+            @Override
+            public void onSucceed(Response&lt;UserBean&gt; response) {
+                UserBean userBean = response.body();
+                if (userBean != null) {
+                    String user_id = userBean.getUser_id();
+                    iLoginView.showLoginSuccess(user_id);
+                }
+            }
+
+            @Override
+            public void onFailed(Throwable t) {
+                iLoginView.showLoginFailed(ILoginView.ErrCode.WRONG_NET_WORK);
+            }
+        });
+
+    }
+}</code></pre>
+<ul>
+<li>上面的代码中，构造方法 LogPresenter 持有了 Model 层</li>
+<li>同时暴露了 login(..., ..., Listener) 接口，可供调用者调用</li>
+</ul>
+<h2 id="view-层实现">View 层实现</h2>
+<ul>
+<li><code>View</code> 层负责实例化 <code>Model</code> 层，并与 <code>Presenter</code> 层绑定</li>
+<li>老样子，创建 <code>BaseFragment&lt;V , P extends IBasePresenter&lt;V&gt;&gt;</code> 基类</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ * @version 2019-11-12
+ */
+public abstract class BaseFragment&lt;V , P extends IBasePresenter&lt;V&gt;&gt; extends Fragment {
+
+    /**
+     * Presenter 层
+     */
+    private P mBaseResister;
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        // 自动绑定
+        if (mBaseResister == null) {
+            mBaseResister = createProsenter();
+        }
+    }
+
+    /**
+     * 在这里确定要生成的 Presenter 对象类型
+     * @return
+     */
+    public abstract P createProsenter();
+
+    /**
+     * 获得 Presenter 对象
+     * @return
+     */
+    public P getPresenter() {
+        if (mBaseResister == null) {
+            createProsenter();
+        }
+        return mBaseResister;
+    }
+
+    /**
+     * 碎片销毁时解绑
+     */
+    @Override
+    public void onStop() {
+        super.onStop();
+        mBaseResister = null;
+    }
+}</code></pre>
+<ul>
+<li>实现 <code>View</code> 层逻辑</li>
+<li>View 层只负责用户界面响应</li>
+</ul>
+<pre><code><code>/**
+ * @author fishinwater-1999
+ */
+public class LoginFragment extends BaseFragment&lt;ILoginView, LogPresenter&gt; implements ILoginView {
+
+    private static final String TAG = &quot;LoginFragment&quot;;
+
+    private LogViewModel mLogViewModel;
+
+    private LoginFragmentBinding binding;
+
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        binding = DataBindingUtil.inflate(inflater, R.layout.login_fragment, container, false);
+        View view = binding.getRoot();
+        binding.setLogCallback(getLogActivity());
+        binding.setFragment(this);
+        return view;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        if (mLogViewModel == null) {
+            mLogViewModel = new LogViewModel();
+        }
+    }
+
+    public void login(View v) {
+        getPresenter().login(
+                getUserName(),
+                getUserPwd(),
+                this);
+    }
+
+    @Override
+    public LogPresenter createPresenter() {
+        if (mLogViewModel == null) {
+            mLogViewModel = new LogViewModel();
+        }
+        return new LogPresenter(mLogViewModel);
+    }
+
+    @Override
+    public String getUserName() {
+        return binding.userAccount.getText().toString();
+    }
+
+    @Override
+    public String getUserPwd() {
+        return binding.userPassword.getText().toString();
+    }
+
+    @Override
+    public void showLoginSuccess(String response) {
+        Toast.makeText(getActivity(), &quot;登录成功&quot;, Toast.LENGTH_LONG).show();
+        SharedPreferencesUtil.putString(getActivity(), SharedPreferencesUtil.PRE_NAME_SITUP, SharedPreferencesUtil.USER_ID, response);
+        ARouter.getInstance().build(RouteUtils.MainActivity).navigation();
+        getActivity().finish();
+    }
+
+    @Override
+    public void showLoginFailed(ErrCode errCode) {
+        if (errCode == ErrCode.WRONG_USER_NAME) {
+            Toast.makeText(getActivity(), &quot;用户名错误&quot;, Toast.LENGTH_LONG).show();
+        }else if (errCode == ErrCode.WRONG_USER_PWD){
+            Toast.makeText(getActivity(), &quot;密码错误&quot;, Toast.LENGTH_LONG).show();
+        }else if (errCode == ErrCode.WRONG_NET_WORK) {
+            Toast.makeText(getActivity(), &quot;未知，请检查网络&quot;, Toast.LENGTH_LONG).show();
+        }
+    }
+}</code></pre>
+<ul>
+<li>这里我使用了 DataBinding 的形式，对数据进行绑定</li>
+<li>当然，你也可以选用 ButterKnife 等优秀的三方库</li>
+<li>那么为什么我选 DataBinding 呢？亲儿子 懂吧？ /坏笑</li>
+</ul>
+<h2 id="运行">运行</h2>
+<ul>
+<li>关于 测序的大致便是如此了</li>
+<li>至于细枝末节的东西大家可以直接到这个库里面看，地址在文末</li>
+</ul>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！7.png" /></p>
+<h1 id="更多模块实战-fiwkeepapp">更多模块实战 <a href="https://github.com/FishInWater-1999/FIWKeepApp">FIWKeepApp</a></h1>
+<ul>
+<li><p>这里我将上述过程写在我的 <code>Demo</code> 里，地址在 <code>GitHub</code> 大家可以直接查看改仓库源码，记得给我点个 <code>star</code> 哦～：</p></li>
+<li><p><code>Demo</code> 地址：<a href="https://github.com/FishInWater-1999/FIWKeepApp/blob/master/usercenter/src/main/java/com/fishinwater/login/ui/fragment/LoginFragment.java">FIWKeepApp - LoginFragment</a></p></li>
+</ul>
+<h1 id="总结">总结</h1>
+<ul>
+<li>想必看到这儿的读者对 Retrofit 的使用都已近有了一定的了解，但 Retrofit 的好处并不只是这些，还有很多跟深入的只是需要了解，但本文限于篇幅，无法向大家一一介绍</li>
+<li>对于我前面的 <a href="https://github.com/FishInWater-1999/FIWKeepApp">FIWKeepApp</a> 这个仓库，我将一步步转换到 Retrofit + OkHttp 的形式下，欢迎大家关注我的 这个仓库，进行学习，也欢迎各位老铁给个 star</li>
+<li>后面我还会对 <code>Android</code> 的各种知识点、<code>Framework</code> 层源码，三方库等进行解析，欢迎大家关注 <a href="https://www.cnblogs.com/yuanhao-1999/">_yuanhao 博客园</a> 及时接收更多优质博文！</li>
+</ul>
+<p><img src="./images/「2020 新手必备 」极速入门 Retrofit + OkHttp 网络框架到实战，这一篇就够了！8.png" alt="加油！" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

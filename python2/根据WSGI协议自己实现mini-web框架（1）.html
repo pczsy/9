@@ -1,0 +1,109 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修根据WSGI协议自己实现mini-web框架（1）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>根据WSGI协议自己实现mini-web框架（1）</center></div><div class='banquan'>原文出处:本文由博客园博主dong4716138提供。<br/>
+原文连接:https://www.cnblogs.com/dong4716138/p/12070168.html</div><br>
+    <h2>1. 为什么要研究WSGI</h2>
+<p>我之前在学习web开发时，往往都是根据MVT等架构直接写所谓的&ldquo;视图&rdquo;，使用其本身自带的http服务器，当时就一直很好奇，为什么有了HTTP协议之后，还要研究WSGI协议，它到底有什么用？</p>
+<p>由于&ldquo;工作要紧&rdquo;所以很多细枝末节的事情 都被安排到推迟，最终迟迟没有研究</p>
+<p>后来有个空闲时间的机会，终于可以静下来研究WSGI</p>
+<p>&nbsp;</p>
+<h2>2. 说说WSGI与HTTP服务器之间的调用过程</h2>
+<h3 id="1-浏览器请求动态页面过程">2.1 浏览器请求动态页面过程</h3>
+<p><a href="./images/根据WSGI协议自己实现mini-web框架（1）0.png" data-lightbox="f7cfab03-8cde-4641-919f-2e2b7690170a" data-title=""><img src="./images/根据WSGI协议自己实现mini-web框架（1）0.png" alt="" width="680" height="357" /></a></p>
+<p>&nbsp;</p>
+<p>看完上图估计也就知道了所谓的WSGI到底有什么用，如果还是不明白，那我就通俗点说：</p>
+<p><span style="background-color: #ffff00;">web服务器接收到浏览器发送过来的请求之后，需要将浏览器传递过来的很多数据（例如user-agent、cookie等）都要告诉你的&ldquo;视图&rdquo;，因为只有&ldquo;视图&rdquo;接收到数据，才能够进一步处理，例如判断是否登录等</span></p>
+<p><span style="background-color: #ffff00;">所以这就需要web服务器与&ldquo;视图&rdquo;之间的传递，此时WSGI就是起到传递的作用，只不过这个传递的过程有些复杂</span> 可以参考上图2、3、4、6步骤</p>
+<p>&nbsp;</p>
+<h3 id="2-wsgi">2.2 用个例子来说明WSGI<span class="pg-emphasize pg-emphasize-yellow"><br /></span></h3>
+<p>怎么在你刚建立的Web服务器上运行一个<code>Django应用</code>和<code>Flask应用</code>，如何不做任何改变而适应不同的web架构呢？</p>
+<p>在以前，选择&nbsp;<code>Python web 架构</code>会受制于可用的<code>web服务器</code>，反之亦然。如果架构和服务器可以协同工作，那就好了：</p>
+<p><a href="./images/根据WSGI协议自己实现mini-web框架（1）1.png" data-lightbox="f5b18013-78f5-49ef-b55b-3525ec2f8ecc" data-title=""><img src="./images/根据WSGI协议自己实现mini-web框架（1）1.png" alt="" width="546" height="358" /></a></p>
+<p>但有可能面对（或者曾有过）下面的问题，当要把一个服务器和一个架构结合起来时，却发现他们不是被设计成协同工作的：</p>
+<p><a href="./images/根据WSGI协议自己实现mini-web框架（1）2.png" data-lightbox="b2485a78-44e3-4d2b-9a54-159db07faeca" data-title=""><img src="./images/根据WSGI协议自己实现mini-web框架（1）2.png" alt="" width="535" height="424" /></a></p>
+<p>那么，怎么可以不修改服务器和架构代码而确保可以在多个架构下运行web服务器呢？答案就是 Python Web Server Gateway Interface (或简称<span style="background-color: #ffff00;"> WSGI</span>，读作&ldquo;wizgy&rdquo;)。</p>
+<p><a href="./images/根据WSGI协议自己实现mini-web框架（1）3.png" data-lightbox="52a6f0ae-6a73-4087-a6ce-c962673bde4d" data-title=""><img src="./images/根据WSGI协议自己实现mini-web框架（1）3.png" alt="" width="456" height="239" /></a></p>
+<p><span class="pg-emphasize pg-emphasize-yellow"><span style="background-color: #ffff00;">WSGI允许开发者将选择web框架和web服务器分开</span>。可以混合匹配web服务器和web框架，选择一个适合的配对。</span></p>
+<p><span class="pg-emphasize pg-emphasize-yellow">比如,可以在Gunicorn 或者 Nginx/uWSGI 或者 Waitress上运行 Django, Flask, 或 Pyramid。</span></p>
+<p><span class="pg-emphasize pg-emphasize-yellow">真正的混合匹配，得益于WSGI同时支持服务器和架构：</span></p>
+<p><a href="./images/根据WSGI协议自己实现mini-web框架（1）4.png" data-lightbox="6ce5e31e-286a-45cd-9bc1-7898e578c959" data-title=""><img src="./images/根据WSGI协议自己实现mini-web框架（1）4.png" alt="" width="533" height="452" /></a></p>
+<p><span class="pg-emphasize pg-emphasize-yellow">web服务器必须具备WSGI接口，所有的现代Python Web框架都已具备WSGI接口，它让你不对代码作修改就能使服务器和特点的web框架协同工作。</span></p>
+<p>WSGI由web服务器支持，而web框架允许你选择适合自己的配对，但它同样对于服务器和框架开发者提供便利使他们可以专注于自己偏爱的领域和专长而不至于相互牵制。</p>
+<p>其他语言也有类似接口：java有Servlet API，Ruby 有 Rack。</p>
+<h2 id="3定义wsgi接口">2.3 定义WSGI接口</h2>
+<p>WSGI接口定义非常简单，它只要求Web开发者实现一个函数，就可以响应HTTP请求。我们来看一个最简单的Web版本的&ldquo;Hello World!&rdquo;：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> application(environ, start_response):
+    start_response(</span><span style="color: #800000;">'</span><span style="color: #800000;">200 OK</span><span style="color: #800000;">'</span>, [(<span style="color: #800000;">'</span><span style="color: #800000;">Content-Type</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">text/html</span><span style="color: #800000;">'</span><span style="color: #000000;">)])
+    </span><span style="color: #0000ff;">return</span> <span style="color: #800000;">'</span><span style="color: #800000;">Hello World!</span><span style="color: #800000;">'</span></pre>
+</div>
+<pre><code><code class="lang-python"><span class="hljs-function"><span class="hljs-keyword"><span class="hljs-title"><span class="hljs-params"><span class="hljs-string"><span class="hljs-string"><span class="hljs-string"><span class="hljs-keyword"><span class="hljs-string"><br /></span></span></span></span></span></span></span></span></span></code>上面的<code>application()</code>函数就是符合WSGI标准的一个HTTP处理函数，它接收两个参数：</pre>
+<ul>
+<li>environ：一个包含所有HTTP请求信息的dict对象；</li>
+<li>start_response：一个发送HTTP响应的函数。</li>
+</ul>
+<p>整个<code>application()</code>函数本身没有涉及到任何解析HTTP的部分，也就是说，把底层web服务器解析部分和应用程序逻辑部分进行了分离，这样开发者就可以专心做一个领域了</p>
+<p>不过，等等，这个<code>application()</code>函数怎么调用？如果我们自己调用，两个参数environ和start_response我们没法提供，返回的str也没法发给浏览器。</p>
+<p>所以<code>application()</code>函数必须由WSGI服务器来调用。有很多符合WSGI规范的服务器。而我们此时的web服务器项目的目的就是做一个既能解析静态网页还可以解析动态网页的服务器</p>
+<h2 id="4-web服务器-----wsgi协议----web框架-传递的字典">2.4 web服务器-----WSGI协议----&gt;web框架 传递的字典</h2>
+<p>下面的信息，仅仅http传递给 web框架的部分信息，没有必要全部写清楚，只要知道这里有很多重要的信息即可，而这些信息在web框架中需要</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_ACCEPT_LANGUAGE</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">zh-cn</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.file_wrapper</span><span style="color: #800000;">'</span>: &lt;built-infunctionuwsgi_sendfile&gt;<span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_UPGRADE_INSECURE_REQUESTS</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">1</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">uwsgi.version</span><span style="color: #800000;">'</span>: b<span style="color: #800000;">'</span><span style="color: #800000;">2.0.15</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">REMOTE_ADDR</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">172.16.7.1</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.errors</span><span style="color: #800000;">'</span>: &lt;_io.TextIOWrappername=2mode=<span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span>encoding=<span style="color: #800000;">'</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">'</span>&gt;<span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.version</span><span style="color: #800000;">'</span>: (1<span style="color: #000000;">,0),
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">REMOTE_PORT</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">40432</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">REQUEST_URI</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">SERVER_PORT</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">8000</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.multithread</span><span style="color: #800000;">'</span><span style="color: #000000;">: False,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_ACCEPT</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_HOST</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">172.16.7.152: 8000</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.run_once</span><span style="color: #800000;">'</span><span style="color: #000000;">: False,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.input</span><span style="color: #800000;">'</span>: &lt;uwsgi._Inputobjectat0x7f7faecdc9c0&gt;<span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">SERVER_PROTOCOL</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">HTTP/1.1</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">REQUEST_METHOD</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">GET</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_ACCEPT_ENCODING</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">gzip,deflate</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_CONNECTION</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">keep-alive</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">uwsgi.node</span><span style="color: #800000;">'</span>: b<span style="color: #800000;">'</span><span style="color: #800000;">ubuntu</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_DNT</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">1</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">UWSGI_ROUTER</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">http</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">SCRIPT_NAME</span><span style="color: #800000;">'</span>: <span style="color: #800000;">''</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.multiprocess</span><span style="color: #800000;">'</span><span style="color: #000000;">: False,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">QUERY_STRING</span><span style="color: #800000;">'</span>: <span style="color: #800000;">''</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">PATH_INFO</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">/index.html</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wsgi.url_scheme</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">http</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">HTTP_USER_AGENT</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Mozilla/5.0(Macintosh;IntelMacOSX10_12_5)AppleWebKit/603.2.4(KHTML,likeGecko)Version/10.1.1Safari/603.2.4</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">SERVER_NAME</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">ubuntu</span><span style="color: #800000;">'</span><span style="color: #000000;">
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>未完待续。。。</p>
+<p>&nbsp;</p>
+<p>我的博客：<a href="https://www.cnblogs.com/dong4716138/">https://www.cnblogs.com/dong4716138/</a></p>
+<p>我的网站：<a href="http://howdoit.cn/">http://howdoit.cn/</a></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

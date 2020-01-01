@@ -1,0 +1,180 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修drf--搜索、过滤、排序组件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>drf--搜索、过滤、排序组件</center></div><div class='banquan'>原文出处:本文由博客园博主蔚蓝的爱提供。<br/>
+原文连接:https://www.cnblogs.com/Hades123/p/11744180.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#drf--搜索过滤排序组件">drf--搜索、过滤、排序组件</a><ul>
+        <li><a href="#过滤">过滤</a><ul>
+        <li><a href="#djangofilterbackend">DjangoFilterBackend</a></li>
+        <li><a href="#自定义过滤器django-filter模块">自定义过滤器django-filter模块</a></li>
+        <li><a href="#自定义过滤类">自定义过滤类</a></li>
+        </ul></li>
+        <li><a href="#搜索searchfilter">搜索SearchFilter</a></li>
+        <li><a href="#排序orderingfilter">排序OrderingFilter</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="drf--搜索过滤排序组件">drf--搜索、过滤、排序组件</h1>
+<h2 id="过滤">过滤</h2>
+<h3 id="djangofilterbackend">DjangoFilterBackend</h3>
+<p>默认情况下 DRF generic list view 会返回整个 <code>queryset</code>查询结果，但通常业务只是需要其中一部分，这种情况下就需要使用 &quot;过滤器&quot; 来限制返回结果集。<br />
+最笨的方式是继承<code>GenericAPIView</code>类或使用继承了<code>GenericAPIView</code>的类，然后重写<code>.get_queryset()</code> 方法 ，首先我们看类视图中增加一个方法<code>get_queryset</code></p>
+<pre><code><code>from rest_framework import generics
+class ArticleViewSet(generics.ListAPIView):
+    queryset = Article.objects.all()  # 查询结果集
+    serializer_class = ArticleSerializer # 序列化类
+    pagination_class = ArticlePagination   # 自定义分页会覆盖settings全局配置的
+
+    def get_queryset(self):
+        queryset = Article.objects.all()
+        read_num = self.request.query_params.get(&#39;read_num&#39;, 0)  # 获取查询字段值
+        if read_num:
+            queryset = queryset.filter(read_num__gt=int(read_num))
+
+        return queryset</code></pre>
+<p>通过重写<code>get_queryset</code>方法来达到过滤效果，这样做如果在过滤条件复杂的情况下，代码会显得过于冗余，而且有可能大部分代码一直在重复实现类似的功能，在日常操作中，我们需要获取指定条件的数据，例如对于文章，我们需要指定分类、浏览数、点赞数等。有时候我们需要按照浏览数进行排序。这些都需要我们对ArticleViewSet进行更多的拓展。</p>
+<h3 id="自定义过滤器django-filter模块">自定义过滤器django-filter模块</h3>
+<pre><code><code>django-filter`库包括一个`DjangoFilterBackend`类，它支持`REST`框架的高度可定制的字段过滤。
+ 首先安装`django-filter
+pip install django-filter</code></pre>
+<p>然后将<code>django_filters</code>添加到<code>Django</code>的<code>INSTALLED_APPS</code>。</p>
+<pre class="bash"><code>REST_FRAMEWORK = {
+    &#39;DEFAULT_FILTER_BACKENDS&#39;: (&#39;django_filters.rest_framework.DjangoFilterBackend&#39;,)
+}</code></pre>
+<p>或者将过滤器加到单个View或ViewSet中(<strong>一般使用这种</strong>)：</p>
+<pre><code><code>from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+
+class ArticleViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = Article.objects.all()  # 查询结果集
+    serializer_class = ArticleSerializer # 序列化类
+    pagination_class = ArticlePagination   # 自定义分页会覆盖settings全局配置的
+    # 过滤器
+    filter_backends = (DjangoFilterBackend,)
+    # 如果要允许对某些字段进行过滤，可以使用filter_fields属性。
+    filter_fields = (&#39;title&#39;, &#39;category&#39;)
+
+    # def get_queryset(self):
+    #     queryset = Article.objects.all()
+    #     read_num = self.request.query_params.get(&#39;read_num&#39;, 0)
+    #
+    #     if read_num:
+    #         queryset = queryset.filter(read_num__gt=int(read_num))
+    #
+    #     return queryset</code></pre>
+<p>可以看出通过加过滤器和添加对应字段会过滤相关的，注意这里是精确匹配，字段间是且的关系，若一个为空，则按照其他的匹配，比如<code>title=测试&amp;category=</code>则按照<code>title</code>来精确查找。</p>
+<h3 id="自定义过滤类">自定义过滤类</h3>
+<p>默认是按照精准匹配，若想达到模糊搜索，可以自定义过滤类，再用filter_class指定过滤集合类。<br />
+新建过滤文件<code>filters.py</code></p>
+<pre><code><code>from django_filters import rest_framework
+from article.models import Article
+
+class AriticleFilter(rest_framework.FilterSet):
+    min_read = rest_framework.NumberFilter(field_name=&#39;read_num&#39;, lookup_expr=&#39;gte&#39;)
+    max_read = rest_framework.NumberFilter(field_name=&#39;read_num&#39;, lookup_expr=&#39;lte&#39;)
+    title = rest_framework.CharFilter(field_name=&#39;title&#39;, lookup_expr=&#39;icontains&#39;)
+
+    class Meta:
+        model = Article
+        fields = [&#39;title&#39;, &#39;category&#39;, &#39;min_read&#39;, &#39;max_read&#39;]</code></pre>
+<p>将视图类修改</p>
+<pre><code><code>from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from .filters import AriticleFilter
+
+class ArticleViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = Article.objects.all()  # 查询结果集
+    serializer_class = ArticleSerializer # 序列化类
+    pagination_class = ArticlePagination   # 自定义分页会覆盖settings全局配置的
+    # 过滤器
+    filter_backends = (DjangoFilterBackend,)
+    # 如果要允许对某些字段进行过滤，可以使用filter_fields属性。
+    #filter_fields = (&#39;title&#39;, &#39;category&#39;)
+    # 使用自定义过滤器
+    filter_class = AriticleFilter
+</code></pre>
+<h2 id="搜索searchfilter">搜索SearchFilter</h2>
+<p>如果要明确指定可以对哪些字段进行搜索，可以使用search_fields属性，默认为可以对<code>serializer_class</code>属性指定的串行器上的任何可读字段进行搜索：</p>
+<pre><code><code>from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+
+from .filters import AriticleFilter
+
+class ArticleViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = Article.objects.all()  # 查询结果集
+    serializer_class = ArticleSerializer # 序列化类
+    pagination_class = ArticlePagination   # 自定义分页会覆盖settings全局配置的
+    # 过滤器
+    filter_backends = (DjangoFilterBackend,filters.SearchFilter,)
+    # 如果要允许对某些字段进行过滤，可以使用filter_fields属性。
+    #filter_fields = (&#39;title&#39;, &#39;category&#39;)
+    # 使用自定义过滤器
+    filter_class = AriticleFilter
+    search_fields = (&#39;title&#39;, &#39;description&#39;, &#39;content&#39;)</code></pre>
+<p>默认情况下，搜索将使用不区分大小写的部分匹配。 搜索参数可以包含多个搜索项，它们应该是空格和/或逗号分隔。 如果使用多个搜索项，则仅当所有提供的条款匹配时，才会在列表中返回对象。默认情况下，搜索参数被命名为“search”，但这可能会被SEARCH_PARAM设置覆盖。<br />
+The search behavior may be restricted by prepending various characters to the search_fields.<br />
+可以通过在search_fields中加入一些字符来限制搜索行为，如下：</p>
+<ul>
+<li>'^' ：以xx字符串开始搜索</li>
+<li>'=' ：完全匹配</li>
+<li>'@' ：全文搜索（目前只支持Django的MySQL后端）</li>
+<li>'$' ：正则表达式搜索</li>
+</ul>
+<p>如：search_fields = ('@username', '=email')</p>
+<h2 id="排序orderingfilter">排序OrderingFilter</h2>
+<p>REST framework提供了对于排序的支持，使用REST framework提供的OrderingFilter过滤器后端即可。OrderingFilter过滤器要使用ordering_fields 属性来指明可以进行排序的字段有哪些。</p>
+<pre><code><code>from rest_framework.filters import OrderingFilter
+
+    # 过滤器，只针对当前查询过滤，所以不在settings.py中配置
+    filter_backends = (OrderingFilter,)
+    # 排序
+    ordering_fields = (&#39;create_time&#39;, &#39;price&#39;, &#39;sales&#39;)</code></pre>
+<p>OrderingFilter 类支持对单个查询字段结果集进行排序。<br />
+默认情况下，查询参数被命名为“ordering”，但这可能会被ORDERING_PARAM设置覆盖。<br />
+可以使用ordering_fields属性明确指定可以对哪些字段执行排序，这有助于防止意外的数据泄露，例如允许用户对密码散列字段或其他敏感数据进行排序。<br />
+如果不指定ordering_fields属性，则默认为可以对serializer_class属性指定的串行器上的任何可读字段进行过滤。</p>
+<pre><code><code>from rest_framework import viewsets
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import filters
+from .filters import AriticleFilter
+
+class ArticleViewSet(mixins.ListModelMixin, mixins.CreateModelMixin, viewsets.GenericViewSet):
+    queryset = Article.objects.all()  # 查询结果集
+    serializer_class = ArticleSerializer # 序列化类
+    pagination_class = ArticlePagination   # 自定义分页会覆盖settings全局配置的
+    # 过滤器 过滤，搜索，排序
+    filter_backends = (DjangoFilterBackend,filters.SearchFilter,filters.OrderingFilter)
+    # 如果要允许对某些字段进行过滤，可以使用filter_fields属性。
+    #filter_fields = (&#39;title&#39;, &#39;category&#39;)
+    # 使用自定义过滤器
+    filter_class = AriticleFilter
+    # 搜索
+    search_fields = (&#39;title&#39;, &#39;description&#39;, &#39;content&#39;)
+    # 排序
+    ordering_fields = (&#39;id&#39;, &#39;read_num&#39;)</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

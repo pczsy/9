@@ -1,0 +1,169 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修9.python3实用编程技巧进阶（四）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>9.python3实用编程技巧进阶（四）</center></div><div class='banquan'>原文出处:本文由博客园博主zhang_derek提供。<br/>
+原文连接:https://www.cnblogs.com/derek1184405959/p/11380555.html</div><br>
+    <h3><span style="color: #ff00ff;">4.1.如何读写csv数据</span></h3>
+<p>&nbsp;爬取豆瓣top250书籍</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> csv
+</span><span style="color: #0000ff;">from</span> bs4 <span style="color: #0000ff;">import</span><span style="color: #000000;"> BeautifulSoup
+
+books </span>=<span style="color: #000000;"> []<br />
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> book_name(url):
+    res </span>=<span style="color: #000000;"> requests.get(url)
+    html </span>=<span style="color: #000000;"> res.text
+    soup </span>= BeautifulSoup(html, <span style="color: #800000;">'</span><span style="color: #800000;">html.parser</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    items </span>= soup.find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">grid-16-8 clearfix</span><span style="color: #800000;">"</span>).find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">indent</span><span style="color: #800000;">"</span>).find_all(<span style="color: #800000;">'</span><span style="color: #800000;">table</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> items:
+        book </span>=<span style="color: #000000;"> []
+        title </span>= i.find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">pl2</span><span style="color: #800000;">"</span>).find(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        book.append(</span><span style="color: #800000;">'</span><span style="color: #800000;">《</span><span style="color: #800000;">'</span> + title.text.replace(<span style="color: #800000;">'</span> <span style="color: #800000;">'</span>, <span style="color: #800000;">''</span>).replace(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span>, <span style="color: #800000;">''</span>) + <span style="color: #800000;">'</span><span style="color: #800000;">》</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        star </span>= i.find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">star clearfix</span><span style="color: #800000;">"</span>).find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">rating_nums</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        book.append(star.text </span>+ <span style="color: #800000;">'</span><span style="color: #800000;">分</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            brief </span>= i.find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">quote</span><span style="color: #800000;">"</span>).find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">inq</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> AttributeError:
+            book.append(</span><span style="color: #800000;">'</span><span style="color: #800000;">&rdquo;暂无简介&ldquo;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            book.append(brief.text)
+
+        link </span>= i.find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">pl2</span><span style="color: #800000;">"</span>).find(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>)[<span style="color: #800000;">'</span><span style="color: #800000;">href</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+        book.append(link)
+
+        </span><span style="color: #0000ff;">global</span><span style="color: #000000;"> books
+        books.append(book)
+
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(book)
+
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        next </span>= soup.find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">paginator</span><span style="color: #800000;">"</span>).find(class_=<span style="color: #800000;">"</span><span style="color: #800000;">next</span><span style="color: #800000;">"</span>).find(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>)[<span style="color: #800000;">'</span><span style="color: #800000;">href</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 翻到最后一页</span>
+    <span style="color: #0000ff;">except</span><span style="color: #000000;"> TypeError:
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> next
+
+
+next </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://book.douban.com/top250?start=0&amp;filter=</span><span style="color: #800000;">'</span><span style="color: #000000;">
+count </span>=<span style="color: #000000;"> 0
+
+</span><span style="color: #0000ff;">while</span> next !=<span style="color: #000000;"> 0:
+    count </span>+= 1<span style="color: #000000;">
+    next </span>=<span style="color: #000000;"> book_name(next)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">-----------以上是第</span><span style="color: #800000;">'</span> + str(count) + <span style="color: #800000;">'</span><span style="color: #800000;">页的内容-----------</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+csv_file </span>= open(<span style="color: #800000;">'</span><span style="color: #800000;">D:/top250_books.csv</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span>, newline=<span style="color: #800000;">''</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+w </span>=<span style="color: #000000;"> csv.writer(csv_file)
+w.writerow([</span><span style="color: #800000;">'</span><span style="color: #800000;">书名</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">评分</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">简介</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">链接</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #0000ff;">for</span> b <span style="color: #0000ff;">in</span><span style="color: #000000;"> books:
+    w.writerow(b)</span></pre>
+</div>
+<p><span style="color: #000000;">结果</span></p>
+<p><span style="color: #ff00ff;"><img src="./images/9.python3实用编程技巧进阶（四）0.png" alt="" /></span></p>
+<p><span style="color: #000000;">把评分为9.0的书籍保存到book_out.csv文件中</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800000;">'''</span><span style="color: #800000;">
+1.爬取豆瓣评分排行前250本书,保存为top250.csv
+2.读取top250.csv文件，把评分为9.0以上的书籍保存到另外一个csv文件中
+</span><span style="color: #800000;">'''</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> csv
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">打开的时候必须用encoding='utf-8'，否则报错</span>
+with open(<span style="color: #800000;">'</span><span style="color: #800000;">top250_books.csv</span><span style="color: #800000;">'</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">) as rf:
+    reader </span>=<span style="color: #000000;"> csv.reader(rf)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">读取头部</span>
+    headers =<span style="color: #000000;"> next(reader)
+    with open(</span><span style="color: #800000;">'</span><span style="color: #800000;">books_out.csv</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">) as wf:
+        writer </span>=<span style="color: #000000;"> csv.writer(wf)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;">把头部信息写进去</span>
+<span style="color: #000000;">        writer.writerow(headers)
+
+        </span><span style="color: #0000ff;">for</span> book <span style="color: #0000ff;">in</span><span style="color: #000000;"> reader:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;">获取评分</span>
+            score = book[1<span style="color: #000000;">]
+            </span><span style="color: #008000;">#</span><span style="color: #008000;">把评分大于9.0的过滤出来</span>
+            <span style="color: #0000ff;">if</span> score <span style="color: #0000ff;">and</span> float(score) &gt;= 9.0<span style="color: #000000;">:
+                writer.writerow(book)</span></pre>
+</div>
+<h3><span style="color: #ff00ff;">&nbsp;4.2.如何读写excel</span></h3>
+<p>&nbsp;安装两个库</p>
+<div class="cnblogs_code">
+<pre><code>pip install xlrd xlwt</pre>
+</div>
+<p>读取excel</p>
+<p><img src="./images/9.python3实用编程技巧进阶（四）1.png" alt="" /></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">4.2.如何读取excel</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> xlrd
+
+book </span>= xlrd.open_workbook(<span style="color: #800000;">'</span><span style="color: #800000;">demo.xlsx</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+sheet </span>=<span style="color: #000000;"> book.sheet_by_index(0)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">获取有多少行多少列</span>
+<span style="color: #0000ff;">print</span>(sheet.nrows)   <span style="color: #008000;">#</span><span style="color: #008000;">4</span>
+<span style="color: #0000ff;">print</span>(sheet.ncols)   <span style="color: #008000;">#</span><span style="color: #008000;">4</span>
+
+<span style="color: #0000ff;">print</span>(sheet.cell(0,0))          <span style="color: #008000;">#</span><span style="color: #008000;">text:'姓名'</span>
+<span style="color: #0000ff;">print</span>(sheet.cell_value(0,0))    <span style="color: #008000;">#</span><span style="color: #008000;">姓名</span>
+
+<span style="color: #0000ff;">print</span>(sheet.row_values(0))      <span style="color: #008000;">#</span><span style="color: #008000;">['姓名', '语文', '数学', '外语']</span>
+<span style="color: #0000ff;">print</span>(sheet.row_values(1,1))    <span style="color: #008000;">#</span><span style="color: #008000;">[95.0, 99.0, 96.0]</span></pre>
+</div>
+<p>求分数的总和</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">4.2.如何读写excel</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> xlrd, xlwt
+
+rbook </span>= xlrd.open_workbook(<span style="color: #800000;">'</span><span style="color: #800000;">demo.xlsx</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+rsheet </span>=<span style="color: #000000;"> rbook.sheet_by_index(0)
+
+k </span>=<span style="color: #000000;"> rsheet.ncols
+</span><span style="color: #008000;">#</span><span style="color: #008000;">在最后添加一列 &lsquo;总分&rsquo;</span>
+rsheet.put_cell(0,k,xlrd.XL_CELL_TEXT, <span style="color: #800000;">'</span><span style="color: #800000;">总分</span><span style="color: #800000;">'</span><span style="color: #000000;">, None)
+
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1<span style="color: #000000;">,rsheet.nrows):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">求分数总和</span>
+    t = sum(rsheet.row_values(i, 1<span style="color: #000000;">))
+    rsheet.put_cell(i,k,xlrd.XL_CELL_NUMBER,t,None)
+
+wbook </span>=<span style="color: #000000;"> xlwt.Workbook()
+wsheet </span>=<span style="color: #000000;"> wbook.add_sheet(rsheet.name)
+
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(rsheet.nrows):
+    </span><span style="color: #0000ff;">for</span> j <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(rsheet.ncols):
+        wsheet.write(i,j,rsheet.cell_value(i,j))
+
+wbook.save(</span><span style="color: #800000;">'</span><span style="color: #800000;">out.xlsx</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;结果</p>
+<p><img src="./images/9.python3实用编程技巧进阶（四）2.png" alt="" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

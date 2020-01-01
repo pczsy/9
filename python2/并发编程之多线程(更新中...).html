@@ -1,0 +1,182 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修并发编程之多线程(更新中...)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>并发编程之多线程(更新中...)</center></div><div class='banquan'>原文出处:本文由博客园博主来年若相见提供。<br/>
+原文连接:https://www.cnblogs.com/kuck/p/11536143.html</div><br>
+    <h3 id="并发编程之多线程">并发编程之多线程</h3>
+<ul>
+<li><p>什么是线程？</p>
+<ul>
+<li><p>被cpu直接运行，一条线程指的是一个单一顺序中的控制流，一个进程中可以并行多个进程，每个并行执行不同的任务</p></li>
+<li><pre><code><code>如果把操作系统比作一个车间的话，而进程就是一个个车间，线程就是车间里边的一条条流水线，电源就是cpu</code></pre></li>
+</ul></li>
+<li><p>进程和线程的区别</p>
+<ul>
+<li><pre class="text"><code>- 线程 ：单指代码的执行过程
+- 进程：资源的申请与销毁的过程
+- 进程内存空间彼此隔离
+- 同一进程下的线程可以共享资源
+- 进程需要申请资源开辟内存空间   慢
+- 线程只是告诉操作系统一个执行方案  快</code></pre></li>
+</ul></li>
+<li><p>为什么要用多线程</p>
+<ul>
+<li><pre class="text"><code>- 多线程共享一个内存空间，节约资源
+- 线程比进程更容易创建，在许多操作系统中，创建一个线程比创建一个进程要快10-100倍，在有大量线程需要动态和快速修改时，这一特性很有用
+- 若多个线程都是cpu密集型的，那么并不能获得性能上的增强，但是如果存在大量的计算和大量的I/O处理，拥有多个线程允许这些活动彼此重叠运行，从而会加快程序执行的速度。
+- 若多个线程都是cpu密集型的，那么并不能获得性能上的增强，但是如果存在大量的计算和大量的I/O处理，拥有多个线程允许这些活动彼此重叠运行，从而会加快程序执行的速度。</code></pre></li>
+</ul></li>
+<li><p>开启进程的两种方式</p>
+<ul>
+<li><p>方式一</p>
+<ul>
+<li><pre><code><code>from threading import Thread
+import time
+def task():
+    print(&quot;线程开启\n&quot;)
+    time.sleep(2)
+    print(&quot;线程结束\n&quot;)
+if __name__ == &#39;__main__&#39;:
+    t = Thread(target=task)
+    t.start()
+    print(&quot;主线程&quot;)
+</code></pre></li>
+</ul></li>
+<li><p>方式二</p>
+<ul>
+<li><pre class="python"><code>from threading import Thread
+import time
+class myt(Thread):
+    def run(self):
+        print(&quot;线程开启\n&quot;)
+        time.sleep(2)
+        print(&quot;线程结束\n&quot;)
+if __name__ == &#39;__main__&#39;:
+    t= myt()
+    t.start()
+    print(&quot;主进程&quot;)</code></pre></li>
+</ul></li>
+</ul></li>
+<li><p>线程与进程运行速度比较</p>
+<ul>
+<li><pre class="python"><code>from threading import Thread
+from multiprocessing import Process
+def task():
+    print(&quot;线程开启&quot;)
+    print(&quot;线程结束\n&quot;)
+
+def task1():
+    print(&quot;进程开启&quot;)
+    print(&quot;进程结束\n&quot;)
+if __name__ == &#39;__main__&#39;:
+    t = Thread(target=task)
+    t.start()
+    print(&quot;主线程&quot;)
+    p = Process(target=task1)
+    p.start()
+    print(&quot;主线程&quot;)</code></pre></li>
+</ul></li>
+<li><p>线程共享内存空间</p>
+<ul>
+<li><pre class="python"><code>from threading import Thread
+x = 100
+def task():
+    global x
+    x =50
+t = Thread(target=task)
+t.start()
+print(x)
+def task1():
+    global x
+    x = 2
+t1 = Thread(target=task1)
+t1.start()
+print(x)</code></pre></li>
+</ul></li>
+<li><p>线程中join用法</p>
+<ul>
+<li><pre class="python"><code>from threading import Thread
+import time
+def tast(name,time_):
+    print(f&quot;{name} 开启&quot;)
+    time.sleep(time_)
+    print(f&quot;{name} 结束&quot;)
+if __name__ == &#39;__main__&#39;:
+    t1 = Thread(target=tast,args=(&#39;线程1&#39;,1))
+    t2 = Thread(target=tast,args=(&#39;线程2&#39;,2))
+    t3 = Thread(target=tast,args=(&#39;线程3&#39;,3))
+    start = time.time()
+    t1.start()
+    t2.start()
+    t3.start()
+    t1.join()
+    t2.join()
+    t3.join()
+    end = time.time()
+    print(&quot;主线程&quot;)
+    print(end-start)</code></pre></li>
+</ul></li>
+<li><p>线程相关的其他方法</p>
+<ul>
+<li><pre class="python"><code>    print(&quot;线程开启\n&quot;)
+    time.sleep(2)
+    print(&quot;线程结束\n&quot;)
+if __name__ == &#39;__main__&#39;:
+    t = Thread(target=task)
+    t.start()
+    # 检测线程是否活动
+    print(t.is_alive())
+    #返回线程名字
+    print(t.getName())
+    #修改线程名字
+    t.setName(&quot;线程1&quot;)
+    print(t.getName())
+    #返回当前线程变量
+    print(threading.currentThread())
+    #返回一个包含正在运行的线程的list。正在运行指线程启动后、结束前，不包括启动前和终止后的线程。
+    print(threading.enumerate())
+    # 返回正在运行的线程数量，与len(threading.enumerate())有相同的结果
+    print(threading.activeCount())
+    print(&quot;主线程&quot;)
+</code></pre></li>
+</ul></li>
+<li><p>守护进程</p>
+<ul>
+<li><p>等待主线程最后一行代码结束完毕之后销毁</p>
+<ul>
+<li><pre class="python"><code>from threading import Thread
+import time
+def task():
+    print(&quot;这是子线程开始\n&quot;)
+    time.sleep(2)
+    print(&quot;这是子线程结束&quot;)
+if __name__ == &#39;__main__&#39;:
+    t = Thread(target=task)
+    #将线程变成守护线程
+    t.daemon = True
+    t.start()
+    print(&quot;这是主线程&quot;)</code></pre></li>
+</ul></li>
+</ul></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

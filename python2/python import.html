@@ -1,0 +1,254 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python import' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python import</center></div><div class='banquan'>原文出处:本文由博客园博主沐水杉提供。<br/>
+原文连接:https://www.cnblogs.com/dawnredwood/p/python_import.html</div><br>
+    <p><strong>一、<a href="https://www.cnblogs.com/windlaughing/archive/2013/05/26/3100362.html" target="_blank">命名空间</a></strong></p>
+<p>1.分类：</p>
+<p>（1）局部命名空间：每个函数都有自已的局部命名空间，它记录了函数的变量，包括函数的参数和局部定义的变量。</p>
+<p>（2）全局命名空间：每个模块都有自已的全局命名空间，它记录了模块的变量，包括函数、类、其它导入的模块、模块级的变量和常量。</p>
+<p>（3）内置命名空间：任何模块均可访问它，它存放着内置的函数和异常。</p>
+<p>&nbsp;</p>
+<p>2.查找顺序：局部命名空间（嵌套函数先到自己的命名空间搜索，再到父函数的命名空间搜索） ==&gt; 全局命名空间 ==&gt; 内置命名空间，如果均没有查找到，将引发一个 NameError 异常。</p>
+<p><img src="./images/python import0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>3.生命周期：局部命名空间在函数被调用时创建，当函数返回或抛出异常时被删除。全局命名空间在模块定义被读入时创建，一直保存到解释器退出。内置命名空间在 Python 解释器启动时创建，一直保留。</p>
+<p>&nbsp;</p>
+<p>4.局部命名空间：</p>
+<p>可以通过内置函数 locals() 查看。locals() 返回局部命名空间的一个拷贝，修改它对局部命名空间没有影响。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">代码</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> foo():
+    a </span>= 1
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">locals: %s</span><span style="color: #800000;">"</span> %<span style="color: #000000;"> locals())
+foo()
+</span><span style="color: #008000;">#</span><span style="color: #008000;">结果</span>
+locals: {<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>: 1}</pre>
+</div>
+<p>&nbsp;</p>
+<p>5.全局命名空间：</p>
+<p>可以通过内置函数 globals() 查看。globals() 返回真实的全局名字空间，修改它会影响全局命名空间。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">代码</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> copy
+</span><span style="color: #0000ff;">from</span> copy <span style="color: #0000ff;">import</span><span style="color: #000000;"> deepcopy
+a </span>= 1
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> foo():
+    b </span>= 2
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">globals: %s</span><span style="color: #800000;">"</span> %<span style="color: #000000;"> locals())
+foo()
+</span><span style="color: #008000;">#</span><span style="color: #008000;">结果</span>
+globals: {<span style="color: #800000;">'</span><span style="color: #800000;">__name__</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">__doc__</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">__package__</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">__loader__</span><span style="color: #800000;">'</span>: &lt;<span style="color: #0000ff;">class</span> <span style="color: #800000;">'</span><span style="color: #800000;">_frozen_importlib.BuiltinImporter</span><span style="color: #800000;">'</span>&gt;, <span style="color: #800000;">'</span><span style="color: #800000;">__spec__</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">__annotations__</span><span style="color: #800000;">'</span>: {}, <span style="color: #800000;">'</span><span style="color: #800000;">__builtins__</span><span style="color: #800000;">'</span>: &lt;module <span style="color: #800000;">'</span><span style="color: #800000;">builtins</span><span style="color: #800000;">'</span> (built-<span style="color: #0000ff;">in</span>)&gt;, <span style="color: #800000;">'</span><span style="color: #800000;">copy</span><span style="color: #800000;">'</span>: &lt;module <span style="color: #800000;">'</span><span style="color: #800000;">copy</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">from</span> <span style="color: #800000;">'</span><span style="color: #800000;">D:\\Python33\\lib\\copy.py</span><span style="color: #800000;">'</span>&gt;, <span style="color: #800000;">'</span><span style="color: #800000;">deepcopy</span><span style="color: #800000;">'</span>: &lt;function deepcopy at 0x01DB28A0&gt;, <span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">foo</span><span style="color: #800000;">'</span>: &lt;function foo at 0x00000208FF69C1E0&gt;}</pre>
+</div>
+<p>import module：模块自身被导入，保持自已的命名空间，访问时需要用 module.function ；</p>
+<p>from module import function：从另一个模块中将指定的函数和属性导入到自己的命名空间，访问时可以直接用 function 。</p>
+<p>&nbsp;</p>
+<p>6.<a href="https://www.cnblogs.com/linxiyue/p/7911916.html" target="_blank">内置命名空间</a>：</p>
+<p>内置命名实际上存在于一个叫 __builtins__ 的模块中，可以通过 globals()['__builtins__'].__dict__ 查看其中的内置函数和内置异常。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">代码</span>
+<span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">builtins: %s</span><span style="color: #800000;">"</span> % globals()[<span style="color: #800000;">'</span><span style="color: #800000;">__builtins__</span><span style="color: #800000;">'</span>].<span style="color: #800080;">__dict__</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">结果</span>
+builtins: {<span style="color: #800000;">'</span><span style="color: #800000;">__name__</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">builtins</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">__doc__</span><span style="color: #800000;">'</span>: <span style="color: #800000;">"</span><span style="color: #800000;">Built-in functions, exceptions, and other objects.\n\nNoteworthy: None is the `nil' object; Ellipsis represents `...' in slices.</span><span style="color: #800000;">"</span>, <span style="color: #800000;">'</span><span style="color: #800000;">__package__</span><span style="color: #800000;">'</span>: <span style="color: #800000;">''</span>, <span style="color: #800000;">'</span><span style="color: #800000;">__loader__</span><span style="color: #800000;">'</span>: &lt;<span style="color: #0000ff;">class</span> <span style="color: #800000;">'</span><span style="color: #800000;">_frozen_importlib.BuiltinImporter</span><span style="color: #800000;">'</span>&gt;, <span style="color: #800000;">'</span><span style="color: #800000;">__spec__</span><span style="color: #800000;">'</span>: ModuleSpec(name=<span style="color: #800000;">'</span><span style="color: #800000;">builtins</span><span style="color: #800000;">'</span>, loader=&lt;<span style="color: #0000ff;">class</span> <span style="color: #800000;">'</span><span style="color: #800000;">_frozen_importlib.BuiltinImporter</span><span style="color: #800000;">'</span>&gt;), <span style="color: #800000;">'</span><span style="color: #800000;">__build_class__</span><span style="color: #800000;">'</span>: &lt;built-<span style="color: #0000ff;">in</span> function <span style="color: #800080;">__build_class__</span>&gt;, <span style="color: #800000;">'</span><span style="color: #800000;">__import__</span><span style="color: #800000;">'</span>: &lt;built-<span style="color: #0000ff;">in</span> function <span style="color: #800080;">__import__</span>&gt;, <span style="color: #800000;">'</span><span style="color: #800000;">abs</span><span style="color: #800000;">'</span>: &lt;built-<span style="color: #0000ff;">in</span> function abs&gt;,...</pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>二、导入方式</strong></p>
+<p>python 导入部分的代码在 Lib/importlib 包中，<a href="https://docs.python.org/zh-cn/3/reference/import.html?highlight=module" target="_blank">官方文档</a>。</p>
+<p>python 的导入依靠 __import__() 函数实现，其他导入方式中 import 语句是 __import__() 函数的语法糖，import_module() 函数是一个对 __import__() 进行简化的包装器。</p>
+<p>三者区别如下：</p>
+<p>1.<a href="https://docs.python.org/zh-cn/3/reference/simple_stmts.html#import" target="_blank">import</a>：先带有适当的参数调用 __import__() 函数，然后将返回值绑定到当前作用域中的命名空间里。</p>
+<p>2.<a href="https://docs.python.org/zh-cn/3/library/functions.html#__import__" target="_blank">__import__()</a>：执行模块搜索以及在找到时的模块创建操作，返回最高层级的包或模块（如 pkg ）。</p>
+<p>3.<a href="https://docs.python.org/zh-cn/3/library/importlib.html#importlib.import_module" target="_blank">import_module()</a>：对 __import__() 进行简化的包装器，返回指定的包或模块（如 pkg.mod ）。</p>
+<p>&nbsp;</p>
+<p><strong>三、<a href="https://michael728.github.io/2018/12/15/python-package-import-order/" target="_blank">导入机制</a></strong></p>
+<p>1.<a href="https://zhuanlan.zhihu.com/p/30836117" target="_blank">模块与包</a>：</p>
+<p>python 导入的都是模块对象类型（&nbsp;module ），模块有一种特殊类型包（ package ）, 任何具有 __path__ 属性的模块都会被当作是包。包有两种类型，常规包和命名空间包。</p>
+<p>常规包通常以一个包含 __init__.py 文件的目录形式实现。（不带__init__.py&nbsp;文件的目录不会被python识别为包）</p>
+<p>第一次导入包时会执行一遍&nbsp;__init__.py 文件，第一次导入模块时会执行一遍模块文件。</p>
+<p>&nbsp;<img src="./images/python import1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>2.<a href="https://www.cnblogs.com/ljhdo/p/10674242.html" target="_blank">搜索顺序</a>：</p>
+<p>首次导入一个模块时，Python 会按顺序搜索该模块，如果找到就创建一个 module 对象并初始化它； 如果未找到则会引发 ModuleNotFoundError 。</p>
+<p>搜索的顺序是： sys.modules&nbsp;==&gt; sys.path[0] （当前目录） ==&gt; sys.path[1:]&nbsp;</p>
+<p><img src="./images/python import2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>sys.modules：执行 py 文件时，首先会默认加载一些模块（ sys.builtin_module_names&nbsp;列出的内置模块，标准库）并存放在 sys.modules 中；之后 import 载入的模块也会存放在&nbsp;sys.modules 中。</p>
+<p>sys.path[0]：执行 py 文件时会把文件所在的&nbsp;directory 存入 sys.path[0]&nbsp;中。直接执行存入的是绝对路径，带 -m 参数执行存入的是相对路径，交互式执行环境存入的是相对路径。</p>
+<p>sys.path[1:] ：第三方模块默认安装位置在环境变量 site-packages 中。</p>
+<p>直接执行时 sys.path[0] 存入的是绝对路径，__name__ = '__main__' ，此时如果使用相对导入会报错；带 -m 参数执行时 sys.path[0] 存入的是相对路径，__name__ = 'package.subpackage.module' ，此时可以使用相对导入。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">test.py</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> sys
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(sys.path)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">直接执行 (作为 top-level 脚本，__name__ = '__main__')</span>
+<span style="color: #000000;">python test.py
+[</span><span style="color: #800000;">'</span><span style="color: #800000;">C:\\test.py</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\python37.zip</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\DLLs</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\lib</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\lib\\site-packages</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">带-m参数执行 (作为 module，同import，__name__ = 'package.subpackage.module')</span>
+python -<span style="color: #000000;">m test
+[</span><span style="color: #800000;">''</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\python37.zip</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\DLLs</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\lib</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\lib\\site-packages</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">交互式执行环境</span>
+&gt;&gt;&gt; <span style="color: #0000ff;">import</span><span style="color: #000000;"> sys
+</span>&gt;&gt;&gt; <span style="color: #0000ff;">print</span><span style="color: #000000;">(sys.path)
+[</span><span style="color: #800000;">''</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\python37.zip</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\DLLs</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\lib</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">D:\\SoftwareIT\\Python\\lib\\site-packages</span><span style="color: #800000;">'</span>]</pre>
+</div>
+<p>&nbsp;</p>
+<p>如下图，import os 时，在 sys.modules 中找到了 os 模块，停止搜索；不会继续在 sys.path[0] 中搜索同目录下的 os.py 文件，因此 os.getcwd() 没有报错。</p>
+<p>from redis import Redis 时，在&nbsp;sys.modules&nbsp;中没有找到 redis 模块，继续搜索；按&nbsp;sys.path[0] 的路径搜索到同目录下的 redis.py 文件，redis.py 文件没有 Redis 方法，因此报错。此时第三方库 redis 的路径&nbsp;site-packages 在 sys.path[1:]&nbsp; 中，还没有执行搜索。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">目录结构</span>
+├── <span style="color: #800080;">__init__</span><span style="color: #000000;">.py
+├── os.py
+├── redis.py
+└── test.py
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">代码 test.py</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+os.getcwd()
+</span><span style="color: #0000ff;">from</span> redis <span style="color: #0000ff;">import</span><span style="color: #000000;"> Redis
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">结果 python test.py</span>
+<span style="color: #000000;">Traceback (most recent call last):
+  File </span><span style="color: #800000;">"</span><span style="color: #800000;">test.py</span><span style="color: #800000;">"</span>, line 3, <span style="color: #0000ff;">in</span> &lt;module&gt;
+    <span style="color: #0000ff;">from</span> redis <span style="color: #0000ff;">import</span><span style="color: #000000;"> Redis
+ImportError: No module named redis</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>四、import</strong></p>
+<p>1.import A：</p>
+<p>查找一个模块，如果有必要还会加载并初始化模块；</p>
+<p>如果未找到该模块，则引发&nbsp;ModuleNotFoundError&nbsp;；</p>
+<p>在局部命名空间中为&nbsp;import&nbsp;语句发生位置所处的作用域定义一个或多个名称，如果有 as 子句则使用其指定的名称，否则使用该属性的名称。</p>
+<p>&nbsp;</p>
+<p>2.from A import B：</p>
+<p>查找 from 子句中指定的模块，如有必要还会加载并初始化模块；</p>
+<p>如果未找到该模块，则引发 ModuleNotFoundError&nbsp;；</p>
+<p>对于 import 子句中指定的每个标识符：检查被导入模块是否有该名称的属性，如果没有，尝试导入具有该名称的子模块，然后再次检查被导入模块是否有该属性；</p>
+<p>如果未找到该属性，则引发 ImportError ；</p>
+<p>否则的话，将对该值的引用存入局部命名空间，如果有 as 子句则使用其指定的名称，否则使用该属性的名称。</p>
+<p>&nbsp;</p>
+<p>3.from A import *（不推荐使用）：</p>
+<p>仅在模块层级上被允许，如果在类或函数定义中使用它将引发 SyntaxError 。</p>
+<p>在模块中定义的全部公有名称都将被绑定到局部命名空间。</p>
+<p>模块的公有名称由模块命名空间中的 __all__ 的变量确定（包则由&nbsp;__init__.py 文件的&nbsp;__all__&nbsp;的变量确定），&nbsp;__all__ 是一个字符串列表&nbsp;__all__ 。如果&nbsp;__all__&nbsp;没有被定义，则公有名称是模块命名空间中所有不以 '_' 开头的名称。</p>
+<p>&nbsp;</p>
+<p>3.<a href="https://www.jianshu.com/p/5cc20b88bcf4" target="_blank">绝对导入和相对导入</a>：</p>
+<p>（1）绝对导入：</p>
+<p>import A.B ，from A import B 这种形式的 import 为绝对导入。</p>
+<p>（2）相对导入：</p>
+<p>from .A import B 这种形式的 import 为相对导入。</p>
+<p>相对导入仅在包内导入时有效，包通常指包含&nbsp;__init__.py 文件的目录。如 A 目录下没有 __init__.py 文件，则不可以使用相对导入。</p>
+<p>一个前缀点号表示相对导入从当前包开始。 两个或更多前缀点号表示对当前包的上级包的相对导入，第一个点号之后的每个点号代表一级。</p>
+<p>&nbsp;</p>
+<p><strong>五、__import__()</strong></p>
+<p>1.定义：</p>
+<p>内置函数，不用 import，在库中位置：importlib.__import__() 。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800080;">__import__</span>(name, globals=None, locals=None, fromlist=(), level=0)</pre>
+</div>
+<p>&nbsp;</p>
+<p>2.参数：</p>
+<p>name 参数指定了导入的模块名。</p>
+<p>globals 和 locals 参数确定了语句的上下文。</p>
+<p>fromlist 参数给出了应该从由 name 参数指定的模块导入对象或子模块的名称。</p>
+<p>level 参数指定了是使用绝对还是相对导入。0（默认值）表示绝对导入，正数表示相对导入，数值大小即为父目录层数<span id="index-20" class="target">。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> import 语句与等价的 __import__() 语句</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> spam
+spam </span>= <span style="color: #800080;">__import__</span>(<span style="color: #800000;">'</span><span style="color: #800000;">spam</span><span style="color: #800000;">'</span><span style="color: #000000;">, globals(), locals(), [], 0)
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> spam.ham
+spam </span>= <span style="color: #800080;">__import__</span>(<span style="color: #800000;">'</span><span style="color: #800000;">spam.ham</span><span style="color: #800000;">'</span><span style="color: #000000;">, globals(), locals(), [], 0)
+
+</span><span style="color: #0000ff;">from</span> spam.ham <span style="color: #0000ff;">import</span><span style="color: #000000;"> eggs, sausage as saus
+_temp </span>= <span style="color: #800080;">__import__</span>(<span style="color: #800000;">'</span><span style="color: #800000;">spam.ham</span><span style="color: #800000;">'</span>, globals(), locals(), [<span style="color: #800000;">'</span><span style="color: #800000;">eggs</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">sausage</span><span style="color: #800000;">'</span><span style="color: #000000;">], 0)
+eggs </span>=<span style="color: #000000;"> _temp.eggs
+saus </span>= _temp.sausage</pre>
+</div>
+<p>当 name 变量的形式为 pkg.mod 时，通常将会返回最高层级的包（第一个点号之前的名称），而不是以 name 命名的模块。 但是当给出了非空的 fromlist 参数时，则将返回以 name 命名的模块。</p>
+<p>正常情况下一般不直接使用&nbsp;__import__() 函数。</p>
+<p>&nbsp;</p>
+<p><strong>六、import_module()</strong></p>
+<p>1.定义：</p>
+<p>非内置函数，需要 import，在库中位置：importlib.import_module() 。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> importlib
+importlib.import_module(name, package</span>=None)</pre>
+</div>
+<p>&nbsp;</p>
+<p>2.参数：</p>
+<p>name 参数指定了以绝对或相对导入方式导入什么模块（如 pkg.mod 或 ..mod ）。</p>
+<p>package 参数为包名。如果 name 参数为相对导入方式，则 package 参数不能为空（如 import_module('..mod', 'pkg.subpkg') 将会导入 pkg.mod ）。</p>
+<p>import_module() 返回指定的包或模块（如&nbsp;pkg.mod ）。</p>
+<p>import_module() 函数可以用于动态导入模块。</p>
+<p>&nbsp;</p>
+<p><strong>七、常见陷阱</strong></p>
+<p>1.<a href="https://medium.com/pyladies-taiwan/python-%E7%9A%84-import-%E9%99%B7%E9%98%B1-3538e74f57e3" target="_blank">循环导入</a>：</p>
+<p>问题：模块A引用了模块B，模块B同时也引用了模块A。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">A.py</span>
+<span style="color: #0000ff;">from</span> .B <span style="color: #0000ff;">import</span><span style="color: #000000;"> B_greet_back
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> A_say_hello():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">A says hello!</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    B_greet_back()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> A_greet_back():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">A says hello back!</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    A_say_hello()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">B.py</span>
+<span style="color: #0000ff;">from</span> .A <span style="color: #0000ff;">import</span><span style="color: #000000;"> A_greet_back
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> B_say_hello():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">B says hello!</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    A_greet_back()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> B_greet_back():
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">B says hello back!</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    B_say_hello()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">运行</span>
+python -<span style="color: #000000;">m sample_package.B
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">结果</span>
+ImportError: cannot <span style="color: #0000ff;">import</span> name <span style="color: #800000;">'</span><span style="color: #800000;">A_greet_back</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>如上图，sample_package&nbsp;包里有 A 和 B 两个模块，当 B 执行时，会导入 A_greet_back ，导入时自动执行一遍 A ，而当 A 执行时，会导入 B_greet_back&nbsp;，这样就出现了死循环。</p>
+<p>解决方法：</p>
+<p>（1）导入整个模块：将 from .A import A_greet_back 更改为 from . import A，这样就不会在 A 模块中去找&nbsp;A_greet_back 的定义了，只需要确认 A 模块是否存在。</p>
+<p>（2）延迟导入：将 from .A import A_greet_back 放入 B_say_hello() 中。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>引用说明：</strong></p>
+<p>命名空间：<a href="https://www.cnblogs.com/windlaughing/archive/2013/05/26/3100362.html">https://www.cnblogs.com/windlaughing/archive/2013/05/26/3100362.html</a></p>
+<p>作用域和闭包：<a href="https://www.cnblogs.com/linxiyue/p/7911916.html">https://www.cnblogs.com/linxiyue/p/7911916.html</a></p>
+<p>导入机制：<a href="https://michael728.github.io/2018/12/15/python-package-import-order/">https://michael728.github.io/2018/12/15/python-package-import-order/</a></p>
+<p>模块搜索路径：<a href="https://www.cnblogs.com/ljhdo/p/10674242.html">https://www.cnblogs.com/ljhdo/p/10674242.html</a></p>
+<p>模块与包：<a href="https://zhuanlan.zhihu.com/p/30836117">https://zhuanlan.zhihu.com/p/30836117</a></p>
+<p>绝对导入和相对导入：<a href="https://www.jianshu.com/p/5cc20b88bcf4">https://www.jianshu.com/p/5cc20b88bcf4</a></p>
+<p>import陷阱：<a href="https://medium.com/pyladies-taiwan/python-%E7%9A%84-import-%E9%99%B7%E9%98%B1-3538e74f57e3">https://medium.com/pyladies-taiwan/python-%E7%9A%84-import-%E9%99%B7%E9%98%B1-3538e74f57e3</a></p>
+<p>规避import的坑：<a href="https://zhuanlan.zhihu.com/p/78247846">https://zhuanlan.zhihu.com/p/78247846</a></p>
+<p>&nbsp;</p>
+<p><strong>转载请注明出处。</strong></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

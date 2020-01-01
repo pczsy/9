@@ -1,0 +1,472 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修一次线上故障：数据库连接池泄露后的思考' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>一次线上故障：数据库连接池泄露后的思考</center></div><div class='banquan'>原文出处:本文由博客园博主beket提供。<br/>
+原文连接:https://www.cnblogs.com/clovejava/p/12094869.html</div><br>
+    <h2>&nbsp;一：初步排查</h2>
+<p>早上作为能效平台系统的使用高峰期，系统负载通常比其它时间段更大一些，某个时间段会有大量用户登录。当天系统开始有用户报障，发布系统线上无法构建发布，然后后续有用户不能登录系统，系统发生假死，当然系统不是真的宕机，而是所有和数据库有关的连接都被阻塞，随后查看日志发现有大量报错。</p>
+<p>和数据库连接池相关：</p>
+<div class="cnblogs_code">
+<pre><code>Caused by: org.springframework.jdbc.CannotGetJdbcConnectionException: Failed to obtain JDBC Connection; nested exception is java.sql.SQLTransientConnectionException: HikariPool-1 - Connection is not available, request timed out after 30002ms.</pre>
+</div>
+<p>&nbsp;</p>
+<p>可以看出上面的报错和数据库连接有关，大量超时。通过对线上debug日志的分析，也验证了数据库连接池被大量消耗。</p>
+<div class="cnblogs_code">
+<pre><code>[DEBUG] c.z.h.p.HikariPool: HikariPool-1 - Timeout failure stats (total=20, active=20, idle=0, waiting=13)</pre>
+</div>
+<p>&nbsp;</p>
+<p>这是开始大量报错前的日志。我们可以看到此时HikariPool连接池已经无法获取连接了，active=20表示被获取正在被使用的数据库连接。waiting表示当前正在排队获取连接的请求数量。可以看出，已经有相当多的请求处于挂起状态。</p>
+<p>所以当时我们的解决办法是调整数据库连接池大小，开始初步认为是，高峰时期，我们设置的连接池数量大小，不足以支撑早高峰的连接数量导致的。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">jdbc.connection.timeout=30000
+jdbc.max.lifetime=1800000
+jdbc.maximum.poolsize=200
+jdbc.minimum.idle=10
+jdbc.idle.timeout=60000
+jdbc.readonly=false</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>我们将将数据库连接池的数量调整到了200。</p>
+<h2>&nbsp;二：事务</h2>
+<h3>&nbsp;2.1事务滥用的后果</h3>
+<p>及时将配置调整成了200，服务重启也恢复了正常，但是我仍然认为系统存在连接泄露的风险，我试图从日志表现出的行为里寻找蛛丝马迹。我在访问日志看到每次在系统崩溃前，其实都有人在做构建，而且构建经常点击没反应，我当时添加的构建debug日志也显示了这一点。我开始怀疑是构建造成的连接泄露。</p>
+<p>在这里我简单说下构建代码处的逻辑</p>
+<ol>
+<li>- 用户触发构建</li>
+<li>- 将job加入增量job缓存，用于更新job状态</li>
+<li>- jenkinsClient调用jenkins的api，开始构建</li>
+<li>- 将构建信息写入数据库（jobname，version）</li>
+</ol>
+<p>&nbsp;</p>
+<p>我开始观察自己写的代码，可是看了多遍，我也发现不了这段代码和数据库连接有啥关系，大多数人包括当时自己来说，数据库连接的泄露，大多数情况应该是服务和数据库连接的过程中发生了阻塞，导致连接泄露。但是现在来看，很容易能发现问题所在，看当时的代码：</p>
+<div class="cnblogs_code">
+<pre><code>@Transactional(rollbackFor = Exception.<span style="color: #0000ff;">class</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> build(BuildHistoryReq buildHistoryReq) {
+</span><span style="color: #008000;">//</span><span style="color: #008000;">1.封装操作
+</span><span style="color: #008000;">//</span><span style="color: #008000;">2.调用jenkins Api
+</span><span style="color: #008000;">//</span><span style="color: #008000;">3.数据库更新写入</span>
+}</pre>
+</div>
+<p>&nbsp;</p>
+<p>这就是当时的代码入口，当然代码处没有这么简单。可以看到我在方法入口就加上了Transactional注解，这里的意思其实就是发生错误，抛出异常时，数据库回滚。</p>
+<p>问题就出现在了这里，当有用户点击构建时，请求刚进入build方法时，就会从数据库连接获取一个连接。可是此时，程序并没有和数据库相关的操作，如果此时代码在步骤1或者2处出现io或者网络阻塞，就会导致，事务无法提交，连接也就会一直被该请求占用。而再大的连接池也会被耗费殆尽。从而造成系统崩溃。</p>
+<h3>&nbsp;2.2事务注解的正确用法</h3>
+<p>通常情况下作为非业务部门，没有涉及到核心的业务，像支付，订单，库存相关的操作时，事务在可读层面并没有特别高的要求。通常也只涉及到，多表操作同时更新时，保证数据一致性，要么同时成功要么同时失败。而使用</p>
+<div class="cnblogs_code">
+<pre><code>@Transactional(rollbackFor = Exception.<span style="color: #0000ff;">class</span>)</pre>
+</div>
+<p>&nbsp;</p>
+<p>足以。</p>
+<p><span style="font-size: 16px;"><strong>而上述代码该如何改进呢？？</strong></span></p>
+<p>首先分析有没有需要使用事务的必要。在步骤3中，数据操作，看代码后发现只有对一张表的操作，同时和其它操作没有相关性。而且本身属于最后一个步骤。所以在此代码中完全没有必要使用，删除注解即可。</p>
+<p>当然如果步骤3操作数据库是多表操作，具有强相关性，数据一致，我们可以这样做。将和步骤3无关的步骤分开,变成两个方法，那么在1,2处发生阻塞也不会影响到数据库连接。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> build(BuildHistoryReq buildHistoryReq) {
+</span><span style="color: #008000;">//</span><span style="color: #008000;">1.封装操作
+</span><span style="color: #008000;">//</span><span style="color: #008000;">2.调用jenkins Api</span>
+update**<span style="color: #000000;">(XX);
+}
+
+@Transactional(rollbackFor </span>= Exception.<span style="color: #0000ff;">class</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> update**<span style="color: #000000;">(XX xx) {
+</span><span style="color: #008000;">//</span><span style="color: #008000;">3.数据库更新写入</span>
+}</pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>这里需要注意，注解事务的用法，方法必须是公开调用的</strong></p>
+<h2>&nbsp;三：HttpClient 4.x连接池</h2>
+<p>当时找到数据连接池泄露的原因后，我第一步就是去掉了事务，然后加上了一些日志，这时我已经能确定代码在jenkinsclient处出现了问题，但是仍然不确定问题出在了哪，我只能加上一些日志，同时通过监控继续观察。</p>
+<p>果然在hotfix的第二天还是出现了我预料中的事情，构建发布仍然有问题，当然此时其它功能是不受影响了。我观察日志发现构建开始并在该处阻塞</p>
+<div class="cnblogs_code">
+<pre><code>jenkinsClient.startBuild(jobName, params);</pre>
+</div>
+<p>&nbsp;</p>
+<p>随后我观察了项目监控。观察线程情况，发现大量http-nio的线程阻塞了，而这个线程和httpclient相关。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">java.lang.Thread.State: WAITING (parking)
+at sun.misc.Unsafe.park(Native Method)
+</span>- parking to wait <span style="color: #0000ff;">for</span> &lt;0x00000007067027e8&gt;<span style="color: #000000;"> (a java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject)
+at java.util.concurrent.locks.LockSupport.park(LockSupport.java:</span>175<span style="color: #000000;">)
+at java.util.concurrent.locks.AbstractQueuedSynchronizer$ConditionObject.await(AbstractQueuedSynchronizer.java:</span>2039<span style="color: #000000;">)
+at org.apache.http.pool.AbstractConnPool.getPoolEntryBlocking(AbstractConnPool.java:</span>379<span style="color: #000000;">)
+at org.apache.http.pool.AbstractConnPool.access$</span>200(AbstractConnPool.java:69<span style="color: #000000;">)
+at org.apache.http.pool.AbstractConnPool$</span>2.get(AbstractConnPool.java:245<span style="color: #000000;">)
+</span>- locked &lt;0x00000007824713a0&gt; (a org.apache.http.pool.AbstractConnPool$2<span style="color: #000000;">)
+at org.apache.http.pool.AbstractConnPool$</span>2.get(AbstractConnPool.java:193)</pre>
+</div>
+<p>&nbsp;</p>
+<p>随后我跟进源码查看了AbstractConnPool类的379行</p>
+<p><img src="./images/一次线上故障：数据库连接池泄露后的思考0.png" alt="" />可以看到线程走到379行执行了this.condition.await()后进入无限期的等待，所以此时如果没有线程执行this.condition.signal()就会导致该线程一直处于waiting状态，而前端也会迟迟收不到相应，导致请求timeout。</p>
+<p>我们再分析下源码，看看什么情况下会导致线程跑到该处：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/**</span><span style="color: #008000;">
+* 获取http连接，从名称也能看出该方法会造成阻塞
+</span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">private</span><span style="color: #000000;"> E getPoolEntryBlocking(
+</span><span style="color: #0000ff;">final</span> T route, <span style="color: #0000ff;">final</span><span style="color: #000000;"> Object state,
+</span><span style="color: #0000ff;">final</span> <span style="color: #0000ff;">long</span> timeout, <span style="color: #0000ff;">final</span><span style="color: #000000;"> TimeUnit timeUnit,
+</span><span style="color: #0000ff;">final</span> Future&lt;E&gt; future) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> IOException, InterruptedException, TimeoutException {
+
+Date deadline </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+</span><span style="color: #0000ff;">if</span> (timeout &gt; 0<span style="color: #000000;">) {
+deadline </span>= <span style="color: #0000ff;">new</span> Date (System.currentTimeMillis() +<span style="color: #000000;"> timeUnit.toMillis(timeout));
+}
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.lock.lock();
+</span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #0000ff;">final</span> RouteSpecificPool&lt;T, C, E&gt; pool =<span style="color: #000000;"> getPool(route);
+E entry;
+</span><span style="color: #0000ff;">for</span><span style="color: #000000;"> (;;) {
+Asserts.check(</span>!<span style="color: #0000ff;">this</span>.isShutDown, "Connection pool shut down"<span style="color: #000000;">);
+</span><span style="color: #0000ff;">for</span><span style="color: #000000;"> (;;) {
+entry </span>=<span style="color: #000000;"> pool.getFree(state);
+</span><span style="color: #0000ff;">if</span> (entry == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+}
+</span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (entry.isExpired(System.currentTimeMillis())) {
+entry.close();
+}
+</span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (entry.isClosed()) {
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.available.remove(entry);
+pool.free(entry, </span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+} </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+}
+}
+</span><span style="color: #0000ff;">if</span> (entry != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.available.remove(entry);
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.leased.add(entry);
+onReuse(entry);
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> entry;
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> New connection is needed</span>
+<span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> maxPerRoute =<span style="color: #000000;"> getMax(route);
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> Shrink the pool prior to allocating a new connection</span>
+<span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> excess = Math.max(0, pool.getAllocatedCount() + 1 -<span style="color: #000000;"> maxPerRoute);
+</span><span style="color: #0000ff;">if</span> (excess &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; excess; i++<span style="color: #000000;">) {
+</span><span style="color: #0000ff;">final</span> E lastUsed =<span style="color: #000000;"> pool.getLastUsed();
+</span><span style="color: #0000ff;">if</span> (lastUsed == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+}
+lastUsed.close();
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.available.remove(lastUsed);
+pool.remove(lastUsed);
+}
+}
+
+</span><span style="color: #0000ff;">if</span> (pool.getAllocatedCount() &lt;<span style="color: #000000;"> maxPerRoute) {
+</span><span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> totalUsed = <span style="color: #0000ff;">this</span><span style="color: #000000;">.leased.size();
+</span><span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> freeCapacity = Math.max(<span style="color: #0000ff;">this</span>.maxTotal - totalUsed, 0<span style="color: #000000;">);
+</span><span style="color: #0000ff;">if</span> (freeCapacity &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> totalAvailable = <span style="color: #0000ff;">this</span><span style="color: #000000;">.available.size();
+</span><span style="color: #0000ff;">if</span> (totalAvailable &gt; freeCapacity - 1<span style="color: #000000;">) {
+</span><span style="color: #0000ff;">if</span> (!<span style="color: #0000ff;">this</span><span style="color: #000000;">.available.isEmpty()) {
+</span><span style="color: #0000ff;">final</span> E lastUsed = <span style="color: #0000ff;">this</span><span style="color: #000000;">.available.removeLast();
+lastUsed.close();
+</span><span style="color: #0000ff;">final</span> RouteSpecificPool&lt;T, C, E&gt; otherpool =<span style="color: #000000;"> getPool(lastUsed.getRoute());
+otherpool.remove(lastUsed);
+}
+}
+</span><span style="color: #0000ff;">final</span> C conn = <span style="color: #0000ff;">this</span><span style="color: #000000;">.connFactory.create(route);
+entry </span>=<span style="color: #000000;"> pool.add(conn);
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.leased.add(entry);
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> entry;
+}
+}
+
+</span><span style="color: #0000ff;">boolean</span> success = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+</span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (future.isCancelled()) {
+</span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> InterruptedException("Operation interrupted"<span style="color: #000000;">);
+}
+pool.queue(future);
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.pending.add(future);
+</span><span style="color: #0000ff;">if</span> (deadline != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+success </span>= <span style="color: #0000ff;">this</span><span style="color: #000000;">.condition.awaitUntil(deadline);
+} </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.condition.await();
+success </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+}
+</span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (future.isCancelled()) {
+</span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> InterruptedException("Operation interrupted"<span style="color: #000000;">);
+}
+} </span><span style="color: #0000ff;">finally</span><span style="color: #000000;"> {
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> In case of 'success', we were woken up by the
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> connection pool and should now have a connection
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> waiting for us, or else we're shutting down.
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> Just continue in the loop, both cases are checked.</span>
+<span style="color: #000000;">pool.unqueue(future);
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.pending.remove(future);
+}
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> check for spurious wakeup vs. timeout</span>
+<span style="color: #0000ff;">if</span> (!success &amp;&amp; (deadline != <span style="color: #0000ff;">null</span> &amp;&amp; deadline.getTime() &lt;=<span style="color: #000000;"> System.currentTimeMillis())) {
+</span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+}
+}
+</span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> TimeoutException("Timeout waiting for connection"<span style="color: #000000;">);
+} </span><span style="color: #0000ff;">finally</span><span style="color: #000000;"> {
+</span><span style="color: #0000ff;">this</span><span style="color: #000000;">.lock.unlock();
+}
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>从源码我们可以看出有几处必要条件才会导致线程会无限期等待：</p>
+<ol>
+<li>- timeout=0 也就是说没有给默认值，导致： deadline = null</li>
+<li>- pool.getAllocatedCount() &lt; maxPerRoute  判断是否已经到达了该路由（host地址）的最大连接数。</li>
+</ol>
+<p>&nbsp;</p>
+<p><strong>其实整体逻辑就是，从池里获取连接，如果有就直接返回，没有，判断当前请求出去的路由有没有到达该路由的最大值，如果达到了，就进行等待。如果timeout为0就会进行无限期等待</strong></p>
+<p>而这些值我本身也没有做任何设置，我当时的第一想法就是，给http请求设置超时时间。也就是给每个client设置必要的参数</p>
+<h3>解决</h3>
+<p><strong>1.jenkinsClient分配超时时间</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span><span style="color: #000000;"> HttpClientBuilder clientBuilder() {
+HttpClientBuilder httpClientBuilder </span>=<span style="color: #000000;"> HttpClientBuilder.create();
+RequestConfig.Builder builder </span>=<span style="color: #000000;"> RequestConfig.custom();
+</span><span style="color: #008000;">//</span><span style="color: #008000;">该参数对应AbstractConnecPool getPoolEntryBlocking方法的timeout</span>
+builder.setConnectionRequestTimeout(5 * 1000<span style="color: #000000;">);
+</span><span style="color: #008000;">//</span><span style="color: #008000;">数据传输的超时时间</span>
+builder.setSocketTimeout(20 * 1000<span style="color: #000000;">);
+</span><span style="color: #008000;">//</span><span style="color: #008000;">该参数为，服务和jenkins连接的时间（通常连接的时间都很短，可以设置小点）</span>
+builder.setConnectTimeout(5 * 1000<span style="color: #000000;">);
+httpClientBuilder.setDefaultRequestConfig(builder.build());
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> httpClientBuilder;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>2.构建JenkinsClient和更新使用的JenkinsClient分离</strong></p>
+<p>其实我已经尝试用池化的思想来解决该问题了。</p>
+<h3>诡异bug（同一个JenkinsClient，调用不同的api，有的api会阻塞，有的调用仍然正常）</h3>
+<p>但hotfix的第二天，又出现了一个诡异的bug：</p>
+<p>构建可以，但是无法同步job的状态。这里出现这个问题的原因在于我将构建和更新两个过程使用的jenkinsClient分离成两个，所以这个过程相互独立，互不影响，所以，更新的client出了问题但是构建的client仍然能正常使用。</p>
+<p>但是更新过程的JenkinsClient出现的问题让我百思不得其解。我们先看看更新状态过程会使用到的api（接口）</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">获取对应的job</span>
+1 JobWithDetails job = client.get(UrlUtils.toJobBaseUrl(folder, jobName), JobWithDetails.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">获取job构建的pipeline流水</span>
+2 client.get("/job/" + EncodingUtils.encode(jobName) + "/" + version + "/wfapi/describe", PipelineStep.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">获取对应job某次build的详情</span>
+3 client.get(url, BuildWithDetails.<span style="color: #0000ff;">class</span>);</pre>
+</div>
+<p>&nbsp;</p>
+<p><strong><em>bug问题1</em></strong>：为什么全量更新job和增量更新job使用的是同一个JenkinsClient，但是全量更新仍然正常获取值，而增量更新job状态的线程确出现阻塞超时（超时是因为前面我设置了timeout，使得请求不会一直阻塞下去）。</p>
+<p>要回答这个问题，就要回到线程的相关问题了，</p>
+<p>this.condition.wait()会导致当前线程阻塞，并不会影响到另外线程。而更新使用了两个线程。所以这个问题也比较好回答。</p>
+<p><em><strong>bug问题2</strong></em>：为什么同一个线程（增量更新job线程）调用不同api，有的成功，而有的会阻塞：</p>
+<p>解决这个问题，我们还是得回到AbstractConnPool中的方法getPoolEntryBlocking（）来看：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">if</span> (pool.getAllocatedCount() &lt;<span style="color: #000000;"> maxPerRoute) {
+
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>当前请求的路由如果已经达到最大值了就会阻塞等待。那么同一个jenkinsclient，按理来说不可能会出现不同的路由。所以同一个client要么都能访问，要么都会阻塞，怎么会出现有的能访问有的会阻塞。为了寻求问题的答案，我翻阅了JenkinsClient的源码，结合日志，发现服务每次阻塞的方法是：</p>
+<p><img src="./images/一次线上故障：数据库连接池泄露后的思考1.png" alt="" /></p>
+<p>不管多少次，每次都会完美的在该地方阻塞：对应上面的api 3：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">获取对应job某次build的详情</span>
+3 client.get(url, BuildWithDetails.<span style="color: #0000ff;">class</span>);</pre>
+</div>
+<p>&nbsp;</p>
+<p>这个url和其它两个api拿到的路由都有区别：可以跟随我一起看源码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> Build <span style="color: #0000ff;">extends</span><span style="color: #000000;"> BaseModel {
+
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> number;
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> queueId;
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String url;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>我们可以看到url是属于Build的属性，并非client我们设置的值，当然有人会觉得该值可能是通过将配置的url设置过来的。我们可以接着看,哪些方法可能会给build设置url，三个构造函数，一个set方法都可以，如果我们继续只看源码仍然很难找到问题所在，所以这时候我开始启动服务debug；</p>
+<p>发现了问题在哪：</p>
+<p><img src="./images/一次线上故障：数据库连接池泄露后的思考2.png" alt="" /></p>
+<p>可以看出调用jenkins的这个api出现了两个router，也可以看出这个url是jenkins返回的，查阅资料可以看到，jenkins系统设置时可以设置这个url。</p>
+<p>所以这个bug也能很好的解释了，对于httpclient来说，每个router默认可以最多两个连接。虽然是同一个调用api采用的是同一个jenkinsClient，但是却维护了两个router，一个是从配置中获取，一个是jenkins返回的，这个是配置不一致导致的。</p>
+<p>JenkinsClient分配连接数：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span><span style="color: #000000;"> HttpClientBuilder clientBuilder() {
+HttpClientBuilder httpClientBuilder </span>=<span style="color: #000000;"> HttpClientBuilder.create();
+RequestConfig.Builder builder </span>=<span style="color: #000000;"> RequestConfig.custom();
+builder.setConnectionRequestTimeout(</span>5 * 1000<span style="color: #000000;">);
+builder.setSocketTimeout(</span>20 * 1000<span style="color: #000000;">);
+builder.setConnectTimeout(</span>5 * 1000<span style="color: #000000;">);
+httpClientBuilder.setDefaultRequestConfig(builder.build());
+</span><span style="color: #008000;">//</span><span style="color: #008000;">每个路由最多有10个连接（默认2个）</span>
+httpClientBuilder.setMaxConnPerRoute(10<span style="color: #000000;">);
+</span><span style="color: #008000;">//</span><span style="color: #008000;">设置连接池最大连接数</span>
+httpClientBuilder.setMaxConnTotal(20<span style="color: #000000;">);
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> httpClientBuilder;
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>给JenkinsClient添加健康检查，并手动更新不能用的Client</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Slf4j
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> JenkinsClientManager <span style="color: #0000ff;">implements</span><span style="color: #000000;"> Runnable {
+
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">volatile</span> <span style="color: #0000ff;">boolean</span> flag = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> JenkinsClientProvider jenkinsClientProvider;
+
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;"> JenkinsClientManager(JenkinsClientProvider jenkinsClientProvider) {
+</span><span style="color: #0000ff;">this</span>.jenkinsClientProvider =<span style="color: #000000;"> jenkinsClientProvider;
+}
+
+@Override
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> run() {
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> (flag) {
+</span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+checkJenkinsHealth();
+</span><span style="color: #008000;">//</span><span style="color: #008000;">每30秒检查一次</span>
+<span style="color: #000000;">Thread.sleep(30_000);
+} </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Exception e) {
+log.warn(</span>"check health error:{}"<span style="color: #000000;">, e.getMessage());
+}
+}
+}
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> checkJenkinsHealth() {
+log.debug(</span>"check jenkins client health start"<span style="color: #000000;">);
+</span><span style="color: #008000;">//</span><span style="color: #008000;">获取client是否可用</span>
+available =<span style="color: #000000;"> isAvailable(..)
+</span><span style="color: #0000ff;">if</span> (!available || !<span style="color: #000000;">queryAvailable) {
+</span><span style="color: #008000;">//</span><span style="color: #008000;">更新client</span>
+<span style="color: #000000;">jenkinsClientProvider.retrieveJenkinsClient();
+}
+}
+
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span> isAvailable(Set&lt;Map.Entry&lt;String, JenkinsClient&gt;&gt;<span style="color: #000000;"> entries) {
+</span><span style="color: #0000ff;">boolean</span> available = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+</span><span style="color: #0000ff;">for</span> (Map.Entry&lt;String, JenkinsClient&gt;<span style="color: #000000;"> entry : entries) {
+</span><span style="color: #0000ff;">boolean</span> running =<span style="color: #000000;"> entry.getValue().isRunning();
+</span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">running) {
+log.debug(</span>"jenkins running error"<span style="color: #000000;">);
+available </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+}
+}
+</span><span style="color: #0000ff;">return</span><span style="color: #000000;"> available;
+}
+
+
+@PostConstruct
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> start() {
+TaskSchedulerConfig.getExecutor().execute(</span><span style="color: #0000ff;">this</span><span style="color: #000000;">);
+}
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<h2>四：JenkinsClient连接池</h2>
+<p><strong>采用池化技术解决client高可用和重复利用问题</strong></p>
+<p>虽然我手动写了一个<strong>JenkinsClientManager</strong>每30秒来维护一次client，但是这种手工的方式并不好：</p>
+<ol>
+<li>- 每30秒维护一次，若是在期间发生问题，那么只能干等</li>
+<li>- 无法动态的根据系统需要，动态构建新的client，也就是无法满足高并发下的使用问题</li>
+<li>- 无法配置</li>
+</ol>
+<p>目前我们都知道各种池化技术:线程池、数据库连接池、redis连接池。</p>
+<p>笔者在实现jenkinsClient pool之前，参考了线程池、数据库连接池的实现、发现其底层实现较为复杂、redis的连接池技术相对来说容易看懂和学习、所以采用了和jedis一样的实现方式来实现JenkinsClient的连接池</p>
+<p><img src="./images/一次线上故障：数据库连接池泄露后的思考3.png" alt="" />这是jedis的类结构目录，其实重点在我标记的这5个类。</p>
+<p>jedis本身也是采用的commons-pool2提供的池技术实现的，接下来我会简单介绍一下该工具提供的池化技术。</p>
+<p><strong>JenkinsClient连接池应该要具备哪些功能？？</strong></p>
+<ol>
+<li>- 动态创建JenkinsClient</li>
+<li>- 使用完的Client放回池中</li>
+<li>- 回收长期不用和不可用的Client</li>
+<li>- 能够根据需要配置一定数量的Client</li>
+</ol>
+<p>&nbsp;</p>
+<p>对于提到的这些功能，我将通过commons-pool2包来实现</p>
+<p><strong>PooledObjectFactory</strong>：该接口管理着bean的生命周期（An interface defining life-cycle methods for instances to be served by an）</p>
+<ol>
+<li>- <strong>makeObject</strong> 方法创建一个可以入池的实例，也就是我们需要用的Client由该方法创建</li>
+<li>- <strong>destroyObject</strong> 方法可以销毁不可用或者过期的对象</li>
+<li>- <strong>validateObject</strong> 方法对实例进行验证，在每次创建完实例后，都会调用该方法，同时也会以一定的频率进行健康检查（频率timeBetweenEvictionRunsMillis）</li>
+</ol>
+<p>&nbsp;</p>
+<p><strong>GenericObjectPool</strong>：实例都会放入该池中进行管理：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">所有的可用连接</span>
+<span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> Map&lt;IdentityWrapper&lt;T&gt;, PooledObject&lt;T&gt;&gt; allObjects = <span style="color: #0000ff;">new</span> ConcurrentHashMap&lt;&gt;<span style="color: #000000;">();
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">空闲的可用连接</span>
+<span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> LinkedBlockingDeque&lt;PooledObject&lt;T&gt;&gt;<span style="color: #000000;"> idleObjects;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">获取可用连接</span>
+T borrowObject() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception, NoSuchElementException,
+IllegalStateException;
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;">资源释放（将连接放回连接池）</span>
+<span style="color: #0000ff;">void</span> returnObject(T obj) <span style="color: #0000ff;">throws</span> Exception;</pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>配置（BaseObjectPoolConfig，但是我们继承GenericObjectPoolConfig，该类给出了大量的默认值）</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">#链接池中最大连接数,默认为8
+maxTotal
+#链接池中最大空闲的连接数,默认也为8
+maxIdle
+#连接池中最少空闲的连接数,默认为0
+minIdle
+#连接空闲的最小时间，达到此值后空闲连接将可能会被移除。默认为1000L*60L*30L
+minEvictableIdleTimeMillis
+#连接空闲的最小时间，达到此值后空闲链接将会被移除，且保留minIdle个空闲连接数。默认为-1
+softMinEvictableIdleTimeMillis
+#当连接池资源耗尽时，等待时间，超出则抛异常，默认为-1即永不超时
+maxWaitMillis
+#当这个值为true的时候，maxWaitMillis参数才能生效。为false的时候，当连接池没资源，则立马抛异常。默认为true
+blockWhenExhausted
+#空闲链接检测线程检测的周期，毫秒数。如果为负值，表示不运行检测线程。默认为-1.
+timeBetweenEvictionRunsMillis
+#在每次空闲连接回收器线程(如果有)运行时检查的连接数量，默认为3
+numTestsPerEvictionRun
+#默认false，create的时候检测是有有效，如果无效则从连接池中移除，并尝试获取继续获取
+testOnCreate
+#默认false，borrow的时候检测是有有效，如果无效则从连接池中移除，并尝试获取继续获取
+testOnBorrow
+#默认false，return的时候检测是有有效，如果无效则从连接池中移除，并尝试获取继续获取
+testOnReturn
+#默认false，在evictor线程里头，当evictionPolicy.evict方法返回false时，而且testWhileIdle为true的时候则检测是否有效，如果无效则移除
+testWhileIdle</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>了解了这些我们对于需要开发的连接池就很轻松了：</p>
+<ol>
+<li>- 实现PooledObjectFactory（JenkinsFactory）该工厂类就是负责JenkinsClient的生命周期</li>
+<li>- 自定义连接池Pool，通过组合的方式引入框架的连接池GenericObjectPool，当然我们也可以用继承的方式来实现（组合优先于继承）</li>
+</ol>
+<p>&nbsp;</p>
+<h2>五：反思</h2>
+<p>连接池写完，目前也只是在测试环境运行，还在观察阶段<br /><strong>有个特别的问题也需要指出来，该问题是笔者在开发时没有注意的问题，也是此次线上产生问题的原因</strong><br />笔者将原来更新频率从15s调整到了10s，问题就暴露出来了，对于1个job，可能会拉出上百个build，每次会调用3个api接口，如果每次有十个job，每次更新会在10秒内完成，随着job增加，和构建历史增加（虽然有设置保留多少版本，但是api还是会拉出很奇怪的历史build），会超量发出大量http请求。所以我在代码层面也做了改动，每次只更新每个job的前5个最新的build，这样下来，请求量会降低很多</p>
+<div class="cnblogs_code">
+<pre><code>List&lt;Build&gt; buildList = builds.stream().sorted(Comparator.comparing(Build::getNumber).reversed()).limit(5).collect(toList());</pre>
+</div>
+<p>本次事故整体来讲，还是笔者技术有限，解决问题时绕了很多弯，花了大量时间研究源码。我也总结了以下几点</p>
+<ol>
+<li>- 对于连接、锁等这些可能会阻塞的场景，都需要给出超时设置</li>
+<li>- 资源消耗型，需要有池化的思想，提高资源利用率，保证系统稳定</li>
+<li>- 基础很重要，需要持续不断的学习，这样解决问题才能深入底层，找出问题所在，而不是浮于表面</li>
+</ol>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

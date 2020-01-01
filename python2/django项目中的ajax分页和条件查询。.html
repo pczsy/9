@@ -1,0 +1,377 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修django项目中的ajax分页和条件查询。' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>django项目中的ajax分页和条件查询。</center></div><div class='banquan'>原文出处:本文由博客园博主记住我忘记我提供。<br/>
+原文连接:https://www.cnblogs.com/nmsghgnv/p/11445807.html</div><br>
+    <p>1，路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">主页面路由</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/article_list/</span><span style="color: #800000;">'</span>, article.article_list,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/article_list/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;">分页面路由</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/list_part/</span><span style="color: #800000;">'</span>, article.list_part,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/list_part/</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>2，前端主页面html</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">引用的js</span>
+&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/jQuery-1.8.2.min.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+
+<span style="color: #008000;">#</span><span style="color: #008000;">查询表单</span>
+&lt;form id=<span style="color: #800000;">"</span><span style="color: #800000;">searchlist</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+    {</span>% csrf_token %<span style="color: #000000;">}
+    </span>&lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">seachform</span><span style="color: #800000;">"</span>&gt;
+
+        &lt;li&gt;&lt;label&gt;标题&lt;/label&gt;&lt;input name=<span style="color: #800000;">"</span><span style="color: #800000;">article_title</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">scinput</span><span style="color: #800000;">"</span>/&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;label&gt;是否推荐&lt;/label&gt;
+            &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">vocation</span><span style="color: #800000;">"</span>&gt;
+                &lt;select <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">select3</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">article_is_recommend</span><span style="color: #800000;">"</span>&gt;
+                    &lt;option value=<span style="color: #800000;">""</span>&gt;请选择&lt;/option&gt;
+                    &lt;option value=<span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>&gt;推荐&lt;/option&gt;
+                    &lt;option value=<span style="color: #800000;">"</span><span style="color: #800000;">0</span><span style="color: #800000;">"</span>&gt;不推荐&lt;/option&gt;
+                &lt;/select&gt;
+            &lt;/div&gt;
+        &lt;/li&gt;
+        &lt;li&gt;&lt;label&gt;是否审核&lt;/label&gt;
+            &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">vocation</span><span style="color: #800000;">"</span>&gt;
+                &lt;select <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">select3</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">article_auditor</span><span style="color: #800000;">"</span>&gt;
+                    &lt;option value=<span style="color: #800000;">""</span>&gt;请选择&lt;/option&gt;
+                    &lt;option value=<span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>&gt;未审核&lt;/option&gt;
+                    &lt;option value=<span style="color: #800000;">"</span><span style="color: #800000;">0</span><span style="color: #800000;">"</span>&gt;审核通过&lt;/option&gt;
+                &lt;/select&gt;
+            &lt;/div&gt;
+        &lt;/li&gt;
+
+        &lt;li&gt;&lt;label&gt;作者&lt;/label&gt;
+            &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">vocation</span><span style="color: #800000;">"</span>&gt;
+                &lt;select <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">select3</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">member_id</span><span style="color: #800000;">"</span>&gt;
+                    &lt;option value=<span style="color: #800000;">""</span>&gt;请选择&lt;/option&gt;<span style="color: #000000;">
+                    {</span>% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> member_list %<span style="color: #000000;">}
+
+                    </span>&lt;option value=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.member_id }}</span><span style="color: #800000;">"</span>&gt;{{ v.member_name }}&lt;/option&gt;<span style="color: #000000;">
+                    {</span>% endfor %<span style="color: #000000;">}
+                </span>&lt;/select&gt;
+            &lt;/div&gt;
+        &lt;/li&gt;
+
+
+        &lt;li&gt;&lt;label&gt;&amp;nbsp;&lt;/label&gt;&lt;input name=<span style="color: #800000;">""</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">scbtn</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">查询</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">search</span><span style="color: #800000;">"</span>/&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;label&gt;&amp;nbsp;&lt;/label&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">删除所选文章</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">del_list</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">scbtn</span><span style="color: #800000;">"</span>&gt;&lt;/li&gt;
+
+    &lt;/ul&gt;
+
+&lt;/form&gt;
+
+<span style="color: #008000;">#</span><span style="color: #008000;">文章表</span>
+&lt;form onsubmit=<span style="color: #800000;">"</span><span style="color: #800000;">return false</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">del</span><span style="color: #800000;">"</span>&gt;
+    &lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+        &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;&lt;input name=<span style="color: #800000;">"</span><span style="color: #800000;">checkall</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">checkbox</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">""</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">checkAll</span><span style="color: #800000;">"</span>&gt;全选&lt;/th&gt;
+            &lt;th&gt;文章序号&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">sort</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/back/images/px.gif</span><span style="color: #800000;">"</span>/&gt;&lt;/i&gt;&lt;/th&gt;
+            &lt;th&gt;文章标题&lt;/th&gt;<span style="color: #000000;">
+            {</span><span style="color: #008000;">#
+</span>            &lt;th&gt;文章简介&lt;/th&gt;
+            <span style="color: #008000;">#</span><span style="color: #008000;">}</span>
+            &lt;th&gt;添加时间&lt;/th&gt;
+            &lt;th&gt;阅读量&lt;/th&gt;
+            &lt;th&gt;点赞量&lt;/th&gt;
+            &lt;th&gt;是否推荐&lt;/th&gt;
+            &lt;th&gt;作者&lt;/th&gt;
+
+            &lt;th&gt;是否审核&lt;/th&gt;
+            &lt;th&gt;操作&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;<span style="color: #000000;">
+
+        {</span>% csrf_token %<span style="color: #000000;">}
+        </span>&lt;tbody <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">maina</span><span style="color: #800000;">"</span>&gt;
+
+
+        &lt;/tbody&gt;
+
+
+    &lt;/table&gt;
+
+&lt;/form&gt;</pre>
+</div>
+<p>3，前端主页面js。</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script&gt;
+    //<span style="color: #000000;">首次页面加载，通过ajax拿到数据，放在maina容器里
+    show_list();
+
+    function show_list() {
+        $.post(</span><span style="color: #800000;">"</span><span style="color: #800000;">{% url 'back:article/list_part/' %}</span><span style="color: #800000;">"</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#searchlist</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+            $(</span><span style="color: #800000;">"</span><span style="color: #800000;">.maina</span><span style="color: #800000;">"</span><span style="color: #000000;">).html(data);
+        });
+    }
+
+    </span>//<span style="color: #000000;">点击分页，点击a连接：
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">.pagin a</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        $.post(this.href, $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#searchlist</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+            $(</span><span style="color: #800000;">"</span><span style="color: #800000;">.maina</span><span style="color: #800000;">"</span><span style="color: #000000;">).html(data);
+        });
+        </span><span style="color: #0000ff;">return</span> false;//<span style="color: #000000;">让a连接失效
+    });
+
+
+    </span>//<span style="color: #000000;">点击删除
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">.del</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        _this </span>=<span style="color: #000000;"> this;
+        layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">您确定要删除吗？</span><span style="color: #800000;">'</span><span style="color: #000000;">, {
+            btn: [</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+        }, function () {
+            id </span>= $(_this).parent().data(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+            $.post(</span><span style="color: #800000;">"</span><span style="color: #800000;">{% url 'back:article/list_delete/' %}</span><span style="color: #800000;">"</span><span style="color: #000000;">, {
+                </span><span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">: id,
+                </span><span style="color: #800000;">"</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+            }, function (data) {
+                </span><span style="color: #0000ff;">if</span> (data.status == 1<span style="color: #000000;">) {
+                    layer.msg(data.info, function () {
+                        $(_this).parent().parent().remove();
+                    });
+
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data.info);
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+        }, function () {
+        });
+        </span><span style="color: #0000ff;">return</span> false;//<span style="color: #000000;">让a连接失效
+    });
+
+    </span>//<span style="color: #000000;">点击查询按钮
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">#search</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        show_list();
+    });
+
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    设为推荐#</span>
+<span style="color: #000000;">    }
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">.recommend</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        </span><span style="color: #800080;">__this</span> =<span style="color: #000000;"> this;
+        layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">特别推荐显示前三篇文章，是否修改数据？</span><span style="color: #800000;">'</span><span style="color: #000000;">, {
+            btn: [</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+        }, function () {
+            vals </span>= $(<span style="color: #800080;">__this</span>).data(<span style="color: #800000;">"</span><span style="color: #800000;">val</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+            $.post(</span><span style="color: #800000;">"</span><span style="color: #800000;">/back/article/article_is_recommend/</span><span style="color: #800000;">"</span><span style="color: #000000;">, {
+                </span><span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">: vals,
+                </span><span style="color: #800000;">"</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+            }, function (data) {
+                </span><span style="color: #0000ff;">if</span> (data.status ==<span style="color: #000000;"> 0) {
+                    layer.msg(data.info, function () {
+
+                    });
+
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data.info);
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+        }, function () {
+        });
+        {</span><span style="color: #008000;">#</span><span style="color: #008000;">return false;//让a连接失效#}</span>
+<span style="color: #000000;">        }
+        );
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    审核#</span>
+<span style="color: #000000;">    }
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">#go</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        layer.msg(</span><span style="color: #800000;">'</span><span style="color: #800000;">点击查看文章后返回文章列表确认是否通过审核.</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    });
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">.auditor</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        </span><span style="color: #800080;">__this</span> =<span style="color: #000000;"> this;
+        layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">是否确认修改文章状态？</span><span style="color: #800000;">'</span><span style="color: #000000;">, {
+            btn: [</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+        }, function () {
+            valuse </span>= $(<span style="color: #800080;">__this</span>).data(<span style="color: #800000;">"</span><span style="color: #800000;">auditor</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+            $.post(</span><span style="color: #800000;">"</span><span style="color: #800000;">/back/article/article_auditor/</span><span style="color: #800000;">"</span><span style="color: #000000;">, {
+                </span><span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">: valuse,
+                </span><span style="color: #800000;">"</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+            }, function (data) {
+                </span><span style="color: #0000ff;">if</span> (data.status ==<span style="color: #000000;"> 0) {
+                    layer.msg(data.info, function () {
+
+                    });
+
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data.info);
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+        }, function () {
+        });
+        {</span><span style="color: #008000;">#</span><span style="color: #008000;">return false;//让a连接失效#}</span>
+<span style="color: #000000;">        }
+        );
+
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    批量删除#</span>
+<span style="color: #000000;">    }
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    全选全不选#</span>
+<span style="color: #000000;">    }
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">input[name="checkall"]</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">input[name="chk[]"]</span><span style="color: #800000;">'</span>).prop(<span style="color: #800000;">'</span><span style="color: #800000;">checked</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">input[name="checkall"]</span><span style="color: #800000;">'</span>).prop(<span style="color: #800000;">'</span><span style="color: #800000;">checked</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+    });
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">input[name="chk[]"]</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">input[name="checkall"]</span><span style="color: #800000;">'</span>).prop(<span style="color: #800000;">'</span><span style="color: #800000;">checked</span><span style="color: #800000;">'</span>, !$(<span style="color: #800000;">'</span><span style="color: #800000;">input[name="chk[]"]:not(:checked)</span><span style="color: #800000;">'</span><span style="color: #000000;">).length)
+    });
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">#del_list</span><span style="color: #800000;">'</span><span style="color: #000000;">, function () {
+        layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">是否确认删除所选文章？</span><span style="color: #800000;">'</span><span style="color: #000000;">, {
+            btn: [</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+        }, function () {
+            $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/article_del/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#del</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        })
+    })
+</span>&lt;/script&gt;</pre>
+</div>
+<p>4，主页面后台方法。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 文章列表</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> article_list(request):
+    member_list </span>=<span style="color: #000000;"> Member.objects.all()
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/article_list.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>5，前端分页面html。</p>
+<div class="cnblogs_code">
+<pre><code>{% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> articles_list %<span style="color: #000000;">}
+    </span>&lt;tr&gt;
+        &lt;td&gt;&lt;input name=<span style="color: #800000;">"</span><span style="color: #800000;">chk[]</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">checkbox</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.article_id }}</span><span style="color: #800000;">"</span>&gt;&lt;/td&gt;
+        &lt;td&gt;{{ forloop.counter }}&lt;/td&gt;&lt;!--编号--&gt;
+        &lt;td&gt;{{ v.article_title }}&lt;/td&gt;
+        &lt;td&gt;{{ v.article_addtime }}&lt;/td&gt;
+        &lt;td&gt;{{ v.article_clicknum }}&lt;/td&gt;
+        &lt;td&gt;{{ v.article_praise_num }}&lt;/td&gt;
+        &lt;td&gt;<span style="color: #000000;">
+            {</span>% <span style="color: #0000ff;">if</span> v.article_is_recommend == 1 %<span style="color: #000000;">}
+                推荐</span>&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> data-val=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.article_id }}</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">color: #440044;</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">recommend</span><span style="color: #800000;">"</span>&gt;
+                    &gt;&gt;设为不推荐&lt;/a&gt;<span style="color: #000000;">
+            {</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+                不推荐</span>&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> data-val=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.article_id }}</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">color: #440044;</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">recommend</span><span style="color: #800000;">"</span>&gt;
+                    &gt;&gt;设为推荐&lt;/a&gt;<span style="color: #000000;">
+            {</span>% endif %<span style="color: #000000;">}
+        </span>&lt;/td&gt;
+        &lt;td&gt;{{ v.member.member_name }}&lt;/td&gt;
+        &lt;td&gt;<span style="color: #000000;">
+            {</span>% <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> v.article_auditor %<span style="color: #000000;">}
+                审核通过
+                </span>&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">color: purple;</span><span style="color: #800000;">"</span> data-auditor=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.article_id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">auditor</span><span style="color: #800000;">"</span>&gt;
+                    &gt;&gt;屏蔽此文章&lt;/a&gt;<span style="color: #000000;">
+            {</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+                </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">color: #0b2e13;</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">go</span><span style="color: #800000;">"</span>&gt;去审核&lt;/a&gt;
+                &amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">color: purple;</span><span style="color: #800000;">"</span> data-auditor=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.article_id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">auditor</span><span style="color: #800000;">"</span>&gt;
+                    &gt;&gt;通过审核&lt;/a&gt;<span style="color: #000000;">
+            {</span>% endif %<span style="color: #000000;">}
+        </span>&lt;/td&gt;
+        &lt;td data-id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.article_id }}</span><span style="color: #800000;">"</span>&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/blog/single-post/{{ v.article_id }}/</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink</span><span style="color: #800000;">"</span>&gt;查看&lt;/a&gt; &lt;<span style="color: #000000;">a
+                href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink del</span><span style="color: #800000;">"</span>&gt; 删除&lt;/a&gt;&lt;/td&gt;
+    &lt;/tr&gt;<span style="color: #000000;">
+{</span>% endfor %<span style="color: #000000;">}
+</span>&lt;tr&gt;
+    &lt;td colspan=<span style="color: #800000;">"</span><span style="color: #800000;">10</span><span style="color: #800000;">"</span>&gt;
+        &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">pagin</span><span style="color: #800000;">"</span>&gt;
+            &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">message</span><span style="color: #800000;">"</span>&gt;共&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">blue</span><span style="color: #800000;">"</span>&gt;{{ num }}&lt;/i&gt;条记录，当前显示第&amp;nbsp;&lt;<span style="color: #000000;">i
+                    </span><span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">blue</span><span style="color: #800000;">"</span>&gt;{{ currentPage }}&amp;nbsp;&lt;/i&gt;<span style="color: #000000;">页
+            </span>&lt;/div&gt;
+            &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">paginList</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+                {</span>% <span style="color: #0000ff;">if</span> articles_list.has_previous %<span style="color: #000000;">}
+                    </span>&lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">paginItem</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                            href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/list_part/?page={{ articles_list.previous_page_number }}</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">span
+                            </span><span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">pagepre</span><span style="color: #800000;">"</span>&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;<span style="color: #000000;">
+                {</span>% endif %<span style="color: #000000;">}
+                {</span>% <span style="color: #0000ff;">for</span> num <span style="color: #0000ff;">in</span> pageRange %<span style="color: #000000;">}
+                    </span>&lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">paginItem {% if num == currentPage %}current{% endif %}</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                            href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/list_part/?page={{ num }}</span><span style="color: #800000;">"</span>&gt;{{ num }}&lt;/a&gt;&lt;/li&gt;<span style="color: #000000;">
+                {</span>% endfor %<span style="color: #000000;">}
+                {</span>% <span style="color: #0000ff;">if</span> articles_list.has_next %<span style="color: #000000;">}
+                    </span>&lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">paginItem</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                            href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/list_part/?page={{ articles_list.next_page_number }}</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">span
+                            </span><span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">pagenxt</span><span style="color: #800000;">"</span>&gt;&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;<span style="color: #000000;">
+                {</span>% endif %<span style="color: #000000;">}
+            </span>&lt;/ul&gt;
+        &lt;/div&gt;
+        &lt;/div&gt;
+
+
+    &lt;/td&gt;
+
+&lt;/tr&gt;</pre>
+</div>
+<p>6，分页面后台方法。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">用到的封装查找函数</span>
+<span style="color: #0000ff;">from</span> blog.utils <span style="color: #0000ff;">import</span><span style="color: #000000;"> function
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 文章part</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> list_part(request):
+    where</span>=<span style="color: #000000;">function.getWhere(request)
+    articles_list</span>=Article.objects.filter(**where).all().order_by(<span style="color: #800000;">'</span><span style="color: #800000;">-article_id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    num</span>=<span style="color: #000000;">len(articles_list)
+    currentPage</span>=int(request.GET.get(<span style="color: #800000;">'</span><span style="color: #800000;">page</span><span style="color: #800000;">'</span>,1)) <span style="color: #008000;">#</span><span style="color: #008000;">获取当前在第几页</span>
+    paginator=Paginator(articles_list,10<span style="color: #000000;">)
+
+    </span><span style="color: #0000ff;">if</span> paginator.num_pages&gt;11<span style="color: #000000;">:
+        </span><span style="color: #0000ff;">if</span> currentPage-5&lt;1<span style="color: #000000;">:
+            pageRange</span>=range(1,11<span style="color: #000000;">)
+        </span><span style="color: #0000ff;">elif</span> currentPage+5&gt;<span style="color: #000000;">paginator.num_pages:
+            pageRange </span>= range(currentPage-5, paginator.num_pages+1<span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            pageRange </span>= range(currentPage - 5,currentPage+5<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        pageRange </span>= range(1,paginator.num_pages+1<span style="color: #000000;">)
+
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        articles_list</span>=<span style="color: #000000;">paginator.page(currentPage)
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> PageNotAnInteger:
+        articles_list </span>= paginator.page(1<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> EmptyPage:
+        articles_list </span>=<span style="color: #000000;"> paginator.page(paginator.num_pages)
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/article_list_part.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>7，分页面中用到的封装函数</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 文章查找</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> getWhere(request):
+    where </span>=<span style="color: #000000;"> dict()
+    article_title</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">article_title</span><span style="color: #800000;">'</span>,<span style="color: #800000;">''</span><span style="color: #000000;">)
+    article_is_recommend </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">article_is_recommend</span><span style="color: #800000;">'</span>, <span style="color: #800000;">''</span><span style="color: #000000;">)
+    member_id </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">member_id</span><span style="color: #800000;">'</span>, <span style="color: #800000;">''</span><span style="color: #000000;">)
+    article_auditor </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">article_auditor</span><span style="color: #800000;">'</span>,<span style="color: #800000;">''</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> article_title:
+        where[</span><span style="color: #800000;">'</span><span style="color: #800000;">article_title__icontains</span><span style="color: #800000;">'</span>]=<span style="color: #000000;">article_title
+    </span><span style="color: #0000ff;">if</span> article_is_recommend!=<span style="color: #800000;">''</span><span style="color: #000000;">:
+        where[</span><span style="color: #800000;">'</span><span style="color: #800000;">article_is_recommend</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> article_is_recommend
+    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> member_id:
+        where[</span><span style="color: #800000;">'</span><span style="color: #800000;">member</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> member_id
+    </span><span style="color: #0000ff;">if</span> article_auditor !=<span style="color: #800000;">''</span><span style="color: #000000;">:
+        where[</span><span style="color: #800000;">'</span><span style="color: #800000;">article_auditor</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> article_auditor
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(where)
+    </span><span style="color: #0000ff;">return</span> where</pre>
+</div>
+<p>8，页面效果。</p>
+<p><img src="./images/django项目中的ajax分页和条件查询。0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;done。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

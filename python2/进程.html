@@ -1,0 +1,409 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修进程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>进程</center></div><div class='banquan'>原文出处:本文由博客园博主corei5tj提供。<br/>
+原文连接:https://www.cnblogs.com/tangjian219/p/11414405.html</div><br>
+    <h1 id="操作系统">操作系统</h1>
+<pre><code><code>操作系统的定义:
+操作系统是存在于硬件与软件之间,管理,协调,控制软件与硬件的交互.
+操作系统的作用(面试会问)
+1.将一些复杂的硬件操作封装成接口,便于使用.
+2.合理的调度分配多个进程与CPU的关系让其有序化
+如果没有操作系统,你去写一个程序,你只要完成两层即可.
+第一层: 你要学会底层硬件:cpu,内存,磁盘是如何工作使用的.
+第二层: 去调用这些底层的硬件.</code></pre>
+<h1 id="进程">进程</h1>
+<pre><code><code>操作系统调度作用,将磁盘上的程序加载到内存,然后交由CPU去处理.一个CPU正在运行的一个程序,就叫开启了一个进程
+进程：正在进行的一个过程或者说一个任务。而负责执行任务则是cpu。
+程序: 一堆静态的文件代码文件
+两者区别:
+    1.程序仅仅只是一堆代码而已，而进程指的是程序的运行过程。
+    2.进程是动态的,程序是静态的
+  </code></pre>
+<h1 id="多道技术">多道技术</h1>
+<pre><code><code>多道技术中的多道指的是多个程序，多道技术的实现是为了解决多个程序竞争或者说共享同一个资源（比如cpu）的有序调度问题，解决方式即多路复用，多路复用分为时间上的复用和空间上的复用。
+
+空间上的复用:将内存分成多个区域,一个内存可以执行多个进程
+时间上的复用:当多个进程抢占一个CPU资源时,操作系统会使进程的执行变得合理有序</code></pre>
+<h1 id="并发-和-并行">并发 和 并行</h1>
+<pre><code><code>串行: 所有的任务一个一个的完成.执行完一个任务,在执行下一个任务
+并发: 一个cpu执行多个进程
+并行: 多个CPU执行多个进程
+阻塞: CPU遇到io就会阻塞
+非阻塞:没有IO,就叫非阻塞.
+    
+有效的提高了CPU的效率
+</code></pre>
+<h1 id="进程的创建方式">进程的创建方式</h1>
+<pre><code><code>1.
+from multiprocessing import Process
+import time
+def tasf(name):
+    print(f&quot;{name}来了&quot;)
+    time.sleep(2)
+    print(f&quot;{name}走了&quot;)
+
+if __name__ == &#39;__main__&#39;:                   #在Windows环境下 必须写main 与Windows操作系统有冲突
+    p = Process(target=tasf,args=(&quot;小宋&quot;,))  #创建一个对象进程  args必须是个元祖  target：表示这个进程实例所调用对象；args：表示调用对象的位置参数元组；
+
+    p.start()   #只是向操作系统发送一个开辟子进程的信号,然后执行下一行 这个操作系统接收到之后 会从内存中开辟一个子进程空间 然后把主进程的数据copy到子进程空间,开辟子进程的开销是很大的执行一个子进程,永远会先打印主进程
+
+2.
+from multiprocessing import Process
+import time
+class MyProcess(Process):
+    def __init__(self,name):
+        super().__init__()   #父类中找
+        self.name = name
+    def run(self): #  如果不是run 回去父类中找,父类中没有run方法,所以就不会执行,所以必须是run
+        print(f&#39;{self.name} is running&#39;)
+        time.sleep(2)
+        print(f&#39;{self.name} is gone&#39;)
+if __name__ == &#39;__main__&#39;:
+    p = MyProcess(&#39;你&#39;)
+    p.start()   #会执行一个run方法 类的约束
+    print(&#39;=====主&#39;)
+    # 一个py文件是一个主进程
+</code></pre>
+<h1 id="验证进程的空间隔离">验证进程的空间隔离</h1>
+<pre><code><code>#进程之间的数据是隔离的,数据不共享
+from multiprocessing import Process
+n = 100
+def work():
+    global n
+    n = 0
+    print(&#39;子进程内:&#39;,n)
+if __name__ == &#39;__main__&#39;:
+    p= Process(target=work)
+    p.start()
+    p.join()
+    print(&#39;主进程内:&#39;,n)
+子进程内: 0
+主进程内: 100
+#等待子进程执行完后,如果数据是共享的话,子进程就通过global将n改为0,但是通过结果,结果仍是主进程n = 100 子进程n = 0
+# 说明子进程对n 的修改没有在主进程中生效 说明他们之间的数据是隔离的</code></pre>
+<h1 id="进程的-p-i-d">进程的 p i d</h1>
+<pre><code><code>import os
+print(f&#39;子进程:{os.getpid()}&#39;)  #获取子进程id  (Pycharm是主进程)
+print(f&#39;主进程:{os.getppid()}&#39;)  #获取主进程id  (Pycharm是主进程)</code></pre>
+<h1 id="进程join">进程join</h1>
+<pre><code><code>from multiprocessing import Process
+import time
+def task(sec,name):
+    print(f&#39;{name}is running&#39;)
+    time.sleep(sec)
+    print(f&#39;{name}is gone&#39;)
+if __name__ == &#39;__main__&#39;:
+    strat_time = time.time()
+    p = Process(target=task,args=(3,&quot;你&quot;))
+    p1 = Process(target=task,args=(4,&quot;我&quot;))
+    p2= Process(target=task,args=(1,&quot;他&quot;))
+    p.start()
+    p1.start()
+    p2.start()
+
+    p.join()#执行到这时,睡3秒,由于是并行或并发,在这3秒中会先执行 p2的&#39;他&#39;,在执行p的&#39;你&#39; 执行完后执行14782,在执行p1的&#39;我&#39; 时间的合理利用,提高CPU效率
+    print(14782)
+    p1.join()
+    p2.join()
+
+    #join执行完之后才执行join下边的代码
+    print(f&quot;{time.time()-strat_time}&quot;)
+    
+****************************************************************************************************
+对上一个代码的优化
+from multiprocessing import Process
+import time
+def sendmail(n):
+    time.sleep(1)
+    print(f&#39;发送邮件{n}&#39;)
+if __name__ == &#39;__main__&#39;:
+    l =[]
+    for i in range(10):
+        p = Process(target=sendmail,args=(i,))
+        l.append(p)
+        p.start()
+    for p in l:
+        p.join()
+    print(&#39;所有的邮件都已经发送了&#39;)
+    
+****************************************************************************************************
+from multiprocessing import Process
+import time
+def send(num):
+    time.sleep(0.5)
+    print(f&quot;发送邮件{num}&quot;)
+if __name__ == &#39;__main__&#39;:
+    for i in range(10):
+        p = Process(target=send,args=(i,))
+        p.start()
+        p.join()
+    print(&#39;所有的邮件都已经发送了&#39;)</code></pre>
+<h1 id="守护进程">守护进程</h1>
+<pre><code><code>主进程创建守护进程
+　　其一：守护进程会在主进程代码执行结束后就终止
+　　其二：守护进程内无法再开启子进程,否则抛出异常：AssertionError: daemonic processes are not allowed to have children
+注意：进程之间是互相独立的，主进程代码运行结束，守护进程随即终止
+
+from multiprocessing import Process
+import time
+def func():
+    print(123)
+    time.sleep(1)
+    print(&#39;end123&#39;)
+def foo():
+    print(456)
+    time.sleep(2)
+    print(&#39;end456&#39;)
+if __name__ == &#39;__main__&#39;:
+    p1 = Process(target=func)
+    p2 = Process(target=foo)
+    p1.daemon = True #守护进程p1
+    p1.start()       #执行p1的子进程时,子进程需要开辟内存空间,需要耗费时间,所以先执行 print(&#39;----main----&#39;)
+                     #所以执行完 print(&#39;----main----&#39;)之后,子进程将不执行,由于p2没有被守护,所以会执行p2
+    p2.start()  
+    print(&#39;----main----&#39;)
+    
+----main----
+456
+end456</code></pre>
+<h1 id="进程对象的其他属性">进程对象的其他属性</h1>
+<pre><code><code>********************************************terminate************************************************
+1.
+from multiprocessing import Process
+import time
+def task(name):
+    print(f&quot;{name} is running&quot;)
+    print(f&quot;{name} is gone&quot;)
+if __name__ == &#39;__main__&#39;:
+    p = Process(target=task,args=(&#39;常新&#39;,),name = &#39;Alex&#39;)
+    p.start()
+    time.sleep(1)   #睡1秒,足够时间执行子进程中的内容
+    p.terminate()   #杀死进程
+    p.join()        #当执行完子进程后执行以下的内容
+    print(p.name)
+#常新 is running
+#常新 is gone
+#Alex
+
+2.
+from multiprocessing import Process
+import time
+def task(name):
+    print(f&quot;{name} is running&quot;)
+    # time.sleep(2)
+    print(f&quot;{name} is gone&quot;)
+if __name__ == &#39;__main__&#39;:
+    p = Process(target=task,args=(&#39;常新&#39;,),name = &#39;Alex&#39;)
+    p.start()
+    p.terminate()   #直接杀死子进程
+    p.join()
+    print(p.name)   #Alex
+
+3.
+from multiprocessing import Process
+import time
+def task(name):
+    print(f&quot;{name} is running&quot;)
+    time.sleep(2)   #睡2秒
+    print(f&quot;{name} is gone&quot;)
+if __name__ == &#39;__main__&#39;:
+    p = Process(target=task,args=(&#39;常新&#39;,),name = &#39;Alex&#39;)
+    p.start()
+    time.sleep(1)    #睡1秒  先执行子进程的 print(f&quot;{name} is running&quot;) 接着执行,发现又睡2秒,但这一步是睡眠1秒,所以向下执行p.terminate() 结束子进程的 print(f&quot;{name} is gone&quot;) 
+    p.terminate()
+    p.join()
+    print(p.name)
+#常新 is running
+#Alex
+
+ 4.
+from multiprocessing import Process
+import time
+def task(name):
+    print(f&quot;{name} is running&quot;)
+    time.sleep(2)   #睡2秒
+    print(f&quot;{name} is gone&quot;)
+if __name__ == &#39;__main__&#39;:
+    p = Process(target=task,args=(&#39;常新&#39;,),name = &#39;Alex&#39;)
+    p.start()
+    time.sleep(3)    #睡3秒  先执行子进程的 print(f&quot;{name} is running&quot;) 在睡眠2秒,此时这步还剩1秒,继续执行子进程的print(f&quot;{name} is gone&quot;) 所以没有杀死子进程,子进程就已经执行完了
+    p.terminate()
+    p.join()
+    print(p.name)
+#常新 is running
+#常新 is gone
+#Alex
+
+********************************************is_alive*************************************************
+
+from multiprocessing import Process
+import time
+import os
+def task(n):
+    print(1233)
+    time.sleep(5)
+    print(f&quot;{n} is running {os.getpid()},{os.getppid()}&quot;)
+if __name__ == &#39;__main__&#39;:
+    p1 = Process(target=task,args=(1,))
+    p1.start()
+    p1.terminate()   #只是给操作系统发送信号,关闭子进程,交给操作系统,不知道具体什么时候什么时候关闭
+    #time.sleep(0.00000000000000000000000001)  #极限时间
+    time.sleep(1)    #睡眠1秒,在睡眠1秒过程中,先执行主进程print(&#39;主&#39;) ,接着执行print(p1.is_alive())
+    print(&quot;主&quot;)
+    print(p1.is_alive()) #判断子进程是否还存活 
+#主
+#False
+</code></pre>
+<h1 id="僵尸进程和孤儿进程">僵尸进程和孤儿进程</h1>
+<pre><code><code>主进程时刻监测子进程的运行状态,当子进程结束之后,一段时间之内,将子进程进行回收
+
+僵尸进程(有害): 所有的子进程结束之后,在被主进程回收之前,都会进入僵尸进程状态
+孤儿进程: 父进程由于某种原因结束了,但是你的子进程还在运行中,这样你的这些子进程就成了孤儿进程.你的父进程如果结束了,你的所有的孤儿进程就会被init进程的回收,init就变成了你的父进程,对你进行回收.
+回收内容:进程号 运行状态 时间
+    
+僵尸进程的危害:如果父进程不对僵尸进程进行回收(wait/waitpid),产生大量的僵尸进程,这样就会占用内存,占用进程pid号.
+
+僵尸进程如何解决?
+父进程产生了大量子进程,但是不回收,这样就会形成大量的僵尸进程,解决方式就是直接杀死父进程,将所有的僵尸进程变成孤儿进程进程,由init进行回收.
+</code></pre>
+<h1 id="锁和队列">锁和队列</h1>
+<pre><code><code>#文件db的内容为：{&quot;count&quot;:1}
+#注意一定要用双引号，不然json无法识别
+#并发运行，效率高，但竞争写同一文件，数据写入错乱
+from multiprocessing import Process,Lock
+import time,json,random
+def search():
+    dic=json.load(open(&#39;db&#39;))
+    print(&#39;\033[43m剩余票数%s\033[0m&#39; %dic[&#39;count&#39;])
+
+def get():
+    dic=json.load(open(&#39;db&#39;))
+    time.sleep(0.1) #模拟读数据的网络延迟
+    if dic[&#39;count&#39;] &gt;0:
+        dic[&#39;count&#39;]-=1
+        time.sleep(0.2) #模拟写数据的网络延迟
+        json.dump(dic,open(&#39;db&#39;,&#39;w&#39;))
+        print(&#39;\033[43m购票成功\033[0m&#39;)
+
+def task():
+    search()
+    get()
+
+if __name__ == &#39;__main__&#39;:
+    for i in range(100): #模拟并发100个客户端抢票
+        p=Process(target=task)
+        p.start()
+        
+加锁
+#文件db的内容为：{&quot;count&quot;:5}
+#注意一定要用双引号，不然json无法识别
+#并发运行，效率高，但竞争写同一文件，数据写入错乱
+from multiprocessing import Process,Lock
+import time,json,random
+def search():
+    dic=json.load(open(&#39;db&#39;))
+    print(&#39;\033[43m剩余票数%s\033[0m&#39; %dic[&#39;count&#39;])
+
+def get():
+    dic=json.load(open(&#39;db&#39;))
+    time.sleep(random.random()) #模拟读数据的网络延迟
+    if dic[&#39;count&#39;] &gt;0:
+        dic[&#39;count&#39;]-=1
+        time.sleep(random.random()) #模拟写数据的网络延迟
+        json.dump(dic,open(&#39;db&#39;,&#39;w&#39;))
+        print(&#39;\033[32m购票成功\033[0m&#39;)
+    else:
+        print(&#39;\033[31m购票失败\033[0m&#39;)
+
+def task(lock):
+    search()
+    lock.acquire()
+    get()
+    lock.release()
+
+if __name__ == &#39;__main__&#39;:
+    lock = Lock()
+    for i in range(100): #模拟并发100个客户端抢票
+        p=Process(target=task,args=(lock,))
+        p.start()
+#加锁可以保证多个进程修改同一块数据时，同一时间只能有一个任务可以进行修改，即串行的修改，没错，速度是慢了，但牺牲了速度却保证了数据安全。
+
+
+***队列***
+什么是队列? ---&gt; 队列就是存在于内存中的一个容器,它的一个特点:队列的特性就是FIFO,完全支持先进先出的原则 进程批次之间互相隔离,要实现进程间通信(IPC),multiprocessing模块中的队列方式可以实现
+创建队列的类(底层就是一管道和锁定的方式实现) Queue([maxsize]) : 创建共享的进程队列,Queue是多进程安全的队列,可以使用Queue实多进程之间的数据传递
+    
+from multiprocessing import Queue
+q = Queue(3)
+q.put(1)
+q.put(2)
+q.put(3)      # q.put(4) # 当队列数据已经达到上限,再插入数据的时候,程序就会阻塞住
+print(q.get()) 
+print(q.get()) 
+print(q.get()) 
+print(q.get()) # 当队列中的数据取完之后,程序也会阻塞住
+
+maxsize() q = Queue(3) 数据量不易过大,队列主要存放精简的重要的数据 
+block 默认值是True,当你插入的数据量超过大限度,默认阻塞,如果block = False 数据超过大限度,不阻塞了 直接报错. timeout = 3 延时报错,超过3秒再不put数据,就会报
+
+# 用进程通信队列模拟实例 
+from multiprocessing import Process from multiprocessing import Queue import os
+def task(q):
+    try:
+        q.put(f&#39;{os.getpid()}&#39;,block=False)
+    except Exception:
+        return
+if __name__ == &#39;__main__&#39;:
+    q = Queue(10)
+    for i in range(100):
+        p = Process(target=task,args=(q,))# 给CPU发送命令,开启子进程会有一定时间的延迟,在这个时间段内,主进程会继续执行  
+        p.start()
+    for i in range(1,11):  # 如果循环次数再多,会取到更多的值                       
+        print(f&#39;排名为{i}的用户:{q.get()}&#39;)</code></pre>
+<h1 id="生产者与消费者模型">生产者与消费者模型</h1>
+<pre><code><code>生产者  消费者  队列    为了平衡
+如果没有容器,生产者与消费者增强耦合性,不合理.所以要有一个容器,缓冲区,平衡生产力和消费力. 
+from multiprocessing import Process,Queue
+import time,random,os
+def scz(q):
+    for i in range(1,6):
+        time.sleep(random.randint(1,3))
+        res = f&#39;第{i}个包子&#39;
+        q.put(res)
+        print(f&#39;{os.getppid()}生产了{res}&#39;)
+def xfz(q):
+    while 1:
+        try:
+            food = q.get(timeout=3)
+            time.sleep(random.randint(1,2))
+            print(f&quot;{os.getpid()}吃了{food}&quot;)
+        except Exception:
+            return
+if __name__ == &#39;__main__&#39;:
+    q = Queue()
+    p = Process(target=scz,args=(q,))
+    p1 = Process(target=xfz,args=(q,))
+    p.start()
+    p1.start()</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,156 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python之路【第十篇】Python面向对象之多态、多态性' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python之路【第十篇】Python面向对象之多态、多态性</center></div><div class='banquan'>原文出处:本文由博客园博主Simon92提供。<br/>
+原文连接:https://www.cnblogs.com/hackerer/p/11274921.html</div><br>
+    <p><strong>阅读目录</strong></p>
+<h2><strong>一 多态</strong></h2>
+<p>多态指的是一类事物有多种形态</p>
+<p>动物有多种形态：人，狗，猪</p>
+<div class="cnblogs_code">
+<pre><code>import abc
+class Animal(metaclass=abc.ABCMeta): #同一类事物:动物
+    @abc.abstractmethod
+    def talk(self):
+        pass
+
+class People(Animal): #动物的形态之一:人
+    def talk(self):
+        print('say hello')
+
+class Dog(Animal): #动物的形态之二:狗
+    def talk(self):
+        print('say wangwang')
+
+class Pig(Animal): #动物的形态之三:猪
+    def talk(self):
+        print('say aoao')</pre>
+</div>
+<p>文件有多种形态：文本文件，可执行文件</p>
+<div class="cnblogs_code">
+<pre><code>import abc
+class File(metaclass=abc.ABCMeta): #同一类事物:文件
+    @abc.abstractmethod
+    def click(self):
+        pass
+
+class Text(File): #文件的形态之一:文本文件
+    def click(self):
+        print('open file')
+
+class ExeFile(File): #文件的形态之二:可执行文件
+    def click(self):
+        print('execute file')</pre>
+</div>
+<p>&nbsp;</p>
+<div>&nbsp;</div>
+<h2>二 多态性</h2>
+<h3><strong>一 什么是多态动态绑定（在继承的背景下使用时，有时也称为多态性）</strong></h3>
+<p><strong>多态性是指在不考虑实例类型的情况下使用实例</strong></p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span>在面向对象方法中一般是这样表述多态性：向不同的对象发送同一条消息（！！！obj.func():是调用了obj的方法func，又称为向obj发送了一条消息func），不同的对象在接收时会产生不同的行为（即方法）。也就是说，每个对象可以用自己的方式去响应共同的消息。所谓消息，就是调用函数，不同的行为就是指不同的实现，即执行不同的函数。
+
+比如：老师.下课铃响了（），学生.下课铃响了()，老师执行的是下班操作，学生执行的是放学操作，虽然二者消息一样，但是执行的效果不同</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>多态性分为静态多态性和动态多态性</strong></p>
+<p><em>　　静态多态性：如任何类型都可以用运算符+进行运算</em></p>
+<p><em>　　动态多态性：如下</em></p>
+<div class="cnblogs_code">
+<pre><code>peo=People()
+dog=Dog()
+pig=Pig()
+
+#peo、dog、pig都是动物,只要是动物肯定有talk方法
+#于是我们可以不用考虑它们三者的具体是什么类型,而直接使用
+peo.talk()
+dog.talk()
+pig.talk()
+
+#更进一步,我们可以定义一个统一的接口来使用
+def func(obj):
+    obj.talk()</pre>
+</div>
+<h3><strong>二 为什么要用多态性（多态性的好处）</strong></h3>
+<p>其实大家从上面多态性的例子可以看出，我们并没有增加什么新的知识，也就是说python本身就是支持多态性的，这么做的好处是什么呢？</p>
+<p>1.增加了程序的灵活性</p>
+<p><em>　　以不变应万变，不论对象千变万化，使用者都是同一种形式去调用，如func(animal)</em></p>
+<p>2.增加了程序额可扩展性</p>
+<p>　<em>　通过继承animal类创建了一个新的类，使用者无需更改自己的代码，还是用func(animal)去调用&nbsp;　　</em>　　</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; class Cat(Animal): #属于动物的另外一种形态：猫
+...     def talk(self):
+...         print('say miao')
+... 
+&gt;&gt;&gt; def func(animal): #对于使用者来说，自己的代码根本无需改动
+...     animal.talk()
+... 
+&gt;&gt;&gt; cat1=Cat() #实例出一只猫
+&gt;&gt;&gt; func(cat1) #甚至连调用方式也无需改变，就能调用猫的talk功能
+say miao
+
+'''
+这样我们新增了一个形态Cat，由Cat类产生的实例cat1，使用者可以在完全不需要修改自己代码的情况下。使用和人、狗、猪一样的方式调用cat1的talk方法，即func(cat1)
+'''</pre>
+</div>
+<h3><strong>三 &nbsp;鸭子类型</strong></h3>
+<p>逗比时刻：</p>
+<p>　　Python崇尚鸭子类型，即&lsquo;如果看起来像、叫声像而且走起路来像鸭子，那么它就是鸭子&rsquo;</p>
+<p>python程序员通常根据这种行为来编写程序。例如，如果想编写现有对象的自定义版本，可以继承该对象</p>
+<p>也可以创建一个外观和行为像，但与它无任何关系的全新对象，后者通常用于保存程序组件的松耦合度。</p>
+<p>例1：利用标准库中定义的各种&lsquo;与文件类似&rsquo;的对象，尽管这些对象的工作方式像文件，但他们没有继承内置文件对象的方法</p>
+<div class="cnblogs_code">
+<pre><code>#二者都像鸭子,二者看起来都像文件,因而就可以当文件一样去用
+class<span> TxtFile:
+    def<span> read(self):
+        pass
+
+    def<span> write(self):
+        pass
+
+class<span> DiskFile:
+    def<span> read(self):
+        pass
+    def<span> write(self):
+        pass</span></span></span></span></span></span></pre>
+</div>
+<p>&nbsp;</p>
+<p>例2：其实大家一直在享受着多态性带来的好处，比如Python的序列类型有多种形态：字符串，列表，元组，多态性体现如下</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>#str,list,tuple都是序列类型
+s=str('hello'<span>)
+l=list([1,2,3<span>])
+t=tuple((4,5,6<span>))
+
+#我们可以在不考虑三者类型的前提下使用s,l,t
+s.__len__<span>()
+l.__len__<span>()
+t.__len__<span>()
+
+len(s)
+len(l)
+len(t)</span></span></span></span></span></span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

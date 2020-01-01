@@ -1,0 +1,197 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修首次自动化测试，使用selenium+scapy' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>首次自动化测试，使用selenium+scapy</center></div><div class='banquan'>原文出处:本文由博客园博主墨水熊提供。<br/>
+原文连接:https://www.cnblogs.com/moshuixiong/p/11409817.html</div><br>
+    <p>痛苦而艰难 才写出这一点点，这是个登陆测试</p>
+<p>main</p>
+<div class="cnblogs_Highlighter">
+<pre><code># -*- coding: utf-8 -*-
+from selenium import webdriver
+import login_tst
+import time
+import thread
+ms={}
+def thread_start_():
+    global ms
+    ms=login_tst.GST_start()#开始抓包
+    return
+
+driver=''
+try:
+    driver = webdriver.Chrome()#驱动加载 火狐用Firefox（）
+except Exception as e:
+    print format(e)
+driver.get('http://***.***.***:8765/Index/login.html')
+time.sleep(1)
+name=unicode("13864619000","utf-8")#只抓取了与服务器之间交互的值做判断，所以js的语句没办法测试
+password=unicode("000ww000","utf-8")#也就是无法测试手机号格式不符，密码为空的情况，
+driver.find_element_by_name('phone').send_keys(name)#这个使用find_element_by_name获取其元素是否显示应该就很好判断
+time.sleep(1)
+driver.find_element_by_name('password').send_keys(password)
+time.sleep(1)
+thread.start_new_thread(thread_start_,())
+time.sleep(2)
+
+driver.find_element_by_tag_name('button').click()
+
+
+time.sleep(1)
+if ms=={}:
+    print "系统错误"
+elif ms['msg']==u'帐号或密码错误!' and ms['state']==u"0" :
+    print "密码不对"
+elif ms['msg']==u"登录成功..."and ms['state']==u"1" :
+    print "密码正确"
+elif ms['msg']==u"验证码错误!"and ms['state']==u"3" :
+    print "验证码错误"
+elif ms['msg']==u"此账号没有经过授权，请联系管理员!"and ms['state']==u"0" :
+    print "账号错误"
+else:
+    print "系统错误"
+
+if(driver.current_url=='http://***.***.***.25:8765/Index/index'):
+    print "进入网页成功"
+</pre>
+</div>
+<p>抓包类login_tst</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;collapse:true;;gutter:true;"># -*- coding: utf-8 -*-
+from scapy.all import *
+import re
+
+ms={}
+def GET_print(packet):
+    global ms
+    for i in packet:
+        # po=i.show()#没有返回值
+        print "@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@"
+
+        qq = i.sprintf("{Raw:%Raw.load%}").split(r"\r\n")  # 获取数据包内的raw数据 不过该项目没有raw  呵呵
+
+        for li in qq:
+
+            patm = '{"msg":"(.*?)"'  # 依靠表达式获取msg内部值
+            text_listm = re.compile(patm).findall(str(li))
+            pats = ',"state":(.?)'  #获取state后的一个值
+            text_lists = re.compile(pats).findall(str(li))
+            if text_listm != []:
+                z = 0
+                while z &lt; len(text_listm) and z &lt; len(text_lists):
+                    # for oo in text_listm and  (ss in text_lists):#显然是不行
+
+                    oo = text_listm[z]
+                    ss = text_lists[z]
+
+                    oo = oo.encode('utf-8').decode('unicode_escape')# 转为uncode编码用来显示汉字
+                    o = eval(repr(oo).replace('\\\\', '\\'))
+
+                    #repr()与str()相对 repr可以更清楚的显示python对数据的处理 str更清楚的显示用户可见的信息
+
+                    #  strinfo = re.compile(r'\\\\')  # 字符串有大量\\\ 用来替换 记得前面加r   作废！！！
+                    # oo = strinfo.sub(r'\\', oo)
+                    # oo=oo.encode('utf-8').decode('unicode_escape')
+
+                    ms['msg'] = o
+                    print ms['msg']
+
+                    ms['state'] = ss.encode('utf-8').decode('unicode_escape')#转不转码无所谓，为了便于管理还是转码了
+                    z += 1
+
+    print u"--------------"
+    return
+
+def stopf(packet):
+    global ms
+    print ms
+    if ms!={}:#判断是否抓到关键包（状态码）
+        return True  #退出抓包
+    else:
+        return False #继续抓包
+
+def GST_start():
+    a = sniff(prn=GET_print, lfilter=lambda p: "HTTP/1.1 200 OK" in str(p), filter="tcp and host ***.***.***.25", count=0,stop_filter=stopf)
+    # lfilter为抓包筛选语句 作用为只抓含有"HTTP/1.1 200 OK"开头的包 filter为抓包的BPF语言 包含tcp 以及host的包， count为抓包数，stop_filter退出抓包条件
+
+    return ms
+
+
+
+
+# 遇到的困难有
+# 起py名要避开关键词 和其他的包名类名 等等
+# linux pip安装包要上root权限 打开charm也要开root权限 sudo su - root
+#注意编码的区别
+#如果接收不到值可能是sinff的lfilter或filter的BPF书写有问题
+#uncode编码非常麻烦尽量最后输出时再转换格式
+#关于uncode编码的&lsquo;\&rsquo;转换 由于python内部不能存在单独的反斜杠所以替换后都是成对的反斜杠 在进行uncode编码转换时会不识别，
+# 解决办法：可以先将字符串先转换为uncode类型后再替换，替换后字符串会自动变为中文，在字典内输出显示依旧为utf8码，
+# 对比uncode编码字符串时 要注意在字符串前加u 比如：if ms['msg']==u'帐号或密码错误!'
+#使用import调用自己写的类时 注意不要在方法外写执行函数 如果非要执行请参考 if __name__ == '__main__':
+#抓包代码要写在按钮前面  使用线程务必在按钮事件前激活抓包
+#thread.start_new_thread没有返回值 因为很讨厌线程问题所以会避开使用threading类库继承之类的方法，尽量简单一些
+#pats = ',"state":(.?)' 的后面(.?)不能跟其他条件 不清楚为什么？ 总之不能跟
+#乱码有可能是ide控制台输出的问题，也有可能是值的问题，要谨慎思考
+
+
+
+#使用到的知识有
+#scapy库:一点点的正则，BPF语句的使用，http传输格式，tcp深入了解，
+#python：全局变量使用，回调的写法，字典的使用，线程，编码的区别与更改，类库绝对路径与相对路径的区别，关于乱码的解决思路，大小写的注意
+#ide：pycharm的一些功能的了解，特别是注意选用合适python，这样pip安装类库后才能正常显示在charm中
+#seleium:自动化框架的选择，http的基本了解，可以插入js，各个浏览器版本驱动安装皆不同，
+#win是将驱动放入浏览器文件夹，写入环境变量中，linux的我忘了。。
+#
+#fiddle：都是些基本操作，
+#javascript：似乎有框架可以用于ajax 这点属于知识盲区，方法的重写与重载，http的网页格式，
+
+
+
+#提升的空间
+#使用excel，批量加载数值，真正实现自动化，
+#日志的实现，可以做到无人值守
+#选用更好的线程类
+#深度优化bpf语句
+#优化代码结构，使scapy类可以得到更好的重用
+#减少sleep的使用，优化速度
+#对于验证码显示以及网页各元素显示的验证
+#自动输入正确的验证码登陆验证 这点比较有意思 需要找个接口
+#还是希望使用纯粹的seleium做判断而不是依据抓包来判断登入成功
+
+#操作步骤
+#登陆-》fiddle抓包&mdash;&mdash;》观察传值有哪些，使用哪种方式传值&mdash;&mdash;》观察网页源代码，js等推断出值的选用范围和逻辑方向，-》据此在scapy中编写bpf写入sniff
+#尽量抓到准确的包-》解析包-》提取关键的值来做逻辑判断-》seleium控制网页，输入数值，-&gt;scapy新建线程等待抓包，-》点击确定-》抓到包
+#根据数值判断执行不同方法
+
+
+#至此学习合计大概花费4天的时间 每天8个小时左右
+#抓包scapy，自动化框架seleium，学习加编写各一天
+#linux系统问题一天（我py起名时竟然起了个跟selenium里面类名一样的，结果报错找不到类，我只好把类库和python装了卸，卸了装，足足花了6个小时才解决。。）
+#最扯的是linux的更新把浏览器内核还更新了 造成原本正常的seleium的浏览器内核作废，我又找了很长时间的错
+#网页分析一天 工具的选用与设计（至今不懂，登陆里面的javascript怎么写的，原想要写个js插入进去获值来判断是否登陆成功的，但对自己的js功力没啥信心，还是算了）
+#其余还有很多时间用在了梳理知识 写笔记，硬刚uncode编码，win和linux之间的兼容性问题上
+
+#至此告一段落 这种自动化成本忒高了 要是鼠标流早完事边上喝茶去了
+</pre>
+</div>
+<p>刚学测试和python 写的一般 让各位见笑了</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

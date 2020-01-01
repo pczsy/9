@@ -1,0 +1,101 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Windows10系统Python2.7通过Swig调用C++过程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Windows10系统Python2.7通过Swig调用C++过程</center></div><div class='banquan'>原文出处:本文由博客园博主西北望射天狼提供。<br/>
+原文连接:https://www.cnblogs.com/gujf2016/p/11282202.html</div><br>
+    <p>我用的 python版本是2.7.12：</p>
+<p>Python 2.7.12 (v2.7.12:d33e0cf91556, Jun 27 2016, 15:24:40) [MSC v.1500 64 bit (AMD64)] on win32</p>
+<p>&nbsp;</p>
+<p>1, 下载Swig</p>
+<p>&nbsp; 下载地址：http://www.swig.org/download.html，我下载了最新版本swigwin-4.0.0.&nbsp;下载后直接解压，把 swig.exe 所在目录添加到系统环境变量 Path中。在 Command中输入 swig -version，如果出现版本号说明添加成功。</p>
+<p>&nbsp;</p>
+<p>2，编写 c++代码</p>
+<p>&nbsp; 头文件 example.h</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">#pragma</span> once
+<span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> #include &lt;iostream&gt;
+<span style="color: #008080;"> 4</span> <span style="color: #0000ff;">using</span> <span style="color: #0000ff;">namespace</span><span style="color: #000000;"> std;
+</span><span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Example {
+</span><span style="color: #008080;"> 7</span> <span style="color: #0000ff;">public</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 8</span> 
+<span style="color: #008080;"> 9</span>     <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span>*<span style="color: #000000;"> getString();
+</span><span style="color: #008080;">10</span>     <span style="color: #0000ff;">void</span> setString(<span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span>*<span style="color: #000000;"> str);
+</span><span style="color: #008080;">11</span> };</pre>
+</div>
+<p>&nbsp;&nbsp;example.cpp</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> #include <span style="color: #800000;">"</span><span style="color: #800000;">example.h</span><span style="color: #800000;">"</span>
+<span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> <span style="color: #0000ff;">void</span> Example::setString(<span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span>*<span style="color: #000000;"> str)
+</span><span style="color: #008080;"> 4</span> <span style="color: #000000;">{
+</span><span style="color: #008080;"> 5</span>     cout&lt;&lt;str&lt;&lt;<span style="color: #000000;">endl;
+</span><span style="color: #008080;"> 6</span> <span style="color: #000000;">}
+</span><span style="color: #008080;"> 7</span> 
+<span style="color: #008080;"> 8</span> <span style="color: #0000ff;">const</span> <span style="color: #0000ff;">char</span>*<span style="color: #000000;"> Example::getString()
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">{
+</span><span style="color: #008080;">10</span>     <span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span><span style="color: #800000;">hello</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+</span><span style="color: #008080;">11</span> }</pre>
+</div>
+<p>&nbsp;</p>
+<p>3，编写 example.i 文件</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> %<span style="color: #000000;">module Example
+</span><span style="color: #008080;">2</span> 
+<span style="color: #008080;">3</span> %<span style="color: #000000;">{
+</span><span style="color: #008080;">4</span> #include <span style="color: #800000;">"</span><span style="color: #800000;">example.h</span><span style="color: #800000;">"</span>
+<span style="color: #008080;">5</span> %<span style="color: #000000;">}
+</span><span style="color: #008080;">6</span> 
+<span style="color: #008080;">7</span> %include <span style="color: #800000;">"</span><span style="color: #800000;">example.h</span><span style="color: #800000;">"</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>4，编写 setup.py 文件</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">from</span><span style="color: #000000;"> distutils.core import setup,Extension
+</span><span style="color: #008080;">2</span> test_module = Extension(<span style="color: #800000;">'</span><span style="color: #800000;">_Example</span><span style="color: #800000;">'</span>,sources = [<span style="color: #800000;">'</span><span style="color: #800000;">example_wrap.cxx</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">example.cpp</span><span style="color: #800000;">'</span><span style="color: #000000;">],)
+</span><span style="color: #008080;">3</span> setup(name = <span style="color: #800000;">'</span><span style="color: #800000;">example</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+</span><span style="color: #008080;">4</span>       version = <span style="color: #800000;">'</span><span style="color: #800000;">0.1</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+</span><span style="color: #008080;">5</span>       author = <span style="color: #800000;">''</span><span style="color: #000000;">,
+</span><span style="color: #008080;">6</span>       description = <span style="color: #800000;">'</span><span style="color: #800000;">Simple swig example</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+</span><span style="color: #008080;">7</span>       ext_modules =<span style="color: #000000;"> [test_module],
+</span><span style="color: #008080;">8</span>       py_modules = [<span style="color: #800000;">'</span><span style="color: #800000;">example</span><span style="color: #800000;">'</span><span style="color: #000000;">],
+</span><span style="color: #008080;">9</span>       )</pre>
+</div>
+<p>&nbsp;</p>
+<p>5，运行命令&nbsp;regedit 打开注册表，查看下列路径是否有该键值&nbsp; productdir：VS安装目录\VC\Auxiliary\Build，如果没有则新建目录并添加键值。这个目录"VS安装目录\VC\Auxiliary\Build"其实是 vcvarsall.bat 文件所在目录，python要用到vcvarsall.bat。</p>
+<p>\HKEY_CURRENT_USER\Software\Wow6432Node\Microsoft\VisualStudio\9.0\Setup\VC</p>
+<p>因为我的VS安装在c:\vs2019，所以我设置 productdir：c:\vs2019\VC\Auxiliary\Build</p>
+<p>&nbsp;</p>
+<p>6, 打开 Command，cd 到 example.i&nbsp;&nbsp;文件所在目录，确保 c++文件和&nbsp;example.i&nbsp; 文件在同一个目录下；输入下列命令：</p>
+<p>&nbsp; swig -python -c++ example.i</p>
+<p>&nbsp; 产生文件 Example.py 和&nbsp;example_wrap.cxx。</p>
+<p>&nbsp;</p>
+<p>7，Command继续输入命令：</p>
+<p>&nbsp; python2 setup.py build_ext --inplace</p>
+<p>&nbsp;产生&nbsp;_Example.pyd 文件。如果没有产生这个文件，查看错误原因，如果第 5 步没成功提示 cannot find vcvarsall.bat</p>
+<p>&nbsp;</p>
+<p>8，Command 输入 Python2 进入 python环境：</p>
+<p>&gt;&gt;&gt; from Example import *<br />&gt;&gt;&gt; ex = Example()<br />&gt;&gt;&gt; ex.getString()<br />'hello'<br />&gt;&gt;&gt; ex.setString("hello")<br />hello<br /><br /></p>
+<p>说明：最好不要通过 Visual studio 来产生 pyd 文件，因为 python与 VC版本不匹配会出现各种错误提示。比如2.7.12需要MSC v.1500即VS2008版本。</p>
+<p>MS VC++ 14.0 _MSC_VER = 1900 vs2015 <br />MS VC++ 12.0 _MSC_VER = 1800 vs2013的编译器他的平台是v120 <br />MS VC++ 11.0 _MSC_VER = 1700 vs2012的编译器他的平台是v110 <br />MS VC++ 10.0 _MSC_VER = 1600 Visual C++ 2010 <br />MS VC++ 9.0 _MSC_VER = 1500 Visual C++ 2008 <br />MS VC++ 8.0 _MSC_VER = 1400 Visual C++ 2005 <br />MS VC++ 7.1 _MSC_VER = 1310 <br />MS VC++ 7.0 _MSC_VER = 1300 <br />MS VC++ 6.0 _MSC_VER = 1200 <br />MS VC++ 5.0 _MSC_VER = 1100</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,72 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修moment.js 默认使用服务器时间' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>moment.js 默认使用服务器时间</center></div><div class='banquan'>原文出处:本文由博客园博主靳刘杰提供。<br/>
+原文连接:https://www.cnblogs.com/theone67/p/12050776.html</div><br>
+    <p>在前端使用Date对象获取当前时间的时候，该时间是客户端的时间。但是该时间可以被用户修改，所以我们一般情况下并不想要这个时间。如果每一次获取时间的时候都请求一下服务器，那么将会对服务器造成不必要的压力，我们也不想这么做。在网上找了一圈之后，发现了一些解决方案，就在这里总结一下</p>
+<p>1.当系统被用户第一次打开的时候，发送请求（没必要写一个专门获取时间的API），根据http的相应头Date字段获取服务器时间。此时与客户端时间做差，并将差值记录下来。</p>
+<p>2.为了防止客户端时间被用户修改，我们每隔2s(这个自定义吧)获取一下客户端时间，并将上一个时间和当前时间做差，看和2s差的大不大，正常情况下也就是几十毫秒的差值，我们在这里比方设为 1s。如果差值大于1s，我们就认为客户端时间被修改了，我们此时获取一下前一个时间和当前时间的差值再减去2s就是修改时候后的差值。</p>
+<p>3.moment.js内部获取时间是使用的moment.now方法，我们把这个方法自定义一下就可以了</p>
+<p>以下是代码实现：</p>
+<pre><code><code>    var diff = 0;           // 记录服务器和客户端的时间差值
+    var lastTime;           // 记录上一次时间
+    $(function(){
+        $.ajax({
+            url: apiURL,
+        }).always(function(res, state, xhr){
+            var serverTime = new Date(xhr.getResponseHeader(&quot;Date&quot;)).getTime();
+            var localTime = +new Date;
+            diff = serverTime - localTime;
+            lastTime = localTime;
+            var InvertialMillSeconds = 2000;
+            var maxMillSeconds = 1000;
+            // 每InvertialSeconds毫秒检测一次当前时间，
+            // 若差值大于maxMillSeconds那么可以判断出客户端时间被修改了
+            setTimeout(function(){
+                var nowTime = +new Date;
+                var InverDiff = nowTime - (lastTime + InvertialMillSeconds);
+                if(Math.abs(InverDiff) &gt; maxMillSeconds){
+                    diff += InverDiff;
+                }
+                lastTime = nowTime;
+                setTimeout(arguments.callee, InvertialMillSeconds);
+            }, InvertialMillSeconds);
+        })
+        
+    })
+    </code></pre>
+<p>moment.now本来是这个样子的</p>
+<pre><code><code>    var now = function() {
+        return Date.now ? Date.now() : +(new Date());
+    };</code></pre>
+<p>我们在引入moment.js之后，重新修改该值为</p>
+<pre><code><code>    if (window.moment &amp;&amp; window.moment.now) {
+        moment.now = function(){
+            return Date.now ? Date.now()+top.diff : (new Date().getTime() + top.diff);
+        }
+    }</code></pre>
+<p>到此，大功告成！</p>
+<blockquote>
+<p>本文由博客一文多发平台 <a href="https://openwrite.cn?from=article_bottom">OpenWrite</a> 发布！</p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

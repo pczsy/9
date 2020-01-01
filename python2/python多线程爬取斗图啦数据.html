@@ -1,0 +1,150 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python多线程爬取斗图啦数据' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python多线程爬取斗图啦数据</center></div><div class='banquan'>原文出处:本文由博客园博主龙益阳提供。<br/>
+原文连接:https://www.cnblogs.com/HiLzd/p/11246116.html</div><br>
+    <h1 id="python多线程爬取斗图啦网的表情数据">python多线程爬取斗图啦网的表情数据</h1>
+<h2 id="使用到的技术点">使用到的技术点</h2>
+<ul>
+<li>requests请求库</li>
+<li>re 正则表达式</li>
+<li>pyquery解析库,python实现的jquery</li>
+<li>threading 线程</li>
+<li>queue 队列</li>
+</ul>
+<pre><code><code>&#39;&#39;&#39;
+斗图啦多线程方式
+
+&#39;&#39;&#39;
+
+import   requests,time,re,os
+from  pyquery  import  PyQuery as jq
+from requests.exceptions import   RequestException
+from urllib import  request
+# 导入线程类
+import threading
+# 导入队列类
+from queue import Queue
+head = {
+            &quot;User_Agent&quot;: &quot;Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36&quot;,
+        }
+# 创建项目文件夹
+pt=os.path.dirname(os.path.abspath(__file__))
+path = os.path.join(pt, &quot;斗图啦&quot;)
+if not os.path.exists(path):
+    os.mkdir(path)
+
+&#39;&#39;&#39;
+生产者类
+继承自多线程类threading.Thread
+重写init方法和run方法
+&#39;&#39;&#39;
+class Producer(threading.Thread):
+    def __init__(self,img_queue,url_queue,*args,**kwargs):
+        super(Producer, self).__init__(*args,*kwargs)
+        self.img_queue=img_queue
+        self.url_queue=url_queue
+
+    def run(self):
+        while True:
+            if self.url_queue.empty():# 如果没有url了 直接退出循环
+                break
+            url=self.url_queue.get()
+            self.parse_page(url)
+   ## 解析数据方法
+    def parse_page(self,url):
+        res=requests.get(url,headers=head)
+        doc=jq(res.text)
+       # print(res.text)
+        # 查询到所有的a标签
+        items= doc.find(&quot;.page-content a&quot;).items()
+        for a  in  items:
+            title=a.find(&quot;p&quot;).text()
+            src=a.find(&quot;img.img-responsive&quot;).attr(&quot;data-original&quot;)
+            # 分割路径 拿到扩展名
+            pathtype= os.path.splitext(src)[1]
+            # 使用正则表达式 去掉特殊字符
+            patitle=re.sub(r&#39;[\.。，\?？\*!！\/~]&#39;,&quot;&quot;,title)
+            filename = patitle + pathtype
+            filepath=os.path.join(path,filename)
+            #  添加到消费者队列 循环下载图片
+            self.img_queue.put((filepath,src))
+
+
+
+
+
+&#39;&#39;&#39;
+消费者
+和生产者一样的道理
+&#39;&#39;&#39;
+class Customer(threading.Thread):
+    def __init__(self,img_queue,url_queue,*args,**kwargs):
+        super(Customer, self).__init__(*args,**kwargs)
+        self.img_queue=img_queue
+        self.url_queue=url_queue
+
+    def run(self):
+        while True:
+            if self.img_queue.empty() and self.url_queue.empty():#如果没有url并且图片下载完成 直接退出
+                break
+            # 在队列中拿到路径和图片链接
+            filepath,src=self.img_queue.get()
+            print(&#39;%s开始下载,链接%s&#39; % (filepath, src))
+            # 请求图片
+            img = requests.get(src)
+            # 写入本地 content表示二进制数据,text是文本数据
+            with open(filepath, &quot;wb&quot;)as f:
+                f.write(img.content)
+            # request.urlretrieve(src,os.path.join(path,filename))
+            print(&#39;%s下载完成&#39; % filepath)
+
+
+
+
+def main():
+    # 构建url队列和img队列
+    url_queue=Queue(100000)
+    img_queue=Queue(100000)
+
+    # 构建url 爬取1到100页的数据
+    for  i in range(1,101):
+        url=&quot;https://www.doutula.com/photo/list/?page=&quot;+str(i)
+        url_queue.put(url)# 添加到生产者队列中
+# 开启5个线程线程执行生产者
+    for i in range(5):
+        t=Producer(img_queue,url_queue)
+        t.start()
+    # 开启3个线程线程执行消费者
+    for i in range(3):
+        t=Customer(img_queue,url_queue)
+        t.start()
+
+
+if __name__ == &#39;__main__&#39;:
+    print(&quot;爬虫调度启动---------&quot;)
+    main()
+    print(&quot;爬虫调度完成---------&quot;)
+
+</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

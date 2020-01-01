@@ -1,0 +1,92 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修8. 函数-闭包' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>8. 函数-闭包</center></div><div class='banquan'>原文出处:本文由博客园博主qi.hu提供。<br/>
+原文连接:https://www.cnblogs.com/hq82/p/11483338.html</div><br>
+    <h3 id="一函数名">一、函数名</h3>
+<p>​ 函数名是⼀个变量, 但它是⼀个特殊的变量, 与括号配合可以执⾏函数的变量。</p>
+<h4 id="函数名的内存地址">1. 函数名的内存地址</h4>
+<pre><code><code>def func():
+    print(&quot;呵呵&quot;)
+    print(func)
+结果:
+&lt;function func at 0x1101e4ea0&gt;</code></pre>
+<h4 id="函数名可以赋值给其他变量">2. 函数名可以赋值给其他变量</h4>
+<pre><code><code>def func():
+    print(&quot;呵呵&quot;)
+    print(func)
+# 把函数当成⼀个变量赋值给另⼀个变量
+a = func
+# 函数调⽤ func()
+a() </code></pre>
+<h4 id="函数名可以当做函数的参数">3. 函数名可以当做函数的参数</h4>
+<pre><code><code>def func():
+    print(&quot;吃了么&quot;)
+def func2(fn):
+    print(&quot;我是func2&quot;)
+    fn() 
+    print(&quot;我是func2&quot;)
+# 把函数func当成参数传递给func2的参数fn.
+func2(func) </code></pre>
+<h4 id="函数名可以作为函数的返回值">4. 函数名可以作为函数的返回值</h4>
+<pre><code><code>def func_1():
+    print(&quot;这⾥是函数1&quot;)
+def func_2():
+    print(&quot;这⾥是函数2&quot;)
+    print(&quot;这⾥是函数1&quot;)
+    return func_2
+# 执⾏函数1. 函数1返回的是函数2, 这时fn指向的就是上⾯函数2
+fn = func_1()
+# 执⾏上⾯返回的函数
+fn()    </code></pre>
+<h3 id="二闭包">二、闭包</h3>
+<h4 id="定义">1. 定义</h4>
+<p>​ 如果在一个内部函数里，对在外部作用于（但不是在全局作用域）的变量进行引用，那么内部函数就被认为是闭包。</p>
+<p>​ 闭包（Closure）是词法闭包（Lexical Closure）的简称，是引用了自由变量的函数。这个被引用的自由变量将和这个函数一同存在，即使已经离开了创造它的环境也不例外。所以，闭包是由函数和与其相关的引用环境组合而成的实体。</p>
+<p>​ 通俗的讲就是：如果在一个内部函数里，对在外部作用域（但不是在全局作用域）的变量进行引用，那么内部函数就被认为是闭包（closure）。它只不过是个“内层”的函数，由一个名字（变量）来指代，而这个名字（变量）对于“外层”包含它的函数而言，是本地变量。</p>
+<p>​ 闭包的主要用途：<strong>实现装饰器</strong></p>
+<h4 id="闭包运用">2. 闭包运用</h4>
+<ul>
+<li>闭包函数必须有内嵌函数</li>
+<li>内嵌函数需要引用该嵌套函数上一级namespace中的变量</li>
+<li>闭包函数必须返回内嵌函数</li>
+</ul>
+<h5 id="普通闭包">(1) 普通闭包</h5>
+<pre><code><code>def func(a, b):
+    def line(x):
+        return a * x - b
+    return line
+
+line = func(2, 3)
+print(line(5))</code></pre>
+<h5 id="修改值闭包">(2) 修改值闭包</h5>
+<pre><code><code>def func(a, b):
+    def line(x):
+        nonlocal a
+        a = 3
+        return a * x - b
+    return line
+
+line = func(2, 3)
+print(line(5))</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

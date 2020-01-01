@@ -1,0 +1,144 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修5 分钟快速学习，缓存一致性优化方案！' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>5 分钟快速学习，缓存一致性优化方案！</center></div><div class='banquan'>原文出处:本文由博客园博主架构文摘提供。<br/>
+原文连接:https://www.cnblogs.com/xwgblog/p/12009836.html</div><br>
+    <h3 id="缓存操作">缓存操作</h3>
+<h4 id="读缓存">读缓存</h4>
+<p>读缓存可以分为两种情况命中（cache hit）和未命中（cache miss）：</p>
+<h5 id="缓存命中">缓存命中</h5>
+<ul>
+<li>首先从缓存中获取数据</li>
+<li>将缓存中的数据返回</li>
+</ul>
+<h5 id="缓存未命中">缓存未命中</h5>
+<ul>
+<li>首先从缓存中获取数据</li>
+<li>此时缓存未命中，从数据库获取数据</li>
+<li>将数据写入缓存</li>
+<li>返回数据</li>
+</ul>
+<p>读缓存的的处理由<strong>缓存中有没有数据？</strong> 决定，如果缓存中有数据那就是<strong>缓存命中</strong>，如果没有那就是<strong>缓存未命中</strong>：</p>
+<p><img src="./images/5 分钟快速学习，缓存一致性优化方案！0.png" /></p>
+<h4 id="写缓存">写缓存</h4>
+<p>写缓存可以分为<code>更新缓存</code>和<code>删除缓存</code>。</p>
+<h5 id="更新缓存">更新缓存</h5>
+<p>更新缓存时需要分两种情况：</p>
+<ul>
+<li>更新简单数据类型（如string）</li>
+<li>更新复杂数据类型 （如hash）</li>
+</ul>
+<p>对于<code>简单数据类型</code>可以直接更新缓存，如果是复杂数据类型会增加额外的更新开销：</p>
+<ol>
+<li>从缓存中获取数据</li>
+<li>将数据序反列化成对象</li>
+<li>更新对象数据</li>
+<li>将更新后的数据序列化存入缓存</li>
+</ol>
+<p>对复杂数据缓存的更新最少需要4步，而且每次写数据时都需要更新缓存，这样对读缓存较少的场景，可能更新数据7-8次读缓存才发生一次想想就划不来，另外每次更新缓存时都要对缓存数据进行计算，很明显写数据时计算缓存数据然后再更新缓存是没必要的，<strong>可以将缓存的更新，推迟到读缓存（缓存未命中）时</strong>。</p>
+<h5 id="删除缓存">删除缓存</h5>
+<p>删除缓存也称为<strong>淘汰缓存</strong>，删除缓存的操作非常简单的，直接将缓存从缓存库中的删除就可以了。</p>
+<h3 id="缓存操作顺序">缓存操作顺序</h3>
+<p>缓存一般都是配合数据库一起使用，从数据库中获取数据然后再更新缓存。为什么要讨论缓存操作的顺序呢？因为在有些情况下不同的操作顺序会产生不一样的结果，常见的操作顺序可以分为：</p>
+<ul>
+<li>先数据库，再缓存</li>
+<li>先缓存，再数据库</li>
+</ul>
+<p>不管是哪种顺序都要经过数据库、缓存两步操作，这两操作不是一个原子性的操作在一些情况会出现数据不一致问题。下面来分别说明不同的顺序所带的数据不一致、并发等问题。</p>
+<h4 id="先数据库后缓存">先数据库后缓存</h4>
+<p><img src="./images/5 分钟快速学习，缓存一致性优化方案！1.png" /></p>
+<p>如上图先将数据写入数据库，然后再去更新或删除缓存。两个步骤1、2都可能失败，如果是第一步失败可以通过抛出业务异常，业务调用方捕获异常信息进行处理，因为这个时候并没有操作缓存可以理解为写数据库失败了。</p>
+<p>如果是第一步成功（写数据库成功），然后再操作缓存的时候失败，这里有两种情况：</p>
+<ol>
+<li>数据库回滚：如果是业务需要保证缓存与数据库强一致性时，可以抛出业务异常给调用方。</li>
+<li>不作处理：与<code>数据库回滚</code>相反，业务可以接受在缓存过期时间达到之前，缓存与数据库允许数据不一致。</li>
+</ol>
+<p>举个例子，假设有一个字符串数据类型的缓存数据，它的key为<code>name</code>并且现在数据库和缓存中的值都是<code>arch-digest</code>。</p>
+<pre><code><code>String name = &quot;arch-digest&quot;;</code></pre>
+<p>现在要将<code>name</code>的值更新成<code>juejin</code>，按照<strong>先数据库后缓存</strong>的顺序：</p>
+<pre><code><code>//将name的值更新为juejin
+public void update(String name){
+    db.insert(...);  //更新数据库
+    cache.delete(name); //更新缓存
+}</code></pre>
+<p>正常情况下<code>db.insert(...)</code>和<code>cache.delete(name)</code>都执行成功没有异议。如果是一些其他原因<code>cache.delete(name)</code>执行失败，那数据库中的值是更新后的值<code>juejin</code>，而缓存中的数据还是<code>arch-digest</code>这样在下次读取缓存的时候拿到的值就是<code>arch-digest</code>。</p>
+<pre><code><code>public String getNameFromCache(String name){
+    String value =  cache.get(name); //从缓存中获取数据
+    ...
+    return value;
+}</code></pre>
+<p>读取缓存的时候在<code>getNameFromCache</code>方法中，如果<code>name</code>缓存没有过期那会一直拿到<code>arch-digest</code>，这样情况就会导致用户看到的数据不一致。</p>
+<h4 id="先缓存后数据库">先缓存后数据库</h4>
+<p><strong>先缓存后数据库</strong>和之前说到的<strong>先数据库后缓存</strong>差不多除了会可能导致数据不一致外，还会有并发问题。</p>
+<p><img src="./images/5 分钟快速学习，缓存一致性优化方案！2.png" /></p>
+<p>如上面现在是更新数据，如果是在<code>更新数据库</code>的时候失败会发生什么呢？这里要根据缓存的操作分两种情况：</p>
+<ol>
+<li>更新缓存：更新缓存数据，缓存中为最新数据，数据库中是老数据，下次读取时会拿到缓存中的新数据（数据不一致）。</li>
+<li>删除缓存：删除缓存中的数据，下次读取时从数据库中获取（数据一致）。</li>
+</ol>
+<p><code>更新缓存</code>和<code>删除缓存</code>操作上面已经介绍过了，不多做解释了。很明显关于<code>更新缓存</code>和<code>删除缓存</code>在这种情况先<code>删除缓存</code>更合适，没有数据不一致的问题，但是在使用<code>删除缓存</code>时也要注意会引发并发问题：</p>
+<ol>
+<li>线程A删除缓存成功</li>
+<li>线程B读取缓存未命中</li>
+<li>线程B从数据库中获取数据</li>
+<li>线程B将数据库中的数据写入缓存</li>
+<li>线程A写入数据库成功</li>
+</ol>
+<p>在高并发场景下，缓存和数据库数据不一致的情况还是会出现。那要解决数据库和缓存的数据一致性有哪些解决方案呢？</p>
+<h3 id="数据一致性优化方案">数据一致性优化方案</h3>
+<p>这里说的是<code>优化方案</code>不是解决方案哦，因为在分布式环境下事务是个难题，现在也没有好的解决方案。只能找到最适合业务的优化方案，使数据不一致的可能性或延迟降到一个业务可接受的范围内。</p>
+<p>常见的几种优化方案可以包括：</p>
+<ol>
+<li>不处理</li>
+<li>延时双删</li>
+<li>订阅Binglog</li>
+</ol>
+<p>3 种方案从简单到复杂，可以根据业务需要选择最合适的优化方案。</p>
+<h4 id="不处理">不处理</h4>
+<p>不处理是最简单的方式了，即数据库与缓存中的数据不一致时在业务允许的情况下不做处理。虽然有点不合适，但是很香！</p>
+<h4 id="延时双删">延时双删</h4>
+<p>延时双删可以用来优化在<strong>先缓存后数据库</strong>中的并发问题：</p>
+<ol>
+<li>线程A删除缓存成功</li>
+<li>线程B读取缓存未命中</li>
+<li>线程B从数据库中获取数据</li>
+<li>线程B将数据库中的数据写入缓存</li>
+<li>线程A写入数据库成功</li>
+<li>线程A休眠1秒然后删除缓存</li>
+</ol>
+<p>这种方案增加第6步，写入数据库完成后使写入线程休眠1秒，然后再将缓存数据删除掉，使其他线程再次读取数据时导致缓存未命中从数据库获取数据并更新缓存。</p>
+<h5 id="这个1秒怎么确定的具体该休眠多久呢">这个1秒怎么确定的，具体该休眠多久呢？</h5>
+<p>针对上面的情形，应该自行评估自己的项目的读数据业务逻辑的耗时。然后写数据的休眠时间则在读数据业务逻辑的耗时基础上，加几百ms即可。这么做的目的，就是确保读请求结束，写请求可以删除读请求造成的缓存脏数据。</p>
+<h5 id="采用这种同步淘汰策略吞吐量降低怎么办">采用这种同步淘汰策略，吞吐量降低怎么办？</h5>
+<p>第二次删除作为异步的。自己起一个线程，异步删除。这样，写的请求就不用沉睡一段时间后了，再返回。这么做，加大吞吐量。</p>
+<h4 id="binlog订阅">binlog订阅</h4>
+<p>使用binlog订阅，这样一旦MySQL中产生了新的写入、更新、删除等操作，就可以把binlog相关的消息推送至Redis，Redis再根据binlog中的记录，对Redis进行更新。</p>
+<p>其实这种机制，很类似MySQL的主从备份机制，因为MySQL的主备也是通过binlog来实现的数据一致性。</p>
+<p>这里可以结合使用canal(阿里的一款开源框架)，通过该框架可以对MySQL的binlog进行订阅，而canal正是模仿了mysql的slave数据库的备份请求，使得Redis的数据更新达到了相同的效果。</p>
+<p>当然，这里的消息推送工具你也可以采用别的第三方：kafka、rabbitMQ等来实现推送更新缓存。</p>
+<p><img src="./images/5 分钟快速学习，缓存一致性优化方案！3.png" /></p>
+<blockquote>
+<p>每天一篇架构领域重磅好文，涉及一线互联网公司应用架构（高可用、高性能、高稳定）、大数据、机器学习、Java架构等各个热门领域。</p>
+</blockquote>
+<p><img src="./images/5 分钟快速学习，缓存一致性优化方案！4.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

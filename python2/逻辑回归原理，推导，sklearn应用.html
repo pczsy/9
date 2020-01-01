@@ -1,0 +1,269 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修逻辑回归原理，推导，sklearn应用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>逻辑回归原理，推导，sklearn应用</center></div><div class='banquan'>原文出处:本文由博客园博主Liangzhuoxuan提供。<br/>
+原文连接:https://www.cnblogs.com/Liangzhuoxuan/p/11418026.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#逻辑回归原理推导及sklearn中的使用">逻辑回归原理，推导，及sklearn中的使用</a><ul>
+        <li><a href="#从线性回归过渡到逻辑回归">1 从线性回归过渡到逻辑回归</a></li>
+        <li><a href="#逻辑回归的损失函数">2 逻辑回归的损失函数</a><ul>
+        <li><a href="#逻辑回归损失函数的推导">2.1 逻辑回归损失函数的推导</a></li>
+        <li><a href="#梯度下降法">2.2 梯度下降法</a></li>
+        <li><a href="#正则化">2.3 正则化</a></li>
+        </ul></li>
+        <li><a href="#用逻辑回归进行多分类">3 用逻辑回归进行多分类</a></li>
+        <li><a href="#sklearn中的-logisticregression">4 sklearn中的 LogisticRegression</a><ul>
+        <li><a href="#max_iter">4.1 max_iter</a></li>
+        <li><a href="#penalty-c">4.2 penalty &amp; C</a></li>
+        <li><a href="#multi_class">4.3 multi_class</a></li>
+        <li><a href="#solver">4.4 solver</a></li>
+        <li><a href="#class_weight">4.5 class_weight</a></li>
+        </ul></li>
+        <li><a href="#逻辑回归的优点与应用">5 逻辑回归的优点与应用</a></li>
+        <li><a href="#本人的一些思考">6 本人的一些思考</a></li>
+        <li><a href="#常用代码">7 常用代码</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="逻辑回归原理推导及sklearn中的使用">逻辑回归原理，推导，及sklearn中的使用</h1>
+<hr />
+<h2 id="从线性回归过渡到逻辑回归">1 从线性回归过渡到逻辑回归</h2>
+<p>对于线性回归而言，标签是<strong>连续值</strong>，线性回归的任务就是构造一个预测函数来映射输入的特征矩阵 x 和标签值 y 的关系，要构造出这个预测函数的核心就是找到参数矩阵 θ^T^，通过预测函数，可以通过输入的特征矩阵 x ，来得到连续型的预测值。</p>
+<p>线性回归的标签是连续值，那如果标签是离散值的呢？具体点就是那种只有 0，1 两种值的呢？这个时候如果有一个函数，可以使得我们输入了一个连续值（线性回归预测出来的结果），把这个值归一化到 (0, 1) 之间，那么就可以从<strong>概率的角度</strong>来看，如果这个值大于 0.5，就把其归类到 1，如果这个值小于 0.5，就把其归类到 0。此时 Sigmoid 函数就出现了。</p>
+<p>Sigmoid 函数：<br />
+<span class="math display">\[
+g(x) = \frac{1}{1 + e^{-z}}
+\]</span><br />
+<img src="./images/逻辑回归原理，推导，sklearn应用0.png" /></p>
+<p>对于 Sigmoid 函数，在 z &gt; 0 时，0.5 &lt; y &lt; 1，z -&gt; inf ，y -&gt; 1。</p>
+<p>线性回归预测函数 <span class="math inline">\(z=θ^Tx\)</span> 预测得到的连续值代入Sigmoid函数，便得到了<strong>逻辑回归模型的预测函数</strong> <span class="math inline">\(y(x)=\frac{1}{1 + e^-z}\)</span></p>
+<p>关于决策边界的一些解惑：</p>
+<ul>
+<li>逻辑回归要做的事情就是<strong>找出决策边界</strong>，来划分出两种不同的分类。对于二维的特征矩阵 x，决策边界就是一条曲线，对于三维的特征矩阵 x，决策边界就是一个平面，对于 n 维的特征矩阵 x，决策边界就是 n-1 维的<strong>超平面</strong>，决策边界的构造，是对于特征向量 x~i~ 来说的。</li>
+<li>决策边界就是 令 <span class="math inline">\(y(x)\)</span> = 0，得到的超平面</li>
+<li>令 $ y(x) &gt; 0$ ，得到的就是 标签为 1 的样本，即在决策边界某一边的样本，$ y(x) &lt; 0$ 就是标签为 0 的样本，通过决策边界划分。</li>
+</ul>
+<p>建模过程：找出最佳的 θ vector，来使得数据和模型的拟合程度最高，用这个θ vector来构建预测函数y(x)，然后将特征矩阵输入到预测函数来输出预测结果y。</p>
+<h2 id="逻辑回归的损失函数">2 逻辑回归的损失函数</h2>
+<h3 id="逻辑回归损失函数的推导">2.1 逻辑回归损失函数的推导</h3>
+<p>要得到参数向量 <span class="math inline">\(θ^T=[ θ_0,θ_1,θ_2,θ_3...θ_n]\)</span>，来最好的拟合出一个模型，就要找出这个模型的损失函数，最小化这个损失函数，来得到对应的 <span class="math inline">\(θ^T\)</span>，那么应该如何得到这个损失函数呢？</p>
+<p>首先要理解的一个地方是，经过 Sigmoid 函数进行归一化的数值是介于 0 到 1 之间的，那么这个值就可以看成是一个概率值，这个概率值的含义是，对于给定的一个样本 <span class="math inline">\(x_i\)</span> 和 参数向量 <span class="math inline">\(θ^T\)</span>，该 <span class="math inline">\(x_i\)</span> 能被预测为 标签1 的概率，我们把这个概率用 <span class="math inline">\(y_θ(x_i)\)</span>来表示如下：</p>
+<p>样本 i 由特征向量 <span class="math inline">\(x_i\)</span> 和 参数向量 θ 组成的预测函数中，样本被预测为 标签1 的概率：<br />
+<span class="math display">\[
+P_1 = P(\hat{y}|x_i,θ) = y_θ(x_i)
+\]</span><br />
+样本 i 由特征向量 <span class="math inline">\(x_i\)</span> 和 参数向量 θ 组成的预测函数中，样本被预测为 标签0 的概率（由于服从0-1分布）：<br />
+<span class="math display">\[
+P_0 = P(\hat{y}|x_i,θ) = 1 -y_θ(x_i)
+\]</span><br />
+那么把这两个概率整合得到联合概率公式，可以得如下形式：<br />
+<span class="math display">\[
+P(\hat{y}|x_i,θ) = P_1^{y_i} * P_0^{1-y_i}
+\]</span><br />
+<strong>对于一个样本 i</strong> ，当 <span class="math inline">\(y_i = 0\)</span> 时，<span class="math inline">\(P(\hat{y}|x_i,θ) = P_0\)</span>，此时，我们希望 <span class="math inline">\(P_0\)</span> 越接近于 1 越好，因为这样取到 标签 0 的概率越大。当 <span class="math inline">\(y_i = 1\)</span> 时，<span class="math inline">\(P(\hat{y}|x_i,θ) = P_1\)</span>，此时，我们希望 <span class="math inline">\(P_1\)</span> 越接近于 1 越好，因为这样取到 标签 1 的概率越大。所以不管怎样，我们都希望<span class="math inline">\(P(\hat{y}|x_i,θ)\)</span> 的 取值越大越好，越接近于 1 越好，这样得到的结果更接近于预期值，即损失更小。所以我们要获取它的最大值，现在的问题，就由将模型拟合中的“最小化损失”问题，转换成了对函数求解极值的问题。</p>
+<p>那么<strong>对数据集中的m个样本</strong>，得到的联合概率公式：<br />
+<span class="math display">\[
+\begin{align}
+J(\theta) &amp;= \prod_{i=0}^nP(\hat{y}|x_i,θ) \\
+&amp;=  \prod_{i=0}^nP(P_1^{y_i} * P_0^{1-y_i}) \\
+\end{align}
+\]</span><br />
+对联合概率公式 <span class="math inline">\(J(θ)\)</span> 两边同时取对数，在根据对数运算的公式：<br />
+<span class="math display">\[
+\begin{align}
+logJ(\theta) &amp;= log\prod_{i=0}^nP(P_1^{y_i} * P_0^{1-y_i}) \\
+&amp;=  \displaystyle \sum^{m}_{i=1}logP(y_\theta(x_i)^{y_i} * (1-y_\theta(x_i))^{1-y_i}) \\
+&amp;= \displaystyle \sum^{m}_{i=1}( log(y_\theta(x_i)^{y_i} + log(1-y_\theta(x_i)^{1-y_i})\\
+&amp;= \displaystyle \sum^{m}_{i=1}( y_i*log(y_\theta(x_i) + (1-y_i)*log(1-y_\theta(x_i))\\
+\end{align}
+\]</span><br />
+因为此处时求解联合概率函数的最大值，要转化为求其最小值，只须求 <span class="math inline">\(-logJ(\theta)\)</span> 即可，如此，便得到了逻辑回归的损失函数<span class="math inline">\(J(\theta)\)</span>：<br />
+<span class="math display">\[
+J(θ) = -\displaystyle \sum^{m}_{i=1}(y_i * log(y_θ(x_{i}))) + (1 - y_i) * log(1 - y_θ(x_i))
+\]</span><br />
+这个推导过程实际上就是&quot;<strong>极大似然估计 MLE</strong>&quot;的过程。</p>
+<p>概率与似然：</p>
+<ul>
+<li>对于联合概率函数 <span class="math inline">\(P(\hat{y}|x_i,θ)\)</span> 而言。</li>
+<li><strong>概率</strong>探究的是自变量与因变量之间的关系，即 <span class="math inline">\(\theta\)</span> 已知，在不同的特征向量 <span class="math inline">\(x_i\)</span> 下，得到 <span class="math inline">\(\hat{y}\)</span> 的可能性。</li>
+<li>似然**探究的是参数向量与因变量之间的关系，即 <span class="math inline">\(x_i\)</span> 已知，在不同的参数向量 <span class="math inline">\(\theta\)</span> 下，得到 <span class="math inline">\(\hat{y}\)</span> 的可能性。</li>
+<li>对于逻辑回归的建模过程，<span class="math inline">\(\theta\)</span> 是未知的，<span class="math inline">\(x_i\)</span> 是已知的，所以这里求解的联合概率函数（似然函数）的结果是 <strong>&quot;似然&quot;</strong>，而因为要最大化似然函数，这个过程称为 &quot;极大似然&quot;。</li>
+</ul>
+<p>求最大似然函数估计的一般步骤：</p>
+<ol>
+<li>写出似然函数</li>
+<li>对似然函数取对数，得到对数似然函数</li>
+<li>如果对数似然函数可导，就对似然函数求导，解方程组，得到驻点</li>
+<li>分析驻点为极大值的点</li>
+</ol>
+<p>对于逻辑回归的最大似然函数，要求解对数似然函数可导=0，是一个NP难问题，所以步骤3，4不可行，又因为对数似然函数是一个<strong>凸函数</strong>，只会存在一个最小值，对于梯度下降法没有收敛到局部最小值烦恼，所以使用梯度下降法</p>
+<h3 id="梯度下降法">2.2 梯度下降法</h3>
+<p>逻辑回归的建模过程，就是要求解参数向量 <span class="math inline">\(\theta\)</span> ，使得模型最好的拟合数据。而求解 <span class="math inline">\(\theta\)</span> 的值是通过最小化损失函数得到的，这个过程使用梯度下降法。</p>
+<p>梯度下降法，是一个基于搜索的最优化算法，用来<strong>最优化一个损失函数</strong>。</p>
+<p>姑且来拆解这个方法中的词：</p>
+<ul>
+<li>梯度：梯度就是函数值增加得最快的方向，梯度的反方向就是函数值减小得最快的方向</li>
+<li>下降：沿着梯度下降最快的方向一直走，直到到达函数的最小值，或附近。</li>
+</ul>
+<p>梯度下降法的求解过程：</p>
+<ol>
+<li>在<strong>损失函数 <span class="math inline">\(J(\theta)\)</span></strong> 上随机选择一个点，初始化 <span class="math inline">\(\theta\)</span> 向量的取值，给定一个步长 <span class="math inline">\(\eta\)</span></li>
+<li>求当前位置的梯度 <span class="math inline">\(gard\)</span> (对<strong>自变量</strong>求偏导)，用参数向量 <span class="math inline">\(\theta\)</span> 减去 <span class="math inline">\(gard * \eta\)</span></li>
+<li>重复步骤 2 ，直到 <span class="math inline">\(\theta - gard * \eta\)</span> 的值小于某一个阈值，或者达到最大的迭代次数 max_iter</li>
+<li>此时对应的参数向量就是损失函数取得最小值的参数向量</li>
+</ol>
+<p>根据上面求解梯度下降法的过程，可以得知一个重要的参数 max_iter ，控制着迭代的次数，在 sklearn 里面的 Logistic Regression 是没有步长这个参数的，这个迭代的过程仅由参数 max_iter 来控制，max_iter 过小，算法可能没收敛到最小值，max_iter 过大，算法收敛缓慢。</p>
+<p>有一个疑问是：max_iter 过大，不会跳过了最小值点吗？</p>
+<p>其实迭代次数多了是没问题的，因为迭代次数多了后，在到达极值点时，函数对自变量的导数已近乎为0，即使过了极值点，导数就变为正数了，此时，参数向量的值减去步长与梯度的乘积反倒变小了。所以即使步数多了，结果也基本上就在极值点处左右徘徊，几乎等于极值点。</p>
+<h3 id="正则化">2.3 正则化</h3>
+<p>虽然逻辑回归和线性回归是天生欠拟合的模型，但我们还是需要控制过拟合来调整模型，对逻辑回归中过拟合的控制，通过<strong>正则化</strong>来实现。</p>
+<p>常用的正则化有 <strong><span class="math inline">\(L_1\)</span>正则化</strong>和<strong><span class="math inline">\(L_2\)</span>正则化</strong>，分别通过在损失函数后 θ 加上参数向量的L1范式和L2范式的倍数来实现。这个增加的范式成为 &quot;正则项&quot; 或 &quot;惩罚项&quot;，利用正则项来<strong>约束</strong>J(θ) 中θ的取值不至于过大，来防止过拟合。<br />
+<span class="math display">\[
+J(\theta)_{L_1} = C*J(\theta) + \displaystyle \sum^{n}_{j=1}|\theta_j|\\
+J(\theta)_{L_2} = C*J(\theta) + \sqrt {\displaystyle \sum^{n}_{j=1}(\theta_j)^2}\\
+\]</span><br />
+对应于 Lasso Regression 和 Ridge Regression 的 <span class="math inline">\(L_1\)</span> 与 <span class="math inline">\(L_2\)</span> 正则化</p>
+<p><span class="math inline">\(L_1\)</span> 正则化 很容易把某个参数 <span class="math inline">\(\theta\)</span> 变为 0，因为这种特性，<span class="math inline">\(L_1\)</span> 正则化 会筛掉一些特征，可能时有用的特征也可能时没用的特征。而 <span class="math inline">\(L_2\)</span> 正则化 只会把 <span class="math inline">\(\theta\)</span> 变为一个很小的值而不会变为 0。一般都使用，<span class="math inline">\(L_2\)</span> 正则化，当数据量很大的时候就使用 <span class="math inline">\(L_1\)</span> 正则化，来筛掉一些特征。</p>
+<h2 id="用逻辑回归进行多分类">3 用逻辑回归进行多分类</h2>
+<p>OvO (One vs One)：用不同标签的数据，<strong>两两类别</strong>之间使用逻辑回归得到一个分类器（这个分类器用来区分这两种类别中的某一个），把要预测的样本传入到这些分类器当中，得到对应的概率，取在所有分类器对比中概率最高的作为分类结果。</p>
+<p>OvR (One vs Rest)：取出某一类样本，和剩下的样本之间构建分类器（这个分类器是用来区分是这个样本和不是这个样本的数据），把要预测的样本传入到这些分类器当中，得到对应的概率，取在所有分类器对比中概率最高的作为分类结果。</p>
+<p>OvO的分类时间更长，但是结果更加精准。</p>
+<h2 id="sklearn中的-logisticregression">4 sklearn中的 LogisticRegression</h2>
+<ul>
+<li><strong>linear_model.LogisticRegression</strong></li>
+</ul>
+<h3 id="max_iter">4.1 max_iter</h3>
+<p>==控制梯度下降的迭代次数==</p>
+<ul>
+<li><p>逻辑回归的运行受到<strong>最大迭代次数的强烈影响</strong>。</p></li>
+<li>max_iter 过小，可能没有收敛到最小值。</li>
+<li><p>max_iter 过大，梯度下降迭代次数过多，模型运行时间缓慢。</p></li>
+</ul>
+<h3 id="penalty-c">4.2 penalty &amp; C</h3>
+<p>==选择正则项，和正则化强度的系数==</p>
+<table>
+<thead>
+<tr class="header">
+<th>参数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><strong>penalty</strong></td>
+<td>可以输入&quot;l1&quot;或&quot;l2&quot;来指定使用哪一种正则化方式，不填写默认&quot;l2&quot;。注意，若选择&quot;l1&quot;正则化，参数solver仅能够使用求解方式”liblinear&quot;和&quot;saga“，若使用“l2”正则化，参数solver中所有的求解方式都可以使用。</td>
+</tr>
+<tr class="even">
+<td><strong>C</strong></td>
+<td>C正则化强度的倒数，必须是一个大于0的浮点数，不填写默认1.0，即默认正则项与损失函数的比值是1：1。C越小，损失函数会越小，模型对损失函数的惩罚越重，正则化的效力越强，参数会逐渐被压缩得越来越小。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="multi_class">4.3 multi_class</h3>
+<p>==multi_class 表示我们要预测的分类是多分类，还是二分类的==</p>
+<p>默认值是 'ovr'，表示当前处理的是二分类，或以&quot;一对多&quot;的形式处理多分类问题。</p>
+<p>'multinomial'：表示处理多分类问题。</p>
+<p>'auto'：表示自动选择</p>
+<h3 id="solver">4.4 solver</h3>
+<p>==求解损失函数的方式==</p>
+<p>默认是 'liblinear' ，坐标下降法</p>
+<p>还有'sag' 随机平均梯度下降法，其实就是Mini Batch gradient descent，小批量的梯度下降，介于梯度下降法和随机梯度下降法的择优方法。</p>
+<p>还有 'newton-cg'，'saga'等方法可选</p>
+<h3 id="class_weight">4.5 class_weight</h3>
+<p>现实当中正负样本的比例往往很不平衡，比如100个浏览此商品的人中，只有一个人购买了此商品，剩下99个人没有购买，class_weight就是==平衡不同标签数据样本的比重，通过给少量的标签增加权重==</p>
+<p>参数为'balanced' 和 None，默认为None</p>
+<p>因为'balanced'参数比较难用，我们要对不平衡的样本进行采样处理，由如下方法</p>
+<pre><code><code># 使用上采样(增加样本量少的样本的数量)的方法平衡样本
+import imblearn
+from imblearn.over_sampling import SMOTE
+
+sm = SMOTE(random_state=42) #实例化 X,y = sm.fit_sample(X,y)
+ 
+n_sample_ = X.shape[0]
+ 
+pd.Series(y).value_counts()
+ 
+n_1_sample = pd.Series(y).value_counts()[1] n_0_sample = pd.Series(y).value_counts()[0]
+ 
+print(&#39;样本个数：{}; 1占{:.2%}; 0占 {:.2%}&#39;.format(n_sample_,n_1_sample/n_sample_,n_0_sample/n_sample_))</code></pre>
+<h2 id="逻辑回归的优点与应用">5 逻辑回归的优点与应用</h2>
+<p>逻辑回归的<strong>优点</strong></p>
+<p>​ 1.LR能以概率的形式输出结果，而非只是0,1判定</p>
+<p>​ 2.对线性关系的拟合效果好，LR的可解释性强，可控度高</p>
+<p>​ 3.训练快，特征工程(featureengineering)之后效果赞</p>
+<p>​ 4.因为结果是概率，可以做排序模型</p>
+<p>​ 5.添加特征方便</p>
+<p>​ 6.在小型数据上 抗噪不错</p>
+<p>出现的应用场景</p>
+<p>1.CTR预估/推荐系统的learningtorank/各种分类场景</p>
+<p>2.很多搜索引擎厂的广告CTR预估基线版是LR</p>
+<p>3.电商搜索排序/广告CTR预估基线版是LR</p>
+<p>4.新闻app的推荐和排序基线也是LR</p>
+<h2 id="本人的一些思考">6 本人的一些思考</h2>
+<blockquote>
+<p>Sigmoid函数：把线性回归得到的直线或者曲线变成决策边界</p>
+</blockquote>
+<blockquote>
+<p>为什么把线性回归的值带入Sigmoid函数就可以变成决策边界？</p>
+<p>​ 假设Sigmoid(z) ，z就是线性回归的表达式，在sigmoid函数中自变量是z，z分为&gt;0和&lt;0。z=0就是指决策边界，z&gt;0就是二元分类中的某一类，z&lt;0就是二元分类中的另一类。</p>
+</blockquote>
+<blockquote>
+<p>关于坐标系：</p>
+<p>​ 使用梯度下降获取损失函数的最小值的时候，纵坐标是J(θ)，所有横坐标是[x1, x2, x3···]</p>
+<p>​ 进行分类时，即观看分类结果，观看决策边界时，所有的维度都是x1, x2, x3···xn</p>
+</blockquote>
+<blockquote>
+<p>对于 n 维的数据，决策边界就是 n-1 维的超平面</p>
+</blockquote>
+<blockquote>
+<p>决策边界就是令Sigmoid函数等于0的那个地方，决策边界的呈现是对于特征向量来呈现的，即如果有两个特征x1, x2，那么横坐标和纵坐标分别为x1, x2，然后画出决策边界就是，令<code>Sigmoid(x1)=0</code>画出x2的值。</p>
+</blockquote>
+<h2 id="常用代码">7 常用代码</h2>
+<pre><code><code># 画出决策边界
+def plotData(data, label_x, label_y, label_pos, label_neg, axes=None):
+    # 获得正负样本的下标(即哪些是正样本，哪些是负样本)
+    neg = data[:,2] == 0
+    pos = data[:,2] == 1
+    
+    if axes == None:
+        axes = plt.gca()
+    axes.scatter(data[pos][:,0], data[pos][:,1], marker=&#39;+&#39;, c=&#39;k&#39;, s=60, linewidth=2, label=label_pos)
+    axes.scatter(data[neg][:,0], data[neg][:,1], c=&#39;y&#39;, s=60, label=label_neg)
+    axes.set_xlabel(label_x)
+    axes.set_ylabel(label_y)
+    axes.legend(frameon= True, fancybox = True)
+    
+# 画出决策边界 二维
+plt.scatter(45, 85, s=60, c=&#39;r&#39;, marker=&#39;v&#39;, label=&#39;(45, 85)&#39;)
+plotData(data, &#39;Exam 1 score&#39;, &#39;Exam 2 score&#39;, &#39;Admitted&#39;, &#39;Not admitted&#39;)
+x1_min, x1_max = X[:,1].min(), X[:,1].max(),
+x2_min, x2_max = X[:,2].min(), X[:,2].max(),
+xx1, xx2 = np.meshgrid(np.linspace(x1_min, x1_max), np.linspace(x2_min, x2_max))
+h = sigmoid(np.c_[np.ones((xx1.ravel().shape[0],1)), xx1.ravel(), xx2.ravel()].dot(res.x))
+h = h.reshape(xx1.shape)
+plt.contour(xx1, xx2, h, [0.5], linewidths=1, colors=&#39;b&#39;)</code></pre>
+<p>陆续补充~~</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

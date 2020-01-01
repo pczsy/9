@@ -1,0 +1,497 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python数据库-MySQL数据库高级查询操作(51)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python数据库-MySQL数据库高级查询操作(51)</center></div><div class='banquan'>原文出处:本文由博客园博主Se7eN_HOU提供。<br/>
+原文连接:https://www.cnblogs.com/Se7eN-HOU/p/11167534.html</div><br>
+    <h3>一、什么是关系？</h3>
+<h4>1、分析：有这么一组数据关于学生的数据</h4>
+<div class="cnblogs_code">
+<pre><code>学号、姓名、年龄、住址、成绩、学科、学科（语文、数学、英语）</pre>
+</div>
+<p>我们应该怎么去设计储存这些数据呢？</p>
+<h4>2、先考虑第一范式：列不可在拆分原则</h4>
+<p>　　这里面学科包含了三个学科，所以学科拆分为：语文学科、数学学科、英语学科，同样的成绩也要拆分为语文成绩、数学成绩、英语成绩。这样既满足了第一范式，各列可以设计为：</p>
+<div class="cnblogs_code">
+<pre><code>学号、姓名、年龄、住址、语文学科、数学学科、英语学科、语文成绩、数学成绩、英语成绩</pre>
+</div>
+<h4>3、在考虑第二范式：唯一标识</h4>
+<p>　　也就是说<strong>在1NF的基础上，非Key属性必须完全依赖于主键，第二范式（2NF）要求数据库表中的每个实例或记录必须可以被唯一地区分。选取一个能区分每个实体的属性或属性组，作为实体的唯一标识。即确定主键，我们可以选取学号为主键</strong></p>
+<h4><strong>4、接着在考虑第三范式：</strong></h4>
+<h4><strong>　　<strong>确保表中各列与主键列直接相关，而不是间接相关。即各列与主键列都是一种直接依赖关系，则满足第三范式。　</strong></strong></h4>
+<p>　　不难发现在这么多列中，年龄、住址和成绩、学科没有直接关系，也就是说我考多少分，和年龄及住址都无关，他们都是学生的信息，但都是不相关的信息，所以根据第三范式，我们需要将这些数据根据其相关性拆分为多个表。</p>
+<p><img src="./images/python数据库-MySQL数据库高级查询操作(51)0.png" alt="" width="600" /></p>
+<h4>5、表与表之间的关系</h4>
+<p>　　如果我们要想找到张三的语文成绩，那么我们就必须去成绩表中查找，因为成绩表中保存的所有人的所有学科成绩。但是在成绩表中查找的时候，需要从省标中查到张三的学号（stu_id）和从学科表中查到语文学科(sub_id)的编号,这个时候这三张表就发生了<strong>关系，这也就是关系型数据库的精髓，而根据这种表与表之间的关系也会衍生出很多的查询的高级操作</strong></p>
+<p>&nbsp;</p>
+<h3>二、外键(foreign key)</h3>
+<p><strong>外键约束:用于限制主表与从表数据完整性。</strong></p>
+<div class="cnblogs_code">
+<pre><code>alter table scores  add constraint <span style="color: #800000;">'</span><span style="color: #800000;">stu_score_fk</span><span style="color: #800000;">'</span> foreign key(stu_id) references students(stu_id);</pre>
+</div>
+<ul>
+<li>将scores表的stu_id外键关联到students表的stu_id字段（说明：这里scores表里面字段stu_id和students表里的stu_id重名了，最好避免重名）</li>
+<li>每个外键都有一个名字，可以通过constraint指定</li>
+<li>存在外键的表，称之为从表（子表），外键指向的表，称之为主表（父表）。</li>
+<li>作用：保持数据一致性，完整性，主要目的是控制存储在外键表（从表）中的数据。例如，此时在从表插入或者修改数据时，如果stu_id的值在students表中不存在则会报错</li>
+<li>外键也可以在创建表时可以直接创建约束</li>
+</ul>
+<p>语法：</p>
+<div class="cnblogs_code">
+<pre><code> foreign key (外键字段） references 主表名 (关联字段)</pre>
+</div>
+<pre><code><strong>例如：<br /></strong></pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">create table scores(
+id </span><span style="color: #0000ff;">int</span><span style="color: #000000;"> primary key auto_increment,
+stu_id </span><span style="color: #0000ff;">int</span><span style="color: #000000;">,
+sub_id </span><span style="color: #0000ff;">int</span><span style="color: #000000;">,
+score </span><span style="color: #0000ff;">decimal</span>(<span style="color: #800080;">5</span>,<span style="color: #800080;">2</span><span style="color: #000000;">),
+foreign key(stuid) references students(id),
+foreign key(subid) references subjects(id)
+);</span></pre>
+</div>
+<p><strong>[主表记录删除时的动作] [主表记录更新时的动作]，</strong>此时需要检测一个从表的外键需要约束为主表的已存在的值。外键在没有关联的情况下，可以设置为null.前提是该外键列，没有<strong>not null。<br /><br /></strong></p>
+<h3>三、外键的级联操作</h3>
+<ul>
+<li>在删除或者修改students表的数据时，如果这个stu_id值在scores中已经存在，则会抛异常</li>
+<li>推荐使用逻辑删除，还可以解决这个问题</li>
+<li>可以创建表时指定级联操作，也可以在创建表后再修改外键的级联操作</li>
+
+
+
+</ul>
+<div class="cnblogs_code">
+<pre><code>alter table scores add constraint stu_sco foreign key(stu_id) references students(stu_id) on delete cascade;</pre>
+</div>
+<p>除了on delete还有on update都要注意级联操作</p>
+<p>级联操作的类型包括：</p>
+<ul>
+<li>restrict（限制）：默认值，抛异常，拒绝父表删除或者更新</li>
+<li>cascade（级联）：如果主表的记录删掉，则从表中相关联的记录都将被删除，如果主表修改记录，则从表记录也将被修改</li>
+<li>set null：将外键设置为空</li>
+<li>no action：什么都不做</li>
+</ul>
+<p>&nbsp;</p>
+<h3>四、链接查询</h3>
+<p>在讲解第一个问题关系的时候，我们提到了，如果要查找张三的语文成绩，需要用到三个表，当我们查询结果来源于多张表的时候就需要使用<strong>连接查询</strong></p>
+<p><strong>链接查询关键：找到表间的关系，当前的关系是</strong></p>
+<ul>
+<li>students表的stu_id---scores表的stu_id</li>
+<li>subjects表的sub_id---scores表的sub_id</li>
+</ul>
+<p><img src="./images/python数据库-MySQL数据库高级查询操作(51)1.png" alt="" width="600" /></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span><span style="color: #000000;"> students.stu_name,subjects.sub_name,scores.score 
+</span><span style="color: #0000ff;">from</span><span style="color: #000000;"> scores
+inner join students on scores.stu_id</span>=<span style="color: #000000;">students.stu_id 
+inner join subjects on scores.sub_id</span>=<span style="color: #000000;">subjects.sub_id 
+</span><span style="color: #0000ff;">where</span> students.stu_name=<span style="color: #800000;">'</span><span style="color: #800000;">张三</span><span style="color: #800000;">'</span> and subjects.sub_name=<span style="color: #800000;">'</span><span style="color: #800000;">语文</span><span style="color: #800000;">'</span>;</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>+----------+----------+-------+
+| stu_name | sub_name | score |
++----------+----------+-------+
+| 张三      | 语文     |    <span style="color: #800080;">80</span> |
++----------+----------+-------+</pre>
+</div>
+<ul>
+<li>结论：当需要对有关系的多张表进行查询时，需要使用连接join</li>
+连接查询分类如下：
+<ul>
+<li>表A inner join 表B：表A与表B匹配的行会出现在结果中</li>
+<li>表A left join 表B：表A与表B匹配的行会出现在结果中，外加表A中独有的数据，未对应的数据使用null填充</li>
+<li>表A right join 表B：表A与表B匹配的行会出现在结果中，外加表B中独有的数据，未对应的数据使用null填充</li>
+<li>在查询或条件中推荐使用&ldquo;表名.列名&rdquo;的语法</li>
+<li>如果多个表中列名不重复可以省略&ldquo;表名.&rdquo;部分</li>
+<li>如果表的名称太长，可以在表名后面使用' as 简写名'或' 简写名'，为表起个临时的简写名称</li>
+</ul>
+</ul>
+<p>&nbsp;</p>
+<h3>五、视图</h3>
+<p>　　视图就像我们python里面的函数一样，对SQL语言代码块的封装</p>
+<ul>
+<li style="list-style-type: none;">
+<ul>
+<li>对于复杂的查询，在多次使用后，维护是一件非常麻烦的事情</li>
+<li>解决：定义视图</li>
+<li>视图本质就是对查询的一个封装</li>
+<li>定义视图</li>
+</ul>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>create view <span style="color: #ff0000;">stuscore</span> <span style="color: #0000ff;">as</span> <span style="color: #ff0000;"><strong>select students.stu_name,subjects.sub_name,scores.score from scores inner join students on scores.stu_id=students.stu_id inner join subjects on scores.sub_id=subjects.sub_id;</strong></span></pre>
+</div>
+<p>这句话的意思就是用stuscore就相当于后面红色很长的一段SQL语句：</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> *<span style="color: #0000ff;">from</span><span style="color: #000000;"> stuscore;
+</span>+----------+----------+-------+
+| stu_name | sub_name | score |
++----------+----------+-------+
+| 张三     | 语文     |    <span style="color: #800080;">80</span> |
+| 张三     | 数学     |    <span style="color: #800080;">85</span> |
+| 张三     | 英语     |    <span style="color: #800080;">88</span> |
+| 李四     | 语文     |    <span style="color: #800080;">83</span> |
+| 李四     | 数学     |    <span style="color: #800080;">84</span> |
+| 李四     | 英语     |    <span style="color: #800080;">87</span> |
+| 王五     | 语文     |    <span style="color: #800080;">81</span> |
+| 王五     | 数学     |    <span style="color: #800080;">85</span> |
+| 王五     | 英语     |    <span style="color: #800080;">85</span> |
+| 赵六     | 语文     |    <span style="color: #800080;">88</span> |
+| 赵六     | 数学     |    <span style="color: #800080;">88</span> |
+| 赵六     | 英语     |    <span style="color: #800080;">87</span> |
+| 侯七     | 语文     |    <span style="color: #800080;">84</span> |
+| 侯七     | 数学     |    <span style="color: #800080;">83</span> |
+| 侯七     | 英语     |    <span style="color: #800080;">82</span> |
++----------+----------+-------+</pre>
+</div>
+<p>&nbsp;</p>
+<h3>&nbsp;六、自连接查询</h3>
+<p>　　有时在信息查询时需要进行对自身连接（自连接）<strong>自连接是单边操作</strong>，所以我们需要为表定义别名。举例说明，下面是一个新的学生成绩表，在下表中我们要找到比张三成绩高的。</p>
+<div class="cnblogs_code">
+<pre><code>+--------+----------+-----------+
+| stu_id | stu_name | stu_score |
++--------+----------+-----------+
+|      <span style="color: #800080;">1</span> | 张三     |        <span style="color: #800080;">90</span> |
+|      <span style="color: #800080;">2</span> | 李四     |        <span style="color: #800080;">85</span> |
+|      <span style="color: #800080;">3</span> | 王五     |        <span style="color: #800080;">80</span> |
+|      <span style="color: #800080;">4</span> | 赵六     |        <span style="color: #800080;">95</span> |
+|      <span style="color: #800080;">5</span> | 侯七     |       <span style="color: #800080;">100</span> |
++--------+----------+-----------+</pre>
+</div>
+<p>　　一般情况我们看到这张表我们第一时间用语句进行操作：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> * <span style="color: #0000ff;">from</span> Score <span style="color: #0000ff;">where</span> stu_score&gt;<span style="color: #800080;">90</span>;</pre>
+</div>
+<p>　　可想而知，这是有多么简单，假设你并不知道数据库中张三的成绩是90或者数据量相当庞大呢？作为一个数据库管理员，我们就要用别的方式迅速找出所需要的数据。</p>
+<p>&nbsp;</p>
+<p><strong>方式一：分步查找：最简单的一种方式，也是最容易想到的操作&ldquo;</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> stu_score <span style="color: #0000ff;">from</span> Score <span style="color: #0000ff;">where</span> stu_name=<span style="color: #800000;">'</span><span style="color: #800000;">张三</span><span style="color: #800000;">'</span>;<span style="color: #008000;">//</span><span style="color: #008000;">得出张三的成绩</span>
+<span style="color: #0000ff;">select</span> *<span style="color: #0000ff;">from</span> Score <span style="color: #0000ff;">where</span> stu_score&gt;<span style="color: #800080;">90</span>;</pre>
+</div>
+<p>　　与采用自连接的方式相比，这种方法需要对中间结果进行人工干预，显然不利于程序中的自动处理操作。</p>
+<p><strong>方式二：自连接方式：</strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> * <span style="color: #0000ff;">from</span> Score <span style="color: #0000ff;">as</span> a,Score <span style="color: #0000ff;">as</span> b <span style="color: #0000ff;">where</span> a.stu_name=<span style="color: #800000;">'</span><span style="color: #800000;">张三</span><span style="color: #800000;">'</span> and a.stu_score&lt;b.stu_score;</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>+--------+----------+-----------+--------+----------+-----------+
+| stu_id | stu_name | stu_score | stu_id | stu_name | stu_score |
++--------+----------+-----------+--------+----------+-----------+
+|      <span style="color: #800080;">1</span> | 张三      |        <span style="color: #800080;">90</span> |      <span style="color: #800080;">4</span> | 赵六     |        <span style="color: #800080;">95</span> |
+|      <span style="color: #800080;">1</span> | 张三      |        <span style="color: #800080;">90</span> |      <span style="color: #800080;">5</span> | 侯七     |       <span style="color: #800080;">100</span> |
++--------+----------+-----------+--------+----------+-----------+</pre>
+</div>
+<p>如果不想把张三的信息打印出来我们可以调整SQL语句为：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span><strong> b.*</strong> <span style="color: #0000ff;">from</span> Stu_score <span style="color: #0000ff;">as</span> a,Stu_score <span style="color: #0000ff;">as</span> b <span style="color: #0000ff;">where</span> a.stu_name=<span style="color: #800000;">'</span><span style="color: #800000;">张三</span><span style="color: #800000;">'</span> and a.stu_score&lt;b.stu_score;</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>+--------+----------+-----------+
+| stu_id | stu_name | stu_score |
++--------+----------+-----------+
+|      <span style="color: #800080;">4</span> | 赵六      |        <span style="color: #800080;">95</span> |
+|      <span style="color: #800080;">5</span> | 侯七      |       <span style="color: #800080;">100</span> |
++--------+----------+-----------+</pre>
+</div>
+<p>注意：别名 a,b虽然名称不同，但是同一个表，定义别名的目的是更方便在自身进行删选。<br />执行select通过（中间表）所得到的<strong>b.*</strong>，，就是最终结果。</p>
+<p>&nbsp;</p>
+<h3><strong>七、子查询</strong></h3>
+<p>子查询也是常用的一种方式，就是在select里嵌套select。还是上面的例子，我们用子查询实现如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> * <span style="color: #0000ff;">from</span> Stu_score <span style="color: #0000ff;">where</span> stu_score&gt;(<span style="color: #0000ff;">select</span> stu_score <span style="color: #0000ff;">from</span> Stu_score <span style="color: #0000ff;">where</span> stu_name=<span style="color: #800000;">'</span><span style="color: #800000;">张三</span><span style="color: #800000;">'</span>); </pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>+--------+----------+-----------+
+| stu_id | stu_name | stu_score |
++--------+----------+-----------+
+|      <span style="color: #800080;">4</span> | 赵六      |        <span style="color: #800080;">95</span> |
+|      <span style="color: #800080;">5</span> | 侯七      |       <span style="color: #800080;">100</span> |
++--------+----------+-----------+</pre>
+</div>
+<p>&nbsp;</p>
+<h3>八、内置函数</h3>
+<h4>1、字符串函数</h4>
+<p>1、查看字符的ascii码值ascii(str)，str是空串时返回0</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <strong><span style="color: #0000ff;">select</span> ascii(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span></strong>+------------+
+| ascii(<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>) |
++------------+
+|         <span style="color: #800080;">97</span> |
++------------+</pre>
+</div>
+<p>2、查看ascii码值对应的字符char(数字)</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <strong><span style="color: #0000ff;">select</span> <span style="color: #0000ff;">char</span>(<span style="color: #800080;">97</span><span style="color: #000000;">);
+</span></strong>+----------+
+| <span style="color: #0000ff;">char</span>(<span style="color: #800080;">97</span>) |
++----------+
+| a        |
++----------+</pre>
+</div>
+<p>3、拼接字符串concat(str1,str2...)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> <strong>concat(<span style="color: #800080;">12</span>,<span style="color: #800080;">34</span>,<span style="color: #800000;">'</span><span style="color: #800000;">ab</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span></strong>+--------------------+
+| concat(<span style="color: #800080;">12</span>,<span style="color: #800080;">34</span>,<span style="color: #800000;">'</span><span style="color: #800000;">ab</span><span style="color: #800000;">'</span>) |
++--------------------+
+| 1234ab             |
++--------------------+</pre>
+</div>
+<p>4、包含字符个数length(str)</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <strong><span style="color: #0000ff;">select</span> length(<span style="color: #800000;">'</span><span style="color: #800000;">abc</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span></strong>+---------------+
+| length(<span style="color: #800000;">'</span><span style="color: #800000;">abc</span><span style="color: #800000;">'</span>) |
++---------------+
+|             <span style="color: #800080;">3</span> |
++---------------+</pre>
+</div>
+<p>5、截取字符串</p>
+<ul>
+<li>left(str,len)返回字符串str的左端len个字符</li>
+<li>right(str,len)返回字符串str的右端len个字符</li>
+<li>substring(str,pos,len)返回字符串str的位置pos起len个字符</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <strong><span style="color: #0000ff;">select</span> substring(<span style="color: #800000;">'</span><span style="color: #800000;">abc123</span><span style="color: #800000;">'</span>,<span style="color: #800080;">2</span>,<span style="color: #800080;">3</span><span style="color: #000000;">);
+</span></strong>+-------------------------+
+| substring(<span style="color: #800000;">'</span><span style="color: #800000;">abc123</span><span style="color: #800000;">'</span>,<span style="color: #800080;">2</span>,<span style="color: #800080;">3</span>) |
++-------------------------+
+| bc1                     |
++-------------------------+</pre>
+</div>
+<p>6、去除空格</p>
+<ul>
+<li>ltrim(str)返回删除了左空格的字符串str</li>
+<li>rtrim(str)返回删除了右空格的字符串str</li>
+<li>trim([方向 remstr from str)返回从某侧删除remstr后的字符串str，方向词包括both、leading、trailing，表示两侧、左、右</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <strong><span style="color: #0000ff;">select</span> trim(<span style="color: #800000;">'</span><span style="color: #800000;">  bar   </span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span></strong>+------------------+
+| trim(<span style="color: #800000;">'</span><span style="color: #800000;">  bar   </span><span style="color: #800000;">'</span>) |
++------------------+
+| bar              |
++------------------+</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>mysql&gt;<strong> <span style="color: #0000ff;">select</span> trim(leading <span style="color: #800000;">'</span><span style="color: #800000;">x</span><span style="color: #800000;">'</span> FROM <span style="color: #800000;">'</span><span style="color: #800000;">xxxbarxxx</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span></strong>+------------------------------------+
+| trim(leading <span style="color: #800000;">'</span><span style="color: #800000;">x</span><span style="color: #800000;">'</span> FROM <span style="color: #800000;">'</span><span style="color: #800000;">xxxbarxxx</span><span style="color: #800000;">'</span>) |
++------------------------------------+
+| barxxx                             |
++------------------------------------+</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <strong><span style="color: #0000ff;">select</span> trim(trailing <span style="color: #800000;">'</span><span style="color: #800000;">x</span><span style="color: #800000;">'</span> FROM <span style="color: #800000;">'</span><span style="color: #800000;">xxxbarxxx</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span></strong>+-------------------------------------+
+| trim(trailing <span style="color: #800000;">'</span><span style="color: #800000;">x</span><span style="color: #800000;">'</span> FROM <span style="color: #800000;">'</span><span style="color: #800000;">xxxbarxxx</span><span style="color: #800000;">'</span>) |
++-------------------------------------+
+| xxxbar                              |
++-------------------------------------+</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <strong><span style="color: #0000ff;">select</span> trim(both <span style="color: #800000;">'</span><span style="color: #800000;">x</span><span style="color: #800000;">'</span> FROM <span style="color: #800000;">'</span><span style="color: #800000;">xxxbarxxx</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span></strong>+---------------------------------+
+| trim(both <span style="color: #800000;">'</span><span style="color: #800000;">x</span><span style="color: #800000;">'</span> FROM <span style="color: #800000;">'</span><span style="color: #800000;">xxxbarxxx</span><span style="color: #800000;">'</span>) |
++---------------------------------+
+| bar                             |
++---------------------------------+</pre>
+</div>
+<p>7、替换字符串replace(str,from_str,to_str)</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> replace(<span style="color: #800000;">'</span><span style="color: #800000;">abc123</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">def</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span>+-------------------------------+
+| replace(<span style="color: #800000;">'</span><span style="color: #800000;">abc123</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">def</span><span style="color: #800000;">'</span>) |
++-------------------------------+
+| abcdef                        |
++-------------------------------+</pre>
+</div>
+<p>8、大小写转换，函数如下</p>
+<ul>
+<li>lower(str)</li>
+<li>upper(str)</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> lower(<span style="color: #800000;">'</span><span style="color: #800000;">aBcD</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span>+---------------+
+| lower(<span style="color: #800000;">'</span><span style="color: #800000;">aBcD</span><span style="color: #800000;">'</span>) |
++---------------+
+| abcd          |
++---------------+</pre>
+</div>
+<h4 id="数学函数">2、数学函数</h4>
+<p>1、求绝对值abs(n)</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> abs(-<span style="color: #800080;">32</span><span style="color: #000000;">);
+</span>+----------+
+| abs(-<span style="color: #800080;">32</span>) |
++----------+
+|       <span style="color: #800080;">32</span> |
++----------+</pre>
+</div>
+<p>2、求m除以n的余数mod(m,n)，同运算符%</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> mod(<span style="color: #800080;">10</span>,<span style="color: #800080;">3</span><span style="color: #000000;">);
+</span>+-----------+
+| mod(<span style="color: #800080;">10</span>,<span style="color: #800080;">3</span>) |
++-----------+
+|         <span style="color: #800080;">1</span> |
++-----------+<span style="color: #000000;">
+
+mysql</span>&gt; <span style="color: #0000ff;">select</span> <span style="color: #800080;">10</span>%<span style="color: #800080;">3</span><span style="color: #000000;">;
+</span>+------+
+| <span style="color: #800080;">10</span>%<span style="color: #800080;">3</span> |
++------+
+|    <span style="color: #800080;">1</span> |
++------+<span style="color: #800080;"><br /></span></pre>
+</div>
+<p>3、floor(n)，表示不大于n的最大整数</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> floor(<span style="color: #800080;">2.3</span><span style="color: #000000;">);
+</span>+------------+
+| floor(<span style="color: #800080;">2.3</span>) |
++------------+
+|          <span style="color: #800080;">2</span> |
++------------+</pre>
+</div>
+<p>4、ceiling(n)，表示不小于n的最大整数</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> ceiling(<span style="color: #800080;">2.3</span><span style="color: #000000;">);
+</span>+--------------+
+| ceiling(<span style="color: #800080;">2.3</span>) |
++--------------+
+|            <span style="color: #800080;">3</span> |
++--------------+</pre>
+</div>
+<p>5、求四舍五入值round(n,d)，n表示原数，d表示小数位置，默认为0</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> round(<span style="color: #800080;">1.6</span><span style="color: #000000;">);
+</span>+------------+
+| round(<span style="color: #800080;">1.6</span>) |
++------------+
+|          <span style="color: #800080;">2</span> |
++------------+</pre>
+</div>
+<p>6、求x的y次幂pow(x,y)</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> pow(<span style="color: #800080;">2</span>,<span style="color: #800080;">3</span><span style="color: #000000;">);
+</span>+----------+
+| pow(<span style="color: #800080;">2</span>,<span style="color: #800080;">3</span>) |
++----------+
+|        <span style="color: #800080;">8</span> |
++----------+</pre>
+</div>
+<p>7、随机数rand()，值为0-1.0的浮点数</p>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span><span style="color: #000000;"> rand();
+</span>+--------------------+
+| rand()             |
++--------------------+
+| <span style="color: #800080;">0.0713081630610937</span> |
++--------------------+</pre>
+</div>
+<h4>3、日期时间函数</h4>
+<ul>
+<li>获取子值，语法如下
+<ul>
+<li>year(date)返回date的年份(范围在1000到9999)</li>
+<li>month(date)返回date中的月份数值</li>
+<li>day(date)返回date中的日期数值</li>
+<li>hour(time)返回time的小时数(范围是0到23)</li>
+<li>minute(time)返回time的分钟数(范围是0到59)</li>
+<li>second(time)返回time的秒数(范围是0到59)</li>
+</ul>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> year(<span style="color: #800000;">'</span><span style="color: #800000;">2019-7-11</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+</span>+-------------------+
+| year(<span style="color: #800000;">'</span><span style="color: #800000;">2019-7-11</span><span style="color: #800000;">'</span>) |
++-------------------+
+|              <span style="color: #800080;">2019</span> |
++-------------------+</pre>
+</div>
+<ul>
+<li>日期计算，使用+-运算符，数字后面的关键字为year、month、day、hour、minute、second</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>mysql&gt; <span style="color: #0000ff;">select</span> <span style="color: #800000;">'</span><span style="color: #800000;">2019-7-11</span><span style="color: #800000;">'</span>+interval <span style="color: #800080;">1</span><span style="color: #000000;"> day;
+</span>+----------------------------+
+| <span style="color: #800000;">'</span><span style="color: #800000;">2019-7-11</span><span style="color: #800000;">'</span>+interval <span style="color: #800080;">1</span> day |
++----------------------------+
+| <span style="color: #800080;">2019</span>-<span style="color: #800080;">07</span>-<span style="color: #800080;">12</span>                 |
++----------------------------+</pre>
+</div>
+<p>日期格式化date_format(date,format)，format参数可用的值如下</p>
+<ul>
+<li>
+<p>获取年%Y，返回4位的整数</p>
+<p>*　获取年%y，返回2位的整数</p>
+<p>*　获取月%m，值为1-12的整数</p>
+</li>
+<li>
+<p>获取日%d，返回整数</p>
+<p>*　获取时%H，值为0-23的整数</p>
+<p>*　获取时%h，值为1-12的整数</p>
+<p>*　获取分%i，值为0-59的整数</p>
+<p>*　获取秒%s，值为0-59的整数</p>
+</li>
+</ul>
+<p>&nbsp;</p>
+<h3>九、事物</h3>
+<ul>
+<li>当一个业务逻辑需要多个sql语句完成时，如果其中某条sql语句出错，则希望整个操作都退回</li>
+<li>使用事务可以完成退回的功能，保证业务逻辑的正确性</li>
+<li>事务四大特性(简称ACID)
+<ul>
+<li>原子性(Atomicity)：事务中的全部操作在数据库中是不可分割的，要么全部完成，要么均不执行</li>
+<li>一致性(Consistency)：几个并行执行的事务，其执行结果必须与按某一顺序串行执行的结果相一致</li>
+<li>隔离性(Isolation)：事务的执行不受其他事务的干扰，事务执行的中间结果对其他事务必须是透明的</li>
+<li>持久性(Durability)：对于任意已提交事务，系统必须保证该事务对数据库的改变不被丢失，即使数据库出现故障</li>
+</ul>
+</li>
+<li>要求：表的类型必须是innodb或bdb类型，才可以对此表使用事务</li>
+<li>查看表的创建语句</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>show create table Stu_score;</pre>
+</div>
+<ul>
+<li>修改表的类型：alter table '表名' engine=innodb;</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>alter table Stu_score engine=innodb;</pre>
+</div>
+<ul>
+<li>事务语句</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">开启begin;
+提交commit;
+回滚rollback;</span></pre>
+</div>
+<p id="示例1">　　在begin；后面写我们要操作的SQL语句组合也就是我们所谓的要执行的事物，但是这个时候写好的SQL语句就算我们回车之后，也不会执行，知道commit;执行之后才会被执行到数据库中，rollback回滚是我们begin;之后发现我们写错了，或者不想执行了，都可以在commit；之前回滚到上一次commit；的状态，很像版本控制器SVN和GIT一样</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

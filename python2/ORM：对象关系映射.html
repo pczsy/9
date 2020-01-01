@@ -1,0 +1,561 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修ORM：对象关系映射' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>ORM：对象关系映射</center></div><div class='banquan'>原文出处:本文由博客园博主林染提供。<br/>
+原文连接:https://www.cnblogs.com/zengyi1995/p/11171456.html</div><br>
+    <h3 id="一简单操作">一、简单操作</h3>
+<ol>
+<li><p>定义：面向对象和关系型数据库的一种映射，通过操作对象的方式操作数据</p></li>
+<li><p>对应关系：</p>
+<ul>
+<li>类对应数据表</li>
+<li>对象对应数据行（记录）</li>
+<li>属性对应字段</li>
+</ul></li>
+<li><p>导入：from app01 import models</p></li>
+<li><p>查：</p>
+<ul>
+<li>models.Publisher.objects.all()
+<ul>
+<li>查询所有的数据，queryset：对象列表<br />
+</li>
+</ul></li>
+<li>models.Publisher.objects.get(name='xxxx')
+<ul>
+<li>对象，获取一个对象（有且唯一），获取不到或者获取到多个对象会报错</li>
+</ul></li>
+<li>models.Publisher.objects.filter(name='xxxx')
+<ul>
+<li>获取满足条件的所有的对象，queryset：对象列表</li>
+</ul></li>
+</ul></li>
+<li><p>增：</p>
+<ul>
+<li>models.Publisher.objects.create(name='xxx')
+<ul>
+<li>新插入数据库的对象</li>
+</ul></li>
+<li>obj = models.Publisher(name='xxx')
+<ul>
+<li>存在在内存中的对象</li>
+</ul></li>
+<li>obj.save()
+<ul>
+<li>提交到数据库中，新增</li>
+</ul></li>
+</ul></li>
+<li><p>删：</p>
+<ul>
+<li>obj = models.Publisher.objects.get(pk=1)
+<ul>
+<li>obj.delete()<br />
+</li>
+</ul></li>
+<li>obj_list = models.Publisher.objects.filter(pk=1)
+<ul>
+<li>obj_list.delete()</li>
+</ul></li>
+</ul></li>
+<li><p>改：</p>
+<ul>
+<li>obj = models.Publisher.objects.get(pk=1)</li>
+<li>obj.name = 'new name'
+<ul>
+<li>在内存中修改对象的属性</li>
+</ul></li>
+<li>obj.save()
+<ul>
+<li>提交数据，保存到数据库中</li>
+</ul></li>
+</ul></li>
+</ol>
+<h3 id="二-字段">二、 字段</h3>
+<ol>
+<li><p>常用字段</p>
+<ul>
+<li>AutoField：自增的整型字段，必填参数primary_key=True
+<ul>
+<li>注意：一个model不能有两个AutoField字段</li>
+</ul></li>
+<li>IntegerField：整数类型，数值的范围是 -2147483648 ~ 2147483647</li>
+<li>CharField：字符类型，必须提供max_length参数，max_length表示字符的长度</li>
+<li>DateField：日期类型，日期格式为YYYY-MM-DD，相当于Python中的datetime.date的实例
+<ul>
+<li>参数：
+<ul>
+<li>auto_now_add=True：新增数据的时候会自动保存当前的时间</li>
+<li>auto_now=True：新增、修改数据的时候会自动保存当前的时间</li>
+</ul></li>
+</ul></li>
+<li>DatetimeField：日期时间类型，格式为<code>YYYY-MM-DD HH:MM[:ss[.uuuuuu]][TZ]</code>，相当于Python中的datetime.datetime的实例</li>
+<li>BooleanField：布尔值类型</li>
+<li>TextField：文本类型</li>
+<li>DecimalField：十进制小数
+<ul>
+<li>参数：
+<ul>
+<li>max_digits：小数总长度</li>
+<li>decimal_places：小数位总长度</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li><p>自定义字段</p>
+<ul>
+<li>自定义一个char类型字段</li>
+</ul>
+<pre><code><code>class MyCharField(models.Field):
+    &quot;&quot;&quot;
+    自定义的char类型的字段类
+    &quot;&quot;&quot;
+    def __init__(self, max_length, *args, **kwargs):
+        self.max_length = max_length
+        super(MyCharField, self).__init__(max_length=max_length, *args, **kwargs)
+
+    def db_type(self, connection):
+        &quot;&quot;&quot;
+        限定生成数据库表的字段类型为char，长度为max_length指定的值
+        &quot;&quot;&quot;
+        return &#39;char(%s)&#39; % self.max_length</code></pre>
+<ul>
+<li>使用自定义char类型字段</li>
+</ul>
+<pre><code><code>class Class(models.Model):
+    id = models.AutoField(primary_key=True)
+    title = models.CharField(max_length=25)
+    # 使用自定义的char类型的字段
+    cname = MyCharField(max_length=25)</code></pre></li>
+</ol>
+<h3 id="三-字段参数">三、 字段参数</h3>
+<ol>
+<li>null：数据库中字段是否可以为空</li>
+<li>default：数据库中字段的默认值</li>
+<li>primary_key：数据库中字段是否为主键</li>
+<li>db_index：数据库中字段是否可以建立索引</li>
+<li>unique：数据库中字段是否可以建立唯一索引</li>
+<li>blank：Admin中是否允许用户输入为空</li>
+<li>choices：Admin中显示选择框的内容，用不变动的数据放在内存中从而避免跨表操作
+<ul>
+<li>choices=((0, '女'), (1, '男') ：可填写的内容和提示</li>
+</ul></li>
+</ol>
+<h3 id="四-model-meta参数">四、 Model Meta参数</h3>
+<ul>
+<li><p>在表对于的类中写入一个类Meta</p>
+<pre><code><code>class UserInfo(models.Model):
+    nid = models.AutoField(primary_key=True)
+    username = models.CharField(max_length=32)
+
+    class Meta:
+        # 数据库中生成的表名称 默认 app名称 + 下划线 + 类名
+        db_table = &quot;table_name&quot;
+        # admin中显示的表名称
+        verbose_name = &#39;个人信息&#39;
+        # verbose_name加s
+        verbose_name_plural = &#39;所有用户信息&#39;
+        # 联合索引 
+        index_together = [
+            (&quot;pub_date&quot;, &quot;deadline&quot;),      # 应为两个存在的字段
+        ]
+        # 联合唯一索引
+        unique_together = ((&quot;driver&quot;, &quot;restaurant&quot;),)   # 应为两个存在的字段</code></pre></li>
+</ul>
+<h3 id="五-orm操作必知必会13条">五、 ORM操作——必知必会13条</h3>
+<ol>
+<li>all()：查询所有结果，返回QuerySet对象</li>
+<li>get()：返回与所给筛选条件相匹配的对象，返回结果有且只有一个，如果符合筛选条件的对象超过一个或者没有都会抛出错误，返回单个对象</li>
+<li>filter()：返回所有符合条件的对象，返回QuerySet对象</li>
+<li>exclude()：返回所有不符合条件的对象，返回QuerySet对象</li>
+<li>values('字段')：拿到对象指定的字段和字段的值，返回的是一个字典序列，返回QuerySet对象</li>
+<li>values_list('字段')：拿到对象指定的字段的值，返回的是一个元组序列，返回QuerySet对象</li>
+<li>order_by()：对查询结果排序，默认升序，字段前加负号则为降序，返回QuerySet对象
+<ul>
+<li>order_by('age','-pid')：先按age字段升序排列，再按pid字段降序排列</li>
+</ul></li>
+<li>reverse()：对查询结果反向排序，只能对已经排序的QuerySet进行反转，返回QuerySet对象</li>
+<li>distinct()：对查询结果进行去重，完全相同的内容才能去重，返回QuerySet对象</li>
+<li>count()：计数，返回数据库中匹配查询的对象数量，返回数字</li>
+<li>first()：返回第一条记录，即取第一个元素，没有返回None，返回单个对象</li>
+<li>last()：返回最后一条记录，即取最后一个元素，没有返回None，返回单个对象</li>
+<li>exist()：判断查询的数据是否存在，存在返回True，否则返回False，返回布尔值</li>
+</ol>
+<ul>
+<li><p>总结：</p>
+<pre><code><code># 返回的是queryset对象的
+all()    
+filter()
+exclude()
+values()  
+values_list() 
+order_by() 
+reverse() 
+distinct()
+# 返回的是单个对象的
+get() 
+first()
+last()
+# 返回的是数字的
+count()
+# 返回的是布尔值的
+exists()</code></pre></li>
+</ul>
+<h3 id="六-单表查询的双下划线">六、 单表查询的双下划线</h3>
+<ol>
+<li>条件判断，相当于SQL中的while
+<ul>
+<li>__gt：大于
+<ul>
+<li>ret = models.Person.objects.filter(pk__gt=1)
+<ul>
+<li>获取pk大于1的</li>
+</ul></li>
+</ul></li>
+<li>__lt：小于
+<ul>
+<li>ret = models.Person.objects.filter(pk__lt=3)
+<ul>
+<li>获取pk小于3的</li>
+</ul></li>
+</ul></li>
+<li>__gte：大于等于
+<ul>
+<li>ret = models.Person.objects.filter(pk__gte=1)
+<ul>
+<li>获取pk大于等于1的</li>
+</ul></li>
+</ul></li>
+<li>__lte：小于等于
+<ul>
+<li>ret = models.Person.objects.filter(pk__lte=3)
+<ul>
+<li>获取pk小于等于3的</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>__range：范围查询，相当于SQL的between...and...
+<ul>
+<li>ret = models.Person.objects.filter(pk__range=[1,3])
+<ul>
+<li>获取pk范围是1到3的</li>
+</ul></li>
+</ul></li>
+<li>__in：成员判断
+<ul>
+<li>ret = models.Person.objects.filter(pk__in=[1,3])
+<ul>
+<li>获取pk等于1、3的，相当于SQL的 in</li>
+</ul></li>
+<li>ret = models.Person.objects.exclude(pk__in=[1,3])
+<ul>
+<li>获取pk不等于1和3的，相当于SQL的 not in</li>
+</ul></li>
+</ul></li>
+<li>模糊查询：相当于SQL的 like 和正则匹配
+<ul>
+<li>__contains：模糊查询
+<ul>
+<li>ret = models.Person.objects.filter(name__contains='A')
+<ul>
+<li>获取name字段的值包含'A'的</li>
+</ul></li>
+</ul></li>
+<li>__icontains：在contains的基础上，对条件中的字母大小写不敏感
+<ul>
+<li>ret = models.Person.objects.filter(name__icontains='A')
+<ul>
+<li>获取name字段的值包含'A'或'a'的，忽略大小写</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>判断以...开头/结尾
+<ul>
+<li>__startswith：以...开头
+<ul>
+<li>ret = models.Person.objects.filter(name__startswith='A')
+<ul>
+<li>获取name字段的值以'A'开头的</li>
+</ul></li>
+</ul></li>
+<li>__istartswith：在startswith的基础上，对条件中的字母大小写不敏感
+<ul>
+<li>ret = models.Person.objects.filter(name__istartswith='A')
+<ul>
+<li>获取name字段的值以'A'或'a'开头的，忽略大小写</li>
+</ul></li>
+</ul></li>
+<li>__endswith：以...结尾
+<ul>
+<li>ret = models.Person.objects.filter(name__endswith='A')
+<ul>
+<li>获取name字段的值以'A'结尾的</li>
+</ul></li>
+</ul></li>
+<li>__iendswith：在endswith的基础上，对条件中的字母大小写不敏感
+<ul>
+<li>ret = models.Person.objects.filter(name__iendswith='A')
+<ul>
+<li>获取name字段的值以'A'或'a'结尾的，忽略大小写</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>__year：判断日期年份
+<ul>
+<li>ret = models.Person.objects.filter(birth__year='2019')
+<ul>
+<li>获取birth字段的值的年份是2019的</li>
+</ul></li>
+<li>__year只能筛选年份，如果要筛选年月日，使用contains：模糊查询
+<ul>
+<li>ret = models.Person.objects.filter(birth__contains='2018-06-24')
+<ul>
+<li>获取birth字段的值是2018-06-24的</li>
+</ul></li>
+</ul></li>
+</ul></li>
+<li>__isnull：查询与null的项
+<ul>
+<li>__isnull = True：查询值是null的
+<ul>
+<li>ret = models.Person.objects.filter(phone__isnull=True)
+<ul>
+<li>获取phone字段的值是null的</li>
+</ul></li>
+</ul></li>
+<li>__isnull = False：查询值不是null的</li>
+</ul></li>
+</ol>
+<h3 id="七-foreignkey操作">七、 ForeignKey操作</h3>
+<ol>
+<li><p>基于对象的查询</p>
+<ul>
+<li>正向查询，语法：对象.关联字段.字段</li>
+</ul>
+<pre><code><code>book_obj = models.Book.objects.get(title=&#39;菊花怪大战MJJ&#39;)
+book_obj.pub
+book_obj.pub.name</code></pre>
+<ul>
+<li>反向查询，语法：对象.表名_set.all()，表名即类名小写
+<ul>
+<li>设置ForeignKey的参数：related_name，相当于替换了类名小写_set</li>
+</ul></li>
+</ul>
+<pre><code><code>pub_obj = models.Publisher.objects.get(pk=1)
+# 没有指定related_name，使用类名小写_set
+pub_obj.book_set.all()
+# 指定related_name=&#39;books&#39;
+pub_obj.books.all()</code></pre></li>
+<li><p>基于字段的查询</p>
+<ul>
+<li>正向查询，语法：关联字段__字段</li>
+</ul>
+<pre><code><code># 查询老男孩出版的书
+ret = models.Book.objects.filter(pub__name=&#39;老男孩出版社&#39;)</code></pre>
+<ul>
+<li>反向查询，语法：表名__字段
+<ul>
+<li>设置ForeignKey的参数：related_query_name，相当于替换了表名</li>
+</ul></li>
+</ul>
+<pre><code><code># 查询出版菊花怪大战MJJ的出版社
+# 没有指定related_name，使用类名的小写
+ret= models.Publisher.objects.filter(book__title=&#39;菊花怪大战MJJ&#39;)
+# related_name=&#39;books&#39;
+ret= models.Publisher.objects.filter(books__title=&#39;菊花怪大战MJJ&#39;)
+# related_query_name=&#39;xxx&#39;
+ret= models.Publisher.objects.filter(xxx__title=&#39;菊花怪大战MJJ&#39;)</code></pre></li>
+</ol>
+<h3 id="八-多对多的操作">八、 多对多的操作</h3>
+<ol>
+<li><p>基于对象的查询</p>
+<ul>
+<li>正向查询，语法：对象.多对多字段.all()</li>
+</ul>
+<pre><code><code>mjj = models.Author.objects.get(pk=1)
+mjj.books        # 关系管理对象
+mjj.books.all()</code></pre>
+<ul>
+<li>反向查询，语法：对象.类名小写_set.all()
+<ul>
+<li>设置related_name，相当于替换了类名小写_set</li>
+</ul></li>
+</ul>
+<pre><code><code>book_obj = models.Book.objects.filter(title=&#39;桃花侠大战菊花怪&#39;).first()
+# 不指定related_name
+book_obj.author_set      # 关系管理对象
+book_obj.author_set.all()
+# 指定related_name=&#39;authors&#39;
+book_obj.authors         # 关系管理对象
+book_obj.authors.all()</code></pre></li>
+<li><p>基于字段的查询</p>
+<ul>
+<li>正向查询，语法：多对多字段__字段</li>
+</ul>
+<pre><code><code>ret = models.Author.objects.filter(books__title=&#39;菊花怪大战MJJ&#39;)</code></pre>
+<ul>
+<li>反向查询，语法：类名小写__字段
+<ul>
+<li>设置related_query_name，相当于替换了类名小写</li>
+</ul></li>
+</ul>
+<pre><code><code># 不指定related_name
+ret = models.Book.objects.filter(author__name=&#39;MJJ&#39;)
+# 指定related_name=&#39;authors&#39;
+ret = models.Book.objects.filter(authors__name=&#39;MJJ&#39;)
+# 指定related_query_name=&#39;xxx&#39;
+ret = models.Book.objects.filter(xxx__name=&#39;MJJ&#39;)</code></pre></li>
+<li><p>关系管理对象的方法</p>
+<ul>
+<li>all()：所关联的所有对象</li>
+</ul>
+<pre><code><code>mjj = models.Author.objects.get(pk=1)
+mjj.books.all()</code></pre>
+<ul>
+<li>set()：设置多对多关系</li>
+</ul>
+<pre><code><code># set()  [id,id]   [对象，对象]
+mjj.books.set([1,2])
+mjj.books.set(models.Book.objects.filter(pk__in=[1,2,3]))</code></pre>
+<ul>
+<li>add()：添加多对多关系</li>
+</ul>
+<pre><code><code># add  (id,id)   (对象，对象)
+mjj.books.add(4,5)
+mjj.books.add(*models.Book.objects.filter(pk__in=[4,5]))</code></pre>
+<ul>
+<li>remove()：删除多对多关系</li>
+</ul>
+<pre><code><code># remove (id,id)   (对象，对象)
+mjj.books.remove(4,5)
+mjj.books.remove(*models.Book.objects.filter(pk__in=[4,5]))</code></pre>
+<ul>
+<li>clear()：清除所有多对多关系</li>
+</ul>
+<pre><code><code>mjj.books.clear()</code></pre>
+<ul>
+<li>create()：创建多对多关系</li>
+</ul>
+<pre><code><code>obj = mjj.books.create(title=&#39;跟MJJ学前端&#39;,pub_id=1)
+
+book__obj = models.Book.objects.get(pk=1)
+obj = book__obj.authors.create(name=&#39;taibai&#39;)</code></pre></li>
+</ol>
+<h3 id="九-聚合和分组">九、 聚合和分组</h3>
+<ol>
+<li><p>聚合</p>
+<ul>
+<li>内置函数：Max（最大值）、Min（最小值）、Avg（平均值）、Sum（求和）、Count（计数）</li>
+</ul>
+<pre><code><code>from app01 import models
+from django.db.models import Max, Min, Avg, Sum, Count
+# 为聚合值指定名称，注意关键字传参要在位置传参后面
+ret = models.Book.objects.filter(pk__gt=3).aggregate(Max(&#39;price&#39;),avg=Avg(&#39;price&#39;))
+print(ret)</code></pre></li>
+<li><p>分组</p>
+<ul>
+<li>一般和聚合一起使用</li>
+</ul>
+<pre><code><code># 统计每一本书的作者个数，annotate：注释
+ret = models.Book.objects.annotate(count=Count(&#39;author&#39;)) 
+
+# 统计出每个出版社的最便宜的书的价格
+# 方式一
+ret = models.Publisher.objects.annotate(Min(&#39;book__price&#39;)).values()
+# 方式二：objects后面接values，就是按字段分组，相当于分组条件
+ret = models.Book.objects.values(&#39;pub_id&#39;).annotate(min=Min(&#39;price&#39;))</code></pre></li>
+</ol>
+<h3 id="十-f查询和q查询">十、 F查询和Q查询</h3>
+<ol>
+<li><p>F查询</p>
+<pre><code><code>from django.db.models import F
+# 比较两个字段的值
+ret=models.Book.objects.filter(sale__gt=F(&#39;kucun&#39;))
+
+# 只更新sale字段
+models.Book.objects.all().update(sale=100)
+
+# 取某个字段的值进行操作
+models.Book.objects.all().update(sale=F(&#39;sale&#39;)*2+10)</code></pre></li>
+<li><p>Q查询</p>
+<ul>
+<li>条件符号：&amp;（与）、|（或）、~（非）</li>
+</ul>
+<pre><code><code>from django.db.models import Q
+ret = models.Book.objects.filter(~Q(Q(pk__gt=3) | Q(pk__lt=2)) &amp; Q(price__gt=50))
+print(ret)</code></pre></li>
+</ol>
+<h3 id="十一-事务">十一、 事务</h3>
+<ul>
+<li><p>使用try进行回滚时，必须把try写在with的外面，否则无法回滚</p>
+<pre><code><code>from django.db import transaction
+
+try:
+    with transaction.atomic():
+        # 进行一系列的ORM操作
+        models.Publisher.objects.create(name=&#39;xxxxx&#39;)
+        models.Publisher.objects.create(name=&#39;xxx22&#39;)
+except Exception as e :
+    print(e)</code></pre></li>
+</ul>
+<h3 id="十二-其他操作设置">十二、 其他操作设置</h3>
+<ol>
+<li><p>Django ORM执行原生SQL</p>
+<pre><code><code># 执行原生SQL
+# 更高灵活度的方式执行原生SQL语句
+from django.db import connection, connections
+cursor = connection.cursor()  
+cursor = connections[&#39;default&#39;].cursor()
+cursor.execute(&quot;&quot;&quot;SELECT * from auth_user where id = %s&quot;&quot;&quot;, [1])
+row = cursor.fetchone()</code></pre></li>
+<li><p>Django终端打印SQL语句</p>
+<pre><code><code>LOGGING = {
+    &#39;version&#39;: 1,
+    &#39;disable_existing_loggers&#39;: False,
+    &#39;handlers&#39;: {
+        &#39;console&#39;:{
+            &#39;level&#39;:&#39;DEBUG&#39;,
+            &#39;class&#39;:&#39;logging.StreamHandler&#39;,
+        },
+    },
+    &#39;loggers&#39;: {
+        &#39;django.db.backends&#39;: {
+            &#39;handlers&#39;: [&#39;console&#39;],
+            &#39;propagate&#39;: True,
+            &#39;level&#39;:&#39;DEBUG&#39;,
+        },
+    }
+}</code></pre></li>
+<li><p>在Python中脚本中调用Django环境</p>
+<ul>
+<li>在要执行的py文件中写入</li>
+</ul>
+<pre><code><code>import os
+os.environ.setdefault(&quot;DJANGO_SETTINGS_MODULE&quot;, &quot;orm_practice.settings&quot;)
+# orm_practice.settings表示当前项目的settings.py，orm_practice是当前项目名称
+import django
+django.setup()
+
+from app01 import models
+# 再继续写要执行的语句，例如
+books = models.Book.objects.all()
+print(books)</code></pre></li>
+</ol>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

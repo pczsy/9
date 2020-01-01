@@ -1,0 +1,94 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修MYSQL数据库的安装,配置文件,登入' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>MYSQL数据库的安装,配置文件,登入</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11180876.html</div><br>
+    <h1 id="自我总结">07.13自我总结</h1>
+<h1 id="mysql数据库">MYSQL数据库</h1>
+<h2 id="一.myql数据库的安装">一.MYQL数据库的安装</h2>
+<p>可以去mysql官网下载mysql压缩包</p>
+<ul>
+<li>运行程序:在bin文件夹中,其中客户端运行文件是<code>mysql.exe</code>,服务端运行文件为<code>mysqld.exe</code></li>
+<li>库的位置:在data文件中</li>
+<li>配置文件:配置文件模板为my-default,int文件中,你如果要手动配置信息要在文件目录下新建my.ini</li>
+<li>服务端设置开机自启:首先cmd终端目录移至到mysqld所在文件夹,在 mysqld --install即可</li>
+</ul>
+<h2 id="二.配置文件">二.配置文件</h2>
+<p>内容和使用 cfg格式 即 section+option (分区+设置)</p>
+<p>[mysqld] 分区服务器端配置 修改后需要重启服务器</p>
+<p>[mysql] 客户端配置 修改后需要重连</p>
+<p>例如</p>
+<pre><code><code># 客户端   除了mysql之外的     客户端的配置修改后  只需要退出重新连接即可
+[client] #如果有mysql会优先加载msql
+user = root
+host = localhost #本机
+password = 111
+default-character-set = utf8
+
+# 服务器端配置 需要重启服务器
+[mysqld]
+character-set-server = utf8</code></pre>
+<p>一些参数设置</p>
+<ul>
+<li>port参数也是表示数据库的端口。</li>
+<li>basedir参数表示MySQL的安装路径。</li>
+<li>datadir参数表示MySQL数据文件的存储位置，也是数据库表的存放位置。</li>
+<li>default-character-set参数表示默认的字符集，这个字符集是服务器端的。</li>
+<li>default-storage-engine参数默认的存储引擎。</li>
+<li>sql-mode参数表示SQL模式的参数，通过这个参数可以设置检验SQL语句的严格程度。</li>
+<li>max_connections参数表示允许同时访问MySQL服务器的最大连接数，其中一个连接是保留的，留给管理员专用的。</li>
+<li>query_cache_size参数表示查询时的缓存大小，缓存中可以存储以前通过select语句查询过的信息，再次查询时就可以直接从缓存中拿出信息。</li>
+<li>table_cache参数表示所有进程打开表的总数。</li>
+<li>tmp_table_size参数表示内存中临时表的总数。</li>
+<li>thread_cache_size参数表示保留客户端线程的缓存。</li>
+<li>myisam_max_sort_file_size参数表示MySQL重建索引时所允许的最大临时文件的大小。</li>
+<li>myisam_sort_buffer_size参数表示重建索引时的缓存大小。</li>
+<li>key_buffer_size参数表示关键词的缓存大小。</li>
+<li>read_buffer_size参数表示MyISAM表全表扫描的缓存大小。</li>
+<li>read_rnd_buffer_size参数表示将排序好的数据存入该缓存中。</li>
+<li>sort_buffer_size参数表示用于排序的缓存大小</li>
+</ul>
+<p>InnoDB存储引擎使用的参数，参数的简介：</p>
+<ul>
+<li>innodb_additional_mem_pool_size参数表示附加的内存池，用来存储InnoDB表的内容。</li>
+<li>innodb_flush_log_at_trx_commit参数是设置提交日志的时机，若设置为1，InnoDB会在每次提交后将事务日志写到磁盘上。</li>
+<li>innodb_log_buffer_size参数表示用来存储日志数据的缓存区的大小。</li>
+<li>innodb_buffer_pool_size参数表示缓存的大小，InnoDB使用一个缓冲池类保存索引和原始数据。</li>
+<li>innodb_log_file_size参数表示日志文件的大小。</li>
+<li>innodb_thread_concurrency参数表示在InnoDB存储引擎允许的线程最大数。</li>
+</ul>
+<h2 id="三.mysql数据库登入">三.MYSQL数据库登入</h2>
+<p>登入前首先要启动服务端mysqld</p>
+<p>然后登入的时候输入客户端程序 mysql -u用户名称 -p(尽量不要在这里输入密码) 没有设置默认密码为空</p>
+<p><strong>更改密码</strong></p>
+<p>未登入情况下修改</p>
+<ul>
+<li>mysqladmin -u用户名 -p密码 password 新密码</li>
+</ul>
+<p>登入情况下修改</p>
+<ul>
+<li><p>首先要进入mysql库,然后输入下面代码</p></li>
+<li><p>update user set password = password(&quot;新密码&quot;) where host=&quot;localhost&quot; and user=&quot;root&quot;;</p></li>
+</ul>
+<p><code>注意</code>:需改后并不是马上更新,你要刷新全新 flush privileges或者重启mysqld</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,322 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修WPF之图片处理系列' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>WPF之图片处理系列</center></div><div class='banquan'>原文出处:本文由博客园博主大头BigHead提供。<br/>
+原文连接:https://www.cnblogs.com/Big-Head/p/12068230.html</div><br>
+    <h1 id="wpf-中的一些图片处理方法">WPF 中的一些图片处理方法</h1>
+<h2 id="一视觉处理控件展示">一，视觉处理（控件展示）</h2>
+<h3 id="显示图片">1，显示图片</h3>
+<ul>
+<li><p>Image控件展示</p>
+<blockquote>
+<p>Xaml代码：</p>
+</blockquote></li>
+</ul>
+<pre><code><code>&lt;Image source=&quot;/Resources/Images/1.png&quot;/&gt;</code></pre>
+<ul>
+<li><p>缩放位图渲染算法</p>
+<blockquote>
+<p>Xaml代码：</p>
+</blockquote></li>
+</ul>
+<pre><code><code>&lt;Image Source=&quot;/Resources/Images/1.jpg&quot; RenderOptions.BitmapScalingMode=&quot;Fant&quot;/&gt;</code></pre>
+<p><img src="./images/WPF之图片处理系列0.png" /><img src="./images/WPF之图片处理系列1.png" /></p>
+<table>
+<thead>
+<tr class="header">
+<th>枚举值</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Fant</td>
+<td>使用超高质量 Fant 位图缩放，虽然速度比所有其他位图缩放模式都慢，但输出质量更高。</td>
+</tr>
+<tr class="even">
+<td>HighQuality</td>
+<td>使用高质量位图缩放，虽然速度比 LowQuality 模式慢，但输出质量更高。 HighQuality 模式与 Fant 模式相同。</td>
+</tr>
+<tr class="odd">
+<td>Linear</td>
+<td>使用线性位图缩放，虽然速度比 HighQuality 模式快，但输出质量较低。</td>
+</tr>
+<tr class="even">
+<td>LowQuality</td>
+<td>使用双线性位图缩放，虽然速度比 HighQuality 快，但输出质量较低。 LowQuality 模式与 Linear 模式相同。</td>
+</tr>
+<tr class="odd">
+<td>NearesNeighbor</td>
+<td>使用最近邻域位图缩放，当使用软件光栅器时，该缩放提供优于 LowQuality 模式的性能。 该模式常用于放大位图。</td>
+</tr>
+<tr class="even">
+<td>Unspecified</td>
+<td>使用默认位图缩放模式，即 Linear。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="image遮罩">2，Image遮罩</h3>
+<ul>
+<li><p>OpacityMask</p>
+<blockquote>
+<p>来自微软官方的说明：<br />
+<font color='#00cc8f'>获取或设置一个作为 Brush 实现的不透明蒙板，该蒙板可应用到此元素所呈现内容的任何 Alpha 通道蒙板。 这是依赖项属性。</font></p>
+</blockquote></li>
+</ul>
+<blockquote>
+<p>来自个人的经验解释：<br />
+<font color='blue'>OpacityMask也是一张图片，它用来改变被它遮住的内容的显示区域,<br />
+OpacityMasK本身：有内容的区域被镂空，没有内容的区域被填充<br />
+被它遮住的控件或者画布：镂空的区域就展示，填充的区域变透明</font></p>
+</blockquote>
+<p><img src="./images/WPF之图片处理系列2.png" /><br />
+<img src="./images/WPF之图片处理系列3.png" /></p>
+<h3 id="图片dpi">3，图片DPI</h3>
+<ul>
+<li>图片DPI是每英寸显示的点的个数（点/英寸）</li>
+<li>图片的宽像素=宽dpi*尺寸</li>
+<li>图片的高像素=高dpi*尺寸</li>
+<li>WPF 中，所有图片在Xaml中都会被强制拉成96dpi。<br />
+<img src="./images/WPF之图片处理系列4.png" /></li>
+</ul>
+<h3 id="控件的transform">4，控件的Transform</h3>
+<blockquote>
+<p>来自微软官方的说明：<br />
+Transform 定义如何将点从一个坐标空间映射或转换到另一个坐标空间。 此映射由转换 Matrix描述，该转换是包含三列 Double 值的三行的集合。</p>
+</blockquote>
+<table>
+<thead>
+<tr class="header">
+<th>枚举值</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>RotateTransform</td>
+<td>按指定角度旋转元素。</td>
+</tr>
+<tr class="even">
+<td>ScaleTranform</td>
+<td>按指定的 ScaleX 和 ScaleY 量来缩放元素。</td>
+</tr>
+<tr class="odd">
+<td>SkewTransform</td>
+<td>按指定的 AngleX 和 AngleY 量倾斜元素。</td>
+</tr>
+<tr class="even">
+<td>TranslateTransform</td>
+<td>按指定的 X 和 Y 量移动（平移）元素。</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>Xaml代码：</p>
+</blockquote>
+<pre><code><code>&lt;Image Width=&quot;450&quot; Source=&quot;/Images/3.jpg&quot;&gt;
+    &lt;Image.RenderTransform&gt;
+        &lt;TransformGroup&gt;
+            &lt;TranslateTransform X=&quot;10&quot; Y=&quot;10&quot; /&gt;
+            &lt;RotateTransform Angle=&quot;20&quot; CenterX=&quot;200&quot; CenterY=&quot;121&quot;/&gt;
+            &lt;ScaleTransform ScaleX=&quot;1.5&quot; ScaleY=&quot;1.5&quot; CenterX=&quot;200&quot; CenterY=&quot;121&quot;/&gt;
+            &lt;SkewTransform AngleX=&quot;10&quot; AngleY=&quot;10&quot; CenterX=&quot;200&quot; CenterY=&quot;121&quot;/&gt;
+        &lt;/TransformGroup&gt;
+    &lt;/Image.RenderTransform&gt;
+&lt;/Image&gt;</code></pre>
+<p><img src="./images/WPF之图片处理系列5.png" /></p>
+<hr />
+<h2 id="二输出文件">二，输出文件</h2>
+<h3 id="显示图片-1">1，显示图片</h3>
+<h4 id="bitmapimage的保存">①，BitmapImage的保存</h4>
+<p>与Bitmap.Save()不同，需要对BitmapImage的数据转为Stream，通过文件流保存</p>
+<blockquote>
+<p>C#代码</p>
+</blockquote>
+<pre class="c#"><code>BitmapEncoder encoder = new PngBitmapEncoder();
+encoder.Frame.Add(BitmapFrame.Create(bitmapImage));
+using(var straem=new FileStream(path,FileMode.Create)){
+    encoder.Save(stream);
+}
+</code></pre>
+<h4 id="bitmapimage的widthheight和pixelwidthpixelheight">②，BitmapImage的Width，Height和PixelWidth,PixelHeight</h4>
+<blockquote>
+<p>Width和Height：获取位图的宽/高度（以与设备无关的单位（每个单位 1/96 英寸）为单位）。<font color='red'>(会根据电脑DPI的更改获取到不同的值)</font><br />
+PixelWidth和PixelHeight：获取位图的宽/高度（以像素为单位）</p>
+</blockquote>
+<h4 id="bitmapimage与bitmap的互相转换">③，BitmapImage与Bitmap的互相转换</h4>
+<p>同样是转为流数据，向Bitmap的构造函数传参</p>
+<pre class="c#"><code>//BitmapImage  to  Bitmap
+public static Bitmap GetBitmapByBitmapImage(this BitmapImage bitmapImage,bool isPng=false) {
+    Bitmap bitmap;
+    MemoryStream outStream = new MemoryStream();
+    BitmapEncoder enc = new BmpBitmapEncoder();
+    if (isPng) {
+        enc = new PngBitmapEncoder();
+    }
+    enc.Frames.Add(BitmapFrame.Create(bitmapImage));
+    enc.Save(outStream);
+    bitmap = new Bitmap(outStream);
+    return bitmap;
+}
+// Bitmap  to BitmapImage
+public static BitmapImage GetBitmapImageBybitmap(this Bitmap bitmap) {
+    BitmapImage bitmapImage = new BitmapImage();
+    try {
+        using (MemoryStream ms = new MemoryStream()) {
+            bitmap.Save(ms, System.Drawing.Imaging.ImageFormat.Png);
+            bitmapImage.BeginInit();
+            bitmapImage.StreamSource = ms;
+            bitmapImage.CacheOption = BitmapCacheOption.OnLoad;
+            bitmapImage.EndInit();
+            bitmapImage.Freeze();
+        }
+    }
+    catch (Exception ex) {
+        log.ErrorFormat(&quot;bitmap to BitmapImage Failed:&quot; + ex.Message);
+    }
+        return bitmapImage;
+}</code></pre>
+<h3 id="visual和drawingcontext">2，Visual和DrawingContext</h3>
+<h4 id="visual">①，Visual</h4>
+<blockquote>
+<p>Visual：为 WPF 中的呈现提供支持，其中包括命中测试、坐标转换和边界框计算。</p>
+</blockquote>
+<p>层级关系：<br />
+System.Windows.Media.Visual<br />
+     System.Windows.Media.ContainerVisual<br />
+            System.Windows.UIElement</p>
+<h4 id="drawingcontext">②，DrawingContext</h4>
+<blockquote>
+<p>DrawingContext:使用绘图、推送和弹出命令描述可视内容。</p>
+</blockquote>
+<p>绘制方法：</p>
+<blockquote>
+<p>DrawDrawing： 画Drawing对象</p>
+</blockquote>
+<blockquote>
+<p>DrawEllipse: 画圆</p>
+</blockquote>
+<blockquote>
+<p>DrawGeometry: 画几何图形</p>
+</blockquote>
+<blockquote>
+<p>DrawGlyphRun：画文字</p>
+</blockquote>
+<blockquote>
+<p>DrawImage： 画图</p>
+</blockquote>
+<blockquote>
+<p>DrawLine：画线</p>
+</blockquote>
+<blockquote>
+<p>DrawRectangle/DrawRoundedRectangle：画矩形</p>
+</blockquote>
+<blockquote>
+<p>DrawText:画带格式的文本</p>
+</blockquote>
+<blockquote>
+<p>DrawVideo：画视频</p>
+</blockquote>
+<blockquote>
+<p>PushClip:推送剪切区域</p>
+</blockquote>
+<h4 id="rendertargetbitmap">③，RenderTargetBitmap</h4>
+<blockquote>
+<p>RenderTargetBitmap:将System.Windows.Media.Visual 对象转换为位图。</p>
+</blockquote>
+<h4 id="image遮罩-1">④，Image遮罩</h4>
+<p>和控件方式类似，在后台代码中使用Visual来展示</p>
+<blockquote>
+<p>C#代码</p>
+</blockquote>
+<pre class="c#"><code>RenderTargetBitmap bmp = new RenderTargetBitmap((int)img.Source.Width, (int)img.Source.Height, 96, 96, PixelFormats.Default);
+DrawingVisual visual = new DrawingVisual() { OpacityMask = imgBrush };//遮罩Visual
+using (DrawingContext dc = visual.RenderOpen()) {
+    dc.DrawImage(img.Source, new Rect(0, 0, img.Source.Width, img.Source.Height));
+}
+bmp.Render(visual);</code></pre>
+<h4 id="图像变化">⑤，图像变化</h4>
+<p>同样是修改Visual的Transform<br />
+<font color='red'>这里注意：文件渲染的Transform和前台的Transform不全相同！！！！<br />
+因为界面显示的图片大小和实际大小不一样</font></p>
+<blockquote>
+<p>C#代码</p>
+</blockquote>
+<pre class="c#"><code>RenderTargetBitmap bmp = new RenderTargetBitmap((int)img.Source.Width, (int)img.Source.Height, 96, 96, PixelFormats.Default);
+DrawingVisual visual = new DrawingVisual() { Transform=img.RenderTransform };//修改Transform
+using (DrawingContext dc = visual.RenderOpen()) {
+    dc.DrawImage(img.Source, new Rect(0, 0, img.Source.Width, img.Source.Height));
+}
+bmp.Render(visual);</code></pre>
+<h4 id="pathgeometry">⑥，PathGeometry</h4>
+<blockquote>
+<p>来自微软官方的解释：表示一个可能由弧、曲线、椭圆、直线和矩形组成的复杂形状</p>
+</blockquote>
+<blockquote>
+<p>LineGeometry 直线<br />
+<font color='green'>ps：这个LineGeometry可以实现线头和线尾的圆滑笔触效果</font></p>
+</blockquote>
+<pre class="c#"><code>new LineGeometry(start, end).GetWidenedPathGeometry(new Pen(Brushes.Black, 10) { StartLineCap = PenLineCap.Round, EndLineCap = PenLineCap.Round }); </code></pre>
+<blockquote>
+<p>EllipseGeometry 圆<br />
+RectangleGeometry 矩形</p>
+</blockquote>
+<h4 id="抠图">⑦，抠图</h4>
+<p>通过DrawingContext的PushClip可以将指定的剪辑区域推送到绘图上下文上。<br />
+需要利用到上面的Geometry几何图形<br />
+配合一些鼠标事件可以手动实现inkcanvas和类似PS的背景橡皮擦</p>
+<blockquote>
+<p>C#代码</p>
+</blockquote>
+<pre class="c#"><code>RenderTargetBitmap bmp = new RenderTargetBitmap((int)img.Source.Width, (int)img.Source.Height, 96, 96, PixelFormats.Default);
+DrawingVisual visual = new DrawingVisual() { OpacityMask = imgBrush };//遮罩Visual
+using (DrawingContext dc = visual.RenderOpen()) {
+    RectangleGeometry full = new RectangleGeometry(new Rect(0,0,777,523));//全图区域
+    var clip= Geometry.Combine(full, new RectangleGeometry(new Rect(200,200,300,300)), GeometryCombineMode.Exclude, null);//减去一个矩形的区域
+    dc.PushClip(clip);//推送clip区域结果
+    dc.DrawImage(img.Source, new Rect(0, 0, img.Source.Width, img.Source.Height));
+}
+bmp.Render(visual);</code></pre>
+<p>正方形抠图<br />
+<img src="./images/WPF之图片处理系列6.png" /><br />
+线条抠图<br />
+<img src="./images/WPF之图片处理系列7.png" /></p>
+<h4 id="裁剪">⑧，裁剪</h4>
+<ul>
+<li>BitmapSource中有一个方法叫做CopyPixels，复制像素点集到一个新的BitmapSource里面。可以实现裁剪</li>
+</ul>
+<blockquote>
+<p>stride:位图的跨距（一行的字节数）。<br />
+pixels:表示位图图像内容的字节数组。</p>
+</blockquote>
+<pre class="c#"><code>public static BitmapSource CutImage(BitmapSource bitmapSource, Int32Rect cut) {
+    //计算Stride
+    var stride = bitmapSource.Format.BitsPerPixel * cut.Width / 8;
+    //声明字节数组
+    byte[] data = new byte[cut.Height * stride];
+    //调用CopyPixels
+    bitmapSource.CopyPixels(cut, data, stride, 0);
+    return BitmapSource.Create(cut.Width, cut.Height, 0, 0, PixelFormats.Bgra32, null, data, stride);
+}           </code></pre>
+<p><img src="./images/WPF之图片处理系列8.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

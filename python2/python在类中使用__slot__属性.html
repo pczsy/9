@@ -1,0 +1,77 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python在类中使用__slot__属性' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python在类中使用__slot__属性</center></div><div class='banquan'>原文出处:本文由博客园博主BRYANT_2019提供。<br/>
+原文连接:https://www.cnblogs.com/bryant24/p/11441151.html</div><br>
+    <p>在类中定义__slot__属性来限制实例的属性字段，在创建大量对象的场合可以减少内存占用。</p>
+<p>创建大量对象是内存占用对比：</p>
+<ol>
+<li>类中不使用__slot__</li>
+</ol>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> MySlot:</span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, a, b, c):
+        self.a </span>=<span style="color: #000000;"> a
+        self.b </span>=<span style="color: #000000;"> b
+        self.c </span>=<span style="color: #000000;"> c
+
+@profile()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    myObj_list </span>=<span style="color: #000000;"> list()
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(50000<span style="color: #000000;">):
+        myObj </span>=<span style="color: #000000;"> MySlot(i, i, i)
+        myObj_list.append(myObj)</span></pre>
+</div>
+<p>执行结果：</p>
+<p>Line # Mem usage Increment Line Contents<br />================================================<br />   401     39.7 MiB     39.7 MiB   @profile()<br />   402                             def main():<br />   403     39.7 MiB      0.0 MiB       myObj_list = list()<br />   404     49.9 MiB      0.0 MiB       for i in range(50000):<br />   405     49.9 MiB      0.1 MiB           myObj = MySlot(i, i, i)<br />   406     49.9 MiB      0.4 MiB           myObj_list.append(myObj)</p>
+<p>占用内存约10M</p>
+<p>&nbsp;</p>
+<ol>
+<li>类中使用__slot__</li>
+
+</ol>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> MySlot:
+    </span><span style="color: #800080;">__slots__</span> = (<span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">b</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">c</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, a, b, c):
+        self.a </span>=<span style="color: #000000;"> a
+        self.b </span>=<span style="color: #000000;"> b
+        self.c </span>=<span style="color: #000000;"> c
+
+@profile()
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+    myObj_list </span>=<span style="color: #000000;"> list()
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(50000<span style="color: #000000;">):
+        myObj </span>=<span style="color: #000000;"> MySlot(i, i, i)
+        myObj_list.append(myObj)</span></pre>
+</div>
+<p>执行结果：</p>
+<p>Line # Mem usage Increment Line Contents<br />================================================<br />   401     40.3 MiB     40.3 MiB   @profile()<br />   402                             def main():<br />   403     40.3 MiB      0.0 MiB       myObj_list = list()<br />   404     45.7 MiB      0.0 MiB       for i in range(50000):<br />   405     45.7 MiB      0.1 MiB           myObj = MySlot(i, i, i)<br />   406     45.7 MiB      0.3 MiB           myObj_list.append(myObj)</p>
+<p>占用内存约5M</p>
+<p>&nbsp;</p>
+<ol>
+<li>说明</li>
+
+</ol>
+<p>　　__slot__限制了属性值，添加__slot__元组之外的属性会报错！</p>
+<p>　　__slot__限制的是实例属性的添加，不限制类属性的添加！</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

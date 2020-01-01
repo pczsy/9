@@ -1,0 +1,438 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django之使用celery和NGINX生成静态页面实现性能优化' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django之使用celery和NGINX生成静态页面实现性能优化</center></div><div class='banquan'>原文出处:本文由博客园博主YifChan提供。<br/>
+原文连接:https://www.cnblogs.com/yifchan/p/python-1-37.html</div><br>
+    <p><strong>性能优化原理</strong>：</p>
+<p>当我们要给client浏览器返回一个页面时，我们需要去数据库查询数据并将数据和基本页面模板渲染形成页面返回给客户端，但如果每一个用户访问时都去查询一次首页的的数据时，当日访问量很大时那么无疑会给数据库查询带来很大的性能问题。为了解决这个问题，我们可以给未登录用户返回一个早就渲染好的静态首页(给已登录的用户返回一个调用缓存数据和个人数据渲染的页面)，这样就可以提高网站的性能了。</p>
+<p>&nbsp;</p>
+<h2>使用celery生成静态首页</h2>
+<p>生成静态页面原理：</p>
+<p>在一个为静态首页准备的基础模板之上，获取数据，使用django的loader加载基础模板，使用render渲染页面即可生成几台页面。</p>
+<p>安装celery</p>
+<div class="cnblogs_code">
+<pre><code>pip install celery</pre>
+</div>
+<p>为redis配置settings文件</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> diango的缓存配置</span>
+CACHES =<span style="color: #000000;"> {
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">default</span><span style="color: #800000;">"</span><span style="color: #000000;">: {
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">BACKEND</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">django_redis.cache.RedisCache</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">LOCATION</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">redis://127.0.0.1:6379/9</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">OPTIONS</span><span style="color: #800000;">"</span><span style="color: #000000;">: {
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">CLIENT_CLASS</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">django_redis.client.DefaultClient</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        }
+    }
+}</span></pre>
+</div>
+<p>准备一个首页静态模板文件static_base.html</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('e664df79-5633-4024-a32d-d79741ae8044')"><img id="code_img_closed_e664df79-5633-4024-a32d-d79741ae8044" class="code_img_closed" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化0.png" alt="" /><img id="code_img_opened_e664df79-5633-4024-a32d-d79741ae8044" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('e664df79-5633-4024-a32d-d79741ae8044',event)" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化1.png" alt="" />
+<div id="cnblogs_code_open_e664df79-5633-4024-a32d-d79741ae8044" class="cnblogs_code_hide">
+<pre><code><span style="color: #000000;">{# 首页 注册 登录 #}
+</span><span style="color: #0000ff;">&lt;!</span><span style="color: #ff00ff;">DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html </span><span style="color: #ff0000;">xmlns</span><span style="color: #0000ff;">="http://www.w3.org/1999/xhtml"</span><span style="color: #ff0000;"> xml:lang</span><span style="color: #0000ff;">="en"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% load staticfiles %}
+</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">http-equiv</span><span style="color: #0000ff;">="Content-Type"</span><span style="color: #ff0000;"> content</span><span style="color: #0000ff;">="text/html;charset=UTF-8"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {# 网页标题内容块 #}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>{% block title %}{% endblock title %}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">link </span><span style="color: #ff0000;">rel</span><span style="color: #0000ff;">="stylesheet"</span><span style="color: #ff0000;"> type</span><span style="color: #0000ff;">="text/css"</span><span style="color: #ff0000;"> href</span><span style="color: #0000ff;">="{% static 'css/reset.css' %}"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">link </span><span style="color: #ff0000;">rel</span><span style="color: #0000ff;">="stylesheet"</span><span style="color: #ff0000;"> type</span><span style="color: #0000ff;">="text/css"</span><span style="color: #ff0000;"> href</span><span style="color: #0000ff;">="{% static 'css/main.css' %}"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {# 网页顶部引入文件块 #}
+    {% block topfiles %}{% endblock topfiles %}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{# 网页顶部欢迎信息块 #}
+{% block header_con %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="header_con"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="header"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="welcome fl"</span><span style="color: #0000ff;">&gt;</span>欢迎来到商城!<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="fr"</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="login_btn fl"</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{% url 'user:login' %}"</span><span style="color: #0000ff;">&gt;</span>登录<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{% url 'user:register' %}"</span><span style="color: #0000ff;">&gt;</span>注册<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="user_link fl"</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{% url 'user:user' %}"</span><span style="color: #0000ff;">&gt;</span>用户中心<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="cart.html"</span><span style="color: #0000ff;">&gt;</span>我的购物车<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{% url 'user:order' %}"</span><span style="color: #0000ff;">&gt;</span>我的订单<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>        
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock header_con %}
+
+{# 网页顶部搜索框块 #}
+{% block search_bar %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="search_bar clearfix"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="index.html"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="logo fl"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{% static 'images/logo.png' %}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="search_con fl"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="input_text fl"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="搜索商品"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="button"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="input_btn fr"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="搜索"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="guest_cart fr"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="cart_name fl"</span><span style="color: #0000ff;">&gt;</span>我的购物车<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="goods_count fl"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="show_count"</span><span style="color: #0000ff;">&gt;</span>{{ cart_count }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock search_bar %}
+
+{# 网站主体内容块 #}
+{% block body %}{% endblock body %}
+
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="footer"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="foot_link"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;</span>关于我们<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;</span>联系我们<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;</span>招聘人才<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;</span>友情链接<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>        
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>CopyRight &copy; 2016 北京商城信息技术有限公司 All Rights Reserved<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>电话：010-****888    京ICP备*******8号<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">p</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {# 网页底部html元素块 #}
+    {% block bottom %}{% endblock bottom %}
+    {# 网页底部引入文件块 #}
+    {% block bottomfiles %}{% endblock bottomfiles %}
+</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">base_index.html</span></div>
+<p>在首页静态模板文件的基础上继承生成一个首页静态文件 static_index.html 方便celery获取数据库文件并进行渲染</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('b29a1f57-c8e8-4b7a-9ddd-ac2ef251d7d7')"><img id="code_img_closed_b29a1f57-c8e8-4b7a-9ddd-ac2ef251d7d7" class="code_img_closed" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化0.png" alt="" /><img id="code_img_opened_b29a1f57-c8e8-4b7a-9ddd-ac2ef251d7d7" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('b29a1f57-c8e8-4b7a-9ddd-ac2ef251d7d7',event)" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化1.png" alt="" />
+<div id="cnblogs_code_open_b29a1f57-c8e8-4b7a-9ddd-ac2ef251d7d7" class="cnblogs_code_hide">
+<pre><code><span style="color: #000000;">{% extends 'static_base.html' %}
+{% load staticfiles %}
+{% block title %}首页{% endblock title %}
+{% block topfiles %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">script </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text/javascript"</span><span style="color: #ff0000;"> src</span><span style="color: #0000ff;">="{% static 'js/jquery-1.12.4.min.js' %}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">script</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">script </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text/javascript"</span><span style="color: #ff0000;"> src</span><span style="color: #0000ff;">="{% static 'js/jquery-ui.min.js' %}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">script</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">script </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text/javascript"</span><span style="color: #ff0000;"> src</span><span style="color: #0000ff;">="{% static 'js/slide.js' %}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">script</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock topfiles %}
+{% block body %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="navbar_con"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="navbar"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1 </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="fl"</span><span style="color: #0000ff;">&gt;</span>全部商品分类<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="navlist fl"</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">=""</span><span style="color: #0000ff;">&gt;</span>首页<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="interval"</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">=""</span><span style="color: #0000ff;">&gt;</span>手机生鲜<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="interval"</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">=""</span><span style="color: #0000ff;">&gt;</span>抽奖<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="center_con clearfix"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="subnav fl"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+            {% for type in types %}
+                </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#model0{{ forloop.counter }}"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="{{ type.logo }}"</span><span style="color: #0000ff;">&gt;</span>{{ type.name }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+            {% endfor %}
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="slide fl"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="slide_pics"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+                {% for banner in goods_banners  %}
+                    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{{ banner.image.url }}"</span><span style="color: #ff0000;"> alt</span><span style="color: #0000ff;">="幻灯片"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+                {% endfor %}
+            </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="prev"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="next"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="points"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="adv fl"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+            {% for banner in promotion_banners %}
+                </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="{{ banner.url }}"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{{ banner.image.url }}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+            {% endfor %}
+        </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+
+    {% for type in types %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="list_model"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="list_title clearfix"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h3 </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="fl"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="model0{{ forloop.counter }}"</span><span style="color: #0000ff;">&gt;</span>{{ type.name }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h3</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="subtitle fl"</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>|<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+                {% for banner in type.title_banners %}
+                    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;</span>{{ banner.sku.name }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+                {% endfor %}
+            </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="goods_more fr"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="fruit_more"</span><span style="color: #0000ff;">&gt;</span>查看更多 &gt;<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="goods_con clearfix"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="goods_banner fl"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{{ type.image.url }}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="goods_list fl"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+                {% for banner in type.image_banners %}
+                </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h4</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;</span>{{ banner.sku.name }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">h4</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="#"</span><span style="color: #0000ff;">&gt;&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{{ banner.sku.image.url }}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+                    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="prize"</span><span style="color: #0000ff;">&gt;</span>&yen; {{ banner.sku.price }}<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+                <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">li</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+                {% endfor %}
+            </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+    {% endfor %}
+{% endblock body %}</span></pre>
+</div>
+<span class="cnblogs_code_collapse">static_index.html</span></div>
+<p>在项目下新建celery_tasks文件夹，在文件夹中新建tasks.py文件，<strong>编写tasks文件</strong>；</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('c2bb5eaf-a7a8-45c4-bd8e-ceb56228e8b6')"><img id="code_img_closed_c2bb5eaf-a7a8-45c4-bd8e-ceb56228e8b6" class="code_img_closed" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化0.png" alt="" /><img id="code_img_opened_c2bb5eaf-a7a8-45c4-bd8e-ceb56228e8b6" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('c2bb5eaf-a7a8-45c4-bd8e-ceb56228e8b6',event)" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化1.png" alt="" />
+<div id="cnblogs_code_open_c2bb5eaf-a7a8-45c4-bd8e-ceb56228e8b6" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> django.conf <span style="color: #0000ff;">import</span><span style="color: #000000;"> settings
+</span><span style="color: #0000ff;">from</span> celery <span style="color: #0000ff;">import</span><span style="color: #000000;"> Celery
+</span><span style="color: #0000ff;">from</span> django.template <span style="color: #0000ff;">import</span><span style="color: #000000;"> loader
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在任务处理者一端加这几句</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> import django</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> os.environ.setdefault("DJANGO_SETTINGS_MODULE", "shoppingmall.settings")</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> django.setup()</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 这几个类要放在django环境初始化那四句的下面</span>
+<span style="color: #0000ff;">from</span> goods.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> GoodsType, IndexGoodsBanner, IndexPromotionBanner, IndexTypeGoodsBanner
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建一个Celery类的实例对象</span>
+app = Celery(<span style="color: #800000;">'</span><span style="color: #800000;">celery_tasks.tasks</span><span style="color: #800000;">'</span>, broker=<span style="color: #800000;">'</span><span style="color: #800000;">redis://127.0.0.1:6379/8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+@app.task
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> generate_static_index_html():
+    </span><span style="color: #800000;">'''</span><span style="color: #800000;">产生首页静态页面</span><span style="color: #800000;">'''</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 获取商品的种类信息</span>
+    types =<span style="color: #000000;"> GoodsType.objects.all()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取首页轮播商品信息</span>
+    goods_banners = IndexGoodsBanner.objects.all().order_by(<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取首页促销活动信息</span>
+    promotion_banners = IndexPromotionBanner.objects.all().order_by(<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取首页分类商品展示信息</span>
+    <span style="color: #0000ff;">for</span> type <span style="color: #0000ff;">in</span> types:  <span style="color: #008000;">#</span><span style="color: #008000;"> GoodsType</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 获取type种类首页分类商品的图片展示信息</span>
+        image_banners = IndexTypeGoodsBanner.objects.filter(type=type, display_type=1).order_by(<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取type种类首页分类商品的文字展示信息</span>
+        title_banners = IndexTypeGoodsBanner.objects.filter(type=type, display_type=0).order_by(<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 动态给type增加属性，分别保存首页分类商品的图片展示信息和文字展示信息</span>
+        type.image_banners =<span style="color: #000000;"> image_banners
+        type.title_banners </span>=<span style="color: #000000;"> title_banners
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 组织模板上下文</span>
+    context =<span style="color: #000000;"> {
+                </span><span style="color: #800000;">'</span><span style="color: #800000;">types</span><span style="color: #800000;">'</span><span style="color: #000000;">: types,
+                </span><span style="color: #800000;">'</span><span style="color: #800000;">goods_banners</span><span style="color: #800000;">'</span><span style="color: #000000;">: goods_banners,
+                </span><span style="color: #800000;">'</span><span style="color: #800000;">promotion_banners</span><span style="color: #800000;">'</span><span style="color: #000000;">: promotion_banners
+            }
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用模板</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 1.加载模板文件,返回模板对象</span>
+    temp = loader.get_template(<span style="color: #800000;">'</span><span style="color: #800000;">static_index.html</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.模板渲染</span>
+    static_index_html =<span style="color: #000000;"> temp.render(context)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 生成首页对应静态文件</span>
+    save_path = os.path.join(settings.BASE_DIR, <span style="color: #800000;">'</span><span style="color: #800000;">static/index.html</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    with open(save_path, </span><span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+        f.write(static_index_html)</span></pre>
+</div>
+<span class="cnblogs_code_collapse">tasks.py</span></div>
+<p>开启redis服务</p>
+<div class="cnblogs_code">
+<pre><code>E:\&gt;cd E:\YifChanSoft\Database\Redis\RedisSoft\Redis-x64-3.2.100<span style="color: #000000;">
+
+E:\YifChanSoft\Database\Redis\RedisSoft\Redis</span>-x64-3.2.100&gt;redis-server --service-install redis.windows-service.conf --<span style="color: #000000;">loglevel verbose
+
+E:\YifChanSoft\Database\Redis\RedisSoft\Redis</span>-x64-3.2.100&gt;redis-<span style="color: #000000;">cli
+</span>127.0.0.1:6379&gt; select 8<span style="color: #000000;">
+OK
+</span>127.0.0.1:6379[8]&gt; keys *
+1) <span style="color: #800000;">"</span><span style="color: #800000;">_kombu.binding.celery</span><span style="color: #800000;">"</span>
+2) <span style="color: #800000;">"</span><span style="color: #800000;">_kombu.binding.celery.pidbox</span><span style="color: #800000;">"</span>
+127.0.0.1:6379[8]&gt;</pre>
+</div>
+<p>开启redis服务截图</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化6.png" alt="" width="866" height="158" /></p>
+<p>将项目代码拷贝一份放在某处，进入该处，<strong>启动tasks的worker模式</strong>，<br />注意，用作worker的代码的tasks文件中应该有提前启动django的初始化的代码，不然worker没法调用conf信息；</p>
+<p>即应该有以下内容</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 在任务处理者一端加这几句</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> django
+os.environ.setdefault(</span><span style="color: #800000;">"</span><span style="color: #800000;">DJANGO_SETTINGS_MODULE</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">shoppingmall.settings</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+django.setup()</span></pre>
+</div>
+<p>为了解决celery4.x在win10上运行的错误，安装eventlet</p>
+<div class="cnblogs_code">
+<pre><code>pip install eventlet</pre>
+</div>
+<p>进入复制用来做celery工作者的项目代码所在处</p>
+<p>开启worker模式</p>
+<div class="cnblogs_code">
+<pre><code>celery -A celery_tasks.tasks worker -l info -P eventlet</pre>
+</div>
+<p>开启worker模式截图</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化7.png" alt="" width="795" height="328" /></p>
+<p>如果有就删除celery代码文件中static中的index.html文件；<br />主动调用 generate_static_index_html.delay() 即可验证生成index.html；</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> celery_tasks.tasks <span style="color: #0000ff;">import</span><span style="color: #000000;"> generate_static_index_html
+generate_static_index_html.delay()</span></pre>
+</div>
+<p>验证截图</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化8.png" alt="" width="736" height="241" /></p>
+<p>&nbsp;</p>
+<p>可以看到在项目下的static文件夹下生成了index.html；</p>
+<p>开启项目在浏览器中输入&nbsp;http://127.0.0.1:8888/static/index.html/ 即可看到生成的静态首页；因为数据库中还没有数据，所以页面比较空。</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化9.png" alt="" width="730" height="377" /></p>
+<p>&nbsp;</p>
+<h2>NGINX的安装</h2>
+<p>参考教程：<a href="https://blog.csdn.net/weixin_40151334/article/details/80681173" target="_blank">https://blog.csdn.net/weixin_40151334/article/details/80681173</a>&nbsp;</p>
+<p><strong>1.下载nginx</strong>：<a href="http://nginx.org/en/download.html" target="_blank">http://nginx.org/en/download.html</a>&nbsp;</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化10.png" alt="" width="552" height="357" /></p>
+<p><strong>2.解压缩nginx包</strong></p>
+<p>下载好后在放入合适的目录，解压缩后如下</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化11.png" alt="" /></p>
+<p>3.使用cmd命令，进入nginx所在解压缩目录，使用如下命令进行<strong>安装nginx</strong>；</p>
+<div class="cnblogs_code">
+<pre><code>start nginx.exe</pre>
+</div>
+<p>安装截图</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化12.png" alt="" /></p>
+<p>安装完成后，我们可以在 任务管理器中看到nginx任务，如图</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化13.png" alt="" /></p>
+<p>至此，nginx就算安装完成了。</p>
+<p>&nbsp;</p>
+<p><strong>nginx命令</strong></p>
+<div class="cnblogs_code">
+<pre><code>start nginx.exe  <span style="color: #008000;">#</span><span style="color: #008000;"> 开启nginx</span>
+nginx -s reload  <span style="color: #008000;">#</span><span style="color: #008000;"> 重新启动</span>
+nginx -s stop  <span style="color: #008000;">#</span><span style="color: #008000;"> 停止nginx</span>
+nginx -s quit  <span style="color: #008000;">#</span><span style="color: #008000;"> 退出nginx</span></pre>
+</div>
+<p>&nbsp;</p>
+<h2>使用NGINX提供静态首页</h2>
+<h3>修改nginx配置</h3>
+<p>找到nginx的配置文件，如下图所示，为了方便以后其他的项目使用，我们拷贝一份源文件重命名为nginx_origin.conf</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化14.png" alt="" width="595" height="249" /></p>
+<p>用编辑器打开 nginx.conf 文件，修改配置文件中内容如下：</p>
+<div class="cnblogs_code">
+<pre><code>location /<span style="color: #000000;">static {
+    alias E:</span>/Pycharm/Pycharm_save/cp15/18Django_fresh2/step206/shoppingmall206/static/<span style="color: #000000;">;
+}
+
+location </span>/<span style="color: #000000;"> {
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> root   html;</span>
+    root   E:/Pycharm/Pycharm_save/cp15/18Django_fresh2/step206/shoppingmall206/static/<span style="color: #000000;">;
+    index  index.html index.htm;
+}</span></pre>
+</div>
+<p>配置截图</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化15.png" alt="" width="605" height="273" /></p>
+<p>注意，其中的地址应该是你使用celery的项目所在的绝对路径地址，并且地址之间应该使用斜杠/而不是反斜杠\，否则会报错。</p>
+<p>&nbsp;</p>
+<p>修改好配置保存后，我们使用一下命令进行nginx的重启</p>
+<div class="cnblogs_code">
+<pre><code>nginx -s reload</pre>
+</div>
+<p>然后，我们打开浏览器输入一下两个链接之一就可以看到项目主页面了。</p>
+<div class="cnblogs_code">
+<pre><code>http://127.0.0.1/  <span style="color: #008000;">#</span><span style="color: #008000;"> 注意，后面必须有一个/，否则会进入nginx默认界面</span>
+http://127.0.0.1/static/index.html</pre>
+</div>
+<p>项目主页面截图</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化16.png" alt="" width="893" height="436" /></p>
+<p>&nbsp;</p>
+<p>nginx的cmd命令截图，其中的报错都是因为使用的是win10目录自带的反斜杠</p>
+<p><img src="./images/Django之使用celery和NGINX生成静态页面实现性能优化17.png" alt="" /></p>
+<p>在Django网站和celery可以理解是并列的关系，在他们之前，其实还有一个nginx服务器负责调度；<br />一般是当用户直接访问127.0.0.1时，我们通过nginx调度去celery的nginx中返回静态页面；<br />而当用户访问127.0.0.1/index时，我们返回调用Django网站的IndexView；</p>
+<p>在网站上线时我们会使用nginx对它们进行配置。</p>
+<p>&nbsp;</p>
+<h2>后台数据修改时重新生成静态页面</h2>
+<p><strong>原理</strong></p>
+<p>在数据库的数据改变时，会调用admin.ModelAdmin下的sava_model和delete_model方法用来更新数据，而我们需要当数据改变后重新生成静态页面；</p>
+<p>因此，我们可以自定义一个类继承admin.ModelAdmin，重写更新和删除数据的方法，调用父类的更新删除方法后，调用celery中的方法重新生成静态首页；</p>
+<p>&nbsp;</p>
+<p><strong>实现</strong></p>
+<p>我们要配置当某个表的数据改变时重新生成静态页面，就要给该表定义一个 xxxModelAdmin 类，继承自admin.ModelAdmin并重写其中的方法，并且在admin中注册时该表应该同时继承xxxModelAdmin 类；</p>
+<p>因为有很多表都需要如此配置，且类中的代码都相同，所以我们可以抽出一个&nbsp;BaseModelAdmin 类，编写更新后重新调用生成静态页面的代码，然后让各个需要修改的表继承该类即可。</p>
+<p>在首页对应的应用中的admin.py文件中编写如下代码</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('73c3e6dc-3fbf-4e61-b5dc-1b1b3525f192')"><img id="code_img_closed_73c3e6dc-3fbf-4e61-b5dc-1b1b3525f192" class="code_img_closed" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化0.png" alt="" /><img id="code_img_opened_73c3e6dc-3fbf-4e61-b5dc-1b1b3525f192" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('73c3e6dc-3fbf-4e61-b5dc-1b1b3525f192',event)" src="./images/Django之使用celery和NGINX生成静态页面实现性能优化1.png" alt="" />
+<div id="cnblogs_code_open_73c3e6dc-3fbf-4e61-b5dc-1b1b3525f192" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> django.contrib <span style="color: #0000ff;">import</span><span style="color: #000000;"> admin
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> from django.core.cache import cache</span>
+<span style="color: #0000ff;">from</span> goods.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> GoodsType, GoodsSKU, Goods, GoodsImage, IndexGoodsBanner, IndexTypeGoodsBanner, IndexPromotionBanner
+</span><span style="color: #0000ff;">from</span> celery_tasks.tasks <span style="color: #0000ff;">import</span><span style="color: #000000;"> generate_static_index_html
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> BaseModelAdmin(admin.ModelAdmin):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">当后台数据库数据改动时使celery重新生成静态首页页面</span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> save_model(self, request, obj, form, change):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">当更新或者新增数据时调用</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        super().save_model(request, obj, form, change)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 发出任务，让celery worker重新生成静态首页</span>
+<span style="color: #000000;">        generate_static_index_html.delay()
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 清除首页的缓存数据</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> cache.delete("index_page_data")</span>
+
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> delete_model(self, request, obj):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">当删除数据时调用</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        super().delete_model(request, obj)
+        generate_static_index_html.delay()
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 清除首页的缓存数据</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> cache.delete("index_page_data")</span>
+
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> GoodsTypeAdmin(BaseModelAdmin):
+    </span><span style="color: #0000ff;">pass</span>
+
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> IndexGoodsBannerAdmin(BaseModelAdmin):
+    </span><span style="color: #0000ff;">pass</span>
+
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> IndexTypeGoodsBannerAdmin(BaseModelAdmin):
+    </span><span style="color: #0000ff;">pass</span>
+
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> IndexPromotionBannerAdmin(BaseModelAdmin):
+    </span><span style="color: #0000ff;">pass</span><span style="color: #000000;">
+
+
+admin.site.register(GoodsType, GoodsTypeAdmin)
+admin.site.register(GoodsSKU)
+admin.site.register(Goods)
+admin.site.register(GoodsImage)
+admin.site.register(IndexGoodsBanner, IndexGoodsBannerAdmin)
+admin.site.register(IndexTypeGoodsBanner, IndexTypeGoodsBannerAdmin)
+admin.site.register(IndexPromotionBanner, IndexPromotionBannerAdmin)</span></pre>
+</div>
+<span class="cnblogs_code_collapse">admin.py</span></div>
+<p>至此，当我们在admin后台更新数据时就会重新生成静态首页了，大家可以自行尝试一下~</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

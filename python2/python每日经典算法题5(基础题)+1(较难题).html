@@ -1,0 +1,247 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python每日经典算法题5(基础题)+1(较难题)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python每日经典算法题5(基础题)+1(较难题)</center></div><div class='banquan'>原文出处:本文由博客园博主一只帅气的IT小昂提供。<br/>
+原文连接:https://www.cnblogs.com/ITXiaoAng/p/11517982.html</div><br>
+    <p><span style="font-size: 16px;"><strong>一：基础算法题5道</strong></span></p>
+<p><strong>1.阿姆斯特朗数</strong></p>
+<p>如果一个n位正整数等于其各位数字的n次方之和,则称该数为阿姆斯特朗数。判断用户输入的数字是否为阿姆斯特朗数。</p>
+<p>(1)题目分析：<span style="color: #ff0000;">这里要先得到该数是多少位的，然后再把每一位的数字截取出来，把各位数字的n次方之和和该数一起判断即可</span>。<br />(2)算法分析：python中有len()函数可以得到一个字符串的长度，因此需要先把一个正整数转化为正整数字符串。然后从高位向低位截取(也可以反过来)。或者高效算法利用for循环切片。</p>
+<p><span style="color: #ff0000;">从高位到低位：<span style="color: #000000;">用正整数除了10的n次方，得到的商就是高位的数，余数就是下次循环的数。</span></span></p>
+<p><span style="color: #ff0000;">从低位到高位：<span style="color: #000000;">用正整数除以10，得到的余数就是低位的数，商就是下次循环的数。</span></span></p>
+<p><span style="color: #ff0000;">for循环：<span style="color: #000000;">用for循环依次得到每一位数。就是可迭代对象依次显示。</span></span></p>
+<p>(3)用到的python语法：while循环，for循环，if语句，函数。</p>
+<p>(4)博主答题代码：</p>
+<p>从高位到低位：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> judge(num):
+    mysum </span>=<span style="color: #000000;"> 0
+    n </span>= len(str(num)) - 1<span style="color: #000000;">
+    m </span>= n + 1<span style="color: #000000;">
+    firstNum </span>=<span style="color: #000000;"> num
+    </span><span style="color: #0000ff;">while</span> num &gt;<span style="color: #000000;"> 0:
+        quotient </span>= num //  (10**<span style="color: #000000;">n)
+        remainder </span>= num % (10**<span style="color: #000000;">n)
+        mysum </span>+= quotient **<span style="color: #000000;"> m
+        num </span>=<span style="color: #000000;"> remainder
+        n </span>-= 1
+    <span style="color: #0000ff;">if</span> mysum ==<span style="color: #000000;"> firstNum:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">该数是阿姆斯特朗数</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">该数不是阿姆斯特朗数</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+num </span>= int(input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入一个整数:</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+judge(num)</span></pre>
+</div>
+<p>从低位到高位：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> judge(num):
+    mysum </span>=<span style="color: #000000;"> 0
+    n </span>= len(str(num)) - 1<span style="color: #000000;">
+    m </span>= n + 1<span style="color: #000000;">
+    firstNum </span>=<span style="color: #000000;"> num
+    </span><span style="color: #0000ff;">while</span> num &gt;<span style="color: #000000;"> 0:
+        quotient </span>= num // 10<span style="color: #000000;">
+        remainder </span>= num % 10<span style="color: #000000;">
+        mysum </span>+= remainder **<span style="color: #000000;"> m
+        num </span>=<span style="color: #000000;"> quotient
+        n </span>-= 1
+    <span style="color: #0000ff;">if</span> mysum ==<span style="color: #000000;"> firstNum:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">该数是阿姆斯特朗数</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">该数不是阿姆斯特朗数</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+num </span>= int(input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入一个整数:</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+judge(num)</span></pre>
+</div>
+<p>(5)高效方法：</p>
+<p>for循环：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> judge(num):
+    n </span>=<span style="color: #000000;"> len(num)
+    sum </span>=<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> num:
+        sum </span>+= int(i) **<span style="color: #000000;"> n
+    </span><span style="color: #0000ff;">if</span> sum ==<span style="color: #000000;"> int(num):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">该数是阿姆斯特朗数</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">该数不是阿姆斯特朗数</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+num </span>= input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入一个整数:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+judge(num)</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>2.整数数组</strong></p>
+<p>给定一个整数数组，判断是否存在重复元素。</p>
+<p>(1)题目分析：<span style="color: #ff0000;">利用list的内置函数count计算每一个元素的数量，时间会很多，内置函数list.count(i)时间复杂度为O(n) 外面嵌套一层循环，总的时间为O(n^2)，不是一个高效算法。</span></p>
+<p><span style="color: #ff0000;">可以排序后对相邻元素判断是否相等。还有一个方法是利用set()特性进行判断。</span></p>
+<p>(2)算法分析：根据上面的题目分析用高效一点的算法展示。<br />(3)用到的python语法：<br />(4)博主答题代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> judgeInt(num):
+    this_set </span>=<span style="color: #000000;"> set(num)
+    </span><span style="color: #0000ff;">if</span> len(this_set) ==<span style="color: #000000;"> len(num):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">没有重复</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">有重复</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+my_num </span>= input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入一个整数:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+judgeInt(my_num)</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>3.回文数<br /></strong></p>
+<p>判断一个整数是否是回文数。</p>
+<p>(1)题目分析：<span style="color: #ff0000;">回文数是指正序（从左向右）和倒序（从右向左）读都是一样的整数</span>。</p>
+<p>(2)算法分析：<span style="color: #000000;">可以利用python的切片很方便地解决该问题，但是如果是其它语言的话，没有切片。因此需要考虑普遍的方法</span>。</p>
+<p>算法分析如下：</p>
+<p><img src="./images/python每日经典算法题5(基础题)+1(较难题)0.png" alt="" width="607" height="416" /></p>
+<p>可以看到，我们根据两种不同情况分析，即可得结果。</p>
+<p>(3)用到的python语法：if判断语句，切片，函数。<br />(4)博主答题代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> judge(x):
+    this_str </span>=<span style="color: #000000;"> str(x)
+    </span><span style="color: #0000ff;">if</span> len(this_str) % 2 !=<span style="color: #000000;"> 0:    
+        mid </span>= int((len(this_str) + 1 ) / 2 - 1<span style="color: #000000;">)
+        left </span>= mid - 1<span style="color: #000000;">
+        right </span>=<span style="color: #000000;"> mid
+        </span><span style="color: #0000ff;">if</span> this_str[0:left+1] == this_str[-1:right:-1<span style="color: #000000;">]:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+
+    </span><span style="color: #0000ff;">if</span> len(this_str) % 2 ==<span style="color: #000000;"> 0:
+        mid </span>= int(len(this_str)/2) - 1
+        <span style="color: #0000ff;">if</span> this_str[0:mid+1] == this_str[-1:mid:-1<span style="color: #000000;">]:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+
+
+num </span>= input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入一个整数:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">if</span><span style="color: #000000;"> judge(num):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{0}是回文数</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(num))
+</span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{0}不是回文数</span><span style="color: #800000;">'</span>.format(num))</pre>
+</div>
+<p>(5)高效方法：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> judge(x):
+    </span><span style="color: #0000ff;">return</span> str(x) == str(x)[::-1<span style="color: #000000;">]
+
+
+num </span>= input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入一个整数:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">if</span><span style="color: #000000;"> judge(num):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{0}是回文数</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(num))
+</span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{0}不是回文数</span><span style="color: #800000;">'</span>.format(num))</pre>
+</div>
+<p>只需要一行代码即可以判断，这就是切片的好处。</p>
+<p>是不是很简单呢。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>4.回文数进阶算法，不限转化为字符串</strong></p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp;那有没有什么不需要先转化为字符串的方法呢？也是有的。可以利用前面的阿姆斯特朗数从高位到低位和从低位到高位获取两个列表或者字典进行比较，这里就不分析了，直接上代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> judge(num1):
+    </span><span style="color: #0000ff;">if</span> <span style="color: #800000;">'</span><span style="color: #800000;">-</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> str(num1):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+    </span><span style="color: #0000ff;">if</span> num1 &gt;= 0 <span style="color: #0000ff;">and</span> num1 &lt; 10<span style="color: #000000;"> :
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+    list1 </span>= [];list2 =<span style="color: #000000;"> []
+    num2 </span>=<span style="color: #000000;"> num1
+    n1 </span>= len(str(num1)) - 1<span style="color: #000000;">
+    n2 </span>= len(str(num2)) - 1
+
+    <span style="color: #0000ff;">while</span> num1 &gt;<span style="color: #000000;"> 0:
+        quotient1 </span>= num1 //  (10**<span style="color: #000000;">n1)
+        remainder1 </span>= num1 % (10**<span style="color: #000000;">n1)
+        list1.append(quotient1)
+        num1 </span>=<span style="color: #000000;"> remainder1
+        n1 </span>-= 1
+
+    <span style="color: #0000ff;">while</span> num2 &gt;<span style="color: #000000;"> 0:
+        quotient2 </span>= num2 // 10<span style="color: #000000;">
+        remainder2 </span>= num2 % 10<span style="color: #000000;">
+        list2.append(remainder2)
+        num2 </span>=<span style="color: #000000;"> quotient2
+        n2 </span>-= 1<span style="color: #000000;">
+    num </span>=<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(0,len(list1)):
+        </span><span style="color: #0000ff;">if</span> list2[i] ==<span style="color: #000000;"> list1[i]:
+            num </span>+= 1
+    <span style="color: #0000ff;">if</span> num ==<span style="color: #000000;"> len(list1):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+
+
+num </span>= int(input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入一个整数:</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+</span><span style="color: #0000ff;">if</span><span style="color: #000000;"> judge(num):
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{0}是回文数</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(num))
+</span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{0}不是回文数</span><span style="color: #800000;">'</span>.format(num))</pre>
+</div>
+<p>效率确实很低。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>5.插入排序</strong></p>
+<p>&nbsp;对于未排序数组，在已排序序列中从前向后或从后向前扫描，找到相应位置并插入。</p>
+<p>(1)题目分析：<span style="color: #ff0000;">这是个简单的算法，只需要把要每个元素依次和相邻的元素比较即可</span>。</p>
+<p>(2)算法分析：想用一个变量标记遍历到的元素，然后，有两种方法。</p>
+<p>从后先前，把该元素和左边的元素进行对比，如果比左边的元素小，就互换，当左边的元素的编号为-1时停止。</p>
+<p>从前先后，把该元素和右边的元素进行对比，如果比右边的元素大，就互换，当右边的元素的编号为数组的长度减1时停止。</p>
+<p>(3)用到的python语法：while循环，函数，数据交换。</p>
+<p>(4)博主答题代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> insert(arr):    
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1<span style="color: #000000;">,len(arr)):
+        j </span>=<span style="color: #000000;"> i
+        </span><span style="color: #0000ff;">while</span> j &gt;<span style="color: #000000;"> 0:
+            </span><span style="color: #0000ff;">if</span> arr[j] &lt; arr[j-1<span style="color: #000000;">]:
+                arr[j</span>-1],arr[j] = arr[j],arr[j-1<span style="color: #000000;">]
+            j </span>-= 1<span style="color: #000000;">        
+
+
+my_arr </span>= list(map(int,input(<span style="color: #800000;">'</span><span style="color: #800000;">请输入数组:</span><span style="color: #800000;">'</span>).split(<span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">)))
+insert(my_arr)
+</span><span style="color: #0000ff;">print</span>(my_arr)</pre>
+</div>
+<p>(5)高效代码</p>
+<p>用python的列表排序函数sort()可以很方便进行排序。</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px;"><strong>二：较难算法题1道</strong></span></p>
+<p><span style="font-size: 14px;">这些等到下一篇博客会详细讲解。</span></p>
+<p><strong>1.串联所有单词的字串</strong></p>
+<p>给定一个字符串&nbsp;s&nbsp;和一些长度相同的单词&nbsp;words。找出 s 中恰好可以由&nbsp;words 中所有单词串联形成的子串的起始位置。</p>
+<p>注意子串要与&nbsp;words 中的单词完全匹配，中间不能有其他字符，但不需要考虑&nbsp;words&nbsp;中单词串联的顺序。</p>
+<p>&nbsp;</p>
+<p><strong>2.解数独</strong></p>
+<p>编写一个程序，通过已填充的空格来解决数独问题。</p>
+<p>空白格用&nbsp;<code>'.'</code>&nbsp;表示。</p>
+<p>&nbsp;</p>
+<p>较难算法题等到之后博客会详细讲解。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

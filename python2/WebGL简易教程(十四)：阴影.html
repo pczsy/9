@@ -1,0 +1,322 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修WebGL简易教程(十四)：阴影' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>WebGL简易教程(十四)：阴影</center></div><div class='banquan'>原文出处:本文由博客园博主charlee44提供。<br/>
+原文连接:https://www.cnblogs.com/charlee44/p/12001631.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#概述">1. 概述</a></li>
+        <li><a href="#示例">2. 示例</a><ul>
+        <li><a href="#着色器部分">2.1. 着色器部分</a><ul>
+        <li><a href="#帧缓存着色器">2.1.1. 帧缓存着色器</a></li>
+        <li><a href="#颜色缓存着色器">2.1.2. 颜色缓存着色器</a></li>
+        </ul></li>
+        <li><a href="#绘制部分">2.2. 绘制部分</a><ul>
+        <li><a href="#整体结构">2.2.1. 整体结构</a></li>
+        <li><a href="#具体改动">2.2.2. 具体改动</a></li>
+        </ul></li>
+        </ul></li>
+        <li><a href="#结果">3. 结果</a></li>
+        <li><a href="#参考">4. 参考</a></li>
+        </ul>
+    </div>
+</div>
+<h1 id="概述">1. 概述</h1>
+<p>所谓阴影，就是物体在光照下向背光处投下影子的现象，使用阴影技术能提升图形渲染的真实感。实现阴影的思路很简单:</p>
+<ol>
+<li>找出阴影的位置。</li>
+<li>将阴影位置的图元调暗。</li>
+</ol>
+<p>很明显，关键还是在于如何去判断阴影的位置。阴影检测的算法当然可以自己去实现，但其实OpenGL/WebGL已经隐含了这种算法：假设摄像机在光源点，视线方向与光线一致，那么这个时候视图中看不到的地方肯定就是存在阴影的地方。这实际上是由光源与物体之间的距离（也就是光源坐标系下的深度Z值）决定的，深度较大的点为阴影点。如下图所示，同一条光线上的两个点P1和P2，P2的深度较大，所以P2为阴影点：<div align=center> <img src="./images/WebGL简易教程(十四)：阴影0.png" alt="image" /><div>图1-1：通过深度来判断阴影</div></div></p>
+<p>当然，在实际进行图形渲染的时候，不会永远在光源处进行观察，这个时候可以把光源点观察的结果保存下来——使用上一篇教程<a href="https://www.cnblogs.com/charlee44/p/11965462.html">《WebGL简易教程(十三)：帧缓存对象(离屏渲染)》</a>中介绍的帧缓冲对象（FBO），将深度信息保存为纹理图像，提供给实际图形渲染时判断阴影位置。这张纹理图像就被称为阴影贴图（shadow map），也就是生成阴影比较常用的ShadowMap算法。</p>
+<h1 id="示例">2. 示例</h1>
+<p>在上一篇教程<a href="https://www.cnblogs.com/charlee44/p/11965462.html">《WebGL简易教程(十三)：帧缓存对象(离屏渲染)》</a>中已经实现了帧缓冲对象的基本的框架，这里根据ShadowMap算法的原理稍微改进下即可，具体代码可参见文末的地址。</p>
+<h2 id="着色器部分">2.1. 着色器部分</h2>
+<p>同样的定义了两组着色器，一组绘制在帧缓存，一组绘制在颜色缓存。在需要的时候对两者进行切换。</p>
+<h3 id="帧缓存着色器">2.1.1. 帧缓存着色器</h3>
+<p>绘制帧缓存的着色器如下：</p>
+<pre><code><code>// 顶点着色器程序-绘制到帧缓存
+var FRAME_VSHADER_SOURCE =
+  &#39;attribute vec4 a_Position;\n&#39; +  //位置
+  &#39;attribute vec4 a_Color;\n&#39; + //颜色
+  &#39;uniform mat4 u_MvpMatrix;\n&#39; +
+  &#39;varying vec4 v_Color;\n&#39; +
+  &#39;void main() {\n&#39; +
+  &#39;  gl_Position = u_MvpMatrix * a_Position;\n&#39; + // 设置顶点坐标
+  &#39;  v_Color = a_Color;\n&#39; +
+  &#39;}\n&#39;;
+
+// 片元着色器程序-绘制到帧缓存
+var FRAME_FSHADER_SOURCE =
+  &#39;precision mediump float;\n&#39; +
+  &#39;varying vec4 v_Color;\n&#39; +
+  &#39;void main() {\n&#39; +
+  &#39;  const vec4 bitShift = vec4(1.0, 256.0, 256.0 * 256.0, 256.0 * 256.0 * 256.0);\n&#39; +
+  &#39;  const vec4 bitMask = vec4(1.0/256.0, 1.0/256.0, 1.0/256.0, 0.0);\n&#39; +
+  &#39;  vec4 rgbaDepth = fract(gl_FragCoord.z * bitShift);\n&#39; + // Calculate the value stored into each byte
+  &#39;  rgbaDepth -= rgbaDepth.gbaa * bitMask;\n&#39; + // Cut off the value which do not fit in 8 bits
+  &#39;  gl_FragColor = rgbaDepth;\n&#39; +   //将深度保存在FBO中
+  &#39;}\n&#39;;</code></pre>
+<p>其中，顶点着色器部分没有变化，主要是根据MVP矩阵算出合适的顶点坐标；在片元着色器中，将渲染的深度值保存为片元颜色。这个渲染的结果将作为纹理对象传递给颜色缓存的着色器。</p>
+<p>这里片元着色器中的深度rgbaDepth还经过一段复杂的计算。这其实是一个编码操作，将16位的深度值gl_FragCoord.z编码为4个8位的gl_FragColor，从而进一步提升精度，避免有的地方因为精度不够而产生马赫带现象。</p>
+<h3 id="颜色缓存着色器">2.1.2. 颜色缓存着色器</h3>
+<p>在颜色缓存中绘制的着色器代码如下：</p>
+<pre><code><code>// 顶点着色器程序
+var VSHADER_SOURCE =
+  &#39;attribute vec4 a_Position;\n&#39; +  //位置
+  &#39;attribute vec4 a_Color;\n&#39; + //颜色
+  &#39;attribute vec4 a_Normal;\n&#39; + //法向量
+  &#39;uniform mat4 u_MvpMatrix;\n&#39; +     //界面绘制操作的MVP矩阵
+  &#39;uniform mat4 u_MvpMatrixFromLight;\n&#39; +      //光线方向的MVP矩阵
+  &#39;varying vec4 v_PositionFromLight;\n&#39; +
+  &#39;varying vec4 v_Color;\n&#39; +
+  &#39;varying vec4 v_Normal;\n&#39; +
+  &#39;void main() {\n&#39; +
+  &#39;  gl_Position = u_MvpMatrix * a_Position;\n&#39; +
+  &#39;  v_PositionFromLight = u_MvpMatrixFromLight * a_Position;\n&#39; +
+  &#39;  v_Color = a_Color;\n&#39; +
+  &#39;  v_Normal = a_Normal;\n&#39; +
+  &#39;}\n&#39;;
+
+// 片元着色器程序
+var FSHADER_SOURCE =
+  &#39;#ifdef GL_ES\n&#39; +
+  &#39;precision mediump float;\n&#39; +
+  &#39;#endif\n&#39; +
+  &#39;uniform sampler2D u_Sampler;\n&#39; +  //阴影贴图
+  &#39;uniform vec3 u_DiffuseLight;\n&#39; + // 漫反射光颜色
+  &#39;uniform vec3 u_LightDirection;\n&#39; + // 漫反射光的方向
+  &#39;uniform vec3 u_AmbientLight;\n&#39; + // 环境光颜色
+  &#39;varying vec4 v_Color;\n&#39; +
+  &#39;varying vec4 v_Normal;\n&#39; +
+  &#39;varying vec4 v_PositionFromLight;\n&#39; +
+  &#39;float unpackDepth(const in vec4 rgbaDepth) {\n&#39; +
+  &#39;  const vec4 bitShift = vec4(1.0, 1.0/256.0, 1.0/(256.0*256.0), 1.0/(256.0*256.0*256.0));\n&#39; +
+  &#39;  float depth = dot(rgbaDepth, bitShift);\n&#39; + // Use dot() since the calculations is same
+  &#39;  return depth;\n&#39; +
+  &#39;}\n&#39; +
+  &#39;void main() {\n&#39; +
+  //通过深度判断阴影
+  &#39;  vec3 shadowCoord = (v_PositionFromLight.xyz/v_PositionFromLight.w)/2.0 + 0.5;\n&#39; +
+  &#39;  vec4 rgbaDepth = texture2D(u_Sampler, shadowCoord.xy);\n&#39; +
+  &#39;  float depth = unpackDepth(rgbaDepth);\n&#39; + // 将阴影贴图的RGBA解码成浮点型的深度值
+  &#39;  float visibility = (shadowCoord.z &gt; depth + 0.0015) ? 0.7 : 1.0;\n&#39; +
+  //获得反射光
+  &#39;  vec3 normal = normalize(v_Normal.xyz);\n&#39; +
+  &#39;  float nDotL = max(dot(u_LightDirection, normal), 0.0);\n&#39; +  //计算光线向量与法向量的点积  
+  &#39;  vec3 diffuse = u_DiffuseLight * v_Color.rgb * nDotL;\n&#39; +  //计算漫发射光的颜色   
+  &#39;  vec3 ambient = u_AmbientLight * v_Color.rgb;\n&#39; +  //计算环境光的颜色
+  //&#39;  gl_FragColor = vec4(v_Color.rgb * visibility, v_Color.a);\n&#39; +
+  &#39;  gl_FragColor = vec4((diffuse+ambient) * visibility, v_Color.a);\n&#39; +
+  &#39;}\n&#39;;</code></pre>
+<p>这段着色器绘制代码在教程<a href="https://www.cnblogs.com/charlee44/p/11668014.html">《WebGL简易教程(十)：光照》</a>绘制颜色和光照的基础之上加入可阴影的绘制。顶点着色器中新加入了一个uniform变量u_MvpMatrixFromLight，这是在帧缓存中绘制的从光源处观察的MVP矩阵，传入到顶点着色器中，计算顶点在光源处观察的位置v_PositionFromLight。</p>
+<p>v_PositionFromLight又传入到片元着色器，变为该片元在光源坐标系下的坐标。这个坐标每个分量都是-1到1之间的值，将其归一化到0到1之间，赋值给变量shadowCoord，其Z分量shadowCoord.z就是从光源处观察时的深度了。与此同时，片元着色器接受了从帧缓冲对象传入的渲染结果u_Sampler，里面保存着帧缓冲对象的深度纹理。从深度纹理从取出深度值为rgbaDepth，这是之前介绍过的编码值，通过相应的解码函数unpackDepth()，解码成真正的深度depth，也就是在光源处观察的片元的深度。比较该片元从光源处观察的深度shadowCoord.z与从光源处观察得到的同一片元位置的渲染深度depth，如果shadowCoord.z较大，就说明为阴影位置。</p>
+<p>注意这里比较时有个0.0015的容差，因为编码解码的操作仍然有精度的限制。</p>
+<h2 id="绘制部分">2.2. 绘制部分</h2>
+<h3 id="整体结构">2.2.1. 整体结构</h3>
+<p>主要的绘制代码如下：</p>
+<pre><code><code>//绘制
+function DrawDEM(gl, canvas, fbo, frameProgram, drawProgram, terrain) {
+  // 设置顶点位置
+  var demBufferObject = initVertexBuffersForDrawDEM(gl, terrain);
+  if (!demBufferObject) {
+    console.log(&#39;Failed to set the positions of the vertices&#39;);
+    return;
+  }
+
+  //获取光线:平行光
+  var lightDirection = getLight();
+
+  //预先给着色器传递一些不变的量
+  {
+    //使用帧缓冲区着色器
+    gl.useProgram(frameProgram);
+    //设置在帧缓存中绘制的MVP矩阵
+    var MvpMatrixFromLight = setFrameMVPMatrix(gl, terrain.sphere, lightDirection, frameProgram);
+
+    //使用颜色缓冲区着色器
+    gl.useProgram(drawProgram);
+    //设置在颜色缓冲区中绘制时光线的MVP矩阵
+    gl.uniformMatrix4fv(drawProgram.u_MvpMatrixFromLight, false, MvpMatrixFromLight.elements);
+    //设置光线的强度和方向
+    gl.uniform3f(drawProgram.u_DiffuseLight, 1.0, 1.0, 1.0);    //设置漫反射光
+    gl.uniform3fv(drawProgram.u_LightDirection, lightDirection.elements);   // 设置光线方向(世界坐标系下的)  
+    gl.uniform3f(drawProgram.u_AmbientLight, 0.2, 0.2, 0.2);    //设置环境光
+    //将绘制在帧缓冲区的纹理传递给颜色缓冲区着色器的0号纹理单元
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, fbo.texture);
+    gl.uniform1i(drawProgram.u_Sampler, 0);
+
+    gl.useProgram(null);
+  }
+
+  //开始绘制
+  var tick = function () {
+    //帧缓存绘制
+    gl.bindFramebuffer(gl.FRAMEBUFFER, fbo); //将绘制目标切换为帧缓冲区对象FBO
+    gl.viewport(0, 0, OFFSCREEN_WIDTH, OFFSCREEN_HEIGHT); // 为FBO设置一个视口
+
+    gl.clearColor(0.2, 0.2, 0.4, 1.0); // Set clear color (the color is slightly changed)
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear FBO
+    gl.useProgram(frameProgram); //准备生成纹理贴图
+
+    //分配缓冲区对象并开启连接
+    initAttributeVariable(gl, frameProgram.a_Position, demBufferObject.vertexBuffer); // 顶点坐标
+    initAttributeVariable(gl, frameProgram.a_Color, demBufferObject.colorBuffer); // 颜色
+
+    //分配索引并绘制
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, demBufferObject.indexBuffer);
+    gl.drawElements(gl.TRIANGLES, demBufferObject.numIndices, demBufferObject.indexBuffer.type, 0);
+
+    //颜色缓存绘制
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null); //将绘制目标切换为颜色缓冲区
+    gl.viewport(0, 0, canvas.width, canvas.height); // 设置视口为当前画布的大小
+
+    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT); // Clear the color buffer
+    gl.useProgram(drawProgram); // 准备进行绘制
+
+    //设置MVP矩阵
+    setMVPMatrix(gl, canvas, terrain.sphere, lightDirection, drawProgram);
+
+    //分配缓冲区对象并开启连接
+    initAttributeVariable(gl, drawProgram.a_Position, demBufferObject.vertexBuffer); // Vertex coordinates
+    initAttributeVariable(gl, drawProgram.a_Color, demBufferObject.colorBuffer); // Texture coordinates
+    initAttributeVariable(gl, drawProgram.a_Normal, demBufferObject.normalBuffer); // Texture coordinates
+
+    //分配索引并绘制
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, demBufferObject.indexBuffer);
+    gl.drawElements(gl.TRIANGLES, demBufferObject.numIndices, demBufferObject.indexBuffer.type, 0);
+
+    window.requestAnimationFrame(tick, canvas);
+  };
+  tick();
+}</code></pre>
+<p>这段代码的总体结构与上一篇的代码相比并没有太多的变化，首先仍然是调用initVertexBuffersForDrawDEM()初始化顶点数组，只是根据需要调整了下顶点数据的内容。然后传递非公用随帧不变的数据，主要是帧缓存着色器中光源处观察的MVP矩阵，颜色缓存着色器中光照的强度，以及帧缓存对象中的纹理对象。最后进行逐帧绘制：将光源处观察的结果渲染到帧缓存；利用帧缓存的结果绘制带阴影的结果到颜色缓存。</p>
+<h3 id="具体改动">2.2.2. 具体改动</h3>
+<p>利用帧缓存绘制阴影的关键就在于绘制了两遍地形，一个是关于当前视图观察下的绘制，另一个是在光源处观察的绘制，一定要确保两者的绘制都是正确的，注意两者绘制时的MVP矩阵。</p>
+<h4 id="获取平行光">2.2.2.1. 获取平行光</h4>
+<p>这个实例模拟的是在太阳光也就是平行光下产生的阴影，因此需要先获取平行光方向。这里描述的是太阳高度角30度，太阳方位角315度下的平行光方向:</p>
+<pre><code><code>//获取光线
+function getLight() {
+  // 设置光线方向(世界坐标系下的)
+  var solarAltitude = 30.0;
+  var solarAzimuth = 315.0;
+  var fAltitude = solarAltitude * Math.PI / 180; //光源高度角
+  var fAzimuth = solarAzimuth * Math.PI / 180; //光源方位角
+
+  var arrayvectorX = Math.cos(fAltitude) * Math.cos(fAzimuth);
+  var arrayvectorY = Math.cos(fAltitude) * Math.sin(fAzimuth);
+  var arrayvectorZ = Math.sin(fAltitude);
+
+  var lightDirection = new Vector3([arrayvectorX, arrayvectorY, arrayvectorZ]);
+  lightDirection.normalize(); // Normalize  
+  return lightDirection;
+}</code></pre>
+<h4 id="设置帧缓存的mvp矩阵">2.2.2.2. 设置帧缓存的MVP矩阵</h4>
+<p>对于点光源光对物体产生阴影，就像在点光源处用透视投影观察物体一样；与此对应，平行光对物体产生阴影就需要使用正射投影。虽然平行光在设置MVP矩阵的时候没有具体的光源位置，但其实只要确定其中一条光线就可以了。在帧缓存中绘制的MVP矩阵如下：</p>
+<pre><code><code>//设置MVP矩阵
+function setFrameMVPMatrix(gl, sphere, lightDirection, frameProgram) {
+  //模型矩阵
+  var modelMatrix = new Matrix4();
+  //modelMatrix.scale(curScale, curScale, curScale);
+  //modelMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis 
+  //modelMatrix.rotate(currentAngle[1], 0.0, 1.0, 0.0); // Rotation around y-axis 
+  modelMatrix.translate(-sphere.centerX, -sphere.centerY, -sphere.centerZ);
+
+  //视图矩阵  
+  var viewMatrix = new Matrix4();
+  var r = sphere.radius + 10;
+  viewMatrix.lookAt(lightDirection.elements[0] * r, lightDirection.elements[1] * r, lightDirection.elements[2] * r, 0, 0, 0, 0, 1, 0);
+  //viewMatrix.lookAt(0, 0, r, 0, 0, 0, 0, 1, 0);
+
+  //投影矩阵
+  var projMatrix = new Matrix4();
+  var diameter = sphere.radius * 2.1;
+  var ratioWH = OFFSCREEN_WIDTH / OFFSCREEN_HEIGHT;
+  var nearHeight = diameter;
+  var nearWidth = nearHeight * ratioWH;
+  projMatrix.setOrtho(-nearWidth / 2, nearWidth / 2, -nearHeight / 2, nearHeight / 2, 1, 10000);
+
+  //MVP矩阵
+  var mvpMatrix = new Matrix4();
+  mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
+
+  //将MVP矩阵传输到着色器的uniform变量u_MvpMatrix
+  gl.uniformMatrix4fv(frameProgram.u_MvpMatrix, false, mvpMatrix.elements);
+
+  return mvpMatrix;
+}</code></pre>
+<p>这个MVP矩阵通过地形的包围球来设置，确定一条对准包围球中心得平行光方向，设置正射投影即可。在教程<a href="https://www.cnblogs.com/charlee44/p/11828120.html">《WebGL简易教程(十二)：包围球与投影》</a>中论述了这个问题。</p>
+<h4 id="设置颜色缓存的mvp矩阵">2.2.2.3. 设置颜色缓存的MVP矩阵</h4>
+<p>设置实际绘制的MVP矩阵就恢复成使用透视投影了，与之前的设置是一样的，同样在教程<a href="https://www.cnblogs.com/charlee44/p/11828120.html">《WebGL简易教程(十二)：包围球与投影》</a>中有论述：</p>
+<pre><code><code>//设置MVP矩阵
+function setMVPMatrix(gl, canvas, sphere, lightDirection, drawProgram) {
+  //模型矩阵
+  var modelMatrix = new Matrix4();
+  modelMatrix.scale(curScale, curScale, curScale);
+  modelMatrix.rotate(currentAngle[0], 1.0, 0.0, 0.0); // Rotation around x-axis 
+  modelMatrix.rotate(currentAngle[1], 0.0, 1.0, 0.0); // Rotation around y-axis 
+  modelMatrix.translate(-sphere.centerX, -sphere.centerY, -sphere.centerZ);
+
+  //投影矩阵
+  var fovy = 60;
+  var projMatrix = new Matrix4();
+  projMatrix.setPerspective(fovy, canvas.width / canvas.height, 1, 10000);
+
+  //计算lookAt()函数初始视点的高度
+  var angle = fovy / 2 * Math.PI / 180.0;
+  var eyeHight = (sphere.radius * 2 * 1.1) / 2.0 / angle;
+
+  //视图矩阵  
+  var viewMatrix = new Matrix4(); // View matrix   
+  viewMatrix.lookAt(0, 0, eyeHight, 0, 0, 0, 0, 1, 0);
+
+  /*
+  //视图矩阵  
+  var viewMatrix = new Matrix4();
+  var r = sphere.radius + 10;
+  viewMatrix.lookAt(lightDirection.elements[0] * r, lightDirection.elements[1] * r, lightDirection.elements[2] * r, 0, 0, 0, 0, 1, 0);
+
+  //投影矩阵
+  var projMatrix = new Matrix4();
+  var diameter = sphere.radius * 2.1;
+  var ratioWH = canvas.width / canvas.height;
+  var nearHeight = diameter;
+  var nearWidth = nearHeight * ratioWH;
+  projMatrix.setOrtho(-nearWidth / 2, nearWidth / 2, -nearHeight / 2, nearHeight / 2, 1, 10000);*/
+
+  //MVP矩阵
+  var mvpMatrix = new Matrix4();
+  mvpMatrix.set(projMatrix).multiply(viewMatrix).multiply(modelMatrix);
+
+  //将MVP矩阵传输到着色器的uniform变量u_MvpMatrix
+  gl.uniformMatrix4fv(drawProgram.u_MvpMatrix, false, mvpMatrix.elements);
+}</code></pre>
+<h1 id="结果">3. 结果</h1>
+<p>最后在浏览器运行的结果如下所示，阴影存在于一些光照强度较暗的地方：<div align=center> <img src="./images/WebGL简易教程(十四)：阴影1.png" alt="image" /><div>图3-1：地形的阴影</div></div></p>
+<p>通过ShadowMap生成阴影并不是要自己去实现阴影检查算法，更像是对图形变换、帧缓冲对象、着色器切换的基础知识的综合运用。</p>
+<h1 id="参考">4. 参考</h1>
+<p>本文部分代码和插图来自《WebGL编程指南》，源代码链接：<a href="https://github.com/fafa1899/WebGLTutorial">地址</a> 。会在此共享目录中持续更新后续的内容。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

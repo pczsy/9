@@ -1,0 +1,250 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python 之   Django框架(ORM常用字段和字段参数、关系字段和和字段参数)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python 之   Django框架(ORM常用字段和字段参数、关系字段和和字段参数)</center></div><div class='banquan'>原文出处:本文由博客园博主small_white-提供。<br/>
+原文连接:https://www.cnblogs.com/mylu/p/11421838.html</div><br>
+    <h5 class="md-end-block md-heading md-focus"><span class="md-plain">12.324 Django ORM常用字段</span></h5>
+<div class="md-hr md-end-block"><hr /></div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800000; font-weight: bold;">1</span>.id <span style="color: #808080;">=</span> models.AutoField(primary_key<span style="color: #808080;">=</span>True)：int自增列，必须填入参数 primary_key<span style="color: #808080;">=</span><span style="color: #000000;">True。当model中如果没有自增列，则自动会创建一个列名为id的列。
+</span><span style="color: #800000; font-weight: bold;">2</span>.IntegerField：一个整数类型,范围在 <span style="color: #808080;">-</span><span style="color: #800000; font-weight: bold;">2147483648</span> <span style="color: #0000ff;">to</span> <span style="color: #800000; font-weight: bold;">2147483647</span>
+<span style="color: #800000; font-weight: bold;">3</span>.name <span style="color: #808080;">=</span> models.CharField(max_length<span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">32</span><span style="color: #000000;">):varchar字符类型，必须提供max_length参数， max_length表示字符长度
+</span><span style="color: #800000; font-weight: bold;">4</span>.title <span style="color: #808080;">=</span> models.DateField(<span style="color: #0000ff;">null</span><span style="color: #808080;">=</span>True):日期字段，日期格式  YYYY<span style="color: #808080;">-</span>MM<span style="color: #808080;">-</span><span style="color: #000000;">DD，相当于Python中的datetime.date()实例
+</span><span style="color: #800000; font-weight: bold;">5</span>.title <span style="color: #808080;">=</span> models.DateTimeField(<span style="color: #0000ff;">null</span><span style="color: #808080;">=</span>True):日期时间字段，格式 YYYY<span style="color: #808080;">-</span>MM<span style="color: #808080;">-</span>DD HH:MM<span style="color: #ff0000;">[</span><span style="color: #ff0000;">:ss[.uuuuuu</span><span style="color: #ff0000;">]</span>]<span style="color: #ff0000;">[</span><span style="color: #ff0000;">TZ</span><span style="color: #ff0000;">]</span>，相当于Python中的datetime.<span style="color: #0000ff;">datetime</span><span style="color: #000000;">()实例
+</span><span style="color: #800000; font-weight: bold;">6</span>.TimeField(DateTimeCheckMixin, Field): <span style="color: #808080;">-</span> 时间格式    HH:MM<span style="color: #ff0000;">[</span><span style="color: #ff0000;">:ss[.uuuuuu</span><span style="color: #ff0000;">]</span><span style="color: #000000;">]
+</span><span style="color: #800000; font-weight: bold;">7</span>.DurationField(Field):<span style="color: #808080;">-</span><span style="color: #000000;"> 长整数，时间间隔，数据库中按照bigint存储，ORM中获取的值为datetime.timedelta类型
+</span><span style="color: #800000; font-weight: bold;">8</span>.TextField(Field): <span style="color: #808080;">-</span><span style="color: #000000;"> 文本类型
+</span><span style="color: #800000; font-weight: bold;">9</span>.FilePathField(Field): <span style="color: #808080;">-</span><span style="color: #000000;"> 字符串，Django Admin以及ModelForm中提供读取文件夹下文件的功能
+        </span><span style="color: #808080;">-</span><span style="color: #000000;"> 参数：
+                path,                      文件夹路径
+                match</span><span style="color: #808080;">=</span><span style="color: #000000;">None,                正则匹配
+                recursive</span><span style="color: #808080;">=</span><span style="color: #000000;">False,           递归下面的文件夹
+                allow_files</span><span style="color: #808080;">=</span><span style="color: #000000;">True,          允许文件
+                allow_folders</span><span style="color: #808080;">=</span><span style="color: #000000;">False,       允许文件夹
+</span><span style="color: #800000; font-weight: bold;">10</span>.FileField(Field):    <span style="color: #808080;">-</span><span style="color: #000000;"> 字符串，路径保存在数据库，文件上传到指定目录
+        </span><span style="color: #808080;">-</span><span style="color: #000000;"> 参数：
+            upload_to </span><span style="color: #808080;">=</span><span style="color: #000000;"> ""      上传文件的保存路径
+            storage </span><span style="color: #808080;">=</span><span style="color: #000000;"> None      存储组件，默认django.core.files.storage.FileSystemStorage
+</span><span style="color: #800000; font-weight: bold;">11</span>.ImageField(FileField):   <span style="color: #808080;">-</span><span style="color: #000000;"> 字符串，路径保存在数据库，文件上传到指定目录
+        </span><span style="color: #808080;">-</span><span style="color: #000000;"> 参数：
+            upload_to </span><span style="color: #808080;">=</span><span style="color: #000000;"> ""      上传文件的保存路径
+            storage </span><span style="color: #808080;">=</span><span style="color: #000000;"> None      存储组件，默认django.core.files.storage.FileSystemStorage
+            width_field</span><span style="color: #808080;">=</span><span style="color: #000000;">None,   上传图片的高度保存的数据库字段名（字符串）
+            height_field</span><span style="color: #808080;">=</span><span style="color: #000000;">None   上传图片的宽度保存的数据库字段名（字符串）
+</span><span style="color: #800000; font-weight: bold;">12</span>.FloatField(Field):    <span style="color: #808080;">-</span><span style="color: #000000;"> 浮点型
+</span><span style="color: #800000; font-weight: bold;">13</span>.DecimalField(Field):  <span style="color: #808080;">-</span><span style="color: #000000;"> 10进制小数
+                        </span><span style="color: #808080;">-</span><span style="color: #000000;"> 参数：max_digits，总长度     decimal_places，小数位长度
+</span><span style="color: #800000; font-weight: bold;">14</span>.BinaryField(Field):  <span style="color: #808080;">-</span> 二进制类型</pre>
+</div>
+<div class="md-hr md-end-block"><hr /></div>
+<p class="md-end-block md-p"><span><strong>自定义字段：</strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">自定义char类型字段：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> FixedCharField(models.Field):
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self, max_length, *args, **<span style="color: #000000;">kwargs):
+        super().</span><span style="color: #800080;">__init__</span>(max_length=max_length, *args, **<span style="color: #000000;">kwargs)
+        self.length </span>=<span style="color: #000000;"> max_length
+​
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> db_type(self, connection):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        限定生成数据库表的字段类型为char，长度为length指定的值
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #0000ff;">return</span> <span style="color: #800000;">'</span><span style="color: #800000;">char(%s)</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> self.length
+​
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Class(models.Model):
+    id </span>= models.AutoField(primary_key=<span style="color: #000000;">True)
+    title </span>= models.CharField(max_length=25<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用上面自定义的char类型的字段</span>
+    cname = FixedCharField(max_length=25)</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">自定义无符号的int类型：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> UnsignedIntegerField(models.IntegerField):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> db_type(self, connection):
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800000;">'</span><span style="color: #800000;">integer UNSIGNED</span><span style="color: #800000;">'</span>
+    
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Class(models.Model):
+    id </span>= models.AutoField(primary_key=<span style="color: #000000;">True)
+    title </span>= models.CharField(max_length=25<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用上面自定义的无符号的int类型的字段</span>
+    cid = UnsignedIntegerField()</pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.325 字段参数</span></h5>
+<div class="cnblogs_code">
+<pre><code>title <span style="color: #808080;">=</span> models.DateField(<span style="color: #0000ff;">null</span><span style="color: #808080;">=</span><span style="color: #000000;">True):用于表示某个字段可以为空
+title </span><span style="color: #808080;">=</span> models.DateField(<span style="color: #0000ff;">unique</span><span style="color: #808080;">=</span>True):如果设置为unique<span style="color: #808080;">=</span><span style="color: #000000;">True,则该字段在此表中必须是唯一的 
+title </span><span style="color: #808080;">=</span> models.DateField(db_index<span style="color: #808080;">=</span>True):如果db_index<span style="color: #808080;">=</span><span style="color: #000000;">True,则代表着为此字段设置数据库索引
+price </span><span style="color: #808080;">=</span> models.DecimalField(max_digits<span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">5</span>, decimal_places<span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">2</span>, <span style="color: #0000ff;">default</span><span style="color: #808080;">=</span><span style="color: #800000; font-weight: bold;">9.9</span><span style="color: #000000;">):为该字段设置默认值
+​
+DatetimeField、DateField、TimeField:
+publisher_date </span><span style="color: #808080;">=</span> models.DateField(auto_now_add): 配置auto_now_add<span style="color: #808080;">=</span><span style="color: #000000;">True，创建数据记录的时候会把当前时间添加到数据库 
+publisher_date </span><span style="color: #808080;">=</span> models.DateField(auto_now): 配置上auto_now<span style="color: #808080;">=</span>True，每次更新数据记录的时候会更新该字段   </pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.326关系字段(ForeignKey)</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">外键类型在ORM中用来表示外键关联关系，一般把ForeignKey字段设置在 '一对多'中'多'的一方。ForeignKey可以和其他表做关联关系同时也可以和自身做关联关系。</span></p>
+<p class="md-end-block md-p"><span><strong>ForeignKey字段参数:</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>publisher <span style="color: #808080;">=</span> models.ForeignKey(<span style="color: #0000ff;">to</span><span style="color: #808080;">=</span><span style="color: #ff0000;">'</span><span style="color: #ff0000;">Publisher</span><span style="color: #ff0000;">'</span>, tofield<span style="color: #808080;">=</span><span style="color: #ff0000;">'</span><span style="color: #ff0000;">id</span><span style="color: #ff0000;">'</span> on_delete<span style="color: #808080;">=</span>models.<span style="color: #0000ff;">CASCADE</span>, db_constraint<span style="color: #808080;">=</span><span style="color: #000000;">False)
+</span><span style="color: #800000; font-weight: bold;">1</span>.<span style="color: #0000ff;">to</span><span style="color: #000000;">：设置要关联的表
+</span><span style="color: #800000; font-weight: bold;">2</span><span style="color: #000000;">.to_field：设置要关联的表的字段、
+</span><span style="color: #800000; font-weight: bold;">3</span>.related_name：反向操作时，使用的字段名，用于代替原反向查询时的<span style="color: #ff0000;">'</span><span style="color: #ff0000;">表名_set</span><span style="color: #ff0000;">'</span>
+<span style="color: #800000; font-weight: bold;">4</span><span style="color: #000000;">.related_query_name:反向查询操作时，使用的连接前缀，用于替换表名
+</span><span style="color: #800000; font-weight: bold;">5</span>.on_delete<span style="color: #808080;">=</span>models.<span style="color: #0000ff;">CASCADE</span>:当删除关联表中的数据时，当前表与其关联的行的行为,models.CASCADE删除关联数据，与之关联也删除(<span style="color: #800000; font-weight: bold;">1</span>.1版本默认级联删除，<span style="color: #800000; font-weight: bold;">2</span><span style="color: #000000;">.0版本后必须手动添加)
+</span><span style="color: #800000; font-weight: bold;">6</span>.on_delete<span style="color: #808080;">=</span>models.<span style="color: #0000ff;">SET</span><span style="color: #000000;">()删除关联数据，
+a. 与之关联的值设置为指定值，设置：models.</span><span style="color: #0000ff;">SET</span>(值)  b. 与之关联的值设置为可执行对象的返回值，设置：models.<span style="color: #0000ff;">SET</span><span style="color: #000000;">(可执行对象)
+def func():
+    </span><span style="color: #0000ff;">return</span> <span style="color: #800000; font-weight: bold;">10</span><span style="color: #000000;">
+
+class MyModel(models.Model):
+    </span><span style="color: #ff00ff;">user</span> <span style="color: #808080;">=</span><span style="color: #000000;"> models.ForeignKey(
+        </span><span style="color: #0000ff;">to</span><span style="color: #808080;">=</span>"<span style="color: #ff00ff;">User</span><span style="color: #000000;">",
+        to_field</span><span style="color: #808080;">=</span><span style="color: #000000;">"id"，
+        on_delete</span><span style="color: #808080;">=</span>models.<span style="color: #0000ff;">SET</span><span style="color: #000000;">(func)
+    )
+</span><span style="color: #800000; font-weight: bold;">7</span>.db_constraint:是否在数据库中设置外键约束关系，默认为True，设置成False，数据库中不体现约束关系，相当于普通字段</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">示例：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Classes(models.Model):
+    name </span>= models.CharField(max_length=32<span style="color: #000000;">)
+​
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Student(models.Model):
+    name </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    theclass </span>= models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Classes</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">当我们要查询某个班级关联的所有学生（反向查询）时，我们会这么写：</span></p>
+<div class="cnblogs_code">
+<pre><code>models.Classes.objects.first().student_set.all()</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">当我们在ForeignKey字段中添加了参数 related_name 后:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Student(models.Model):
+    name </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    theclass </span>= models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Classes</span><span style="color: #800000;">"</span>, related_name=<span style="color: #800000;">"</span><span style="color: #800000;">students</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">当我们要查询某个班级关联的所有学生（反向查询）时，我们会这么写：</span></p>
+<div class="cnblogs_code">
+<pre><code>models.Classes.objects.first().students.all()</pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.327OneToOneField</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">一对一字段：通常一对一字段用来扩展已有字段。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">一对一的关联关系多用在当一张表的不同字段查询频次差距过大的情况下，将本可以存储在一张表的字段拆开放置在两张表中，然后将两张表建立一对一的关联关系。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Author(models.Model):
+    name </span>= models.CharField(max_length=32<span style="color: #000000;">)
+    gender_choice </span>= ((1, <span style="color: #800000;">"</span><span style="color: #800000;">男</span><span style="color: #800000;">"</span>), (2, <span style="color: #800000;">"</span><span style="color: #800000;">女</span><span style="color: #800000;">"</span>), (3, <span style="color: #800000;">"</span><span style="color: #800000;">保密</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+    gender </span>= models.SmallIntegerField(choices=gender_choice, default=3<span style="color: #000000;">)
+    info </span>= models.OneToOneField(to=<span style="color: #800000;">'</span><span style="color: #800000;">AuthorInfo</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> AuthorInfo(models.Model):
+    phone </span>= models.CharField(max_length=11<span style="color: #000000;">)
+    email </span>= models.EmailField(unique=True, db_index=<span style="color: #000000;">True)
+</span>1<span style="color: #000000;">.to:设置要关联的表
+</span>2<span style="color: #000000;">.to_field:设置要关联的字段
+</span>3.on_delete:同ForeignKey字段</pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.328ManyToManyField</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">用于表示多对多的关联关系,在数据库中通过第三张表来建立关联关系</span></p>
+<p class="md-end-block md-p"><span><strong>多对多关联关系的三种方式:</strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">方式一：自行创建第三张表</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Book(models.Model):
+    title </span>= models.CharField(max_length=32,verbose_name=<span style="color: #800000;">"</span><span style="color: #800000;">书名</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+​
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Author(models.Model):
+    name </span>= models.CharField(max_length=32,verbose_name=<span style="color: #800000;">"</span><span style="color: #800000;">作者姓名</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+​
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 自己创建第三张表</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Book2Author(models.Model):
+    id </span>= models.AutoField(primary_key=<span style="color: #000000;">True)
+    book </span>= models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Book</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    author </span>= models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Author</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">first_blood = models.DateField() 自行创建第三章表，便于增加新字段</span>
+    <span style="color: #0000ff;">class</span><span style="color: #000000;"> Meta:
+        unique_together </span>= (<span style="color: #800000;">"</span><span style="color: #800000;">author</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">book</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span>1<span style="color: #000000;">.unique_together：联合唯一索引
+</span>2<span style="color: #000000;">.index_together：联合索引
+</span>3.ordering：指定默认按什么字段排序。只有设置了该属性，查询到的结果才可以被reverse()</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">方式二：通过ManyToManyField自动创建第三张表</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Book(models.Model):
+    title </span>= models.CharField(max_length=32, verbose_name=<span style="color: #800000;">"</span><span style="color: #800000;">书名</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 通过ORM自带的ManyToManyField自动创建第三张表</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Author(models.Model):
+    name </span>= models.CharField(max_length=32, verbose_name=<span style="color: #800000;">"</span><span style="color: #800000;">作者姓名</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    books </span>= models.ManyToManyField(to=<span style="color: #800000;">"</span><span style="color: #800000;">Book</span><span style="color: #800000;">"</span>, db_table=<span style="color: #800000;">"</span><span style="color: #800000;">author2book</span><span style="color: #800000;">"</span>,related_name=<span style="color: #800000;">"</span><span style="color: #800000;">authors</span><span style="color: #800000;">"</span><span style="color: #000000;">)  
+    </span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Meta:
+        db_table </span>= <span style="color: #800000;">"</span><span style="color: #800000;">author</span><span style="color: #800000;">"</span>
+1<span style="color: #000000;">.to：设置要关联的表
+</span>2.db_table=<span style="color: #800000;">"</span><span style="color: #800000;">author2book</span><span style="color: #800000;">"</span><span style="color: #000000;">:指定自动创建的第三张表的表名为author2book，而不是app01_author_book
+</span>3.related_name=<span style="color: #800000;">"</span><span style="color: #800000;">authors</span><span style="color: #800000;">"</span>：反向操作时，使用的字段名，用于代替原反向查询时的<span style="color: #800000;">'</span><span style="color: #800000;">表名_set</span><span style="color: #800000;">'</span><span style="color: #000000;">，同ForeignKey字段
+</span>4.Meta:db_table，创建author表时指定表名为author，而不是app01_author</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">方式三：设置ManyTomanyField并指定自行创建的第三张表</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Book(models.Model):
+    title </span>= models.CharField(max_length=32,verbose_name=<span style="color: #800000;">"</span><span style="color: #800000;">书名</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+​
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Author(models.Model):
+    name </span>= models.CharField(max_length=32,verbose_name=<span style="color: #800000;">"</span><span style="color: #800000;">作者姓名</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    books </span>=<span style="color: #000000;"> models.ManyToManyField(
+        to</span>=<span style="color: #800000;">"</span><span style="color: #800000;">Book</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        through</span>=<span style="color: #800000;">"</span><span style="color: #800000;">Book2Author</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        through_fields</span>=(<span style="color: #800000;">'</span><span style="color: #800000;">author</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">book</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    )
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 自己创建第三张表</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Book2Author(models.Model):
+    id </span>= models.AutoField(primary_key=<span style="color: #000000;">True)
+    book </span>= models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Book</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    author </span>= models.ForeignKey(to=<span style="color: #800000;">"</span><span style="color: #800000;">Author</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">first_blood = models.DateField() 自行创建第三章表，便于增加新字段</span>
+    <span style="color: #0000ff;">class</span><span style="color: #000000;"> Meta:
+        unique_together </span>= (<span style="color: #800000;">"</span><span style="color: #800000;">author</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">book</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span>1<span style="color: #000000;">.to：设置要关联的表      
+</span>2.through_fields:设置关联的字段，接受一个2元组（<span style="color: #800000;">'</span><span style="color: #800000;">field1</span><span style="color: #800000;">'</span>，<span style="color: #800000;">'</span><span style="color: #800000;">field2</span><span style="color: #800000;">'</span><span style="color: #000000;">）：其中field1是定义ManyToManyField的模型外键的名（author），field2是关联目标模型（book）的外键名，表示第三张表author,book字段是描述多对多关系的，其他的字段的ForeignKey是单纯的多对一外键。
+</span>3.through:在使用ManyToManyField字段时，Django将自动生成一张表来管理多对多的关联关系。但我们也可以手动创建第三张表来管理多对多关系，此时就需要通过through来指定第三张表的表名。</pre>
+</div>
+<p class="md-end-block md-p"><span><strong>注意：</strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">但是当我们使用第三种方式创建多对多关联关系时，就<span><strong>无法使用set、add、remove、clear</strong><span class="md-plain">方法来管理多对多的关系了，只能使用all方法拿到对象，需要通过第三张表的<span><strong>model</strong><span class="md-plain">来管理多对多关系。</span></span></span></span></span></p>
+<h6 class="md-end-block md-heading"><span class="md-plain">12.3281使用方式一或方式三的查询和其他操作</span></h6>
+<p class="md-end-block md-p"><span class="md-plain">查询操作：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 找到第一本书</span>
+ret = models.Book.objects.first().author2book_set.all().values(<span style="color: #800000;">"</span><span style="color: #800000;">author__name</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+ret </span>= models.Book.objects.filter(id=1).values(<span style="color: #800000;">"</span><span style="color: #800000;">author2book__author__name</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">增删改操作：</span></p>
+<div class="cnblogs_code">
+<pre><code>first_book =<span style="color: #000000;"> models.Book.objects.first()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 改：first_book.author.add(1):</span>
+models.Author2Book.objects.create(book=first_book, author_id=1<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 清空：first_book.author.clear()</span>
+models.Author2Book.objects.filter(book=<span style="color: #000000;">first_book).delete()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除：first_book.author.remove(3)</span>
+models.Author2Book.objects.filter(book=first_book, author_id=3<span style="color: #000000;">).delete()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 查：first_book.author.all() 方式三可用</span>
+models.Author2Book.objects.filter(book=first_book)</pre>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

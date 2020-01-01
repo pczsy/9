@@ -1,0 +1,223 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python中的元类介绍' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python中的元类介绍</center></div><div class='banquan'>原文出处:本文由博客园博主三国小梦提供。<br/>
+原文连接:https://www.cnblogs.com/lxy0/p/11389312.html</div><br>
+    <h1 id="类也是对象">类也是对象</h1>
+<p>在大多数编程语言中，类就是一组用来描述如何生成一个对象的代码段，在python中也是成立的。</p>
+<pre><code><code>class ObjectCreator:
+    pass
+    
+my_object = ObjectCreator()
+print(my_object)
+&quot;&quot;&quot;
+输出结果：
+&lt;__main__.ObjectCreator object at 0x037DACD0&gt;
+&quot;&quot;&quot;</code></pre>
+<p>但是，python的类不止于此，类同样也是一种对象。</p>
+<pre><code><code>class ObjectCreator:
+    pass</code></pre>
+<p>上面的代码段将在内存中创建一个对象，名字就叫做ObjectCreator。这个对象（类对象ObjectCreator）拥有创建对象（实例对象）的能力，但它本质上仍然还是一个对象，于是你就可以对它做如下的操作：</p>
+<ul>
+<li>给它复制一个变量</li>
+<li>拷贝它</li>
+<li>给它增加属性</li>
+<li>将它作为函数参数传递<br />
+示例代码：</li>
+</ul>
+<pre><code><code>class ObjectCreator:
+    pass
+# 把它赋值给一个变量
+a = ObjectCreator
+print(a) # &lt;class &#39;__main__.ObjectCreator&#39;&gt;
+# 作为函数参数传递
+def echo(o):
+    print(o)
+    
+echo(ObjectCreator) # &lt;class &#39;__main__.ObjectCreator&#39;&gt;</code></pre>
+<h1 id="动态的创建类">动态的创建类</h1>
+<p>因为类也是对象，所以可以在运行时动态的创建它们，使用class关键字即可。</p>
+<pre><code><code>def choose_class(name):
+    if name == &#39;foo&#39;:
+        class Foo(object):
+            pass
+        return Foo     # 返回的是类，不是类的实例
+    else:
+        class Bar(object):
+            pass
+        return Bar
+MyClass = choose_class(&quot;foo&quot;)
+print(MyClass) # 打印类对象
+# 输出结果
+&lt;class &#39;__main__.choose_class.&lt;locals&gt;.Foo&#39;&gt;
+
+print(MyClass()) # 打印实例对象
+# 输出结果
+&lt;__main__.choose_class.&lt;locals&gt;.Foo object at 0x0368CFD0&gt;</code></pre>
+<h1 id="使用type创建类">使用type创建类</h1>
+<p>我们知道通过type()可以知道这个对象的类型是什么，他还有一个完全不同的功能，动态的创建类。<br />
+type可以接受一个类的描述作为参数，然后返回一个类。<br />
+语法：<br />
+<strong>type(类名，由父类名称构成的元组（针对继承的情况可以为空），包含属性的字典)</strong></p>
+<pre><code><code>MyClass = type(&quot;MyClass&quot;,(),{})
+print(MyClass)
+# 输出结果：
+&lt;class &#39;__main__.MyClass&#39;&gt;</code></pre>
+<h2 id="使用type创建带属性的类">使用type创建带属性的类</h2>
+<p>type 接受一个字典来为类定义属性，如下所示：</p>
+<pre><code><code>Foo = type(&quot;Foo&quot;,(),{&#39;bar&#39;:True})</code></pre>
+<p>等价于</p>
+<pre><code><code>class Foo:
+    bar = True</code></pre>
+<h2 id="使用type创建继承的子类">使用type创建继承的子类</h2>
+<p>接着上面的代码，我们已经创建了一个Foo类，现在来创建一个它的子类。</p>
+<pre><code><code>FooChild = type(&quot;FooChild&quot;,(Foo,),{})
+print(FooChild.bar) # # bar属性是由Foo继承而来
+# 输出结果：
+True</code></pre>
+<p>注意：</p>
+<ul>
+<li>type的第二个参数，元组中是父类的名字，不是字符串。</li>
+<li>添加的属性是类属性，不是实例属性。</li>
+</ul>
+<h2 id="使用type创建带有方法的类">使用type创建带有方法的类</h2>
+<p>最终你会希望为你的类增加方法。只需要定义一个有着恰当签名的函数并将其作为属性赋值就可以了。</p>
+<h3 id="添加实例方法">添加实例方法</h3>
+<pre><code><code>def test_f(self):
+    print(&quot;添加的实例方法&quot;)
+Foo = type(&quot;Foo&quot;,(),{&quot;test_f&quot;:test_f})
+f = Foo()
+f.test_f()
+# 输出结果：
+添加的实例方法</code></pre>
+<h3 id="添加静态方法">添加静态方法</h3>
+<pre><code><code>@staticmethod
+def test_static():
+    print(&quot;添加的静态方法&quot;)
+Foo = type(&quot;Foo&quot;,(),{&quot;test_static&quot;:test_static})
+Foo.test_static()
+Foo.test_static()
+# 输出结果：
+添加的静态方法</code></pre>
+<h3 id="添加类方法">添加类方法</h3>
+<pre><code><code>@classmethod
+def test_class(cls):
+    print(&quot;添加的类方法&quot;)
+Foo = type(&quot;Foo&quot;,(),{&quot;test_class&quot;:test_class})
+Foo.test_class()
+# 输出的结果：
+添加的类方法</code></pre>
+<h1 id="什么是元类">什么是元类</h1>
+<p>元类就是用来创建类的“东西”。元类就是就是用来创建类对象的，元类就是类的类。<br />
+可以这样理解：</p>
+<pre><code><code>MyClass =   MetaClass() # 使用元类创建类对象
+MyObject = MyClass() # 使用类对象创建实例对象</code></pre>
+<p>type函数其实就是元类。type就是在Python在背后创建所有类的元类，可以通过__class __属性来查看,__class __的<strong>功能是查看对象所在的类</strong>，它可以嵌套使用。</p>
+<pre><code><code>class A:
+    pass
+print(A.__class__)
+a = A()
+print(a.__class__)
+print(a.__class__.__class__)
+# 输出结果：
+&lt;class &#39;type&#39;&gt;
+&lt;class &#39;__main__.A&#39;&gt;
+&lt;class &#39;type&#39;&gt;</code></pre>
+<p>可以看出，最后对象的类都是type元类。<br />
+<strong>Python中所有的东西，注意，我是指所有的东西——都是对象。这包括整数、字符串、函数以及类。它们全部都是对象，而且它们都是从一个类创建而来，这个类就是type。</strong><br />
+整数：</p>
+<pre><code><code>age = 18
+print(age.__class__)
+print(age.__class__.__class__)
+# 输出结果：
+&lt;class &#39;int&#39;&gt;
+&lt;class &#39;type&#39;&gt;</code></pre>
+<p>字符串：</p>
+<pre><code><code>name = &quot;张三&quot;
+print(name .__class__)
+print(name .__class__.__class__)
+# 输出结果：
+&lt;class &#39;str&#39;&gt;
+&lt;class &#39;type&#39;&gt;</code></pre>
+<p>函数：</p>
+<pre><code><code>def f():
+    pass
+print(f.__class__)
+print(f.__class__.__class__)
+# 输出结果：
+&lt;class &#39;function&#39;&gt;
+&lt;class &#39;type&#39;&gt;</code></pre>
+<h1 id="自定义元类">自定义元类</h1>
+<p>首先的了解一下metaclass属性，用它来指定一个元类，python会在定义的类中寻找metaclass属性，如果没找到，就到它的父类找以此类推。如果找到了，python就会用它来创建类对象，如果实在没有找到就会用内建的type来创建这个类。<br />
+metaclass中可以放type或者任何使用到type或者子类化type的东东都可以。<br />
+自定义类的主要目的：</p>
+<ul>
+<li>拦截类的创建</li>
+<li><p>修改类</p>
+<h2 id="使用函数实现一个自定义的元类">使用函数实现一个自定义的元类</h2>
+功能：把不是__开头的类属性名字变为大写</li>
+</ul>
+<pre><code><code>def upper_attr(future_class_name: str,future_class_parents: tuple,future_class_attr: dict):
+    newAttr = {}
+    for key,value in future_class_attr.items():
+        if not key.startswith(&quot;__&quot;):
+            newAttr[key.upper()] = value
+    return type(future_class_name,future_class_parents,newAttr)
+class Foo(metaclass=upper_attr):
+    name = &quot;张三&quot;
+    age = 18
+
+hasattr(Foo,&quot;name&quot;) # 判断是否有该类属性 False
+hasattr(Foo,&quot;NAME&quot;) # True
+hasattr(Foo,&quot;age&quot;) # False
+hasattr(Foo,&quot;AGE&quot;) # True</code></pre>
+<h2 id="继承type实现一个自定义元类">继承type实现一个自定义元类</h2>
+<p>功能：同上</p>
+<pre><code><code>class MyMetaClass(type):
+    def __new__(cls, class_name: str, class_parents: tuple, class_attr: dict):
+        newAttr = {}
+        for key, value in class_attr.items():
+            if not key.startswith(&quot;__&quot;):
+                newAttr[key.upper()] = value
+
+        # 方法1：通过&#39;type&#39;来做类对象的创建
+        # return type(class_name, class_parents, newAttr)
+    
+        # 方法2：复用type.__new__方法
+        # 这就是基本的OOP编程，没什么魔法
+        # return type.__new__(cls, class_name, class_parents, newAttr)
+    
+        # 方法3：使用super方法
+        return super(MyMetaClass, cls).__new__(cls, class_name, class_parents, newAttr)
+
+
+class Foo(metaclass=MyMetaClass):
+    name = &quot;张三&quot;
+    age = 18
+
+hasattr(Foo,&quot;name&quot;) # 判断是否有该类属性 False
+hasattr(Foo,&quot;NAME&quot;) # True
+hasattr(Foo,&quot;age&quot;) # False
+hasattr(Foo,&quot;AGE&quot;) # True</code></pre>
+<p>效果和上面是一样的。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

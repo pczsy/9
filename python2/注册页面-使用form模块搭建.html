@@ -1,0 +1,122 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修注册页面-使用form模块搭建' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>注册页面-使用form模块搭建</center></div><div class='banquan'>原文出处:本文由博客园博主小叶柏杉提供。<br/>
+原文连接:https://www.cnblogs.com/yebax/p/11437729.html</div><br>
+    <p>基于Django的form模块，快速的搭建注册页面，每个限制条件，都放在form模块里面，不单独对每一项编写标签，使用模版的 for 循环来渲染。</p>
+<p>&nbsp;</p>
+<ul>
+<li>首先设置form模块</li>
+</ul>
+<p style="margin-left: 60px;">在blogs模块下创建一个blogs_form.py文件</p>
+<p style="margin-left: 60px;">注意一点，需要引用django模块下的forms模块，还有widgets模块，widget是设置input的类型，比如TextInput文本框，PasswordInput密码框，EmailInput邮箱框等等，这些好处就不用对其做判断，是否符合邮箱的匹配条件，forms模块就帮忙做了。</p>
+<p style="margin-left: 60px;">attrs：添加input的属性和属性值，key-value 形式，我想在class添加form-control（Bootstrap的样式），使用 attrs={"class","form-control"}&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">from django import forms
+</span><span style="color: #008080;"> 2</span> <span style="color: #000000;">from django.forms import widgets
+</span><span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> <span style="color: #000000;">class UserForm(forms.Form):
+</span><span style="color: #008080;"> 5</span>     user = forms.CharField(max_length=32<span style="color: #000000;">,
+</span><span style="color: #008080;"> 6</span>                            label=<span style="color: #800000;">"</span><span style="color: #800000;">用户名</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;"> 7</span>                            widget=widgets.TextInput(attrs={<span style="color: #800000;">"</span><span style="color: #800000;">class</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">form-control</span><span style="color: #800000;">"</span><span style="color: #000000;">}))
+</span><span style="color: #008080;"> 8</span>     pwd = forms.CharField(max_length=32<span style="color: #000000;">,
+</span><span style="color: #008080;"> 9</span>                           label=<span style="color: #800000;">"</span><span style="color: #800000;">密码</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">10</span>                           widget=widgets.PasswordInput(attrs={<span style="color: #800000;">"</span><span style="color: #800000;">class</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">form-control</span><span style="color: #800000;">"</span><span style="color: #000000;">}))
+</span><span style="color: #008080;">11</span>     re_pwd = forms.CharField(max_length=32<span style="color: #000000;">,
+</span><span style="color: #008080;">12</span>                              label=<span style="color: #800000;">"</span><span style="color: #800000;">确认密码</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">13</span>                              widget=widgets.PasswordInput(attrs={<span style="color: #800000;">"</span><span style="color: #800000;">class</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">form-control</span><span style="color: #800000;">"</span><span style="color: #000000;">}))
+</span><span style="color: #008080;">14</span>     email = forms.EmailField(max_length=32<span style="color: #000000;">,
+</span><span style="color: #008080;">15</span>                              label=<span style="color: #800000;">"</span><span style="color: #800000;">邮箱</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+</span><span style="color: #008080;">16</span>                              widget=widgets.EmailInput(attrs={<span style="color: #800000;">"</span><span style="color: #800000;">class</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">form-control</span><span style="color: #800000;">"</span>}))</pre>
+</div>
+<p>&nbsp;</p>
+<ul>
+<li>view视图添加注册</li>
+</ul>
+<p style="margin-left: 60px;">创建forms对象，直接返回。</p>
+<p style="margin-left: 60px;">记得引入刚刚写的UserForm到view中。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">from .blog_form import UserForm
+
+def register(request):
+    form = UserForm()
+    return render(request, "register.html", locals())
+</pre>
+</div>
+<p>　　</p>
+<ul>
+<li>urls路由中添加路径</li>
+</ul>
+<p style="margin-left: 60px;">添加路径，将url路径和view中的register函数，关联起来。</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:python;gutter:true;">path("register/", views.register)
+</pre>
+</div>
+<p>　　</p>
+<ul>
+<li>重头戏，写register.html</li>
+</ul>
+<p style="margin-left: 60px;">首先，使用Bootstrap将布局搭建好，把&lt;form&gt;标签中的位置空出来</p>
+<p style="margin-left: 60px;">记得在form标签中，写 csrf_token 解决跨站问题</p>
+<p style="margin-left: 60px;">循环 UserForm对象， 每次拿到一个filed对象</p>
+<p style="margin-left: 60px;">filed.name：对象的label名</p>
+<p style="margin-left: 60px;">filed.label：对象的label</p>
+<p style="margin-left: 60px;">filed： input标签</p>
+<div class="cnblogs_Highlighter">
+<pre class="brush:html;gutter:true;">&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+    &lt;meta charset="UTF-8"&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+    &lt;link rel="stylesheet" href="/static/bootstrap/css/bootstrap.min.css"&gt;
+    &lt;script src="/static/js/jquery-3.4.1.js" type="text/javascript"&gt;&lt;/script&gt;
+    &lt;style type="text/css"&gt;
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class="container"&gt;
+    &lt;div class="row"&gt;
+        &lt;div class="col-md-6 col-lg-offset-3"&gt;
+            &lt;h3&gt;注册页面&lt;/h3&gt;
+            &lt;form&gt;
+                {% csrf_token %}
+
+                {% for filed in form %}
+                    &lt;div class="form-group"&gt;
+                        &lt;label for="id_{{ filed.name }}"&gt;{{ filed.label }}&lt;/label&gt;
+                        {{ filed }}
+                    &lt;/div&gt;
+                {% endfor %}
+            &lt;/form&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;script type="text/javascript"&gt;
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</div>
+<p>　　</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

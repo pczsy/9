@@ -1,0 +1,104 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修理解迭代器和可迭代对象' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>理解迭代器和可迭代对象</center></div><div class='banquan'>原文出处:本文由博客园博主燃烧的砟子提供。<br/>
+原文连接:https://www.cnblogs.com/burningcarbon/p/11567872.html</div><br>
+    <p>前言：</p>
+<p>之前在迭代器、可迭代对象这一部分一直有些混淆，结合一些资料，表达我对这些概念的理解，未必都对，但是适合刚开始入手的朋友们从零开始理解</p>
+<hr />
+<p>&nbsp;</p>
+<p>开门见山首先介绍可迭代对象和迭代器的通俗理解</p>
+<p>　　迭代器就是能被next()调用得到下一次迭代值的对象，迭代器不直接保存迭代的序列值，而保存得到下一次迭代值的算法</p>
+<p>　　可迭代对象就是能被iter()方法调用得到迭代器的对象，能进行for循环的必须是可迭代对象</p>
+<p>&nbsp;</p>
+<p>for循环的底层实现原理：</p>
+<p>　　以下是一个for循环的格式</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">　　for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> 可迭代对象：
+    循环体<br /></span></pre>
+</div>
+<p>　　实质是调用内建方法iter()得到迭代器对象，然后通过每次调用next(迭代器)得到i的迭代值</p>
+<p>　　例如以下的代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> x:
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<p>　　完全可以改写为：</p>
+<div class="cnblogs_code">
+<pre><code>iterator =<span style="color: #000000;"> iter(x)
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    i </span>=<span style="color: #000000;"> next(iterator)
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<p>&nbsp;</p>
+<p>从严格或者底层原理来说</p>
+<p>　　迭代器或迭代器对象：实现了__next__()魔法方法的（类所实例化的）对象,该方法返回迭代器下一个值（保存得到下一个迭代值的算法）</p>
+<p>　　可迭代对象：实现了__iter__()魔法方法的（类所实例化的）对象，该方法返回一个迭代器对象</p>
+<p>　　</p>
+<p>实际上，next和iter是对__next__和__iter__的进一步封装或者说next和iter在执行的时候又分别调用了内部的__next__和__iter__从而实现迭代器和可迭代对象的特性和功能</p>
+<p>&nbsp;</p>
+<p>综上，我们可以理解for循环、可迭代对象、迭代器三者的联系：</p>
+<p>　　for循环只能对可迭代对象进行，可迭代对象又需要迭代器的实现</p>
+<p>由此，我们可以自定义实现迭代器和可迭代迭代对象，从而实现自定义的for循环效果　</p>
+<hr />
+<p>&nbsp;</p>
+<p>示例：</p>
+<p>通过迭代器和可迭代对象实现菲波那切数列</p>
+<p>分别定义迭代器和可迭代对象所属的类：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Fib:<br />　　'''定义可迭代对象所属类'''
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self，num): #num表示该数列的长度
+    　　self.a </span>= 1<span style="color: #000000;">
+    　　self.b </span>= 2<br />　　 　　self.current=self.a<br />　　 　　self.num = num
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> FebIterator(self)
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> FibIterator(self):<br />　　'''定义迭代器类'''
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self,source):
+        self.source </span>=<span style="color: #000000;"> source
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__next__</span><span style="color: #000000;">(self):<br />　　 　　<br />　　 　　if(self.num-1&gt;=0):<br />　　　　 　　self.num = self.num-1
+    　　　　self.current </span>=<span style="color: #000000;"> self.a
+    　　　　self.a </span>=<span style="color: #000000;"> self.b
+    　　　　self.b </span>= self.b+self.current   <span style="color: #008000;">#</span><span style="color: #008000;">以上两步赋值操作可省略中间变量直接写为self.a,self.b = self.b,self.a+self,b <br />　　 　　　　return self.curent<br />　　 　  else: raise StopIteration<br /></span></pre>
+</div>
+<p>通过调用这两个类的实例化对象，可以实现循环打印斐波那契数列</p>
+<div class="cnblogs_code">
+<pre><code>fib =<span style="color: #000000;"> Fib()<br />
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> fib:
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<p>实际上，为了简化和方便，完全可以在一个类中同时实现__iter__()和__next__()方法，也即该类实例化的对象既是一个可迭代对象也是迭代器，代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Fib:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">():
+        self.a </span>= 1<span style="color: #000000;">
+        self.b </span>= 2<br />　　 　　sele.current = self.a
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__next__</span><span style="color: #000000;">():<br /></span>　　 　　if(self.num-1&gt;=0):</pre>
+<pre><code><em id="__mceDel"><span>　　　　 　　self.num = self.num-1
+    　　　　self.current =<span> self.a
+    　　　　self.a =<span> self.b
+    　　　　self.b = self.b+self.current   #以上两步赋值操作可省略中间变量直接写为self.a,self.b = self.b,self.a+self,b <br />　　 　　　　return self.curent<br />　　 　  else: raise StopIteration</span></span></span></em></pre>
+<pre><code></pre>
+</div>
+<p>其使用方法和之前没有区别，反而更加简便，前提是对迭代器和可迭代对象有清晰的理解和认识，否则会对二者概念产生混淆</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

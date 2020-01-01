@@ -1,0 +1,118 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Linux下基于Docker部署.Net Core web api项目' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Linux下基于Docker部署.Net Core web api项目</center></div><div class='banquan'>原文出处:本文由博客园博主江北、提供。<br/>
+原文连接:https://www.cnblogs.com/zhangnever/p/11961297.html</div><br>
+    <p>Docker的好处我就不说啦，问问度娘就知道了😄</p>
+<p>在动手之前我假设您已经安装了Docker(Linux环境)</p>
+<p>准备好一个web api项目,如果您还不知道怎样用vs建web api项目,请看此篇博客</p>
+<div class="cnblogs_code">
+<pre><code>https:<span style="color: #008000;">//</span><span style="color: #008000;">www.cnblogs.com/zhangnever/p/11915509.html</span></pre>
+</div>
+<p>如果还没安装Docker请先别急,移步至此地址安装</p>
+<div class="cnblogs_code">
+<pre><code>https:<span style="color: #008000;">//</span><span style="color: #008000;">www.runoob.com/docker/centos-docker-install.html</span></pre>
+</div>
+<p>在这里先说几条Docker的命令,因为一会儿会用到</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #800080;">1</span>.docker ps -a  --<span style="color: #000000;">查看所有的容器
+</span><span style="color: #800080;">2</span>.docker ps  --<span style="color: #000000;">查看正在运行的容器
+</span><span style="color: #800080;">3</span>.docker images  --<span style="color: #000000;">查看所有的镜像
+</span><span style="color: #800080;">4</span>.docker logs 容器id  --查看指定容器的日志<br />5.docker pull 镜像名  --拉取指定镜像</pre>
+</div>
+<p>首先在Program类添加如下代码，UseUrls方法设置ip和端口号(可不和我一样),这样的话发布之后外网就可对其进行访问。一定要加上这句代码！！！</p>
+<div class="cnblogs_code">
+<pre><code>.UseUrls(<span style="color: #800000;">"</span><span style="color: #800000;">http://*:9659</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目0.png" alt="" /></p>
+<p>&nbsp;然后右键-属性发布项目</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目1.png" alt="" /></p>
+<p>&nbsp;进入发布后的文件夹，将发布后的所有文件copy出来,上传至Linux服务器，我用的是Xftp,在此之前在tmp目录下新建一个文件夹(名称随意)</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目2.png" alt="" /></p>
+<p>&nbsp;然后将xml文件copy进来，不然发布会报错。xml文件找不到</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目3.png" alt="" /></p>
+<p>&nbsp;打开Linux命令行终端工具,我用的是Xshell.切换到项目根目录下,Vim创建Dockerfile文件,当然你也可以右键新建文件也行</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目4.png" alt="" /></p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目5.png" alt="" /></p>
+<p>&nbsp;写入这四句命令</p>
+<div class="cnblogs_code">
+<pre><code>FROM microsoft/dotnet:<span style="color: #800080;">2.2</span>-aspnetcore-<span style="color: #000000;">runtime
+
+WORKDIR </span>/<span style="color: #000000;">app
+
+EXPOSE </span><span style="color: #800080;">9659</span><span style="color: #000000;">
+
+COPY . .&nbsp;
+
+CMD [</span><span style="color: #800000;">"</span><span style="color: #800000;">dotnet</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">CoreFrame.dll</span><span style="color: #800000;">"</span>]&nbsp;</pre>
+</div>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目6.png" alt="" /></p>
+<p>&nbsp;然后拉取镜像，我这是.net core 2.2的项目,依据你的项目版本来</p>
+<div class="cnblogs_code">
+<pre><code>docker pull microsoft/dotnet:<span style="color: #800080;">2.2</span>-aspnetcore-runtime</pre>
+</div>
+<p>我这边已经拉取过了,所以会提示我,已经存在最新的microsoft/dotnet:2.2-aspnetcore-runtime,你要稍微等个几分钟...</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目7.png" alt="" /></p>
+<p>拉取完成之后你可以用docker images命令看看有没有这个镜像</p>
+<div class="cnblogs_code">
+<pre><code>[root@instance-<span style="color: #000000;">1epqf1sp core]# docker images
+REPOSITORY                             TAG                      IMAGE ID            CREATED             SIZE</span><span style="color: #000000;">
+docker.io</span>/microsoft/dotnet             <span style="color: #800080;">2.2</span>-aspnetcore-runtime   594143f47344        <span style="color: #800080;">2</span> weeks ago         <span style="color: #800080;">261</span> MB</pre>
+</div>
+<p>接下来执行下面这条命令,创建我们的项目镜像,"."代表使用当前目录下的Dockerfile创建镜像</p>
+<div class="cnblogs_code">
+<pre><code>docker build -t apiproject .</pre>
+</div>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目8.png" alt="" /></p>
+<p>&nbsp;再使用docker images命令看看是否创建</p>
+<div class="cnblogs_code">
+<pre><code>[root@instance-<span style="color: #000000;">1epqf1sp core]# docker images
+REPOSITORY                             TAG                      IMAGE ID            CREATED              SIZE
+apiproject                             latest                   f0036423060a        About a minute ago   </span><span style="color: #800080;">301</span><span style="color: #000000;"> MB</span><span style="color: #000000;">
+docker.io</span>/microsoft/dotnet             <span style="color: #800080;">2.2</span>-aspnetcore-runtime   594143f47344        <span style="color: #800080;">2</span> weeks ago          <span style="color: #800080;">261</span> MB</pre>
+</div>
+<p>无误后执行下面这条命令,启动容器，成功之后会有一长串字符</p>
+<div class="cnblogs_code">
+<pre><code>docker run -d -p <span style="color: #800080;">9659</span>:<span style="color: #800080;">9659</span> --name corewebapi apiproject<br />--corewebapi是容器名称<br />--apiproject是依赖的镜像</pre>
+</div>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目9.png" alt="" /></p>
+<p>&nbsp;查看运行的容器</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目10.png" alt="" /></p>
+<p>&nbsp;浏览器中就可以打开swagger文档了</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目11.png" alt="" /></p>
+<p>&nbsp;如果容器没有运行的话,要查看错误日志,看看报的什么错,再解决。如果你按照我写的步骤来的话应该不会报错。😊</p>
+<p><img src="./images/Linux下基于Docker部署.Net Core web api项目12.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;晚安！🌙</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

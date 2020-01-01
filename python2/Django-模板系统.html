@@ -1,0 +1,548 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django-模板系统' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django-模板系统</center></div><div class='banquan'>原文出处:本文由博客园博主626提供。<br/>
+原文连接:https://www.cnblogs.com/fengqiang626/p/11584576.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#语法">1.语法</a></li>
+        <li><a href="#变量">2.变量</a></li>
+        <li><a href="#过滤器">3.过滤器</a><ul>
+        <li><a href="#default">3.1default</a></li>
+        <li><a href="#length">3.2length</a></li>
+        <li><a href="#filesizeformat">3.3filesizeformat</a></li>
+        <li><a href="#slice">3.4slice</a></li>
+        <li><a href="#date">3.5date</a></li>
+        <li><a href="#safe">3.6safe</a></li>
+        <li><a href="#truncatechars">3.7truncatechars</a></li>
+        <li><a href="#truncatewords">3.8truncatewords</a></li>
+        <li><a href="#cut">3.9cut</a></li>
+        <li><a href="#join">3.10join</a></li>
+        <li><a href="#timesince了解">3.11timesince（了解）</a></li>
+        <li><a href="#timeuntil了解">3.18timeuntil（了解）</a></li>
+        </ul></li>
+        <li><a href="#标签tags">4.标签Tags</a><ul>
+        <li><a href="#for标签">4.1for标签</a></li>
+        <li><a href="#if-标签">4.2if 标签</a></li>
+        <li><a href="#csrf_token">4.3csrf_token</a></li>
+        <li><a href="#注释">4.4注释</a></li>
+        <li><a href="#注意事项">4.5注意事项</a></li>
+        </ul></li>
+        <li><a href="#模板继承">5.模板继承</a></li>
+        <li><a href="#组件">6.组件</a></li>
+        <li><a href="#自定义标签和过滤器">7.自定义标签和过滤器</a></li>
+        <li><a href="#inclusion_tag">8.inclusion_tag</a></li>
+        <li><a href="#静态文件相关">9.静态文件相关</a><ul>
+        <li><a href="#static">9.1{% static %}</a></li>
+        <li><a href="#get_static_prefix">9.2{% get_static_prefix %}</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h2 id="语法">1.语法</h2>
+<p>​ 模板渲染的<a href="https://docs.djangoproject.com/en/1.11/ref/templates/builtins/#std:templatetag-for">官方文档</a></p>
+<p>​ 关于模板渲染你只需要记两种特殊符号（语法）：</p>
+<p>​ {{ }}和 {% %}</p>
+<p>​ 变量相关的用{{}}，逻辑相关的用{%%}。</p>
+<h2 id="变量">2.变量</h2>
+<p>​ 在Django的模板语言中按此语法使用：{{ 变量名 }}。</p>
+<p>​ 当模版引擎遇到一个变量，它将计算这个变量，然后用结果替换掉它本身。 变量的命名包括任何字母数字以及下划线 (&quot;_&quot;)的组合。 变量名称中不能有空格或标点符号。</p>
+<p>​ 深度查询据点符（.）在模板语言中有特殊的含义。当模版系统遇到点(&quot;.&quot;)，它将以这样的顺序查询：</p>
+<p>​ 字典查询（Dictionary lookup）<br />
+​ 属性或方法查询（Attribute or method lookup）<br />
+​ 数字索引查询（Numeric index lookup）</p>
+<p>注意事项：</p>
+<ol>
+<li>如果计算结果的值是可调用的，它将被无参数的调用。 调用的结果将成为模版的值。</li>
+<li>如果使用的变量不存在， 模版系统将插入 string_if_invalid 选项的值， 它被默认设置为'' (空字符串) 。</li>
+</ol>
+<pre><code><code>def index(request):
+    import datetime
+    s = &quot;hello&quot;
+    l = [111, 222, 333]  # 列表
+    dic = {&quot;name&quot;: &quot;yuan&quot;, &quot;age&quot;: 18}  # 字典
+    date = datetime.date(1993, 5, 2)  # 日期对象
+
+    class Person(object):
+        def __init__(self, name):
+            self.name = name
+        def dream(self):
+            return &#39;dreamer&#39;
+    person_yuan = Person(&quot;chao&quot;)  # 自定义类对象
+    person_egon = Person(&quot;yantao&quot;)
+    person_alex = Person(&quot;jinxin&quot;)
+
+    person_list = [person_yuan, person_egon, person_alex]
+
+    return render(request, &quot;index.html&quot;, {&quot;l&quot;: l, &quot;dic&quot;: dic, &quot;date&quot;: date, &quot;person_list&quot;: person_list})
+    # return render(request,&#39;index.html&#39;,locals())
+    #locals()获取函数内容所有的变量，然后通过render方法给了index.html文件进行模板渲染，如果你图省事，你可以用它，但是很多多余的变量也被传进去了，效率低</code></pre>
+<p>​ 模板中支持的写法：</p>
+<pre><code><code>&lt;h4&gt;{{s}}&lt;/h4&gt;
+&lt;h4&gt;列表:{{ l.0 }}&lt;/h4&gt;
+&lt;h4&gt;列表:{{ l.2 }}&lt;/h4&gt;
+&lt;h4&gt;字典:{{ dic.name }}&lt;/h4&gt;
+&lt;h4&gt;日期:{{ date.year }}&lt;/h4&gt;
+
+&lt;!--取列表的第1个对象的name属性的值--&gt;
+&lt;h4&gt;类对象列表:{{ person_list.0.name }}&lt;/h4&gt;
+&lt;!--取列表的第1个对象的dream方法的返回值，如果没有返回值，拿到的是none--&gt;
+&lt;h4&gt;类对象列表:{{ person_list.0.dream }}&lt;/h4&gt;
+注意：
+    调用对象里面的方法的时候，不需要写括号来执行，并且只能执行不需要传参数的方法，如果你的这个方法需要传参数，那么模板语言不支持，不能帮你渲染</code></pre>
+<p>​ 注意我们直接在js代码中使用模板语法的时候，模板渲染的时候会有个转义的动作，将s = ['哈哈','xx']这种数据中的元素的引号变为一个特殊符号：</p>
+<pre><code><code>    &lt;script&gt;
+        // 不加safe的话，引号会被转义。        // var a = {{ s }}
+        // var a = [&amp;#39;哈哈&amp;#39;, &amp;#39;xx&amp;#39;];
+        // console.log(a[0])
+        // 加上safe就正常了
+        var a = {{ s|safe }};
+        console.log(a[0])        // 还要注意，当我们模板渲染的时候，后端返回的数据是字符串的话，我们需要将{{ s }}外面加上引号        比如s = &#39;哈哈&#39;        js中的写法        var a = &#39;{{ s }}&#39;
+    &lt;/script&gt;    </code></pre>
+<h2 id="过滤器">3.过滤器</h2>
+<p>​ 在Django的模板语言中，通过使用 过滤器 来改变变量的显示。</p>
+<p>​ 过滤器的语法： {{ value|filter_name:参数 }}</p>
+<p>　　使用管道符&quot;|&quot;来应用过滤器。</p>
+<p>　　例如：{{ name|lower }}会将name变量应用lower过滤器之后再显示它的值。lower在这里的作用是将文本全都变成小写。</p>
+<p>　　注意事项：</p>
+<ol>
+<li>过滤器支持“链式”操作。即一个过滤器的输出作为另一个过滤器的输入。</li>
+<li>过滤器可以接受参数，例如：{{ sss|truncatewords:30 }}，这将显示sss的前30个词。</li>
+<li>过滤器参数包含空格的话，必须用引号包裹起来。比如使用逗号和空格去连接一个列表中的元素，如：{{ list|join:', ' }}</li>
+<li>'|'左右没有空格没有空格没有空格</li>
+</ol>
+<p>　　Django的模板语言中提供了大约六十个内置过滤器。</p>
+<h3 id="default">3.1default</h3>
+<p>​ <strong>如果一个变量是false或者为空，使用给定的默认值。 否则，使用变量的值。</strong></p>
+<pre><code><code>{{ value|default:&quot;nothing&quot;}}</code></pre>
+<p>　　　　如果value没有传值或者值为空的话就显示nothing</p>
+<h3 id="length">3.2length</h3>
+<p>​ <strong>返回值的长度，作用于字符串和列表。</strong></p>
+<p>​ {{ value|length }}</p>
+<p>​ 返回value的长度，如 value=['a', 'b', 'c', 'd']的话，就显示4.</p>
+<h3 id="filesizeformat">3.3filesizeformat</h3>
+<p>​ <strong>将值格式化为一个 “人类可读的” 文件尺寸 （例如 <code>'13 KB'</code>, <code>'4.1 MB'</code>, <code>'102 bytes'</code>, 等等）</strong></p>
+<pre><code><code>{{ value|filesizeformat }}</code></pre>
+<p>​ 如果 value 是 123456789，输出将会是 117.7 MB。</p>
+<h3 id="slice">3.4slice</h3>
+<p>​ <strong>切片,如果 value=&quot;hello world&quot;,还有其他可切片的数据类型</strong></p>
+<pre><code><code>{{value|slice:&quot;2:-1&quot;}}</code></pre>
+<h3 id="date">3.5date</h3>
+<p>​ <strong>格式化,如果 value=datetime.datetime.now()</strong></p>
+<pre><code><code>{{ value|date:&quot;Y-m-d H:i:s&quot;}}</code></pre>
+<p>　　关于时间日期的可用的参数(除了Y,m,d等等)还有很多，有兴趣的可以去查查看看。</p>
+<h3 id="safe">3.6safe</h3>
+<p>​ Django的模板中在进行模板渲染的时候会对HTML标签和JS等语法标签进行自动转义，原因显而易见，这样是为了安全，django担心这是用户添加的数据，比如如果有人给你评论的时候写了一段js代码，这个评论一提交，js代码就执行啦，这样你是不是可以搞一些坏事儿了，写个弹窗的死循环，那浏览器还能用吗，是不是会一直弹窗啊，这叫做xss攻击，所以浏览器不让你这么搞，给你转义了。但是有的时候我们可能不希望这些HTML元素被转义，比如我们做一个内容管理系统，后台添加的文章中是经过修饰的，这些修饰可能是通过一个类似于FCKeditor编辑加注了HTML修饰符的文本，如果自动转义的话显示的就是保护HTML标签的源文件。为了在Django中关闭HTML的自动转义有两种方式，如果是一个单独的变量我们可以通过过滤器“|safe”的方式告诉Django这段代码是安全的不必转义。</p>
+<p>​ 我们去network那个地方看看，浏览器看到的都是渲染之后的结果，通过network的response的那个部分可以看到，这个a标签全部是特殊符号包裹起来的，并不是一个标签，这都是django搞得事情。</p>
+<p><img src="./images/Django-模板系统0.png" /></p>
+<p>​ value = &quot;<a href='#'>点我</a>&quot; 和 value=&quot;&quot;</p>
+<pre><code><code>{{ value|safe}}</code></pre>
+<p>​ 很多网站，都会对你提交的内容进行过滤，一些敏感词汇、特殊字符、标签、黄赌毒词汇等等，你一提交内容，人家就会检测你提交的内容，如果包含这些词汇，就不让你提交，其实这也是解决xss攻击的根本途径，例如博客园：</p>
+<p><img src="./images/Django-模板系统1.png" /></p>
+<h3 id="truncatechars">3.7truncatechars</h3>
+<p>​ <strong>如果字符串字符多于指定的字符数量，那么会被截断。截断的字符串将以可翻译的省略号序列（“...”）结尾</strong></p>
+<p>​ 参数：截断的字符数</p>
+<pre><code><code>{{ value|truncatechars:9}} #注意：最后那三个省略号也是9个字符里面的，也就是这个9截断出来的是6个字符+3个省略号，有人会说，怎么展开啊，配合前端的点击事件就行啦
+</code></pre>
+<h3 id="truncatewords">3.8truncatewords</h3>
+<p>​ <strong>在一定数量的字后截断字符串，是截多少个单词</strong></p>
+<p>​ 例如：‘hello girl hi baby yue ma’,</p>
+<pre><code><code>{{ value|truncatewords:3}}  #上面例子得到的结果是 &#39;hello girl h1...&#39;
+</code></pre>
+<h3 id="cut">3.9cut</h3>
+<p>​ <strong>移除value中所有的与给出的变量相同的字符串</strong></p>
+<pre><code><code>{{ value|cut:&#39; &#39; }}
+</code></pre>
+<p>　　　　如果value为'i love you'，那么将输出'iloveyou'.</p>
+<h3 id="join">3.10join</h3>
+<p>​ <strong>使用字符串连接列表，{{ list|join:', ' }}，就像Python的str.join(list)</strong></p>
+<h3 id="timesince了解">3.11timesince（了解）</h3>
+<p>​ <strong>将日期格式设为自该日期起的时间（例如，“4天，6小时”）</strong></p>
+<p>​ 采用一个可选参数，它是一个包含用作比较点的日期的变量（不带参数，比较点为现在）。 例如，如果blog_date是表示2006年6月1日午夜的日期实例，并且comment_date是2006年6月1日08:00的日期实例，则以下将返回“8小时”：</p>
+<pre><code><code>{{ blog_date|timesince:comment_date }}
+</code></pre>
+<p>​ 分钟是所使用的最小单位，对于相对于比较点的未来的任何日期，将返回“0分钟”。</p>
+<h3 id="timeuntil了解">3.18timeuntil（了解）</h3>
+<p>​ 似于timesince，除了它测量从现在开始直到给定日期或日期时间的时间。 例如，如果今天是2006年6月1日，而conference_date是保留2006年6月29日的日期实例，则{{ conference_date | timeuntil }}将返回“4周”。</p>
+<p>​ 使用可选参数，它是一个包含用作比较点的日期（而不是现在）的变量。 如果from_date包含2006年6月22日，则以下内容将返回“1周”：</p>
+<pre><code><code>{{ conference_date|timeuntil:from_date }}
+</code></pre>
+<p>　　这里简单介绍一些常用的模板的过滤器，<a href="http://python.usyiyi.cn/translate/django_182/ref/templates/builtins.html#ref-templates-builtins-tags">更多详见</a></p>
+<h2 id="标签tags">4.标签Tags</h2>
+<p>​ 标签看起来像是这样的： <code>{% tag %}</code>。标签比变量更加复杂：一些在输出中创建文本，一些通过循环或逻辑来控制流程，一些加载其后的变量将使用到的额外信息到模版中。一些标签需要开始和结束标签 （例如<code>{% tag %} ...</code>标签 内容 ... {% endtag %}）。</p>
+<h3 id="for标签">4.1for标签</h3>
+<p>​ 遍历每一个元素： 写个for，然后 tab键自动生成for循环的结构，循环很基础，就这么简单的用，没有什么break之类的，复杂一些的功能，你要通过js</p>
+<pre><code><code>{% for person in person_list %}
+    &lt;p&gt;{{ person.name }}&lt;/p&gt;  &lt;!--凡是变量都要用两个大括号括起来--&gt;
+{% endfor %}
+</code></pre>
+<p>​ 可以利用<code>{% for obj in list reversed %}</code>反向完成循环。</p>
+<p>​ 遍历一个字典：</p>
+<pre><code><code>{% for key,val in dic.items %}
+    &lt;p&gt;{{ key }}:{{ val }}&lt;/p&gt;
+{% endfor %}
+</code></pre>
+<p>​ 注：循环序号可以通过｛｛forloop｝｝显示，必须在循环内部用　　</p>
+<pre><code><code>forloop.counter            当前循环的索引值(从1开始)，forloop是循环器，通过点来使用功能
+forloop.counter0           当前循环的索引值（从0开始）
+forloop.revcounter         当前循环的倒序索引值（从1开始）
+forloop.revcounter0        当前循环的倒序索引值（从0开始）
+forloop.first              当前循环是不是第一次循环（布尔值）
+forloop.last               当前循环是不是最后一次循环（布尔值）
+forloop.parentloop         本层循环的外层循环的对象，再通过上面的几个属性来显示外层循环的计数等
+</code></pre>
+<p><img src="./images/Django-模板系统2.png" /></p>
+<p><img src="./images/Django-模板系统3.png" /></p>
+<h4 id="for-...-empty">4.1.1for ... empty</h4>
+<p><code>　　　　for</code> 标签带有一个可选的<code>{% empty %}</code> 从句，以便在给出的组是空的或者没有被找到时，可以有所操作。</p>
+<pre><code><code>{% for person in person_list %}
+    &lt;p&gt;{{ person.name }}&lt;/p&gt;
+
+{% empty %}
+    &lt;p&gt;sorry,no person here&lt;/p&gt;
+{% endfor %}
+</code></pre>
+<h3 id="if-标签">4.2if 标签</h3>
+<p><code>　　　　{% if %}</code>会对一个变量求值，如果它的值是“True”（存在、不为空、且不是boolean类型的false值），对应的内容块会输出。</p>
+<pre><code><code>{% if num &gt; 100 or num &lt; 0 %}
+    &lt;p&gt;无效&lt;/p&gt;  &lt;!--不满足条件，不会生成这个标签--&gt;
+{% elif num &gt; 80 and num &lt; 100 %}
+    &lt;p&gt;优秀&lt;/p&gt;
+{% else %}  &lt;!--也是在if标签结构里面的--&gt;
+    &lt;p&gt;凑活吧&lt;/p&gt;
+{% endif %}
+</code></pre>
+<p>​ 当然也可以只有if和else</p>
+<pre><code><code>{% if user_list|length &gt; 5 %}  &lt;!--结合过滤器来使用--&gt;
+  七座豪华SUV
+{% else %}
+    黄包车
+{% endif %}
+</code></pre>
+<p>​ if语句支持 and 、or、==、&gt;、&lt;、!=、&lt;=、&gt;=、in、not in、is、is not判断，注意条件两边都有空格。</p>
+<h4 id="with">4.2.1with</h4>
+<p>​ 使用一个简单地名字缓存一个复杂的变量，多用于给一个复杂的变量起别名，当你需要使用一个“昂贵的”方法（比如访问数据库）很多次的时候是非常有用的</p>
+<p>注意等号左右不要加空格。</p>
+<pre><code><code>{% with total=business.employees.count %}
+    {{ total }} &lt;!--只能在with语句体内用--&gt;
+{% endwith %}
+</code></pre>
+<p>或</p>
+<pre><code><code>{% with business.employees.count as total %}
+    {{ total }}
+{% endwith %}
+</code></pre>
+<h3 id="csrf_token">4.3csrf_token</h3>
+<p>​ 我们以post方式提交表单的时候，会报错，还记得我们在settings里面的中间件配置里面把一个csrf的防御机制给注销了啊，本身不应该注销的，而是应该学会怎么使用它，并且不让自己的操作被forbiden，通过这个东西就能搞定。</p>
+<p>​ 这个标签用于跨站请求伪造保护，</p>
+<p>​ 在页面的form表单里面（注意是在form表单里面）任何位置写上{% csrf_token %}，这个东西模板渲染的时候替换成了<input type="hidden" name="csrfmiddlewaretoken" value="8J4z1wiUEXt0gJSN59dLMnktrXFW0hv7m4d40Mtl37D7vJZfrxLir9L3jSTDjtG8">，隐藏的，这个标签的值是个随机字符串，提交的时候，这个东西也被提交了，首先这个东西是我们后端渲染的时候给页面加上的，那么当你通过我给你的form表单提交数据的时候，你带着这个内容我就认识你，不带着，我就禁止你，因为后台我们django也存着这个东西，和你这个值相同的一个值，可以做对应验证是不是我给你的token，存储这个值的东西我们后面再学，你先知道一下就行了，就像一个我们后台给这个用户的一个通行证，如果你用户没有按照我给你的这个正常的页面来post提交表单数据，或者说你没有先去请求我这个登陆页面，而是直接模拟请求来提交数据，那么我就能知道，你这个请求是非法的，反爬虫或者恶意攻击我的网站，以后将中间件的时候我们在细说这个东西，但是现在你要明白怎么回事，明白为什么django会加这一套防御。</p>
+<p><strong>爬虫发送post请求简单模拟：</strong></p>
+<pre><code><code>import requests
+
+res = requests.post(&#39;http://127.0.0.1:8000/login/&#39;,data={
+    &#39;username&#39;:&#39;chao&#39;,
+    &#39;password&#39;:&#39;123&#39;
+})
+
+print(res.text)　　
+</code></pre>
+<h3 id="注释">4.4注释</h3>
+<pre><code><code>{# ... #}
+</code></pre>
+<h3 id="注意事项">4.5注意事项</h3>
+<p><strong>Django的模板语言不支持连续判断，即不支持以下写法：</strong></p>
+<pre><code><code>{% if a &gt; b &gt; c %}
+...
+{% endif %}
+</code></pre>
+<p><strong>Django的模板语言中属性的优先级大于方法（了解）</strong></p>
+<pre><code><code>def xx(request):
+    d = {&quot;a&quot;: 1, &quot;b&quot;: 2, &quot;c&quot;: 3, &quot;items&quot;: &quot;100&quot;}
+    return render(request, &quot;xx.html&quot;, {&quot;data&quot;: d})
+</code></pre>
+<p>​ 如上，我们在使用render方法渲染一个页面的时候，传的字典d有一个key是items并且还有默认的 d.items() 方法，此时在模板语言中:</p>
+<pre><code><code>{{ data.items }}
+</code></pre>
+<p>​ 默认会取d的items key的值。</p>
+<h2 id="模板继承">5.模板继承</h2>
+<p>　　Django模版引擎中最强大也是最复杂的部分就是模版继承了。模版继承可以让您创建一个基本的“骨架”模版，它包含您站点中的全部元素，并且可以定义能够被子模版覆盖的 blocks 。</p>
+<p>​ 通过从下面这个例子开始，可以容易的理解模版继承：</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot; /&gt;
+    &lt;title&gt;{% block title %}My amazing site{%/span&gt; endblock %}&lt;/title&gt;
+&lt;/head&gt;
+
+&lt;body&gt;
+    &lt;div id=&quot;sidebar&quot;&gt;
+        {% block sidebar %}
+        &lt;ul&gt;
+            &lt;li&gt;&lt;a href=&quot;/&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&quot;/blog/&quot;&gt;Blog&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+        {% endblock %}
+    &lt;/div&gt;
+
+    &lt;div id=&quot;content&quot;&gt;
+        {% block content %}{% endblock %}
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>​ 这个模版，我们把它叫作 <code>base.html</code>， 它定义了一个可以用于两列排版页面的简单HTML骨架。“子模版”的工作是用它们的内容填充空的blocks。</p>
+<p>​ 在这个例子中， <code>block</code> 标签定义了三个可以被子模版内容填充的block。 <code>block</code> 告诉模版引擎： 子模版可能会覆盖掉模版中的这些位置。</p>
+<p>​ 子模版可能看起来是这样的：</p>
+<pre><code><code>{% extends &quot;base.html&quot; %}
+ 
+{% block title %}My amazing blog{% endblock %}
+ 
+{% block content %}
+{% for entry in blog_entries %}
+    &lt;h2&gt;{{ entry.title }}&lt;/h2&gt;
+    &lt;p&gt;{{ entry.body }}&lt;/p&gt;
+{% endfor %}
+{% endblock %}
+</code></pre>
+<p><strong>extends</strong>标签是这里的关键。它告诉模版引擎，这个模版“继承”了另一个模版。当模版系统处理这个模版时，首先，它将定位父模版——在此例中，就是“base.html”。</p>
+<p>​ 那时，模版引擎将注意到 <code>base.html</code> 中的三个 <code>block</code> 标签，并用子模版中的内容来替换这些block。根据 <code>blog_entries</code> 的值，输出可能看起来是这样的：</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;style.css&quot; /&gt;
+    &lt;title&gt;My amazing blog&lt;/title&gt;
+&lt;/head&gt;
+ 
+&lt;body&gt;
+    &lt;div id=&quot;sidebar&quot;&gt;
+        &lt;ul&gt;
+            &lt;li&gt;&lt;a href=&quot;/&quot;&gt;Home&lt;/a&gt;&lt;/li&gt;
+            &lt;li&gt;&lt;a href=&quot;/blog/&quot;&gt;Blog&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+    &lt;/div&gt;
+ 
+    &lt;div id=&quot;content&quot;&gt;
+        &lt;h2&gt;Entry one&lt;/h2&gt;
+        &lt;p&gt;This is my first entry.&lt;/p&gt;
+ 
+        &lt;h2&gt;Entry two&lt;/h2&gt;
+        &lt;p&gt;This is my second entry.&lt;/p&gt;
+    &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>​ 请注意，子模版并没有定义 <code>sidebar</code> block，所以系统使用了父模版中的值。父模版的 <code>{% block %}</code> 标签中的内容总是被用作备选内容（fallback）。</p>
+<p>​ 这种方式使代码得到最大程度的复用，并且使得添加内容到共享的内容区域更加简单，例如，部分范围内的导航。</p>
+<p>​ 这里是使用继承的一些提示：</p>
+<ul>
+<li>如果你在模版中使用 <code>{% extends %}</code> 标签，它必须是模版中的第一个标签。其他的任何情况下，模版继承都将无法工作，模板渲染的时候django都不知道你在干啥。</li>
+<li>在base模版中设置越多的 <code>{% block %}</code> 标签越好。请记住，子模版不必定义全部父模版中的blocks，所以，你可以在大多数blocks中填充合理的默认内容，然后，只定义你需要的那一个。多一点钩子总比少一点好。</li>
+<li>如果你发现你自己在大量的模版中复制内容，那可能意味着你应该把内容移动到父模版中的一个 <code>{% block %}</code> 中。</li>
+<li>If you need to get the content of the block from the parent template, the <code>{{ block.super }}</code> variable will do the trick. This is useful if you want to add to the contents of a parent block instead of completely overriding it. Data inserted using <code>{{ block.super }}</code> will not be automatically escaped (see the next section), since it was already escaped, if necessary, in the parent template. 将子页面的内容和继承的母版中block里面的内容同时保留</li>
+</ul>
+<p><img src="./images/Django-模板系统4.png" /></p>
+<ul>
+<li>为了更好的可读性，你也可以给你的 <code>{% endblock %}</code> 标签一个 <em>名字</em> 。例如：</li>
+</ul>
+<pre><code><code>{% block content %}
+...
+{% endblock content %}　　
+</code></pre>
+<p>　　在大型模版中，这个方法帮你清楚的看到哪一个　 <code>{% block %}</code> 标签被关闭了。</p>
+<ul>
+<li>不能在一个模版中定义多个相同名字的 <code>block</code> 标签。</li>
+</ul>
+<h2 id="组件">6.组件</h2>
+<p>​ 可以将常用的页面内容如导航条，页尾信息等组件保存在单独的文件中，然后在需要使用的地方，文件的任意位置按如下语法导入即可。</p>
+<pre><code><code>{% include &#39;navbar.html&#39; %}
+</code></pre>
+<p>例如：有个如下的导航栏,nav.html　</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+    &lt;style&gt;
+        .c1{
+            background-color: red;
+            height: 40px;
+        }
+    &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;div class=&quot;c1&quot;&gt;
+    &lt;div&gt;
+        &lt;a href=&quot;&quot;&gt;xx&lt;/a&gt;
+        &lt;a href=&quot;&quot;&gt;dd&lt;/a&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>嵌入导航栏的页面，test.html</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+{% include &#39;nav.html&#39; %}
+&lt;h1&gt;xxxxxxxxxx&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>组件和插件的简单区别</p>
+<pre><code><code>组件是提供某一完整功能的模块，如：编辑器组件，QQ空间提供的关注组件 等。
+
+而插件更倾向封闭某一功能方法的函数。
+
+这两者的区别在 Javascript 里区别很小，组件这个名词用得不多，一般统插件。
+</code></pre>
+<h2 id="自定义标签和过滤器">7.自定义标签和过滤器</h2>
+<p><strong>在settings中的INSTALLED_APPS配置当前app，不然django无法找到自定义的simple_tag.</strong></p>
+<p><strong>在app中创建templatetags模块(模块名只能是templatetags)</strong></p>
+<p><strong>创建任意 .py 文件，如：my_tags.py</strong></p>
+<pre><code><code>from django import template
+from django.utils.safestring import mark_safe
+ 
+register = template.Library()   #register的名字是固定的,不可改变
+ 
+ 
+@register.filter
+def filter_multi(v1,v2):
+    return  v1 * v2
+
+@register.simple_tag  #和自定义filter类似，只不过接收更灵活的参数，没有个数限制。
+def simple_tag_multi(v1,v2):
+    return  v1 * v2
+
+@register.simple_tag
+def my_input(id,arg):
+    result = &quot;&lt;input type=&#39;text&#39; id=&#39;%s&#39; class=&#39;%s&#39; /&gt;&quot; %(id,arg,)
+    return mark_safe(result)
+</code></pre>
+<p><strong>在使用自定义simple_tag和filter的html文件中导入之前创建的 my_tags.py</strong></p>
+<pre><code><code>{% load my_tags %}　
+</code></pre>
+<p><strong>使用simple_tag和filter（如何调用）</strong></p>
+<pre><code><code>-------------------------------.html
+{% load xxx %}  
+      
+# num=12
+{{ num|filter_multi:2 }} #24
+ 
+{{ num|filter_multi:&quot;[22,333,4444]&quot; }}
+ 
+{% simple_tag_multi 2 5 %}  参数不限,但不能放在if for语句中
+{% simple_tag_multi num 5 %}
+</code></pre>
+<p><strong>注意：filter可以用在if、for等语句后，simple_tag不可以</strong></p>
+<pre><code><code>{% if num|filter_multi:30 &gt; 100 %}
+    {{ num|filter_multi:30 }}
+{% endif %}
+</code></pre>
+<h2 id="inclusion_tag">8.inclusion_tag</h2>
+<p>多用于返回html代码片段</p>
+<p><strong>templatetags/my_inclusion.py</strong></p>
+<pre><code><code>from django import template
+
+register = template.Library()
+
+
+@register.inclusion_tag(&#39;result.html&#39;)  #将result.html里面的内容用下面函数的返回值渲染，然后作为一个组件一样，加载到使用这个函数的html文件里面
+def show_results(n): #参数可以传多个进来
+    n = 1 if n &lt; 1 else int(n)
+    data = [&quot;第{}项&quot;.format(i) for i in range(1, n+1)]
+    return {&quot;data&quot;: data}#这里可以穿多个值，和render的感觉是一样的{&#39;data1&#39;:data1,&#39;data2&#39;:data2....}
+</code></pre>
+<p><strong>templates/snippets/result.html</strong></p>
+<pre><code><code>&lt;ul&gt;
+  {% for choice in data %}
+    &lt;li&gt;{{ choice }}&lt;/li&gt;
+  {% endfor %}
+&lt;/ul&gt;
+</code></pre>
+<p><strong>templates/index.html</strong></p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta http-equiv=&quot;x-ua-compatible&quot; content=&quot;IE=edge&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot;&gt;
+  &lt;title&gt;inclusion_tag test&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+{% load inclusion_tag_test %}
+
+{% show_results 10 %}  
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h2 id="静态文件相关">9.静态文件相关</h2>
+<p>​ js、css、img等都叫做静态文件，那么关于django中静态文件的配置，我们就需要在settings配置文件里面写上这写内容：</p>
+<pre><code><code># STATIC_URL = &#39;/xxx/&#39; #别名,随便写名字，但是如果你改名字，别忘了前面页面里面如果你是通过/xxx/bootstrap.css的时候，如果这里的别名你改成了/static/的话，你前端页面的路径要改成/static/bootstrap.css。所以我们都是用下面的load static的方式来使用静态文件路径
+STATIC_URL = &#39;/static/&#39; #别名
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR,&#39;jingtaiwenjian&#39;), #注意别忘了写逗号,第二个参数就是项目中你存放静态文件的文件夹名称
+]
+</code></pre>
+<p>​ 目录：别名也是一种安全机制，浏览器上通过调试台你能够看到的是别名的名字，这样别人就不能知道你静态文件夹的名字了，不然别人就能通过这个文件夹路径进行攻击。　　</p>
+<p><img src="./images/Django-模板系统5.png" /></p>
+<p>​ 前端页面引入静态文件的写法，因为别名也可能会修改，所以使用路径的时候通过load static来找到别名，通过别名映射路径的方式来获取静态文件</p>
+<p><img src="./images/Django-模板系统6.png" /></p>
+<h3 id="static">9.1{% static %}</h3>
+<pre><code><code>{% load static %}
+&lt;img src=&quot;{% static &quot;images/hi.jpg&quot; %}&quot; alt=&quot;Hi!&quot; /&gt;
+</code></pre>
+<p><strong>引用JS文件时使用</strong></p>
+<pre><code><code>{% load static %}
+&lt;script src=&quot;{% static &quot;mytest.js&quot; %}&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p><strong>某个文件多处被用到可以存为一个变量</strong></p>
+<pre><code><code>{% load static %}
+{% static &quot;images/hi.jpg&quot; as myphoto %}
+&lt;img src=&quot;{{ myphoto }}&quot;&gt;&lt;/img&gt;
+</code></pre>
+<h3 id="get_static_prefix">9.2{% get_static_prefix %}</h3>
+<pre><code><code>{% load static %}
+&lt;img src=&quot;{% get_static_prefix %}images/hi.jpg&quot; alt=&quot;Hi!&quot; /&gt;
+</code></pre>
+<p>或者</p>
+<pre><code><code>{% load static %}
+{% get_static_prefix as STATIC_PREFIX %}
+
+&lt;img src=&quot;{{ STATIC_PREFIX }}images/hi.jpg&quot; alt=&quot;Hi!&quot; /&gt;
+&lt;img src=&quot;{{ STATIC_PREFIX }}images/hi2.jpg&quot; alt=&quot;Hello!&quot; /&gt;
+</code></pre>
+<p><strong>注意一个html文件中写相对路径时需要注意的一个问题</strong></p>
+<pre><code><code>&lt;form action=&quot;/login/&quot;&gt;&lt;/form&gt;
+&lt;img src=&quot;/static/1.jpg&quot; alt=&quot;&quot;&gt;
+等标签需要写路径的地方，如果写的是相对路径，那么前置的/这个斜杠必须写上，不然这个请求会拼接当前网页的路径来发送请求，就不能匹配我们的后端路径了
+</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

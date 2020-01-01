@@ -1,0 +1,154 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修重新整理django中Auth模块' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>重新整理django中Auth模块</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11483464.html</div><br>
+    <h1 id="自我总结">0907自我总结</h1>
+<h1 id="重新整理django中auth模块">重新整理django中Auth模块</h1>
+<p><code>from django.contrib import auth</code></p>
+<h2 id="一.设置">一.设置</h2>
+<p>默认Auth表单</p>
+<p><code>auth</code>默认是使用自带的<code>user</code>表单</p>
+<h3 id="自定义auth表单">自定义Auth表单</h3>
+<p>一定要在<code>settings.py</code>中告诉<code>Django</code>，我现在使用我新定义的<code>UserInfo</code>表来做用户认证。写法如下：</p>
+<pre><code><code># 引用Django自带的User表，继承使用时需要设置
+AUTH_USER_MODEL = &quot;app名.UserInfo&quot;</code></pre>
+<p>在<code>modles.py</code>创建表单模型可以对<code>AbstractUser</code>进行继承因为我们可以从源码中看出来auth自带的user表示继承<code>AbstractUser</code>类,所有我们可以可以同样继承然后对于他的内容进行自定义</p>
+<pre><code><code>from django.contrib.auth.models import AbstractUser
+class UserInfo(AbstractUser):
+    新增的内容
+    通过源码我们可以看出自带的几个内容</code></pre>
+<p><code>AbstractUser</code>自带的字段</p>
+<p><code>源码里的内容</code></p>
+<pre><code><code>username :账号
+first_name:姓
+last_name:名
+email:邮箱
+is_staff ： 用户是否拥有网站的管理权限.
+is_active： 是否允许用户登录, 设置为 False，可以在不删除用户的前提下禁止用户登录。
+date_joined:创建日期</code></pre>
+<p>再看他的父级<code>AbstractBaseUser</code></p>
+<pre><code><code>password:密码
+last_login:最后一次登入时间
+is_active:是否允许用户登录, 设置为 False，可以在不删除用户的前提下禁止用户登录。</code></pre>
+<p>再看他的另外的父级<code>PermissionsMixin</code></p>
+<pre><code><code>is_superuser:是否为超级账号也就管理员
+groups:分组
+user_permissions:用户权限</code></pre>
+<p>我们可以再这基础上进行新增</p>
+<h2 id="二.注册相关">二.注册相关</h2>
+<h3 id="创建普通用户">创建普通用户</h3>
+<p><code>create_user()</code></p>
+<p>auth 提供的一个创建新用户的方法，需要提供必要参数（username、password）等。</p>
+<p>用法：</p>
+<pre><code><code>from django.contrib.auth.models import User
+user = User.objects.create_user（username=&#39;用户名&#39;,password=&#39;密码&#39;,email=&#39;邮箱&#39;,...）</code></pre>
+<h3 id="创建超级用户">创建超级用户</h3>
+<p><code>create_superuser()</code></p>
+<p>auth 提供的一个创建新的超级用户的方法，需要提供必要参数（username、password）等。</p>
+<p>用法：</p>
+<pre><code><code>from django.contrib.auth.models import User
+user = User.objects.create_superuser（username=&#39;用户名&#39;,password=&#39;密码&#39;,email=&#39;邮箱&#39;,...）</code></pre>
+<h2 id="三.登入相关">三.登入相关</h2>
+<h3 id="验证登入">验证登入</h3>
+<p><code>authenticate()</code></p>
+<p>提供了用户认证功能，即验证用户名以及密码是否正确，一般需要username 、password两个关键字参数。</p>
+<p>如果认证成功（用户名和密码正确有效），便会返回一个 User 对象。</p>
+<p>authenticate()会在该 User 对象上设置一个属性来标识后端已经认证了该用户，且该信息在后续的登录过程中是需要的。</p>
+<p>用法：</p>
+<pre><code><code>user = authenticate(username=&#39;usernamer&#39;,password=&#39;password&#39;)</code></pre>
+<h3 id="将登入的对象存放在request中">将登入的对象存放在request中</h3>
+<p><code>login(HttpRequest, user)</code></p>
+<p>该函数接受一个HttpRequest对象，以及一个经过认证的User对象。</p>
+<p>该函数实现一个用户登录的功能。它本质上会在后端为该用户生成相关session数据。</p>
+<p>用法：</p>
+<pre><code><code>from django.contrib.auth import authenticate, login
+   
+def my_view(request):
+  username = request.POST[&#39;username&#39;]
+  password = request.POST[&#39;password&#39;]
+  user = authenticate(username=username, password=password)
+  if user is not None:
+    login(request, user)
+    # Redirect to a success page.
+    ...
+  else:
+    # Return an &#39;invalid login&#39; error message.
+    ...</code></pre>
+<p>这样设置之后可以直接<code>request.user</code>点出其<code>账号相关信息</code></p>
+<p><code>is_authenticated</code>为<code>True</code></p>
+<h3 id="将登入的对象存放在request中去除">将登入的对象存放在request中去除</h3>
+<p><code>logout(request)</code></p>
+<p>该函数接受一个HttpRequest对象，无返回值。</p>
+<p>当调用该函数时，当前请求的session信息会全部清除。该用户即使没有登录，使用该函数也不会报错。</p>
+<p>用法：</p>
+<pre><code><code>from django.contrib.auth import logout
+   
+def logout_view(request):
+  logout(request)
+  # Redirect to a success page.</code></pre>
+<p>这样设置之后可以直接<code>request.user</code>就为空</p>
+<p><code>is_authenticated</code>为<code>False</code></p>
+<h3 id="通过认证">通过认证</h3>
+<p><code>is_authenticated()</code></p>
+<p>用来判断当前请求是否通过了认证。</p>
+<p>用法:</p>
+<pre><code><code>def my_view(request):
+  if not request.user.is_authenticated():
+    return redirect(&#39;%s?next=%s&#39; % (settings.LOGIN_URL, request.path))</code></pre>
+<p>页面中操作</p>
+<pre><code><code>{% if request.user.is_authenticated %}
+    如果里面有通过验证的user就为真没有就没否</code></pre>
+<h2 id="四.登入装饰器">四.登入装饰器</h2>
+<p><code>login_requierd()</code></p>
+<p>auth 给我们提供的一个装饰器工具，用来快捷的给某个视图添加登录校验。</p>
+<p>用法：</p>
+<pre><code><code>from django.contrib.auth.decorators import login_required
+      
+@login_required
+def my_view(request):
+  ...</code></pre>
+<p>若用户没有登录，则会跳转到django默认的 登录URL '/accounts/login/ ' 并传递当前访问url的绝对路径 (登陆成功后，会重定向到该路径)。</p>
+<p>如果需要自定义登录的URL，则需要在settings.py文件中通过LOGIN_URL进行修改。</p>
+<p>示例：</p>
+<pre><code><code>LOGIN_URL = &#39;/login/&#39;  # 这里配置成你项目登录页面的路由</code></pre>
+<h2 id="五.密码相关">五.密码相关</h2>
+<h3 id="检验密码是否正确">检验密码是否正确</h3>
+<p><code>check_password(password)</code></p>
+<p>auth 提供的一个检查密码是否正确的方法，需要提供当前请求用户的密码。</p>
+<p>密码正确返回True，否则返回False。</p>
+<p>用法：</p>
+<pre><code><code>ok = user.check_password(&#39;密码&#39;)</code></pre>
+<h3 id="修改密码">修改密码</h3>
+<p><code>set_password(password)</code></p>
+<p>auth 提供的一个修改密码的方法，接收 要设置的新密码 作为参数。</p>
+<p>注意：设置完一定要调用用户对象的save方法！！！</p>
+<p>用法：</p>
+<pre><code><code>user.set_password(password=&#39;&#39;)
+user.save()</code></pre>
+<h2 id="六.注意">六.注意</h2>
+<p><code>上面的写的都是基于auth自带的user表达写的</code></p>
+<p>导入</p>
+<p><code>from django.contrib.auth.models import User</code></p>
+<p>如果是自定义表单,请把<code>user换成你自定义的表单名称</code></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

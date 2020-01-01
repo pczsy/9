@@ -1,0 +1,272 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python使用APScheduler实现定时任务' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python使用APScheduler实现定时任务</center></div><div class='banquan'>原文出处:本文由博客园博主gdjlc提供。<br/>
+原文连接:https://www.cnblogs.com/gdjlc/p/11432526.html</div><br>
+    <p>APScheduler是基于Quartz的一个Python定时任务框架。提供了基于日期、固定时间间隔以及crontab类型的任务，并且可以持久化任务。<br />在线文档：https://apscheduler.readthedocs.io/en/latest/userguide.html</p>
+<p><strong>一、安装APScheduler</strong> </p>
+<div class="cnblogs_code">
+<pre><code>pip install apscheduler</pre>
+</div>
+<p><strong>二、基本概念</strong></p>
+<p>APScheduler有四大组件：<br />1、触发器 triggers ：<br />触发器包含调度逻辑。每个作业都有自己的触发器，用于确定下一个任务何时运行。除了初始配置之外，触发器是完全无状态的。<br />有三种内建的trigger:<br />（1）date: 特定的时间点触发<br />（2）interval: 固定时间间隔触发<br />（3）cron: 在特定时间周期性地触发<br />2、任务储存器 job stores：用于存放任务，把任务存放在内存（为默认MemoryJobStore）或数据库中。<br />3、执行器 executors： 执行器是将任务提交到线程池或进程池中运行，当任务完成时，执行器通知调度器触发相应的事件。<br />4、调度器 schedulers： 把上方三个组件作为参数，通过创建调度器实例来运行<br />根据开发需求选择相应的组件，下面是不同的调度器组件：<br />BlockingScheduler 阻塞式调度器：适用于只跑调度器的程序。<br />BackgroundScheduler 后台调度器：适用于非阻塞的情况，调度器会在后台独立运行。<br />AsyncIOScheduler AsyncIO调度器，适用于应用使用AsnycIO的情况。<br />GeventScheduler Gevent调度器，适用于应用通过Gevent的情况。<br />TornadoScheduler Tornado调度器，适用于构建Tornado应用。<br />TwistedScheduler Twisted调度器，适用于构建Twisted应用。<br />QtScheduler Qt调度器，适用于构建Qt应用。</p>
+<p><strong>三、使用步骤</strong><br />1、新建一个调度器schedulers<br />2、添加调度任务<br />3、运行调度任务</p>
+<p><strong>四、使用实例</strong></p>
+<p><strong><span style="color: #3366ff;">1、触发器date</span></strong></p>
+<p>特定的时间点触发，只执行一次。参数如下：</p>
+<table style="height: 96px; width: 698px;" border="1">
+<tbody>
+<tr>
+<td>参数</td>
+<td>说明</td>
+
+
+
+</tr>
+<tr>
+<td>run_date (datetime 或 str)</td>
+<td>作业的运行日期或时间</td>
+
+
+
+</tr>
+<tr>
+<td>timezone (datetime.tzinfo 或 str)</td>
+<td>指定时区</td>
+
+
+
+</tr>
+
+
+
+</tbody>
+
+
+
+</table>
+<p>使用例子：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> datetime <span style="color: #0000ff;">import</span><span style="color: #000000;"> datetime
+</span><span style="color: #0000ff;">from</span> datetime <span style="color: #0000ff;">import</span><span style="color: #000000;"> date
+</span><span style="color: #0000ff;">from</span> apscheduler.schedulers.blocking <span style="color: #0000ff;">import</span><span style="color: #000000;"> BlockingScheduler
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> job(text):    
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(text)
+
+scheduler </span>=<span style="color: #000000;"> BlockingScheduler()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在 2019-8-30 运行一次 job 方法</span>
+scheduler.add_job(job, <span style="color: #800000;">'</span><span style="color: #800000;">date</span><span style="color: #800000;">'</span>, run_date=date(2019, 8, 30), args=[<span style="color: #800000;">'</span><span style="color: #800000;">text1</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在 2019-8-30 01:00:00 运行一次 job 方法</span>
+scheduler.add_job(job, <span style="color: #800000;">'</span><span style="color: #800000;">date</span><span style="color: #800000;">'</span>, run_date=datetime(2019, 8, 30, 1, 0, 0), args=[<span style="color: #800000;">'</span><span style="color: #800000;">text2</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在 2019-8-30 01:00:01 运行一次 job 方法</span>
+scheduler.add_job(job, <span style="color: #800000;">'</span><span style="color: #800000;">date</span><span style="color: #800000;">'</span>, run_date=<span style="color: #800000;">'</span><span style="color: #800000;">2019-8-30 01:00:00</span><span style="color: #800000;">'</span>, args=[<span style="color: #800000;">'</span><span style="color: #800000;">text3</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+
+scheduler.start()</span></pre>
+</div>
+<p><strong style="color: #3366ff;">2、触发器interval</strong></p>
+<p>固定时间间隔触发。参数如下：</p>
+<table style="height: 207px; width: 703px;" border="1">
+<tbody>
+<tr>
+<td>参数</td>
+<td>说明</td>
+</tr>
+<tr>
+<td>weeks (int)</td>
+<td>间隔几周</td>
+</tr>
+<tr>
+<td>days (int)</td>
+<td>间隔几天</td>
+</tr>
+<tr>
+<td>hours (int)</td>
+<td>间隔几小时</td>
+</tr>
+<tr>
+<td>minutes (int)</td>
+<td>间隔几分钟</td>
+</tr>
+<tr>
+<td>seconds (int)</td>
+<td>间隔多少秒</td>
+</tr>
+<tr>
+<td>start_date (datetime 或 str)</td>
+<td>开始日期</td>
+</tr>
+<tr>
+<td>end_date (datetime 或 str)</td>
+<td>结束日期</td>
+</tr>
+<tr>
+<td>timezone (datetime.tzinfo 或str)</td>
+<td>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+<p>使用例子：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> apscheduler.schedulers.blocking <span style="color: #0000ff;">import</span><span style="color: #000000;"> BlockingScheduler
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> job(text):    
+    t </span>= time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">'</span><span style="color: #000000;">, time.localtime(time.time()))
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{} --- {}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(text, t))
+
+scheduler </span>=<span style="color: #000000;"> BlockingScheduler()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 每隔 1分钟 运行一次 job 方法</span>
+scheduler.add_job(job, <span style="color: #800000;">'</span><span style="color: #800000;">interval</span><span style="color: #800000;">'</span>, minutes=1, args=[<span style="color: #800000;">'</span><span style="color: #800000;">job1</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在 2019-08-29 22:15:00至2019-08-29 22:17:00期间，每隔1分30秒 运行一次 job 方法</span>
+scheduler.add_job(job, <span style="color: #800000;">'</span><span style="color: #800000;">interval</span><span style="color: #800000;">'</span>, minutes=1, seconds = 30, start_date=<span style="color: #800000;">'</span><span style="color: #800000;">2019-08-29 22:15:00</span><span style="color: #800000;">'</span>, end_date=<span style="color: #800000;">'</span><span style="color: #800000;">2019-08-29 22:17:00</span><span style="color: #800000;">'</span>, args=[<span style="color: #800000;">'</span><span style="color: #800000;">job2</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+
+scheduler.start()
+
+</span><span style="color: #800000;">'''</span><span style="color: #800000;">
+运行结果：
+job2 --- 2019-08-29 22:15:00
+job1 --- 2019-08-29 22:15:46
+job2 --- 2019-08-29 22:16:30
+job1 --- 2019-08-29 22:16:46
+job1 --- 2019-08-29 22:17:46
+...余下省略...
+</span><span style="color: #800000;">'''</span></pre>
+</div>
+<p>&nbsp;<span style="color: #3366ff;"><strong>3、触发器cron</strong></span></p>
+<p>在特定时间周期性地触发。参数如下：</p>
+<table style="height: 359px; width: 729px;" border="1">
+<tbody>
+<tr>
+<td>参数</td>
+<td>说明</td>
+</tr>
+<tr>
+<td>year (int 或 str)</td>
+<td>年，4位数字</td>
+</tr>
+<tr>
+<td>month (int 或 str)</td>
+<td>月 (范围1-12)</td>
+</tr>
+<tr>
+<td>day (int 或 str)</td>
+<td>日 (范围1-31)</td>
+</tr>
+<tr>
+<td>week (int 或 str)</td>
+<td>周 (范围1-53)</td>
+</tr>
+<tr>
+<td>day_of_week (int 或 str)</td>
+<td>周内第几天或者星期几 (范围0-6 或者 mon,tue,wed,thu,fri,sat,sun)</td>
+</tr>
+<tr>
+<td>hour (int 或 str)</td>
+<td>时 (范围0-23)</td>
+</tr>
+<tr>
+<td>minute (int 或 str)</td>
+<td>分 (范围0-59)</td>
+</tr>
+<tr>
+<td>second (int 或 str)</td>
+<td>秒 (范围0-59)</td>
+</tr>
+<tr>
+<td>start_date (datetime 或 str)</td>
+<td>最早开始日期(包含)</td>
+</tr>
+<tr>
+<td>end_date (datetime 或 str)</td>
+<td>最晚结束时间(包含)</td>
+</tr>
+<tr>
+<td>timezone (datetime.tzinfo 或str)</td>
+<td>指定时区</td>
+</tr>
+</tbody>
+</table>
+<p>这些参数支持算数表达式，取值格式有如下：</p>
+<p><img src="./images/Python使用APScheduler实现定时任务0.png" alt="" /></p>
+<p>&nbsp;&nbsp;使用例子：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> apscheduler.schedulers.blocking <span style="color: #0000ff;">import</span><span style="color: #000000;"> BlockingScheduler
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> job(text):    
+    t </span>= time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">'</span><span style="color: #000000;">, time.localtime(time.time()))
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">{} --- {}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(text, t))
+
+scheduler </span>=<span style="color: #000000;"> BlockingScheduler()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在每天22点，每隔 1分钟 运行一次 job 方法</span>
+scheduler.add_job(job, <span style="color: #800000;">'</span><span style="color: #800000;">cron</span><span style="color: #800000;">'</span>, hour=22, minute=<span style="color: #800000;">'</span><span style="color: #800000;">*/1</span><span style="color: #800000;">'</span>, args=[<span style="color: #800000;">'</span><span style="color: #800000;">job1</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在每天22和23点的25分，运行一次 job 方法</span>
+scheduler.add_job(job, <span style="color: #800000;">'</span><span style="color: #800000;">cron</span><span style="color: #800000;">'</span>, hour=<span style="color: #800000;">'</span><span style="color: #800000;">22-23</span><span style="color: #800000;">'</span>, minute=<span style="color: #800000;">'</span><span style="color: #800000;">25</span><span style="color: #800000;">'</span>, args=[<span style="color: #800000;">'</span><span style="color: #800000;">job2</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+
+scheduler.start()
+
+</span><span style="color: #800000;">'''</span><span style="color: #800000;">
+运行结果：
+job1 --- 2019-08-29 22:25:00
+job2 --- 2019-08-29 22:25:00
+job1 --- 2019-08-29 22:26:00
+job1 --- 2019-08-29 22:27:00
+...余下省略...
+</span><span style="color: #800000;">'''</span></pre>
+</div>
+<p>&nbsp;<span style="color: #3366ff;"><strong>4、通过装饰器scheduled_job()添加方法</strong></span></p>
+<p>&nbsp;添加任务的方法有两种：</p>
+<div class="table-wrapper">
+<p>（1）通过调用add_job()---见上面1至3代码<br />（2）通过装饰器scheduled_job()：<br />第一种方法是最常用的方法。第二种方法主要是方便地声明在应用程序运行时不会更改的任务。该 add_job()方法返回一个apscheduler.job.Job实例，可以使用该实例稍后修改或删除该任务。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">from</span> apscheduler.schedulers.blocking <span style="color: #0000ff;">import</span><span style="color: #000000;"> BlockingScheduler
+
+scheduler </span>=<span style="color: #000000;"> BlockingScheduler()
+
+@scheduler.scheduled_job(</span><span style="color: #800000;">'</span><span style="color: #800000;">interval</span><span style="color: #800000;">'</span>, seconds=5<span style="color: #000000;">)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> job1():    
+    t </span>= time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">'</span><span style="color: #000000;">, time.localtime(time.time()))
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">job1 --- {}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(t))
+
+@scheduler.scheduled_job(</span><span style="color: #800000;">'</span><span style="color: #800000;">cron</span><span style="color: #800000;">'</span>, second=<span style="color: #800000;">'</span><span style="color: #800000;">*/7</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> job2():    
+    t </span>= time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">'</span><span style="color: #000000;">, time.localtime(time.time()))
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">job2 --- {}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(t))
+
+scheduler.start()
+
+</span><span style="color: #800000;">'''</span><span style="color: #800000;">
+运行结果：
+job2 --- 2019-08-29 22:36:35
+job1 --- 2019-08-29 22:36:37
+job2 --- 2019-08-29 22:36:42
+job1 --- 2019-08-29 22:36:42
+job1 --- 2019-08-29 22:36:47
+job2 --- 2019-08-29 22:36:49
+...余下省略...
+</span><span style="color: #800000;">'''</span></pre>
+</div>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,93 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修使用Python实现不同目录下文件的拷贝' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>使用Python实现不同目录下文件的拷贝</center></div><div class='banquan'>原文出处:本文由博客园博主沙木提供。<br/>
+原文连接:https://www.cnblogs.com/yong-sir/p/11655794.html</div><br>
+    <hr />
+<p><strong>目标：要实现将一台计算机的共享文件夹中的文件备份到另一台计算机，如果存在同名的文件只要文件的大小和最后修改时间一致，则不拷贝该文件</strong></p>
+<hr />
+<p>python版本：Python3.7.1</p>
+<p>python脚本：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> datetime <span style="color: #0000ff;">import</span><span style="color: #000000;"> date,datetime
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> shutil
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+
+source_path </span>= os.path.abspath(r<span style="color: #800000;">'</span><span style="color: #800000;">D:\Video\540409938</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+target_path </span>= os.path.abspath(r<span style="color: #800000;">'</span><span style="color: #800000;">D:\Video\540409939</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+jsonfilepath </span>= os.path.abspath(target_path + r<span style="color: #800000;">"</span><span style="color: #800000;">\log.json</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> load():
+    flag </span>=<span style="color: #000000;"> os.path.exists(jsonfilepath)
+    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> flag:
+        with open(jsonfilepath, </span><span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+            data </span>=<span style="color: #000000;"> json.load(f)
+            </span><span style="color: #0000ff;">if</span> data ==<span style="color: #000000;"> None:
+                data </span>=<span style="color: #000000;"> []
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> data
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        with open(jsonfilepath, </span><span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>, encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> []
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> store(data):
+    with open(jsonfilepath, </span><span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span><span style="color: #000000;">) as fw:
+        json.dump(data,fw)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> makedir(dir):
+    </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> os.path.exists(dir):
+        os.makedirs(dir)
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    makedir(target_path)
+    logdata </span>=<span style="color: #000000;"> load()
+        
+    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> os.path.exists(source_path):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> root 所指的是当前正在遍历的这个文件夹的本身的地址</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> dirs 是一个 list，内容是该文件夹中所有的目录的名字(不包括子目录)</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> files 同样是 list, 内容是该文件夹中所有的文件(不包括子目录)</span>
+        <span style="color: #0000ff;">for</span> root, dirs, files <span style="color: #0000ff;">in</span><span style="color: #000000;"> os.walk(source_path):
+            </span><span style="color: #0000ff;">for</span> file <span style="color: #0000ff;">in</span><span style="color: #000000;"> files:
+                src_file </span>=<span style="color: #000000;"> os.path.join(root, file)
+                fsize </span>=<span style="color: #000000;"> os.path.getsize(src_file)
+                fmtime </span>=<span style="color: #000000;"> os.path.getmtime(src_file)
+                log</span>={<span style="color: #800000;">'</span><span style="color: #800000;">file</span><span style="color: #800000;">'</span>:src_file,<span style="color: #800000;">'</span><span style="color: #800000;">fsize</span><span style="color: #800000;">'</span>:fsize,<span style="color: #800000;">'</span><span style="color: #800000;">fmtime</span><span style="color: #800000;">'</span><span style="color: #000000;">:fmtime}
+
+                iscopy</span>=<span style="color: #000000;">0
+                </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> logdata:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判断文件是否拷贝过</span>
+                    <span style="color: #0000ff;">if</span> (item[<span style="color: #800000;">"</span><span style="color: #800000;">file</span><span style="color: #800000;">"</span>] == src_file <span style="color: #0000ff;">and</span> item[<span style="color: #800000;">"</span><span style="color: #800000;">fsize</span><span style="color: #800000;">"</span>] == fsize <span style="color: #0000ff;">and</span> item[<span style="color: #800000;">"</span><span style="color: #800000;">fmtime</span><span style="color: #800000;">"</span>] ==<span style="color: #000000;"> fmtime):
+                        iscopy</span>=1
+                        <span style="color: #0000ff;">break</span>
+                
+                <span style="color: #0000ff;">if</span> iscopy==<span style="color: #000000;">0:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 未拷贝过则拷贝到当天文件夹下</span>
+                    target = target_path + <span style="color: #800000;">"</span><span style="color: #800000;">\\</span><span style="color: #800000;">"</span> + date.today().strftime(<span style="color: #800000;">"</span><span style="color: #800000;">%Y%m%d</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+                    makedir(target)
+                    logdata.append(log)
+                    shutil.copy(src_file, target)
+
+    store(logdata)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">copy files finished!</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

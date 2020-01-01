@@ -1,0 +1,128 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Flask学习之旅--用 Python + Flask 制作一个简单的验证码系统' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Flask学习之旅--用 Python + Flask 制作一个简单的验证码系统</center></div><div class='banquan'>原文出处:本文由博客园博主TM0831提供。<br/>
+原文连接:https://www.cnblogs.com/TM0831/p/11610559.html</div><br>
+    <h2>一、写在前面</h2>
+<p>　　现在无论大大小小的网站，基本上都会使用验证码，登录的时候要验证，下载的时候要验证，而使用的验证码也从那些简简单单的字符图形验证码&ldquo;进化&rdquo;成了需要进行图文识别的验证码、需要拖动滑块的滑动验证码、甚至还有手机验证码。当你与之打交道的时候，有没有考虑过其背后的原理呢？当然了，对于那些复杂的验证码我们想要弄得一清二楚还是很难的，但是可以挑软柿子捏嘛--字符图形验证码，就这样，我决定用 Python + Flask 制作出一个简单的验证码系统来，话不多说，撸起袖子加油干！</p>
+<p>　　<img src="./images/Flask学习之旅--用 Python + Flask 制作一个简单的验证码系统0.png" alt="" /></p>
+<p>&nbsp;</p>
+<h2>二、基本思路</h2>
+<p>　　一个简单的验证码系统，要实现的目标包括能够不断刷新验证码和对用户输入的内容进行验证，若验证成功则进行后续操作，若失败则给出提示信息并要求重新输入。</p>
+<p>　　但是没有大量验证码图片怎么办呢？正所谓&ldquo;自己动手，丰衣足食&rdquo;，Python 所具有的丰富的第三方库使得产生大量验证码图片这一需求变得甚是简单了，这里主要使用的模块是 pillow。</p>
+<p>　　有了验证码图片之后，要做的就是将其显示在前端页面上，并且要能够更新验证码，这利用 Flask 可以很方便地实现。然后就是输入验证码和对输入的内容进行验证了，这里我是用 JS 实现验证的。</p>
+<p>&nbsp;</p>
+<h2>三、具体步骤</h2>
+<h3>1.生成验证码图片</h3>
+<p>　　前面已经提过这一步主要使用的模块是 pillow，没有安装的话可以使用 pip install pillow 进行安装。</p>
+<p>　　PIL：Python Image Library，是 Python 处理图片的标准库，不过 PIL 仅支持到 Python2.7，之后有人在其基础上创建了兼容的版本，名字就叫做 pillow。</p>
+<p>　　新建一个 Flask 项目：CaptchaTest，然后创建一个 generate.py。要生成一个验证码图片，首先得创建一张图片，可以用 pillow 模块中的 Image.new() 实现。然后需要生成验证码文本并将其写入到前面生成的图片上，除此之外，我们还可以加入一些干扰元素增加识别的难度。下面是几张生成的验证码图片：</p>
+<p>　　<img src="./images/Flask学习之旅--用 Python + Flask 制作一个简单的验证码系统1.png" alt="" /></p>
+<p>　　最终得到的生成验证码图片的代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">from</span> random <span style="color: #0000ff;">import</span><span style="color: #000000;"> randint
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">from</span> PIL <span style="color: #0000ff;">import</span><span style="color: #000000;"> Image, ImageDraw, ImageFont
+</span><span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> 
+<span style="color: #008080;"> 5</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_random_color():
+</span><span style="color: #008080;"> 6</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 随机颜色RGB</span>
+<span style="color: #008080;"> 7</span>     <span style="color: #0000ff;">return</span> randint(120, 200), randint(120, 200), randint(120, 200<span style="color: #000000;">)
+</span><span style="color: #008080;"> 8</span> 
+<span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_random_code():
+</span><span style="color: #008080;">11</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 随机字符</span>
+<span style="color: #008080;">12</span>     codes = [[chr(i) <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(48, 58)], [chr(i) <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(65, 91)], [chr(i) <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(97, 123<span style="color: #000000;">)]]
+</span><span style="color: #008080;">13</span>     codes = codes[randint(0, 2<span style="color: #000000;">)]
+</span><span style="color: #008080;">14</span>     <span style="color: #0000ff;">return</span> codes[randint(0, len(codes)-1<span style="color: #000000;">)]
+</span><span style="color: #008080;">15</span> 
+<span style="color: #008080;">16</span> 
+<span style="color: #008080;">17</span> <span style="color: #0000ff;">def</span> generate_captcha(width=140, height=60, length=4<span style="color: #000000;">):
+</span><span style="color: #008080;">18</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 生成验证码</span>
+<span style="color: #008080;">19</span>     img = Image.new(<span style="color: #800000;">"</span><span style="color: #800000;">RGB</span><span style="color: #800000;">"</span>, (width, height), (250, 250, 250<span style="color: #000000;">))
+</span><span style="color: #008080;">20</span>     draw =<span style="color: #000000;"> ImageDraw.Draw(img)
+</span><span style="color: #008080;">21</span>     font = ImageFont.truetype(<span style="color: #800000;">"</span><span style="color: #800000;">static/font/font.ttf</span><span style="color: #800000;">"</span>, size=36<span style="color: #000000;">)
+</span><span style="color: #008080;">22</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 验证码文本</span>
+<span style="color: #008080;">23</span>     text = <span style="color: #800000;">""</span>
+<span style="color: #008080;">24</span>     <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(length):
+</span><span style="color: #008080;">25</span>         c =<span style="color: #000000;"> get_random_code()
+</span><span style="color: #008080;">26</span>         text +=<span style="color: #000000;"> c
+</span><span style="color: #008080;">27</span> 
+<span style="color: #008080;">28</span>         rand_len = randint(-5, 5<span style="color: #000000;">)
+</span><span style="color: #008080;">29</span>         draw.text((width * 0.2 * (i+1) + rand_len, height * 0.2 + rand_len), c, font=font, fill=<span style="color: #000000;">get_random_color())
+</span><span style="color: #008080;">30</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 加入干扰线</span>
+<span style="color: #008080;">31</span>     <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(3<span style="color: #000000;">):
+</span><span style="color: #008080;">32</span>         x1 =<span style="color: #000000;"> randint(0, width)
+</span><span style="color: #008080;">33</span>         y1 =<span style="color: #000000;"> randint(0, height)
+</span><span style="color: #008080;">34</span>         x2 =<span style="color: #000000;"> randint(0, width)
+</span><span style="color: #008080;">35</span>         y2 =<span style="color: #000000;"> randint(0, height)
+</span><span style="color: #008080;">36</span>         draw.line((x1, y1, x2, y2), fill=<span style="color: #000000;">get_random_color())
+</span><span style="color: #008080;">37</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 加入干扰点</span>
+<span style="color: #008080;">38</span>     <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(16<span style="color: #000000;">):
+</span><span style="color: #008080;">39</span>         draw.point((randint(0, width), randint(0, height)), fill=<span style="color: #000000;">get_random_color())
+</span><span style="color: #008080;">40</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 保存图片</span>
+<span style="color: #008080;">41</span>     img.save(<span style="color: #800000;">"</span><span style="color: #800000;">static/captcha/</span><span style="color: #800000;">"</span> + text + <span style="color: #800000;">"</span><span style="color: #800000;">.jpg</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">42</span>     <span style="color: #0000ff;">return</span> text + <span style="color: #800000;">"</span><span style="color: #800000;">.jpg</span><span style="color: #800000;">"</span>
+<span style="color: #008080;">43</span> 
+<span style="color: #008080;">44</span> 
+<span style="color: #008080;">45</span> <span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+</span><span style="color: #008080;">46</span>     <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1000<span style="color: #000000;">):
+</span><span style="color: #008080;">47</span>         generate_captcha()</pre>
+</div>
+<h3>2.显示验证码图片</h3>
+<p>　　在进行完上一步之后，我们已经得到了1000张验证码图片，都保存在 static 下的 captcha 文件夹下。那么现在的问题就是如何将验证码图片显示在页面上，要解决这个问题，首先要定义一个路由，用于随机选取验证码图片并返回路径。</p>
+<p>　　在 Flask 中 route() 装饰器把一个函数绑定到 URL 上，不仅能配置静态 URL，而且能配置动态 URL，不过这里使用静态 URL 就行了。定义该路由的代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> @app.route(<span style="color: #800000;">'</span><span style="color: #800000;">/get_captcha</span><span style="color: #800000;">'</span>, methods=[<span style="color: #800000;">'</span><span style="color: #800000;">GET</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008080;">2</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_captcha():
+</span><span style="color: #008080;">3</span>     img_list = os.listdir(<span style="color: #800000;">"</span><span style="color: #800000;">static/captcha</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">4</span>     img = img_list[random.randint(0, 1000<span style="color: #000000;">)]
+</span><span style="color: #008080;">5</span>     <span style="color: #0000ff;">return</span> os.path.join(<span style="color: #800000;">"</span><span style="color: #800000;">static/captcha</span><span style="color: #800000;">"</span>, img)</pre>
+</div>
+<p>　　其中 os.listdir() 用于列举文件夹下的内容，os.path.join() 用于返回图片路径。</p>
+<h3>3.刷新验证码图片</h3>
+<p>　　刷新验证码图片的功能可以通过使用 Ajax 来实现，主要过程是先向后端发送请求，请求成功之后会得到一个验证码图片路径， 然后再设置图片的 src 属性，达到刷新验证码的目的。在 Ajax 中的 URL 可以直接写静态 URL，还能使用 url_for 来反向解析获取对应的 URL，使用方法如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> &lt;script&gt;
+<span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">function</span><span style="color: #000000;"> Change() {
+</span><span style="color: #008080;"> 3</span> <span style="color: #000000;">        $.ajax({
+</span><span style="color: #008080;"> 4</span>             url: '{{ url_for('get_captcha') }}'<span style="color: #000000;">,
+</span><span style="color: #008080;"> 5</span>             async: <span style="color: #0000ff;">true</span><span style="color: #000000;">,
+</span><span style="color: #008080;"> 6</span>             type: "GET"<span style="color: #000000;">,
+</span><span style="color: #008080;"> 7</span>             success: <span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+</span><span style="color: #008080;"> 8</span>                 document.getElementById("captcha").src =<span style="color: #000000;"> data;
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">10</span> <span style="color: #000000;">        })
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">12</span> &lt;/script&gt;</pre>
+</div>
+<h3>4.验证码内容验证</h3>
+<p>　　在输入验证码内容后，需要对输入的内容进行验证。因为前面生成验证码图片的时候直接用的图片内容来命名的，所以这里就可以用 JavaScript 来获取图片名称，再将输入框中的内容获取到，把两者进行比对，这一步还可以做一个忽略大小写，至于具体代码就不放了。</p>
+<p>&nbsp;</p>
+<h2>四、运行截图</h2>
+<p>　　首先是一张运行页面的截图，点击&ldquo;看不清楚，换一张&rdquo;可以刷新验证码，点击&ldquo;确认&rdquo;可以验证输入的内容是否正确：</p>
+<p>　　<img src="./images/Flask学习之旅--用 Python + Flask 制作一个简单的验证码系统2.png" alt="" /></p>
+<p>&nbsp;　　当输入的内容正确的时候，给出一个验证成功的提示：</p>
+<p>　　<img src="./images/Flask学习之旅--用 Python + Flask 制作一个简单的验证码系统3.png" alt="" /></p>
+<p>&nbsp;　　到这里为止，一个简单的验证码系统就做出来了，当然还有很多可以去完善的地方，比如使用更复杂的验证码，对验证次数进行限制等等。</p>
+<p>&nbsp;</p>
+<p>　　 <span style="font-size: 14pt;">完整代码已上传到 <a href="https://github.com/TM0831/PythonCode/tree/master/CaptchaTest" target="_blank">GitHub</a>！</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

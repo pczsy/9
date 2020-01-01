@@ -1,0 +1,235 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修二叉树的实现(补充)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>二叉树的实现(补充)</center></div><div class='banquan'>原文出处:本文由博客园博主橘子味的猫啊提供。<br/>
+原文连接:https://www.cnblogs.com/yang-he/p/11407653.html</div><br>
+    <h1 style="text-align: center;">二叉树的实现(补充)</h1>
+<h3>本次实现的二叉树包括二叉树的先序遍历，中序遍历和后序遍历以及二叉树的层序遍历，还包括二叉树的高度，叶子节点以及反转二叉树</h3>
+<p style="margin-left: 30px;">二叉树的层序遍历依然是使用Python内置的deque实现一个队列，根据队列先进先出(FIFO)的性质，先把二叉树的根节点放入队列中，判断队列是否为空，如果不为空，则弹出一个元素，打印该元素的值，如果该元素有左孩子，则把左孩子入队，如果有右孩子，则把有孩子入队</p>
+<h3>代码:</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">  1</span> <span style="color: #0000ff;">from</span> collections <span style="color: #0000ff;">import</span><span style="color: #000000;"> deque
+</span><span style="color: #008080;">  2</span> 
+<span style="color: #008080;">  3</span> 
+<span style="color: #008080;">  4</span> <span style="color: #0000ff;">class</span> Queue:  <span style="color: #008000;">#</span><span style="color: #008000;"> 借助内置的 deque 我们可以迅速实现一个 Queue</span>
+<span style="color: #008080;">  5</span>     <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self):
+</span><span style="color: #008080;">  6</span>         self._elem =<span style="color: #000000;"> deque()
+</span><span style="color: #008080;">  7</span> 
+<span style="color: #008080;">  8</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> append(self, value):
+</span><span style="color: #008080;">  9</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> self._elem.append(value)
+</span><span style="color: #008080;"> 10</span> 
+<span style="color: #008080;"> 11</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> pop(self):
+</span><span style="color: #008080;"> 12</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> self._elem.popleft()
+</span><span style="color: #008080;"> 13</span> 
+<span style="color: #008080;"> 14</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> empty(self):
+</span><span style="color: #008080;"> 15</span>         <span style="color: #0000ff;">return</span> len(self._elem) ==<span style="color: #000000;"> 0
+</span><span style="color: #008080;"> 16</span> 
+<span style="color: #008080;"> 17</span> 
+<span style="color: #008080;"> 18</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> BTree(object):
+</span><span style="color: #008080;"> 19</span>     <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self, data=None, left=None, right=<span style="color: #000000;">None):
+</span><span style="color: #008080;"> 20</span>         self.data =<span style="color: #000000;"> data
+</span><span style="color: #008080;"> 21</span>         self.left =<span style="color: #000000;"> left
+</span><span style="color: #008080;"> 22</span>         self.right =<span style="color: #000000;"> right
+</span><span style="color: #008080;"> 23</span> 
+<span style="color: #008080;"> 24</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> preorder(self):
+</span><span style="color: #008080;"> 25</span>         <span style="color: #0000ff;">if</span> self.data <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 26</span>             <span style="color: #0000ff;">print</span>(self.data, end=<span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 27</span>         <span style="color: #0000ff;">if</span> self.left <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 28</span> <span style="color: #000000;">            self.left.preorder()
+</span><span style="color: #008080;"> 29</span>         <span style="color: #0000ff;">if</span> self.right <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 30</span> <span style="color: #000000;">            self.right.preorder()
+</span><span style="color: #008080;"> 31</span> 
+<span style="color: #008080;"> 32</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> midorder(self):
+</span><span style="color: #008080;"> 33</span>         <span style="color: #0000ff;">if</span> self.left <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 34</span> <span style="color: #000000;">            self.left.midorder()
+</span><span style="color: #008080;"> 35</span>         <span style="color: #0000ff;">if</span> self.data <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 36</span>             <span style="color: #0000ff;">print</span>(self.data, end=<span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 37</span>         <span style="color: #0000ff;">if</span> self.right <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 38</span> <span style="color: #000000;">            self.right.midorder()
+</span><span style="color: #008080;"> 39</span> 
+<span style="color: #008080;"> 40</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> postorder(self):
+</span><span style="color: #008080;"> 41</span>         <span style="color: #0000ff;">if</span> self.left <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 42</span> <span style="color: #000000;">            self.left.postorder()
+</span><span style="color: #008080;"> 43</span>         <span style="color: #0000ff;">if</span> self.right <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 44</span> <span style="color: #000000;">            self.right.postorder()
+</span><span style="color: #008080;"> 45</span>         <span style="color: #0000ff;">if</span> self.data <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 46</span>             <span style="color: #0000ff;">print</span>(self.data, end=<span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 47</span> 
+<span style="color: #008080;"> 48</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> levelorder(self):
+</span><span style="color: #008080;"> 49</span> 
+<span style="color: #008080;"> 50</span>         <span style="color: #008000;">#</span><span style="color: #008000;"> 返回某个节点的左孩子</span>
+<span style="color: #008080;"> 51</span>         <span style="color: #0000ff;">def</span><span style="color: #000000;"> LChild_Of_Node(node):
+</span><span style="color: #008080;"> 52</span>             <span style="color: #0000ff;">return</span> node.left <span style="color: #0000ff;">if</span> node.left <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> None <span style="color: #0000ff;">else</span><span style="color: #000000;"> None
+</span><span style="color: #008080;"> 53</span> 
+<span style="color: #008080;"> 54</span>         <span style="color: #008000;">#</span><span style="color: #008000;"> 返回某个节点的右孩子</span>
+<span style="color: #008080;"> 55</span>         <span style="color: #0000ff;">def</span><span style="color: #000000;"> RChild_Of_Node(node):
+</span><span style="color: #008080;"> 56</span>             <span style="color: #0000ff;">return</span> node.right <span style="color: #0000ff;">if</span> node.right <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> None <span style="color: #0000ff;">else</span><span style="color: #000000;"> None
+</span><span style="color: #008080;"> 57</span> 
+<span style="color: #008080;"> 58</span>         <span style="color: #008000;">#</span><span style="color: #008000;"> 层序遍历列表</span>
+<span style="color: #008080;"> 59</span>         level_order =<span style="color: #000000;"> []
+</span><span style="color: #008080;"> 60</span>         <span style="color: #008000;">#</span><span style="color: #008000;"> 是否添加根节点中的数据</span>
+<span style="color: #008080;"> 61</span>         <span style="color: #0000ff;">if</span> self.data <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 62</span> <span style="color: #000000;">            level_order.append([self])
+</span><span style="color: #008080;"> 63</span> 
+<span style="color: #008080;"> 64</span>         <span style="color: #008000;">#</span><span style="color: #008000;"> 二叉树的高度</span>
+<span style="color: #008080;"> 65</span>         height =<span style="color: #000000;"> self.height()
+</span><span style="color: #008080;"> 66</span>         <span style="color: #0000ff;">if</span> height &gt;= 1<span style="color: #000000;">:
+</span><span style="color: #008080;"> 67</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 对第二层及其以后的层数进行操作, 在level_order中添加节点而不是数据</span>
+<span style="color: #008080;"> 68</span>             <span style="color: #0000ff;">for</span> _ <span style="color: #0000ff;">in</span> range(2, height + 1<span style="color: #000000;">):
+</span><span style="color: #008080;"> 69</span>                 level = []  <span style="color: #008000;">#</span><span style="color: #008000;"> 该层的节点</span>
+<span style="color: #008080;"> 70</span>                 <span style="color: #0000ff;">for</span> node <span style="color: #0000ff;">in</span> level_order[-1<span style="color: #000000;">]:
+</span><span style="color: #008080;"> 71</span>                     <span style="color: #008000;">#</span><span style="color: #008000;"> 如果左孩子非空，则添加左孩子</span>
+<span style="color: #008080;"> 72</span>                     <span style="color: #0000ff;">if</span><span style="color: #000000;"> LChild_Of_Node(node):
+</span><span style="color: #008080;"> 73</span> <span style="color: #000000;">                        level.append(LChild_Of_Node(node))
+</span><span style="color: #008080;"> 74</span>                     <span style="color: #008000;">#</span><span style="color: #008000;"> 如果右孩子非空，则添加右孩子</span>
+<span style="color: #008080;"> 75</span>                     <span style="color: #0000ff;">if</span><span style="color: #000000;"> RChild_Of_Node(node):
+</span><span style="color: #008080;"> 76</span> <span style="color: #000000;">                        level.append(RChild_Of_Node(node))
+</span><span style="color: #008080;"> 77</span>                 <span style="color: #008000;">#</span><span style="color: #008000;"> 如果该层非空，则添加该层</span>
+<span style="color: #008080;"> 78</span>                 <span style="color: #0000ff;">if</span><span style="color: #000000;"> level:
+</span><span style="color: #008080;"> 79</span> <span style="color: #000000;">                    level_order.append(level)
+</span><span style="color: #008080;"> 80</span> 
+<span style="color: #008080;"> 81</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 取出每层中的数据</span>
+<span style="color: #008080;"> 82</span>             <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(0, height):  <span style="color: #008000;">#</span><span style="color: #008000;"> 层数</span>
+<span style="color: #008080;"> 83</span>                 <span style="color: #0000ff;">for</span> index <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(len(level_order[i])):
+</span><span style="color: #008080;"> 84</span>                     level_order[i][index] =<span style="color: #000000;"> level_order[i][index].data
+</span><span style="color: #008080;"> 85</span> 
+<span style="color: #008080;"> 86</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> level_order
+</span><span style="color: #008080;"> 87</span> 
+<span style="color: #008080;"> 88</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> height(self):
+</span><span style="color: #008080;"> 89</span>         <span style="color: #0000ff;">if</span> self.data <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 90</span>             <span style="color: #0000ff;">return</span><span style="color: #000000;"> 0
+</span><span style="color: #008080;"> 91</span>         <span style="color: #0000ff;">elif</span> self.left <span style="color: #0000ff;">is</span> None <span style="color: #0000ff;">and</span> self.right <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 92</span>             <span style="color: #0000ff;">return</span> 1
+<span style="color: #008080;"> 93</span>         <span style="color: #0000ff;">elif</span> self.left <span style="color: #0000ff;">is</span> None <span style="color: #0000ff;">and</span> self.right <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 94</span>             <span style="color: #0000ff;">return</span> 1 +<span style="color: #000000;"> self.left.height()
+</span><span style="color: #008080;"> 95</span>         <span style="color: #0000ff;">elif</span> self.left <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> None <span style="color: #0000ff;">and</span> self.right <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 96</span>             <span style="color: #0000ff;">return</span> 1 +<span style="color: #000000;"> self.left.height()
+</span><span style="color: #008080;"> 97</span>         <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 98</span>             <span style="color: #0000ff;">return</span> 1 +<span style="color: #000000;"> max(self.left.height(), self.right.height())
+</span><span style="color: #008080;"> 99</span> 
+<span style="color: #008080;">100</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> leaves(self):
+</span><span style="color: #008080;">101</span>         <span style="color: #0000ff;">if</span> self.data <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;">102</span>             <span style="color: #0000ff;">return</span><span style="color: #000000;"> None
+</span><span style="color: #008080;">103</span>         <span style="color: #0000ff;">elif</span> self.left <span style="color: #0000ff;">is</span> None <span style="color: #0000ff;">and</span> self.right <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;">104</span>             <span style="color: #0000ff;">print</span>(self.data, end=<span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">105</span>         <span style="color: #0000ff;">elif</span> self.left <span style="color: #0000ff;">is</span> None <span style="color: #0000ff;">and</span> self.right <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;">106</span> <span style="color: #000000;">            self.right.leaves()
+</span><span style="color: #008080;">107</span>         <span style="color: #0000ff;">elif</span> self.left <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span> None <span style="color: #0000ff;">and</span> self.right <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;">108</span> <span style="color: #000000;">            self.left.leaves()
+</span><span style="color: #008080;">109</span>         <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">110</span> <span style="color: #000000;">            self.left.leaves()
+</span><span style="color: #008080;">111</span> <span style="color: #000000;">            self.right.leaves()
+</span><span style="color: #008080;">112</span> 
+<span style="color: #008080;">113</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 反转二叉树</span>
+<span style="color: #008080;">114</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> reverse(self):
+</span><span style="color: #008080;">115</span>         <span style="color: #0000ff;">if</span> self.data <span style="color: #0000ff;">is</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;">116</span>             <span style="color: #0000ff;">if</span> self.left <span style="color: #0000ff;">and</span><span style="color: #000000;"> self.right:
+</span><span style="color: #008080;">117</span>                 self.left, self.right =<span style="color: #000000;"> self.right, self.left
+</span><span style="color: #008080;">118</span> <span style="color: #000000;">                self.left.reverse()
+</span><span style="color: #008080;">119</span> <span style="color: #000000;">                self.right.reverse()
+</span><span style="color: #008080;">120</span> 
+<span style="color: #008080;">121</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> @staticmethod</span>
+<span style="color: #008080;">122</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> def layer_trav(subtree):</span>
+<span style="color: #008080;">123</span>     <span style="color: #008000;">#</span><span style="color: #008000;">     cur_nodes = [subtree]  # current layer nodes</span>
+<span style="color: #008080;">124</span>     <span style="color: #008000;">#</span><span style="color: #008000;">     next_nodes = []</span>
+<span style="color: #008080;">125</span>     <span style="color: #008000;">#</span><span style="color: #008000;">     while cur_nodes or next_nodes:</span>
+<span style="color: #008080;">126</span>     <span style="color: #008000;">#</span><span style="color: #008000;">         for node in cur_nodes:</span>
+<span style="color: #008080;">127</span>     <span style="color: #008000;">#</span><span style="color: #008000;">             print(node.data, end=',')</span>
+<span style="color: #008080;">128</span>     <span style="color: #008000;">#</span><span style="color: #008000;">             if node.left:</span>
+<span style="color: #008080;">129</span>     <span style="color: #008000;">#</span><span style="color: #008000;">                 next_nodes.append(node.left)</span>
+<span style="color: #008080;">130</span>     <span style="color: #008000;">#</span><span style="color: #008000;">             if node.right:</span>
+<span style="color: #008080;">131</span>     <span style="color: #008000;">#</span><span style="color: #008000;">                 next_nodes.append(node.right)</span>
+<span style="color: #008080;">132</span>     <span style="color: #008000;">#</span><span style="color: #008000;">         cur_nodes = next_nodes  # 继续遍历下一层</span>
+<span style="color: #008080;">133</span>     <span style="color: #008000;">#</span><span style="color: #008000;">         next_nodes = []</span>
+<span style="color: #008080;">134</span> 
+<span style="color: #008080;">135</span> <span style="color: #000000;">    @staticmethod
+</span><span style="color: #008080;">136</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> layer_trav(subtree):
+</span><span style="color: #008080;">137</span>         q =<span style="color: #000000;"> Queue()
+</span><span style="color: #008080;">138</span> <span style="color: #000000;">        q.append(subtree)
+</span><span style="color: #008080;">139</span>         <span style="color: #0000ff;">while</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> q.empty():
+</span><span style="color: #008080;">140</span>             node =<span style="color: #000000;"> q.pop()
+</span><span style="color: #008080;">141</span>             <span style="color: #0000ff;">print</span>(node.data, end=<span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">142</span>             <span style="color: #0000ff;">if</span><span style="color: #000000;"> node.left:
+</span><span style="color: #008080;">143</span> <span style="color: #000000;">                q.append(node.left)
+</span><span style="color: #008080;">144</span>             <span style="color: #0000ff;">if</span><span style="color: #000000;"> node.right:
+</span><span style="color: #008080;">145</span> <span style="color: #000000;">                q.append(node.right)
+</span><span style="color: #008080;">146</span> 
+<span style="color: #008080;">147</span> 
+<span style="color: #008080;">148</span> <span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+</span><span style="color: #008080;">149</span>     right_tree = BTree(6<span style="color: #000000;">)
+</span><span style="color: #008080;">150</span>     right_tree.left = BTree(2<span style="color: #000000;">)
+</span><span style="color: #008080;">151</span>     right_tree.right = BTree(4<span style="color: #000000;">)
+</span><span style="color: #008080;">152</span> 
+<span style="color: #008080;">153</span>     left_tree = BTree(5<span style="color: #000000;">)
+</span><span style="color: #008080;">154</span>     left_tree.left = BTree(1<span style="color: #000000;">)
+</span><span style="color: #008080;">155</span>     left_tree.right = BTree(3<span style="color: #000000;">)
+</span><span style="color: #008080;">156</span> 
+<span style="color: #008080;">157</span>     tree = BTree(11<span style="color: #000000;">)
+</span><span style="color: #008080;">158</span>     tree.left =<span style="color: #000000;"> left_tree
+</span><span style="color: #008080;">159</span>     tree.right =<span style="color: #000000;"> right_tree
+</span><span style="color: #008080;">160</span> 
+<span style="color: #008080;">161</span>     left_tree = BTree(7<span style="color: #000000;">)
+</span><span style="color: #008080;">162</span>     left_tree.left = BTree(3<span style="color: #000000;">)
+</span><span style="color: #008080;">163</span>     left_tree.right = BTree(4<span style="color: #000000;">)
+</span><span style="color: #008080;">164</span> 
+<span style="color: #008080;">165</span>     right_tree = tree  <span style="color: #008000;">#</span><span style="color: #008000;"> 增加新的变量</span>
+<span style="color: #008080;">166</span>     tree = BTree(18<span style="color: #000000;">)
+</span><span style="color: #008080;">167</span>     tree.left =<span style="color: #000000;"> left_tree
+</span><span style="color: #008080;">168</span>     tree.right =<span style="color: #000000;"> right_tree
+</span><span style="color: #008080;">169</span>     tree.root =<span style="color: #000000;"> tree
+</span><span style="color: #008080;">170</span> 
+<span style="color: #008080;">171</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">先序遍历为:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">172</span> <span style="color: #000000;">    tree.preorder()
+</span><span style="color: #008080;">173</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">174</span> 
+<span style="color: #008080;">175</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">后序遍历为:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">176</span> <span style="color: #000000;">    tree.postorder()
+</span><span style="color: #008080;">177</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">178</span> 
+<span style="color: #008080;">179</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">中序遍历为:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">180</span> <span style="color: #000000;">    tree.midorder()
+</span><span style="color: #008080;">181</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">182</span> 
+<span style="color: #008080;">183</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">层序遍历为:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">184</span>     level_order =<span style="color: #000000;"> tree.levelorder()
+</span><span style="color: #008080;">185</span> <span style="color: #000000;">    tree.layer_trav(tree)
+</span><span style="color: #008080;">186</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">187</span>     <span style="color: #0000ff;">print</span><span style="color: #000000;">(level_order)
+</span><span style="color: #008080;">188</span> 
+<span style="color: #008080;">189</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">叶子节点为:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">190</span> <span style="color: #000000;">    tree.leaves()
+</span><span style="color: #008080;">191</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">192</span> 
+<span style="color: #008080;">193</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">树的高度为:</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">194</span>     <span style="color: #0000ff;">print</span><span style="color: #000000;">(tree.height())
+</span><span style="color: #008080;">195</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">196</span> 
+<span style="color: #008080;">197</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">反转二叉树</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">198</span> <span style="color: #000000;">    tree.reverse()
+</span><span style="color: #008080;">199</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">先序遍历</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">200</span> <span style="color: #000000;">    tree.preorder()
+</span><span style="color: #008080;">201</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">202</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">层序遍历</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">203</span>     tree.layer_trav(tree)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

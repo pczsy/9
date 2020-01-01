@@ -1,0 +1,132 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python学习之旅：使用Python实现Linux中的ls命令' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python学习之旅：使用Python实现Linux中的ls命令</center></div><div class='banquan'>原文出处:本文由博客园博主TM0831提供。<br/>
+原文连接:https://www.cnblogs.com/TM0831/p/11459109.html</div><br>
+    <h2>一、写在前面</h2>
+<p>　　前几天在微信上看到这样一篇文章，链接为：<a href="https://mp.weixin.qq.com/s/rl6Sgv3uk_IpoFAx6cWa8w">https://mp.weixin.qq.com/s/rl6Sgv3uk_IpoFAx6cWa8w</a>，在这篇文章中，有这样一段话，吸引了我的注意：</p>
+<p>　　<img src="./images/Python学习之旅：使用Python实现Linux中的ls命令0.png" alt="" /></p>
+<p>&nbsp;　　在 Linux 中 ls 是一个使用频率非常高的命令了，可选的参数也有很多， 算是一条不得不掌握的命令。Python 作为一门简单易学的语言，被很多人认为是不需要认真学的，或者只是随便调个库就行了，那可就真是小瞧 Python 了。那这次我就要试着用 Python 来实现一下 Linux 中的 ls 命令， 小小地证明下 Python 的不简单！</p>
+<p>&nbsp;</p>
+<h2>二、ls简介</h2>
+<p>　　Linux ls 命令用于显示指定工作目录下的内容。语法如下：</p>
+<blockquote>
+<p>ls [-alkrt] [name]</p>
+</blockquote>
+<p>　　这里只列举了几个常用的参数，ls 命令的可选参数还是很多的，可以使用 man ls 来进行查看具体信息。这里列出的几个参数对应含义如下：</p>
+<p>　　1）-a：显示所有文件及目录；</p>
+<p>　　2）-l：除文件名称外，亦将文件大小、创建时间等信息列出；</p>
+<p>　　3）-k：将文件大小以 KB 形式表示；</p>
+<p>　　4）-r：将文件以相反次序排列；</p>
+<p>　　5）-t：将文件以修改时间次序排列。</p>
+<p>&nbsp;</p>
+<h2>三、具体思路</h2>
+<p>　　主要使用的模块是 argparse 和 os，其中 argparse 模块能设置和接收命令行参数，也就使得 Python 对命令行的操作变得简单，而 os 模块则用于文件操作，对 argparse 模块不熟悉的可以在<a href="https://docs.python.org/3/library/argparse.html" target="_blank">这里</a>查看官方文档。</p>
+<p>　　既然要用 Python 实现 ls.py， 也就要在命令行中进行操作，比如 python ls.py -a 这样的命令，而对 Python 比较熟悉的人可能会想到使用 sys 模块来接收输入的命令，但使用 argparse 能让命令行操作变得更加简单！首先要导入模块并创建一个 ArgumentParser 对象，可以理解为一个解析器，然后就可以通过使用 add_argument() 方法为这个解析器添加参数了。示例如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #008000;">#</span><span style="color: #008000;"> test.py</span>
+<span style="color: #008080;"> 2</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> argparse
+</span><span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> parser = argparse.ArgumentParser(description=<span style="color: #800000;">'</span><span style="color: #800000;">Find the maximum number.</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 5</span> parser.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">integers</span><span style="color: #800000;">"</span>, type=int, nargs=<span style="color: #800000;">"</span><span style="color: #800000;">+</span><span style="color: #800000;">"</span>, help=<span style="color: #800000;">"</span><span style="color: #800000;">The input integers.</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 6</span> parser.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">-min</span><span style="color: #800000;">"</span>, nargs=<span style="color: #800000;">"</span><span style="color: #800000;">?</span><span style="color: #800000;">"</span>, required=False, dest=<span style="color: #800000;">"</span><span style="color: #800000;">find_num</span><span style="color: #800000;">"</span>, default=max, const=<span style="color: #000000;">min, 
+</span><span style="color: #008080;"> 7</span>                     help=<span style="color: #800000;">"</span><span style="color: #800000;">Find the minimum number(Default: find the maximum number).</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 8</span> 
+<span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> args =<span style="color: #000000;"> parser.parse_args()
+</span><span style="color: #008080;">11</span> <span style="color: #0000ff;">print</span><span style="color: #000000;">(args)
+</span><span style="color: #008080;">12</span> <span style="color: #0000ff;">print</span>(args.find_num(args.Nums))</pre>
+</div>
+<p>　　这段代码的功能是输入一到多个整数，默认求其中的最大值，若有 -min 参数则是求其中的最小值。可以看到在创建解析器和添加命令行参数的时候都设置了 description 描述信息，这个信息会在我们使用 --help 命令的时候显示出来，例如：</p>
+<p>　　<img src="./images/Python学习之旅：使用Python实现Linux中的ls命令1.png" alt="" /></p>
+<p>　　在上面的代码中，需要注意的是其中使用 add_argument() 添加了一个位置参数 "integers" 和一个可选参数 "-min"，位置参数在命令行中必须存在，不可遗漏，也就不能设置 required 参数了，而可选参数就不是必须要有的了，因而还可以使用 default 参数设置默认值。nargs 参数用于设置命令行参数的数量，"+" 表示一个或多个，"?" 表示零个或一个，这里由于输入的数字可能有多个，所以要设置为 "+"。最终运行示例如下：</p>
+<blockquote>
+<p>&gt; python test.py 1 3 5</p>
+<p>Namespace(find_num=&lt;built-in function max&gt;, integers=[1, 3, 5])<br />5</p>
+<p>&gt;&nbsp;python test.py 1 3 5 -min</p>
+<p>Namespace(find_num=&lt;built-in function min&gt;, integers=[1, 3, 5])</p>
+<p>1</p>
+
+
+</blockquote>
+<p>　　关于 argparse 的介绍就到此为止了，下面简单介绍下 os 模块， os 模块提供了便捷的使用操作系统相关功能的方式，实现 ls.py 所用到的该模块下的方法包括：</p>
+<p>　　1）os.path.isdir(path)：若 path 是一个存在的目录，返回 True。</p>
+<p>　　2）os.listdir(path)：返回一个列表，其中包括 path 对应的目录下的内容，不包含&ldquo;.&rdquo;和&ldquo;..&rdquo;，即使它们存在。</p>
+<p>　　3）os.stat(path)：获取文件或文件描述符的状态，返回一个 stat_result 对象，其中包含了各种状态信息。</p>
+<p>&nbsp;</p>
+<h2>四、主要代码</h2>
+<p>&nbsp;　　ls.py 中的主函数如下，主要功能为创建解析器，设置可选参数和位置参数，然后接收命令行参数信息，并根据输入的参数调用相应的方法，这里设置了一个 "-V" 参数用于显示版本信息，可以使用 "-V" 或者 "-Version" 进行查看。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> main():
+</span><span style="color: #008080;"> 2</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 3</span> <span style="color: #800000;">    主函数，设置和接收命令行参数，并根据参数调用相应方法
+</span><span style="color: #008080;"> 4</span> <span style="color: #800000;">    :return:
+</span><span style="color: #008080;"> 5</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 6</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 创建解析器</span>
+<span style="color: #008080;"> 7</span>     parse = argparse.ArgumentParser(description=<span style="color: #800000;">"</span><span style="color: #800000;">Python_ls</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 8</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 可选参数</span>
+<span style="color: #008080;"> 9</span>     parse.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">-a</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">-all</span><span style="color: #800000;">"</span>, help=<span style="color: #800000;">"</span><span style="color: #800000;">Show all files</span><span style="color: #800000;">"</span>, action=<span style="color: #800000;">"</span><span style="color: #800000;">store_true</span><span style="color: #800000;">"</span>, required=<span style="color: #000000;">False)
+</span><span style="color: #008080;">10</span>     parse.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">-l</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">-long</span><span style="color: #800000;">"</span>, help=<span style="color: #800000;">"</span><span style="color: #800000;">View in long format</span><span style="color: #800000;">"</span>, action=<span style="color: #800000;">"</span><span style="color: #800000;">store_true</span><span style="color: #800000;">"</span>, required=<span style="color: #000000;">False)
+</span><span style="color: #008080;">11</span>     parse.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">-k</span><span style="color: #800000;">"</span>, help=<span style="color: #800000;">"</span><span style="color: #800000;">Expressed in bytes</span><span style="color: #800000;">"</span>, action=<span style="color: #800000;">"</span><span style="color: #800000;">store_true</span><span style="color: #800000;">"</span>, required=<span style="color: #000000;">False)
+</span><span style="color: #008080;">12</span>     parse.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">-r</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">-reverse</span><span style="color: #800000;">"</span>, help=<span style="color: #800000;">"</span><span style="color: #800000;">In reverse order</span><span style="color: #800000;">"</span>, action=<span style="color: #800000;">"</span><span style="color: #800000;">store_true</span><span style="color: #800000;">"</span>, required=<span style="color: #000000;">False)
+</span><span style="color: #008080;">13</span>     parse.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">-t</span><span style="color: #800000;">"</span>, help=<span style="color: #800000;">"</span><span style="color: #800000;">Sort by modified time</span><span style="color: #800000;">"</span>, action=<span style="color: #800000;">"</span><span style="color: #800000;">store_true</span><span style="color: #800000;">"</span>, required=<span style="color: #000000;">False)
+</span><span style="color: #008080;">14</span>     parse.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">-V</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">-Version</span><span style="color: #800000;">"</span>, help=<span style="color: #800000;">"</span><span style="color: #800000;">Get the version</span><span style="color: #800000;">"</span>, action=<span style="color: #800000;">"</span><span style="color: #800000;">store_true</span><span style="color: #800000;">"</span>, required=<span style="color: #000000;">False)
+</span><span style="color: #008080;">15</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 位置参数</span>
+<span style="color: #008080;">16</span>     parse.add_argument(<span style="color: #800000;">"</span><span style="color: #800000;">path</span><span style="color: #800000;">"</span>, type=str, help=<span style="color: #800000;">"</span><span style="color: #800000;">The path</span><span style="color: #800000;">"</span>, nargs=<span style="color: #800000;">"</span><span style="color: #800000;">?</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">17</span> 
+<span style="color: #008080;">18</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 命令行参数信息</span>
+<span style="color: #008080;">19</span>     data =<span style="color: #000000;"> vars(parse.parse_args())
+</span><span style="color: #008080;">20</span>     <span style="color: #0000ff;">assert</span> type(data) ==<span style="color: #000000;"> dict
+</span><span style="color: #008080;">21</span>     <span style="color: #0000ff;">if</span> data[<span style="color: #800000;">"</span><span style="color: #800000;">V</span><span style="color: #800000;">"</span><span style="color: #000000;">]:
+</span><span style="color: #008080;">22</span>         <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">Python_ls version: 1.0</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">23</span>         <span style="color: #0000ff;">return</span>
+<span style="color: #008080;">24</span>     <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">25</span>         check_arg(data)</pre>
+</div>
+<p>&nbsp;　　然后是一个获取指定路径下的内容信息的函数，要做的就是判断路径是否存在，若存在就返回一个文件列表，若不存在则显示错误信息，并退出程序。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_all(path):
+</span><span style="color: #008080;"> 2</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 3</span> <span style="color: #800000;">    获取指定路径下的全部内容
+</span><span style="color: #008080;"> 4</span> <span style="color: #800000;">    :param path: 路径
+</span><span style="color: #008080;"> 5</span> <span style="color: #800000;">    :return:
+</span><span style="color: #008080;"> 6</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 7</span>     <span style="color: #0000ff;">if</span><span style="color: #000000;"> os.path.isdir(path):
+</span><span style="color: #008080;"> 8</span>         files = [<span style="color: #800000;">"</span><span style="color: #800000;">.</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">..</span><span style="color: #800000;">"</span>] +<span style="color: #000000;"> os.listdir(path)
+</span><span style="color: #008080;"> 9</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> files
+</span><span style="color: #008080;">10</span>     <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">11</span>         <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">No such file or directory</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">12</span>         exit()</pre>
+</div>
+<p>&nbsp;</p>
+<h2>五、运行结果</h2>
+<p>　　下面是 ls.py 运行后的部分结果截图。</p>
+<p>　　首先是 python ls.py -a，这里并没有输入路径，就会使用默认路径即当前目录，如下图：</p>
+<p>　　<img src="./images/Python学习之旅：使用Python实现Linux中的ls命令2.png" alt="" /></p>
+<p>　　然后是 python ls.py -a -t .，使用该命令会显示当前目录下的所有内容，并按照创建的时间进行排序，如下图：</p>
+<p>　　<img src="./images/Python学习之旅：使用Python实现Linux中的ls命令3.png" alt="" /></p>
+<p>　　最后是 python ls.py -a -l -k -r .，也是显示当前目录下的所有内容并按照创建名称排序，不过这次文件大小会以 KB 为单位来显示，如下图：</p>
+<p>　　<img src="./images/Python学习之旅：使用Python实现Linux中的ls命令4.png" alt="" /></p>
+<p>&nbsp;　　到这里为止，ls.py 就算是基本实现了，当然还是有很多可以去实现的功能的，比如更多的参数等等，如果你感兴趣的话可以自己尝试一下==</p>
+<p>&nbsp;</p>
+<p>　　<span style="font-size: 14pt;">完整代码已上传到<a href="https://github.com/TM0831/PythonCode/tree/master/python_ls" target="_blank">GitHub</a>！</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

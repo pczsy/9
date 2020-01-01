@@ -1,0 +1,139 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修【python】文件操作' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>【python】文件操作</center></div><div class='banquan'>原文出处:本文由博客园博主小白一生提供。<br/>
+原文连接:https://www.cnblogs.com/liudianer/p/11732536.html</div><br>
+    <h2 id="基本语法">基本语法</h2>
+<pre><code><code>open(&quot;文件名&quot;,&quot;访问方式&quot;)
+
+# 1. 打开文件
+file = open(&quot;README.txt&quot;)
+
+# 2. 读取文件内容,默认全部内容
+text = file.read()
+print(text)
+
+# 3. 关闭文件
+file.close()
+
+&quot;&quot;&quot;
+r     以只读方式打开文件。文件的指针将会放在文件的开头，默认模式。如果文件不存在，抛出异常。
+w     以只写方式打开文件。如果文件存在会被覆盖。如果文件不存在，创建新文件
+a     以追加方式打开文件。如果该文件已存在，文件指针将会放在文件的结尾。如果文件不存在，创建新文件进行写入
+r+    以读写方式打开文件。文件指针将会放在文件的开头。不存在抛异常。
+w+    以读写方式打开文件。存在，覆盖。不存在，新建
+a+    以读写方式打开文件。如存在，指针在末尾，如不存在，建立新的，写入数据
+&quot;&quot;&quot;
+
+
+# 大文件的读
+# 1. 打开文件
+file = open(&quot;catalina.out.before_20191023.txt&quot;,encoding=&#39;utf8&#39;)
+
+# 2. 操作文件
+tmp = file.readline()
+
+while True:
+    tmp = file.readline()
+    # tmp = file.readlines(100)
+    if not tmp:
+        break
+
+    print(tmp,end=&quot;&quot;)
+
+print(tmp)
+# 3. 关闭文件
+file.close()</code></pre>
+<p>文件指针</p>
+<h2 id="文件的复制">文件的复制</h2>
+<pre><code><code># 小文件
+# 1. 打开文件
+file_read = open(&quot;README.txt&quot;)
+file_write = open(&quot;README[附件].txt&quot;,&quot;w&quot;)
+
+# 2. 源文件中读取，目标文件写入
+text = file_read.read()
+
+file_write.write(text)
+
+# 3. 关闭文件
+
+file_read.close()
+file_write.close()
+
+
+
+# 大文件
+# 1. 打开文件
+file_read = open(&quot;catalina.out.before_20191023.txt&quot;,encoding=&#39;utf-8&#39;)
+file_write = open(&quot;catalina.out.before_20191023[附件].txt&quot;,&quot;w&quot;,encoding=&#39;utf-8&#39;)
+
+# 2. 源文件中读取，目标文件写入
+while True:
+    text = file_read.readline()
+    if not text:
+        break
+    file_write.write(text)
+
+# 3. 关闭文件
+
+file_read.close()
+file_write.close()</code></pre>
+<h2 id="进阶语法">进阶语法</h2>
+<pre><code><code>with open(&#39;a.txt&#39;) as f:
+    f.read()
+
+# with 的前提是open能够打开，打不开就挂了</code></pre>
+<h2 id="文件目录的常用管理操作">文件/目录的常用管理操作</h2>
+<p>在 <code>Python</code> 中，如果希望通过程序实现上述功能，需要导入 <code>OS</code> 模块</p>
+<p><strong>文件操作</strong></p>
+<pre><code><code># 重命名文件   
+ os.rename(源文件名,目标文件名)
+
+# 删除文件        
+os.remove(文件名)</code></pre>
+<p><strong>目录操作</strong></p>
+<pre><code><code># 目录列表
+os.listdir(目录名)
+
+# 创建目录
+os.mkdir(目录名)
+
+# 删除目录
+os.rmdir(目录名)
+
+# 获取当前目录
+os.getcwd()
+
+# 修改工作目录
+os.chdir(目标目录)
+
+# 判断是否是文件
+os.path.isdir(文件路径)</code></pre>
+<h2 id="文本文件的编码个数">文本文件的编码个数</h2>
+<p>** ASCII 编码 **<br />
+只有256个ASCII字符，占1个字节的空间</p>
+<p><img src="./images/【python】文件操作0.png" /></p>
+<p><strong>UTF-8 编码</strong><br />
+一个UTF-8字符用1~6个字节来表示</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

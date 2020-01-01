@@ -1,0 +1,126 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python爬虫——爬取B站用户在线人数' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python爬虫——爬取B站用户在线人数</center></div><div class='banquan'>原文出处:本文由博客园博主调味料air提供。<br/>
+原文连接:https://www.cnblogs.com/tiaoweiliao/p/11650461.html</div><br>
+    <p>　　国庆期间想要统计一下bilibili网站的在线人数变化，写了一个简单的爬虫程序。主要是对<span style="color: #800000;">https://api.bilibili.com/x/web-interface/online</span>返回的参数进行分析，获取在线人数对应位置。程序关键点在于requests模块的使用。</p>
+<p>　　具体步骤</p>
+<p>　　1、网页中寻找数据元素对应接口</p>
+<p>　　2、设置代理库</p>
+<p>　　3、请求接口，json读取数据，获得当前在线人数</p>
+<p>　　4、10次求平均</p>
+<p>　　5、配置定时任务，每分钟执行一次</p>
+<p>　　6、excel导出图表</p>
+<p>　　最终结果</p>
+<p>　　<img src="./images/python爬虫——爬取B站用户在线人数0.png" alt="" width="420" height="200" /><img src="./images/python爬虫——爬取B站用户在线人数1.png" alt="" width="412" height="200" /></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> !/usr/bin/env python3</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> random
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> ---------------------------------------------------------------------------------------</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 计算时间差,格式: 时分秒</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> gettimediff(start, end):
+    seconds </span>= (end -<span style="color: #000000;"> start).seconds
+    m, s </span>= divmod(seconds, 60<span style="color: #000000;">)
+    h, m </span>= divmod(m, 60<span style="color: #000000;">)
+    diff </span>= (<span style="color: #800000;">"</span><span style="color: #800000;">%02d:%02d:%02d</span><span style="color: #800000;">"</span> %<span style="color: #000000;"> (h, m, s))
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> diff
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> ----------------------------------------------------------------------------------------------------------------------</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 返回一个随机的请求头 headers</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> getheaders():
+    user_agent_list </span>=<span style="color: #000000;"> [ \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/22.0.1207.1 Safari/537.1</span><span style="color: #800000;">"</span><span style="color: #000000;"> \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (X11; CrOS i686 2268.111.0) AppleWebKit/536.11 (KHTML, like Gecko) Chrome/20.0.1132.57 Safari/536.11</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1092.0 Safari/536.6</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.6 (KHTML, like Gecko) Chrome/20.0.1090.0 Safari/536.6</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.1 (KHTML, like Gecko) Chrome/19.77.34.5 Safari/537.1</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.9 Safari/536.5</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.0) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.36 Safari/536.5</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1063.0 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 5.1) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1063.0 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Macintosh; Intel Mac OS X 10_8_0) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1063.0 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1062.0 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.1 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.2) AppleWebKit/536.3 (KHTML, like Gecko) Chrome/19.0.1061.0 Safari/536.3</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24</span><span style="color: #800000;">"</span><span style="color: #000000;">, \
+        </span><span style="color: #800000;">"</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/535.24 (KHTML, like Gecko) Chrome/19.0.1055.1 Safari/535.24</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    ]
+    UserAgent </span>=<span style="color: #000000;"> random.choice(user_agent_list)
+    headers </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span><span style="color: #000000;">: UserAgent}
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> headers
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> -----------------------------------------------------检查ip是否可用---------------------</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> checkip(targeturl, ip):
+    headers </span>= getheaders()  <span style="color: #008000;">#</span><span style="color: #008000;"> 定制请求头</span>
+    proxies = {ip.split(<span style="color: #800000;">'</span><span style="color: #800000;">:</span><span style="color: #800000;">'</span>)[0]: ip}  <span style="color: #008000;">#</span><span style="color: #008000;"> 代理ip</span>
+    <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        response </span>= requests.get(url=targeturl, proxies=proxies, headers=headers, timeout=5<span style="color: #000000;">).status_code
+        </span><span style="color: #0000ff;">if</span> response == 200<span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> -------------------------------------------------------获取代理方法----------------------</span>
+<span style="color: #0000ff;">def</span> findip():  <span style="color: #008000;">#</span><span style="color: #008000;"> ip类型,页码,目标url,存放ip的路径</span>
+    url = <span style="color: #800000;">'</span><span style="color: #800000;">https://api.bilibili.com/x/web-interface/online</span><span style="color: #800000;">'</span>  <span style="color: #008000;">#</span><span style="color: #008000;"> 配置url</span>
+    headers = getheaders()  <span style="color: #008000;">#</span><span style="color: #008000;"> 定制请求头</span>
+    callback = requests.get(url=url, headers=headers, timeout=10<span style="color: #000000;">).text
+    data_json </span>= json.loads(callback)  <span style="color: #008000;">#</span><span style="color: #008000;"> json格式读取返回值</span>
+    web_online = data_json[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>][<span style="color: #800000;">'</span><span style="color: #800000;">web_online</span><span style="color: #800000;">'</span>]  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取在线人数</span>
+    play_online = data_json[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>][<span style="color: #800000;">'</span><span style="color: #800000;">play_online</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+    all_count </span>= data_json[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>][<span style="color: #800000;">'</span><span style="color: #800000;">all_count</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> web_online, play_online, all_count
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    num_sum </span>=<span style="color: #000000;"> 0
+    play_sum </span>=<span style="color: #000000;"> 0
+    count_sum </span>=<span style="color: #000000;"> 0
+    time_now </span>= time.strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">'</span>, time.localtime(time.time()))  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取当前时间，格式%Y-%m-%d %H:%M:%S</span>
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(10):         <span style="color: #008000;">#</span><span style="color: #008000;"> 统计十次数据，求平均</span>
+        num_sum = num_sum +<span style="color: #000000;"> findip()[0]
+        play_sum </span>= play_sum + findip()[1<span style="color: #000000;">]
+        count_sum </span>= count_sum + findip()[2<span style="color: #000000;">]
+        time.sleep(</span>1<span style="color: #000000;">)
+    num </span>= num_sum / 10<span style="color: #000000;">
+    play_online </span>= play_sum / 10<span style="color: #000000;">
+    count </span>= count_sum / 10<span style="color: #000000;">
+    with open(</span><span style="color: #800000;">'</span><span style="color: #800000;">online_num.csv</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">a</span><span style="color: #800000;">'</span>) as f:   <span style="color: #008000;">#</span><span style="color: #008000;"> 写入文件数据</span>
+        f.write(<span style="color: #800000;">'</span><span style="color: #800000;">%s,%s,%s,%s\n</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> (time_now, num, play_online, count))
+    f.close()</span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,245 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python-12-装饰器' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python-12-装饰器</center></div><div class='banquan'>原文出处:本文由博客园博主lsf123456提供。<br/>
+原文连接:https://www.cnblogs.com/lsf123456/p/11180815.html</div><br>
+    <h1><span style="font-size: 18pt;">一、定义</span></h1>
+<p><span style="font-size: 16px;">器即函数</span></p>
+<p><span style="font-size: 16px;">装饰即修饰，意指为其他函数添加新功能</span></p>
+<p><span style="font-size: 16px;">装饰器定义：<em>本质就是函数，功能是为其他函数添加新功能</em></span></p>
+<p><span style="font-size: 16px;">原则：</span></p>
+<ul>
+<li>
+<p><em><span style="font-size: 15px; color: #888888;">1.不修改被装饰函数的源代码（开放封闭原则）</span></em></p>
+</li>
+<li>
+<p><em><span style="font-size: 15px; color: #888888;">2.为被装饰函数添加新功能后，不修改被修饰函数的调用方</span></em></p>
+</li>
+</ul>
+<h1><span style="font-size: 18pt;">二、装饰器=高阶函数+函数嵌套+闭包</span></h1>
+<h2><span style="font-size: 14pt;">1. 高阶函数</span></h2>
+<p><span style="font-size: 16px;">默认满足以下两个条件中的一个就是高阶函数：</span></p>
+<ul>
+<li><span style="font-size: 15px;">函数的传入参数是一个函数名</span></li>
+<li><span style="font-size: 15px;">函数的返回值是一个函数名</span></li>
+</ul>
+<div class="cnblogs_Highlighter">
+<pre><code>#高阶函数应用1:把函数当做参数传给高阶函数
+import time
+def foo():
+    print('from the foo')
+
+def timmer(func):
+    start_time=time.time()
+    func()
+    stop_time=time.time()
+    print('函数%s 运行时间是%s' %(func,stop_time-start_time))
+timmer(foo)
+#总结:我们确实为函数foo增加了foo运行时间的功能,但是foo原来的执行方式是foo(),现在我们需要调用高阶函数timmer(foo),改变了函数的调用方式
+
+
+#高阶函数应用2:把函数名当做参数传给高阶函数,高阶函数直接返回函数名
+import time
+def foo():
+    print('from the foo')
+
+def timmer(func):
+    start_time=time.time()
+    return func
+    stop_time=time.time()
+    print('函数%s 运行时间是%s' %(func,stop_time-start_time))
+foo=timmer(foo)
+foo()
+#总结:我们确实没有改变foo的调用方式,但是我们也没有为foo增加任何新功能
+
+函数返回值是函数名
+</pre>
+</div>
+<h2><span style="font-size: 14pt;">2. 函数嵌套</span></h2>
+<p><span style="font-size: 14pt;"><span style="font-size: 16px;">在函数内部定义函数</span></span></p>
+<h2><span style="font-size: 14pt;">3. 闭包</span></h2>
+<p><span style="color: #000000; font-size: 16px;">闭包:在一个作用域里放入定义变量,相当于打了一个包</span></p>
+<h1><span style="font-size: 18pt;">三、装饰器实现</span></h1>
+<div class="cnblogs_Highlighter">
+<pre><code>def timmer(func):
+    def wrapper(*args, **kwargs):
+        print(func)
+        res = func(*args, **kwargs)
+        return res
+
+    return wrapper
+
+@timmer  # test = timmer(test)
+def test(name, age):
+    print('姓名：%s，年龄：%s' % (name, age))
+    return 1
+
+msg = test('Tom', 18)  # 就是在运行wrapper
+print(msg)
+</pre>
+</div>
+<h1><span style="font-size: 18pt;">四、应用</span></h1>
+<p>&nbsp;<span style="font-size: 16px;">网站登录认证</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('0f65f181-5c8c-4cac-92e9-9d7ed9c89029')"><img id="code_img_closed_0f65f181-5c8c-4cac-92e9-9d7ed9c89029" class="code_img_closed" src="./images/Python-12-装饰器0.png" alt="" /><img id="code_img_opened_0f65f181-5c8c-4cac-92e9-9d7ed9c89029" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('0f65f181-5c8c-4cac-92e9-9d7ed9c89029',event)" src="./images/Python-12-装饰器1.png" alt="" />
+<div id="cnblogs_code_open_0f65f181-5c8c-4cac-92e9-9d7ed9c89029" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> user_list =<span style="color: #000000;"> [
+</span><span style="color: #008080;"> 2</span>     {<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">alex</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span><span style="color: #000000;">},
+</span><span style="color: #008080;"> 3</span>     {<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Tom</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span><span style="color: #000000;">},
+</span><span style="color: #008080;"> 4</span>     {<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Jerry</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+</span><span style="color: #008080;"> 5</span> <span style="color: #000000;">]
+</span><span style="color: #008080;"> 6</span> 
+<span style="color: #008080;"> 7</span> current_user = {<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">login</span><span style="color: #800000;">'</span><span style="color: #000000;">: False}
+</span><span style="color: #008080;"> 8</span> 
+<span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> auth_deco(func):
+</span><span style="color: #008080;">11</span>     <span style="color: #0000ff;">def</span> wrapper(*args, **<span style="color: #000000;">kwargs):
+</span><span style="color: #008080;">12</span>         <span style="color: #0000ff;">if</span> current_user[<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>] <span style="color: #0000ff;">and</span> current_user[<span style="color: #800000;">'</span><span style="color: #800000;">login</span><span style="color: #800000;">'</span><span style="color: #000000;">]:
+</span><span style="color: #008080;">13</span>             res = func(*args, **<span style="color: #000000;">kwargs)
+</span><span style="color: #008080;">14</span>             <span style="color: #0000ff;">return</span><span style="color: #000000;"> res
+</span><span style="color: #008080;">15</span>         i =<span style="color: #000000;"> 0
+</span><span style="color: #008080;">16</span>         <span style="color: #0000ff;">while</span> i &lt; 3<span style="color: #000000;">:
+</span><span style="color: #008080;">17</span>             username = input(<span style="color: #800000;">'</span><span style="color: #800000;">用户名: </span><span style="color: #800000;">'</span><span style="color: #000000;">).strip()
+</span><span style="color: #008080;">18</span>             passwd = input(<span style="color: #800000;">'</span><span style="color: #800000;">密码: </span><span style="color: #800000;">'</span><span style="color: #000000;">).strip()
+</span><span style="color: #008080;">19</span>             <span style="color: #0000ff;">for</span> user_dic <span style="color: #0000ff;">in</span><span style="color: #000000;"> user_list:
+</span><span style="color: #008080;">20</span>                 <span style="color: #0000ff;">if</span> username == user_dic[<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>] <span style="color: #0000ff;">and</span> passwd == user_dic[<span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span><span style="color: #000000;">]:
+</span><span style="color: #008080;">21</span>                     current_user[<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> username
+</span><span style="color: #008080;">22</span>                     current_user[<span style="color: #800000;">'</span><span style="color: #800000;">login</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> True
+</span><span style="color: #008080;">23</span>                     res = func(*args, **<span style="color: #000000;">kwargs)
+</span><span style="color: #008080;">24</span>                     <span style="color: #0000ff;">return</span><span style="color: #000000;"> res
+</span><span style="color: #008080;">25</span>             <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">26</span>                 <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">用户名或者密码错误,重新登录</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">27</span>             i += 1
+<span style="color: #008080;">28</span>         <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">请稍后重试</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">29</span> 
+<span style="color: #008080;">30</span>     <span style="color: #0000ff;">return</span><span style="color: #000000;"> wrapper
+</span><span style="color: #008080;">31</span> 
+<span style="color: #008080;">32</span> 
+<span style="color: #008080;">33</span> <span style="color: #000000;">@auth_deco
+</span><span style="color: #008080;">34</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> index():
+</span><span style="color: #008080;">35</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">欢迎来到主页面</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">36</span> 
+<span style="color: #008080;">37</span> 
+<span style="color: #008080;">38</span> <span style="color: #000000;">@auth_deco
+</span><span style="color: #008080;">39</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> home():
+</span><span style="color: #008080;">40</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">这里是你家</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">41</span> 
+<span style="color: #008080;">42</span> 
+<span style="color: #008080;">43</span> <span style="color: #000000;">@auth_deco
+</span><span style="color: #008080;">44</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> shopping_car():
+</span><span style="color: #008080;">45</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">查看购物车啊亲</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">46</span> 
+<span style="color: #008080;">47</span> 
+<span style="color: #008080;">48</span> <span style="color: #000000;">@auth_deco
+</span><span style="color: #008080;">49</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> order():
+</span><span style="color: #008080;">50</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">查看订单啊亲</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">51</span> 
+<span style="color: #008080;">52</span> 
+<span style="color: #008080;">53</span> home()</pre>
+</div>
+<span class="cnblogs_code_collapse">无参装饰器</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('9f8f5ce5-0242-4420-b664-f8e2ddec0ab6')"><img id="code_img_closed_9f8f5ce5-0242-4420-b664-f8e2ddec0ab6" class="code_img_closed" src="./images/Python-12-装饰器0.png" alt="" /><img id="code_img_opened_9f8f5ce5-0242-4420-b664-f8e2ddec0ab6" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('9f8f5ce5-0242-4420-b664-f8e2ddec0ab6',event)" src="./images/Python-12-装饰器1.png" alt="" />
+<div id="cnblogs_code_open_9f8f5ce5-0242-4420-b664-f8e2ddec0ab6" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> user_list =<span style="color: #000000;"> [
+</span><span style="color: #008080;"> 2</span>     {<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">alex</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span><span style="color: #000000;">},
+</span><span style="color: #008080;"> 3</span>     {<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Tom</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span><span style="color: #000000;">},
+</span><span style="color: #008080;"> 4</span>     {<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Jerry</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+</span><span style="color: #008080;"> 5</span> <span style="color: #000000;">]
+</span><span style="color: #008080;"> 6</span> 
+<span style="color: #008080;"> 7</span> current_user = {<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">login</span><span style="color: #800000;">'</span><span style="color: #000000;">: False}
+</span><span style="color: #008080;"> 8</span> 
+<span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #0000ff;">def</span> auth(auth_type=<span style="color: #800000;">'</span><span style="color: #800000;">file</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+</span><span style="color: #008080;">11</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> auth_deco(func):
+</span><span style="color: #008080;">12</span>         <span style="color: #0000ff;">def</span> wrapper(*args, **<span style="color: #000000;">kwargs):
+</span><span style="color: #008080;">13</span>             <span style="color: #0000ff;">if</span> auth_type == <span style="color: #800000;">'</span><span style="color: #800000;">file</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+</span><span style="color: #008080;">14</span>                 <span style="color: #0000ff;">if</span> current_user[<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>] <span style="color: #0000ff;">and</span> current_user[<span style="color: #800000;">'</span><span style="color: #800000;">login</span><span style="color: #800000;">'</span><span style="color: #000000;">]:
+</span><span style="color: #008080;">15</span>                     res = func(*args, **<span style="color: #000000;">kwargs)
+</span><span style="color: #008080;">16</span>                     <span style="color: #0000ff;">return</span><span style="color: #000000;"> res
+</span><span style="color: #008080;">17</span>                 i =<span style="color: #000000;"> 0
+</span><span style="color: #008080;">18</span>                 <span style="color: #0000ff;">while</span> i &lt; 3<span style="color: #000000;">:
+</span><span style="color: #008080;">19</span>                     username = input(<span style="color: #800000;">'</span><span style="color: #800000;">用户名: </span><span style="color: #800000;">'</span><span style="color: #000000;">).strip()
+</span><span style="color: #008080;">20</span>                     passwd = input(<span style="color: #800000;">'</span><span style="color: #800000;">密码: </span><span style="color: #800000;">'</span><span style="color: #000000;">).strip()
+</span><span style="color: #008080;">21</span>                     <span style="color: #0000ff;">for</span> user_dic <span style="color: #0000ff;">in</span><span style="color: #000000;"> user_list:
+</span><span style="color: #008080;">22</span>                         <span style="color: #0000ff;">if</span> username == user_dic[<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span>] <span style="color: #0000ff;">and</span> passwd == user_dic[<span style="color: #800000;">'</span><span style="color: #800000;">passwd</span><span style="color: #800000;">'</span><span style="color: #000000;">]:
+</span><span style="color: #008080;">23</span>                             current_user[<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> username
+</span><span style="color: #008080;">24</span>                             current_user[<span style="color: #800000;">'</span><span style="color: #800000;">login</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> True
+</span><span style="color: #008080;">25</span>                             res = func(*args, **<span style="color: #000000;">kwargs)
+</span><span style="color: #008080;">26</span>                             <span style="color: #0000ff;">return</span><span style="color: #000000;"> res
+</span><span style="color: #008080;">27</span>                     <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;">28</span>                         <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">用户名或者密码错误,重新登录</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">29</span>                     i += 1
+<span style="color: #008080;">30</span>                 <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">请稍后登录</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">31</span>             <span style="color: #0000ff;">elif</span> auth_type == <span style="color: #800000;">'</span><span style="color: #800000;">ldap</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+</span><span style="color: #008080;">32</span>                 <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">巴拉拉小魔仙</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">33</span>                 res = func(*args, **<span style="color: #000000;">kwargs)
+</span><span style="color: #008080;">34</span>                 <span style="color: #0000ff;">return</span><span style="color: #000000;"> res
+</span><span style="color: #008080;">35</span> 
+<span style="color: #008080;">36</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> wrapper
+</span><span style="color: #008080;">37</span> 
+<span style="color: #008080;">38</span>     <span style="color: #0000ff;">return</span><span style="color: #000000;"> auth_deco
+</span><span style="color: #008080;">39</span> 
+<span style="color: #008080;">40</span> 
+<span style="color: #008080;">41</span> <span style="color: #008000;">#</span><span style="color: #008000;"> auth(auth_type='file')就是在运行一个函数,然后返回auth_deco,所以@auth(auth_type='file')</span>
+<span style="color: #008080;">42</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 就相当于@auth_deco,只不过现在,我们的auth_deco作为一个闭包的应用,外层的包auth给它留了一个auth_type='file'参数</span>
+<span style="color: #008080;">43</span> @auth(auth_type=<span style="color: #800000;">'</span><span style="color: #800000;">ldap</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">44</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> index():
+</span><span style="color: #008080;">45</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">欢迎来到主页面</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">46</span> 
+<span style="color: #008080;">47</span> 
+<span style="color: #008080;">48</span> @auth(auth_type=<span style="color: #800000;">'</span><span style="color: #800000;">ldap</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">49</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> home():
+</span><span style="color: #008080;">50</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">这里是你家</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">51</span> 
+<span style="color: #008080;">52</span> 
+<span style="color: #008080;">53</span> @auth(auth_type=<span style="color: #800000;">'</span><span style="color: #800000;">file</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">54</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> shopping_car():
+</span><span style="color: #008080;">55</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">查看购物车啊亲</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">56</span> 
+<span style="color: #008080;">57</span> 
+<span style="color: #008080;">58</span> @auth(auth_type=<span style="color: #800000;">'</span><span style="color: #800000;">file</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">59</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> order():
+</span><span style="color: #008080;">60</span>     <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">查看订单啊亲</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">61</span> 
+<span style="color: #008080;">62</span> 
+<span style="color: #008080;">63</span> order()</pre>
+</div>
+<span class="cnblogs_code_collapse">有参装饰器</span></div>
+<h1><span style="font-size: 18pt;">五、类的装饰器</span></h1>
+<p><em><span style="font-size: 16px;">装饰器不仅可以对函数进行装饰，还可以装饰类</span></em></p>
+<div class="cnblogs_Highlighter">
+<pre><code>def deco(obj):
+    print('====')
+    obj.x = 1
+    obj.y = 2
+    return obj
+
+@deco
+class Foo(object):
+    pass
+
+print(Foo.__dict__)  
+# {'__module__': '__main__', '__dict__': &lt;attribute '__dict__' of 'Foo' objects&gt;, 
+# '__weakref__': &lt;attribute '__weakref__' of 'Foo' objects&gt;, '__doc__': None, 'x': 1, 'y': 2}
+</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

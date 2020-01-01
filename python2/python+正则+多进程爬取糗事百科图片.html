@@ -1,0 +1,83 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python+正则+多进程爬取糗事百科图片' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python+正则+多进程爬取糗事百科图片</center></div><div class='banquan'>原文出处:本文由博客园博主记住我忘记我提供。<br/>
+原文连接:https://www.cnblogs.com/nmsghgnv/p/11308354.html</div><br>
+    <p>话不多说，直接上代码；</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 需要的库</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">from</span> multiprocessing <span style="color: #0000ff;">import</span><span style="color: #000000;"> Pool
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 请求头</span>
+headers =<span style="color: #000000;"> {
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/65.0.3325.181 Safari/537.36</span><span style="color: #800000;">'</span><span style="color: #000000;">
+}
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 主函数</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> get_img(url):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义图片存储路径</span>
+    img_path = <span style="color: #800000;">'</span><span style="color: #800000;">./img/</span><span style="color: #800000;">'</span>
+    <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> os.path.exists(img_path):
+        os.mkdir(img_path)
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 请求网页</span>
+        response = requests.get(url=url,headers=<span style="color: #000000;">headers)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 正则提取图片地址</span>
+        response = re.findall(<span style="color: #800000;">'</span><span style="color: #800000;">&lt;div class="thumb".*?&lt;img src="(.*?)".*?&lt;/a&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">,response.text,re.S)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 循环图片地址</span>
+        <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> response:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 拼接完整图片路由</span>
+            url = (<span style="color: #800000;">'</span><span style="color: #800000;">http:</span><span style="color: #800000;">'</span> +<span style="color: #000000;"> i)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 请求完整图片路由</span>
+            response =<span style="color: #000000;"> requests.get(url,headers)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 图片命名</span>
+            img_name = url.split(<span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span>)[-1<span style="color: #000000;">]
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判断图片是否已下载</span>
+            <span style="color: #0000ff;">if</span> os.path.exists(img_path+<span style="color: #000000;">img_name):
+                </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">图片已存在</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 下载图片</span>
+                with open(img_path+img_name,<span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+                    f.write(response.content)
+                    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">正在下载：</span><span style="color: #800000;">'</span>+<span style="color: #000000;">url)
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(e)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 程序主入口</span>
+<span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 构造所有ip地址</span>
+    urls = [<span style="color: #800000;">'</span><span style="color: #800000;">https://www.qiushibaike.com/imgrank/page/{}/</span><span style="color: #800000;">'</span>.format(i) <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1,14<span style="color: #000000;">)]
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用多进程</span>
+    pool =<span style="color: #000000;"> Pool()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 开启多进程爬取</span>
+<span style="color: #000000;">    pool.map(get_img,urls)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">下载完毕</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>下载中;</p>
+<p><img src="./images/python+正则+多进程爬取糗事百科图片0.png" alt="" /></p>
+<p>打开文件夹查看图片；</p>
+<p><img src="./images/python+正则+多进程爬取糗事百科图片1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>done</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

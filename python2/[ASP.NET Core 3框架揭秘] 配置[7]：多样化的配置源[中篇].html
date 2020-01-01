@@ -1,0 +1,280 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修[ASP.NET Core 3框架揭秘] 配置[7]：多样化的配置源[中篇]' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>[ASP.NET Core 3框架揭秘] 配置[7]：多样化的配置源[中篇]</center></div><div class='banquan'>原文出处:本文由博客园博主Artech提供。<br/>
+原文连接:https://www.cnblogs.com/artech/p/inside-asp-net-core-05-07.html</div><br>
+    <p>物理文件是我们最常用到的原始配置载体，而最佳的配置文件格式主要有三种，它们分别是JSON、XML和INI，对应的配置源类型分别是JsonConfigurationSource、XmlConfigurationSource和IniConfigurationSource，它们具有如下一个相同的基类FileConfigurationSource。</p><h1><font size="4">一、FileConfigurationSource</font></h1><p>FileConfigurationSource总是利用一个IFileProvider对象来读取配置文件，我们可以利用FileProvider属性来设置这个对象。配置文件的路径通过Path属性表示，一般来说这是一个针对IFileProvider对象根目录的相对路径。在读取配置文件的时候，这个路径将会作为参数调用IFileProvider对象的GetFileInfo方法得到描述配置文件的IFileInfo对象，该对象的CreateReadStream方法最终会被调用来读取文件内容。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">abstract</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> FileConfigurationSource : IConfigurationSource
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> IFileProvider FileProvider { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">string</span> Path { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">bool</span> Optional { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">int</span> ReloadDelay { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">bool</span> ReloadOnChange { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span> Action&lt;FileLoadExceptionContext&gt; OnLoadException { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">abstract</span><span style="color: rgb(0, 0, 0);"> IConfigurationProvider Build(IConfigurationBuilder builder);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> EnsureDefaults(IConfigurationBuilder builder);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> ResolveFileProvider();
+}</span></pre></div><h2><font size="3">ResolveFileProvider方法</font></h2><p>如果FileProvider属性并没有被显式赋值，而我们指定的配置文件路径是一个绝对路径（比如“c:\app\appsettings.json”），那么一个针对配置文件所在目录（“c:\app”）的PhysicalFileProvider将会自动创建出来作为FileProvider的属性值，而Path属性将被设置成配置文件名。如果指定的仅仅是一个相对路径，FileProvider属性将不会被自动初始化。这个逻辑实现在ResolveFileProvider方法中，并体现在如下的测试程序中。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> Program
+{
+    </span><span style="color: rgb(0, 0, 255);">static</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> Main()
+    {
+        </span><span style="color: rgb(0, 0, 255);">var</span> source = <span style="color: rgb(0, 0, 255);">new</span><span style="color: rgb(0, 0, 0);"> FakeConfigurationSource
+        {
+            Path </span>= <span style="color: rgb(128, 0, 0);">@"</span><span style="color: rgb(128, 0, 0);">C:\App\appsettings.json</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+        };
+        Debug.Assert(source.FileProvider </span>== <span style="color: rgb(0, 0, 255);">null</span><span style="color: rgb(0, 0, 0);">);
+
+        source.ResolveFileProvider();
+        </span><span style="color: rgb(0, 0, 255);">var</span> fileProvider =<span style="color: rgb(0, 0, 0);"> (PhysicalFileProvider)source.FileProvider;
+        Debug.Assert(fileProvider.Root </span>== <span style="color: rgb(128, 0, 0);">@"</span><span style="color: rgb(128, 0, 0);">C:\App\</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">);
+        Debug.Assert(source.Path </span>== <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">appsettings.json</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">);
+    }
+
+    </span><span style="color: rgb(0, 0, 255);">private</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> FakeConfigurationSource : FileConfigurationSource
+    {
+        </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span> IConfigurationProvider Build(IConfigurationBuilder builder) =&gt; <span style="color: rgb(0, 0, 255);">throw</span> <span style="color: rgb(0, 0, 255);">new</span><span style="color: rgb(0, 0, 0);"> NotImplementedException();
+    }
+}</span></pre></div><h2><font size="3">EnsureDefaults方法</font></h2><p>除了ResolveFileProvider方法，FileConfigurationSource还定义了另一个名为EnsureDefaults的方法，该方法会确保FileConfigurationSource总是具有一个用于加载配置文件的IFileProvider对象。具体来说，<a>该方法</a>最终会调用IConfigurationBuilder接口具有如下定义的扩展方法GetFileProvider来获取默认的IFileProvider对象。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> FileConfigurationExtensions
+{    
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IFileProvider GetFileProvider(<span style="color: rgb(0, 0, 255);">this</span><span style="color: rgb(0, 0, 0);"> IConfigurationBuilder builder)
+    {
+        </span><span style="color: rgb(0, 0, 255);">if</span> (builder.Properties.TryGetValue(<span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">FileProvider</span><span style="color: rgb(128, 0, 0);">"</span>, <span style="color: rgb(0, 0, 255);">out</span> <span style="color: rgb(0, 0, 255);">object</span><span style="color: rgb(0, 0, 0);"> provider))
+        {
+            </span><span style="color: rgb(0, 0, 255);">return</span> builder.Properties[<span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">FileProvider</span><span style="color: rgb(128, 0, 0);">"</span>] <span style="color: rgb(0, 0, 255);">as</span><span style="color: rgb(0, 0, 0);"> IFileProvider;
+        }
+        </span><span style="color: rgb(0, 0, 255);">return</span> <span style="color: rgb(0, 0, 255);">new</span> PhysicalFileProvider(AppContext.BaseDirectory ?? <span style="color: rgb(0, 0, 255);">string</span><span style="color: rgb(0, 0, 0);">.Empty);
+    }
+}</span></pre></div><p>从上面给出的代码片段可以看出，<a>这个扩展方法</a> 实际上是将IConfigurationBuilder对象的Properties属性表示的字典作为了存放IFileProvider对象的容器（对应的Key为“FileProvider”）。如果这个容器中存在一个IFileProvider对象，那么它将作为方法的返回值。反之，该方法会根据当前应用的基础目录（默认为当前应用程序域的基础目录，也就是当前执行的.exe文件所在的目录）作为根目录创建一个PhysicalFileProvider对象。</p><h2><font size="3">SetFileProvider和SetBasePath方法</font></h2><p>既然默认情况下EnsureDefaults方法会从IConfigurationBuilder对象的属性字典中提取IFileProvider对象，那么我们可以在这个属性字典中存放一个默认的IFileProvider对象供所有注册在它上面的FileConfigurationSource对象共享。实际上IConfigurationBuilder接口提供了如下两个SetFileProvider和SetBasePath扩展方法实现了这个功能。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> FileConfigurationExtensions
+{    
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder SetFileProvider( <span style="color: rgb(0, 0, 255);">this</span><span style="color: rgb(0, 0, 0);"> IConfigurationBuilder builder, IFileProvider fileProvider)
+    {
+        builder.Properties[</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">FileProvider</span><span style="color: rgb(128, 0, 0);">"</span>] =<span style="color: rgb(0, 0, 0);"> fileProvider;
+        </span><span style="color: rgb(0, 0, 255);">return</span><span style="color: rgb(0, 0, 0);"> builder;
+    }
+
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder SetBasePath( <span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span><span style="color: rgb(0, 0, 0);"> basePath)
+        </span>=&gt;builder.SetFileProvider(<span style="color: rgb(0, 0, 255);">new</span><span style="color: rgb(0, 0, 0);"> PhysicalFileProvider(basePath));
+}</span></pre></div><h2><font size="3">可缺省配置文件</font></h2><p>FileConfigurationSource的Optional表示当前配置源是否可以缺省。如果该属性被设置成False，即使指定的配置文件不存在也不会抛出异常。可缺省的配置文件在支持多环境的场景中具有广泛的应用。正如前面实例演示的一样，我们可以按照如下的方式加载两个配置文件，基础配置文件<font color="#ff0000">appsettings.json</font>一般包含相对全面的配置，针对某个环境的差异化配置则定义在<font color="#ff0000">appsettings.{environment}.json</font>文件中。前者是必需的，后者则是可以缺省的，这保证了应用程序在缺少基于当前环境的差异化配置文件的情况下依然可以使用定义在基础配置文件中的默认配置。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">var</span> configuration = <span style="color: rgb(0, 0, 255);">new</span><span style="color: rgb(0, 0, 0);"> ConfigurationBuilder()
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile(path: </span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">appsettings.json</span><span style="color: rgb(128, 0, 0);">"</span>, optional: <span style="color: rgb(0, 0, 255);">false</span><span style="color: rgb(0, 0, 0);">)
+    .AddJsonFile(path: $</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">appsettings.{environment}.json</span><span style="color: rgb(128, 0, 0);">"</span>, optional: <span style="color: rgb(0, 0, 255);">true</span><span style="color: rgb(0, 0, 0);">)
+    .Build();</span></pre></div><h2><font size="3">配置数据的实时同步</font></h2><p>FileConfigurationSource借助IFileProvider对象提供的文件系统监控功能实现了配置文件在更新后的自动实时加载功能，这个特性通过ReloadOnChange属性来开启或者关闭。默认情况下这个特性是关闭的，我们需要通过将这个属性设置为True来显式地开启该特性。如果开启了配置文件的重新加载功能，一旦配置文件发生变化，IFileProvider对象会在第一时间将通知发送给对应的FileConfigurationProvider对象，后者会调用Load方法重新加载配置文件。考虑到有可能针对配置文件的写入此时尚未结束，FileConfigurationSource采用了 “延时加载” 的方式来解决这个问题，具体的延时通过ReloadDelay属性来控制。该属性的单位是毫秒，默认设置的延时为250毫秒。</p><h2><font size="3">异常处理</font></h2><p>考虑到针对配置文件的加载不可能百分之百成功，所以FileConfigurationSource提供了相应的异常处理机制。具体来说，我们可以通过FileConfigurationSource对象的OnLoadException属性注册一个Action&lt;FileLoadExceptionContext&gt;类型的委托作为异常处理器。作为参数的FileLoadExceptionContext 对象代表FileConfigurationProvider在加载配置文件出错的情况下为异常处理器提供的执行上下文。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> FileLoadExceptionContext
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> Exception Exception { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span> FileConfigurationProvider Provider { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">bool</span> Ignore { <span style="color: rgb(0, 0, 255);">get</span>; <span style="color: rgb(0, 0, 255);">set</span><span style="color: rgb(0, 0, 0);">; }
+}</span></pre></div><p>如上面的代码片段所示，我们可以从FileLoadExceptionContext上下文中获取抛出的异常和当前FileConfigurationProvider对象。如果异常处理结束之后上下文对象的Ignore属性被设置为True，FileConfigurationProvider对象会认为目前的异常（可能是原来抛出的异常，也可能是异常处理器设置的异常）是可以被忽略的，此时程序会继续执行，否则异常还是会抛出来。顺便强调一下，最终抛出来的是原来的异常，所以我们不可以通过修改上下文的Exception属性来达到抛出另一个异常的目的。</p><p>就像我们可以为注册到IConfigurationBuilder对象上的所有FileConfigurationSource注册一个共享的IFileProvider对象一样，我们也可以调用IConfigurationBuilder接口的SetFileLoadExceptionHandler扩展方法注册一个共享的异常处理器，该方法依然是利用IConfiguration<br>Builder对象的属性字典来存放这个作为异常处理器的委托对象。注册的这个异常处理器通过对应的扩展方法GetFileLoadExceptionHandler来获取。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> FileConfigurationExtensions
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder SetFileLoadExceptionHandler(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, Action&lt;FileLoadExceptionContext&gt;<span style="color: rgb(0, 0, 0);"> handler)
+    {
+        builder.Properties[</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">FileLoadExceptionHandler</span><span style="color: rgb(128, 0, 0);">"</span>] =<span style="color: rgb(0, 0, 0);"> handler;
+        </span><span style="color: rgb(0, 0, 255);">return</span><span style="color: rgb(0, 0, 0);"> builder;
+    }
+
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> Action&lt;FileLoadExceptionContext&gt; GetFileLoadExceptionHandler(<span style="color: rgb(0, 0, 255);">this</span><span style="color: rgb(0, 0, 0);"> IConfigurationBuilder builder)
+        </span>=&gt; builder.Properties.TryGetValue(<span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">FileLoadExceptionHandler</span><span style="color: rgb(128, 0, 0);">"</span>, <span style="color: rgb(0, 0, 255);">out</span> <span style="color: rgb(0, 0, 255);">object</span> handler) ? handler <span style="color: rgb(0, 0, 255);">as</span> Action&lt;FileLoadExceptionContext&gt; : <span style="color: rgb(0, 0, 255);">null</span><span style="color: rgb(0, 0, 0);">;
+}</span></pre></div><p>前面我们提到FileConfigurationSource的EnsureDefaults方法，这个方法除了在IFileProvider对象没有被初始化的情况下调用IConfigurationBuilder的GetFileProvider扩展方法提供一个默认的IFileProvider对象之外，它还会在异常处理器没有初始化的情况下调用上面这个GetFileLoad<br>ExceptionHandler扩展方法提供一个默认的异常处理器。</p><h1><font size="4">二、FileConfigurationProvider</font></h1><p>对于配置系统默认提供的针对三种文件格式化的FileConfigurationSource类型来说，它们提供的IConfigurationProvider实现都派生于如下这个抽象基类FileConfigurationProvider。对于我们自定义的FileConfigurationSource，但我们也倾向于将这个抽象类作为对应IConfiguration<br>Provider实现类型的基类。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">abstract</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> FileConfigurationProvider : ConfigurationProvider
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> FileConfigurationSource Source { <span style="color: rgb(0, 0, 255);">get</span><span style="color: rgb(0, 0, 0);">; }
+    </span><span style="color: rgb(0, 0, 255);">public</span><span style="color: rgb(0, 0, 0);"> FileConfigurationProvider(FileConfigurationSource source);
+
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> Load();    
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">abstract</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> Load(Stream stream);    
+}</span></pre></div><p>当我们创建一个FileConfigurationProvider对象的时候需要提供对应的FileConfigurationSource对象，它会赋值给Source属性。如果指定的FileConfigurationSource对象开启了配置文件更新监控和自动加载功能（其属性OnLoadException返回True），FileConfigurationProvider对象会利用FileConfigurationSource对象提供的IFileProvider对象对配置文件实施监控，并通过注册回调的方式在配置文件更新的时候调用Load方法重新加载配置。</p><p>由于FileConfigurationSource对象提供了IFileProvider对象，所以FileConfigurationProvider对象可以调用其CreateReadStream方法获取读取配置文件内容的流对象，因此我们可以利用这个Stream对象来完成配置的加载。根据基于Stream加载配置的功能体现在抽象方法Load上，所以FileConfigurationProvider对象的派生类都需要重写这个方法。</p><h1><font size="4">三、JsonConfigurationSource</font></h1><p><a>JsonConfigurationSource</a>代表针对通过JSON文件的配置源，该类型定义在NuGet包“Microsoft.Extensions.Configuration.Json”中。从如下给出的定义可以看出，JsonConfigurationSource重写的Build方法在提供对应的JsonConfigurationProvider对象之前会调用EnsureDefaults方法，这个方法确保用于读取配置文件的IFileProvider对象和处理配置文件加载异常的处理器被初始化。JsonConfigurationProvider<strong>对象</strong>派生于抽象类FileConfigurationProvider，它利用重写的Load方法读取配置文件的内容并将其转换成配置字典。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> JsonConfigurationSource : FileConfigurationSource
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span><span style="color: rgb(0, 0, 0);"> IConfigurationProvider Build(IConfigurationBuilder builder)
+    {
+        EnsureDefaults(builder);
+        </span><span style="color: rgb(0, 0, 255);">return</span> <span style="color: rgb(0, 0, 255);">new</span> JsonConfigurationProvider(<span style="color: rgb(0, 0, 255);">this</span><span style="color: rgb(0, 0, 0);">);
+    }
+}
+
+</span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> JsonConfigurationProvider : FileConfigurationProvider
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span><span style="color: rgb(0, 0, 0);"> JsonConfigurationProvider(JsonConfigurationSource source);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> Load(Stream stream);
+}</span></pre></div><p>IConfigurationBuilder接口具有如下几个名为AddJsonFile扩展方法来注册JsonConfigurationSource。如果调用第一个AddJsonFile方法重载，我们可以利用指定的Action&lt;JsonConfigurationSource&gt;对象对创建的JsonConfigurationSource进行初始化。至于其他AddJsonFile方法重载，实际上就是通过相应的参数初始化JsonConfigurationSource对象的Path、Optional和ReloadOnChange属性罢了。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> JsonConfigurationExtensions
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddJsonFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, Action&lt;JsonConfigurationSource&gt;<span style="color: rgb(0, 0, 0);"> configureSource);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddJsonFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span><span style="color: rgb(0, 0, 0);"> path);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddJsonFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> optional);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddJsonFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span> optional, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> reloadOnChange);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddJsonFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, IFileProvider provider, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span> optional, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> reloadOnChange);
+}</span></pre></div><p>当使用JSON文件来定义配置的时候，我们会发现不论对于何种数据结构（复杂对象、集合、数组和字典），我们都能通过JSON格式以一种简单而自然的方式来定义它们。同样以前面定义的Profile类型为例，我们可以利用如下所示的三个JSON文件分别定义一个完整的Profile对象、一个Profile对象的集合以及一个Key和Value类型分别为字符串和Profile的字典。</p><p><strong>Profile</strong><strong>对象：</strong></p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 0);">{
+    </span>"profile"<span style="color: rgb(0, 0, 0);">: {
+        </span>"gender" : "Male"<span style="color: rgb(0, 0, 0);">,
+        </span>"age" : "18"<span style="color: rgb(0, 0, 0);">,
+        </span>"contactInfo"<span style="color: rgb(0, 0, 0);">    : {
+            </span>"email" : "foobar@outlook.com"<span style="color: rgb(0, 0, 0);">,
+            </span>"phoneNo": "123456789"<span style="color: rgb(0, 0, 0);">
+        }
+    }
+}</span></pre></div><p><strong>Profile</strong><strong>集合或者数组:</strong></p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 0);">{
+  </span>"profiles"<span style="color: rgb(0, 0, 0);">: [
+    {
+      </span>"gender": "Male"<span style="color: rgb(0, 0, 0);">,
+      </span>"age": "18"<span style="color: rgb(0, 0, 0);">,
+      </span>"contactInfo"<span style="color: rgb(0, 0, 0);">: {
+        </span>"email": "foo@outlook.com"<span style="color: rgb(0, 0, 0);">,
+        </span>"phoneNo": "123"<span style="color: rgb(0, 0, 0);">
+      }
+    },
+    {
+      </span>"gender": "Male"<span style="color: rgb(0, 0, 0);">,
+      </span>"age": "25"<span style="color: rgb(0, 0, 0);">,
+      </span>"contactInfo"<span style="color: rgb(0, 0, 0);">: {
+        </span>"email": "bar@outlook.com"<span style="color: rgb(0, 0, 0);">,
+        </span>"phoneNo": "456"<span style="color: rgb(0, 0, 0);">
+      }
+    },
+    {
+      </span>"gender": "Female"<span style="color: rgb(0, 0, 0);">,
+      </span>"age": "40"<span style="color: rgb(0, 0, 0);">,
+      </span>"contactInfo"<span style="color: rgb(0, 0, 0);">: {
+        </span>"email": "baz@outlook.com"<span style="color: rgb(0, 0, 0);">,
+        </span>"phoneNo": "789"<span style="color: rgb(0, 0, 0);">
+      }
+    }
+  ]
+}</span></pre></div><p><strong>Profile</strong><strong>字典(Dictionary&lt;string, Profile&gt;):</strong></p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 0);">{
+  </span>"profiles"<span style="color: rgb(0, 0, 0);">: {
+    </span>"foo"<span style="color: rgb(0, 0, 0);">: {
+      </span>"gender": "Male"<span style="color: rgb(0, 0, 0);">,
+      </span>"age": "18"<span style="color: rgb(0, 0, 0);">,
+      </span>"contactInfo"<span style="color: rgb(0, 0, 0);">: {
+        </span>"email": "foo@outlook.com"<span style="color: rgb(0, 0, 0);">,
+        </span>"phoneNo": "123"<span style="color: rgb(0, 0, 0);">
+      }
+    },
+    </span>"bar"<span style="color: rgb(0, 0, 0);">: {
+      </span>"gender": "Male"<span style="color: rgb(0, 0, 0);">,
+      </span>"age": "25"<span style="color: rgb(0, 0, 0);">,
+      </span>"contactInfo"<span style="color: rgb(0, 0, 0);">: {
+        </span>"email": "bar@outlook.com"<span style="color: rgb(0, 0, 0);">,
+        </span>"phoneNo": "456"<span style="color: rgb(0, 0, 0);">
+      }
+    },
+    </span>"baz"<span style="color: rgb(0, 0, 0);">: {
+      </span>"gender": "Female"<span style="color: rgb(0, 0, 0);">,
+      </span>"age": "40"<span style="color: rgb(0, 0, 0);">,
+      </span>"contactInfo"<span style="color: rgb(0, 0, 0);">: {
+        </span>"email": "baz@outlook.com"<span style="color: rgb(0, 0, 0);">,
+        </span>"phoneNo": "789"<span style="color: rgb(0, 0, 0);">
+      }
+    }
+  }
+}</span></pre></div><h1><font size="4">四、XmlConfiguationSource</font></h1><p>XML也是一种常用的配置定义形式，它对数据的表达能力甚至强于JSON，几乎所有类型的数据结构都可以通过XML表示出来。当我们通过一个XML元素表示一个复杂对象的时候，对象的数据成员定义成当前XML元素的子元素。如果数据成员是一个简单数据类型，我们还可以选择将其定义成当前XML元素的属性（Attribute）。针对一个Profile对象，我们可以采用如下两种不同的形式来定义。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Profile</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">&gt;</span>Male<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Age</span><span style="color: rgb(0, 0, 255);">&gt;</span>18<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Age</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+        <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">EmailAddress</span><span style="color: rgb(0, 0, 255);">&gt;</span>foobar@outlook.com<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">EmailAddress</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+        <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">PhoneNo</span><span style="color: rgb(0, 0, 255);">&gt;</span>123456789<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">PhoneNo</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+   <span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">ContactInfo</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Profile</span><span style="color: rgb(0, 0, 255);">&gt;</span></pre></div><p>或者</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Profile </span><span style="color: rgb(255, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">="Male"</span><span style="color: rgb(255, 0, 0);"> Age</span><span style="color: rgb(0, 0, 255);">="18"</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+  <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo </span><span style="color: rgb(255, 0, 0);">EmailAddress </span><span style="color: rgb(0, 0, 255);">="foobar@outlook.com"</span><span style="color: rgb(255, 0, 0);"> PhoneNo</span><span style="color: rgb(0, 0, 255);">="123456789"</span><span style="color: rgb(0, 0, 255);">/&gt;</span>
+<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Profile</span><span style="color: rgb(0, 0, 255);">&gt;</span></pre></div><p>虽然XML对数据结构的表达能力总体要强于JSON，但是作为配置模型的数据来源却有自己的局限性，比如它们对集合的表现形式有点不尽如人意。举个简单的例子，对于一个元素类型为Profile的集合，我们可以采用具有如下结构的XML来表现。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Profiles</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Profile </span><span style="color: rgb(255, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">="Male"</span><span style="color: rgb(255, 0, 0);"> Age</span><span style="color: rgb(0, 0, 255);">="18"</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+        <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo </span><span style="color: rgb(255, 0, 0);">EmailAddress </span><span style="color: rgb(0, 0, 255);">="foo@outlook.com"</span><span style="color: rgb(255, 0, 0);"> PhoneNo</span><span style="color: rgb(0, 0, 255);">="123"</span><span style="color: rgb(0, 0, 255);">/&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Profile</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Profile </span><span style="color: rgb(255, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">="Male"</span><span style="color: rgb(255, 0, 0);"> Age</span><span style="color: rgb(0, 0, 255);">="25"</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+        <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo </span><span style="color: rgb(255, 0, 0);">EmailAddress </span><span style="color: rgb(0, 0, 255);">="bar@outlook.com"</span><span style="color: rgb(255, 0, 0);"> PhoneNo</span><span style="color: rgb(0, 0, 255);">="456"</span><span style="color: rgb(0, 0, 255);">/&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Profile</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Profile </span><span style="color: rgb(255, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">="Male"</span><span style="color: rgb(255, 0, 0);"> Age</span><span style="color: rgb(0, 0, 255);">="36"</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+        <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo </span><span style="color: rgb(255, 0, 0);">EmailAddress </span><span style="color: rgb(0, 0, 255);">="baz@outlook.com"</span><span style="color: rgb(255, 0, 0);"> PhoneNo</span><span style="color: rgb(0, 0, 255);">="789"</span><span style="color: rgb(0, 0, 255);">/&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Profile</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Profiles</span><span style="color: rgb(0, 0, 255);">&gt;</span></pre></div><p>但是这段XML却不能正确地转换成配置字典，原因很简单，因为字典的<font color="#ff0000">Key必须是唯一</font>的，这必然要求最终构成配置树的每个节点必须具有不同的路径。上面这段XML很明显不满足这个基本的要求，因为表示一个Profile对象的三个XML元素（&lt;Profile&gt;...&lt;/Profile&gt;）是“同质”的，对于由它们表示的三个Profile对象来说，分别表示性别、年龄、电子邮箱地址和电话号码的四个叶子节点的路径是完全一样的，所以根本无法作为配置字典的Key。通过前面针对配置绑定的介绍我们知道，如果需要通过配置字典来表示一个Profile对象的集合，我们需要按照如下的方式为每个集合元素加上相应的索引（“foo”、“bar”和“baz”）。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 0);">foo:Gender
+foo:Age
+foo:ContactInfo:EmailAddress
+foo:ContactInfo:PhoneNo
+
+bar:Gender
+bar:Age
+bar:ContactInfo:EmailAddress
+bar:ContactInfo:PhoneNo
+
+baz:Gender
+baz:Age
+baz:ContactInfo:EmailAddress
+baz:ContactInfo:PhoneNo</span></pre></div><p>按照这样的结构，如果我们需要以XML的方式来表示一个Profile对象的集合，就不得不采用如下的结构。但是这样的定义方式从语义的角度来讲是不合理的，因为同一个集合的所有元素就应该是“同质”的，同质的XML元素采用不同的名称有点说不过去。根据配置绑定的规则，这样的结构同样可以表示一个由三个元素组成的Dictionary&lt;string, Profile&gt;对象，Key分别是“Foo”、“Bar”和“Baz”。如果用这样的XML来表示一个字典对象，语义上就完全没有问题了。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Profiles</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+  <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Foo </span><span style="color: rgb(255, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">="Male"</span><span style="color: rgb(255, 0, 0);"> Age</span><span style="color: rgb(0, 0, 255);">="18"</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo </span><span style="color: rgb(255, 0, 0);">EmailAddress </span><span style="color: rgb(0, 0, 255);">="foobar@outlook.com"</span><span style="color: rgb(255, 0, 0);"> PhoneNo</span><span style="color: rgb(0, 0, 255);">="123"</span><span style="color: rgb(0, 0, 255);">/&gt;</span>
+  <span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Foo</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+  <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Bar </span><span style="color: rgb(255, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">="Male"</span><span style="color: rgb(255, 0, 0);"> Age</span><span style="color: rgb(0, 0, 255);">="25"</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo </span><span style="color: rgb(255, 0, 0);">EmailAddress </span><span style="color: rgb(0, 0, 255);">="foobar@outlook.com"</span><span style="color: rgb(255, 0, 0);"> PhoneNo</span><span style="color: rgb(0, 0, 255);">="123"</span><span style="color: rgb(0, 0, 255);">/&gt;</span>
+  <span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Bar</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+  <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">Baz </span><span style="color: rgb(255, 0, 0);">Gender</span><span style="color: rgb(0, 0, 255);">="Male"</span><span style="color: rgb(255, 0, 0);"> Age</span><span style="color: rgb(0, 0, 255);">="18"</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+    <span style="color: rgb(0, 0, 255);">&lt;</span><span style="color: rgb(128, 0, 0);">ContactInfo </span><span style="color: rgb(255, 0, 0);">EmailAddress </span><span style="color: rgb(0, 0, 255);">="baz@outlook.com"</span><span style="color: rgb(255, 0, 0);"> PhoneNo</span><span style="color: rgb(0, 0, 255);">="789"</span><span style="color: rgb(0, 0, 255);">/&gt;</span>
+  <span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Baz</span><span style="color: rgb(0, 0, 255);">&gt;</span>
+<span style="color: rgb(0, 0, 255);">&lt;/</span><span style="color: rgb(128, 0, 0);">Profiles</span><span style="color: rgb(0, 0, 255);">&gt;</span></pre></div><p>针对XML文件的配置源类型为XmlConfigurationSource，该类型定义在“Microsoft.Extensions.Configuration.Xml”这个NuGet包中。如下面的代码片段所示，XmlConfigurationSource通过重写的Build方法创建出对应的XmlConfigurationProvider对象。作为抽象类型FileConfigurationProvider的继承者，XmlConfigurationProvider通过重写的Load方法完成了针对XML文件的读取和配置字典的初始化。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> XmlConfigurationSource : FileConfigurationSource
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span><span style="color: rgb(0, 0, 0);"> IConfigurationProvider Build(IConfigurationBuilder builder)
+    {
+        EnsureDefaults(builder);
+        </span><span style="color: rgb(0, 0, 255);">return</span> <span style="color: rgb(0, 0, 255);">new</span> XmlConfigurationProvider(<span style="color: rgb(0, 0, 255);">this</span><span style="color: rgb(0, 0, 0);">);
+    }
+}
+
+</span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> XmlConfigurationProvider : FileConfigurationProvider
+{   
+    </span><span style="color: rgb(0, 0, 255);">public</span><span style="color: rgb(0, 0, 0);"> XmlConfigurationProvider(XmlConfigurationSource source);   
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> Load(Stream stream);
+}</span></pre></div><p>JsonConfigurationSource的注册可以通过调用针对IConfigurationBuilder<strong>对象</strong>的扩展方法AddJsonFile来完成。与之类似，IConfigurationBuilder接口同样具有如下一系列名为AddXmlFile的扩展方法，这些方法会帮助我们注册根据指定XML文件创建的XmlConfigurationSource对象。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> XmlConfigurationExtensions
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddXmlFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span><span style="color: rgb(0, 0, 0);"> path);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddXmlFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> optional);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddXmlFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span> optional, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> reloadOnChange);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddXmlFile(<span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, IFileProvider provider, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span> optional, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> reloadOnChange);
+}</span></pre></div><h1><font size="4">五、IniConfigurationSource</font></h1><p>“INI”是“Initialization”的缩写，INI文件又被称为初始化文件，它是Windows系统普遍使用的配置文件，同时也被一些Linux和Unix系统所支持。INI文件直接以键值对的形式定义配置项，如下所示的代码片段体现了INI文件的基本格式。总的来说，INI文件以单纯的“{Key}={Value}”的形式定义配置项，{Value}可以定义在可选的双引号中（如果值的前后包括空白字符，必须使用双引号，否则会被忽略）。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 0);">[Section]
+key1</span>=<span style="color: rgb(0, 0, 0);">value1
+key2 </span>= <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);"> value2 </span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+; comment
+# comment
+</span>/ comment</pre></div><p>除了以“{Key}={Value}”的形式定义的原子配置项外，我们还可以采用“[{SectionName}]”的形式定义配置节对它们进行分组。中括号（“[]”）作为下一个的配置节开始的标志和上一个配置节结束的标志，所以采用INI文件定义的配置节并不存在层次化的结构，即没有“子配置节”的概念。除此之外，我们可以在INI中定义相应的注释，注释行前置的字符可以采用“;”、“#”或者“/”。</p><p>由于INI文件自身就体现为一个数据字典，所以我们可以采用“路径化”的Key来定义最终绑定为复杂对象、集合或者字典的配置数据。如果采用INI文件来定义一个Profile对象的基本信息，我们就可以采用如下的定义形式。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code>Gender = <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">Male</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+Age  </span>= <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">18</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+ContactInfo:EmailAddress </span>= <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">foobar@outlook.com</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+ContactInfo:PhoneNo </span>= <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">123456789</span><span style="color: rgb(128, 0, 0);">"</span></pre></div><p>由于Profile的配置信息具有两个层次（Profile<a>&gt;</a>ContactInfo），我们可以按照如下的形式将EmailAddress和PhoneNo定义在配置节“ContactInfo”中，这个INI文件在语义表达上和上面是完全等效的。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code>Gender = <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">Male</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+Age  </span>= <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">18</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+
+[ContactInfo]
+EmailAddress </span>= <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">foobar@outlook.com</span><span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(0, 0, 0);">
+PhoneNo  </span>= <span style="color: rgb(128, 0, 0);">"</span><span style="color: rgb(128, 0, 0);">123456789</span><span style="color: rgb(128, 0, 0);">"</span></pre></div><p>针对INI文件类型的配置源类型通过如下所示的IniConfigurationSource来表示，该类型定义在“Microsoft.Extensions.Configuration.Ini”这个NuGet包中。IniConfigurationSource重写的Build方法创建的是一个IniConfigurationProvider对象。作为抽象类FileConfigurationProvider的继承者，IniConfigurationProvider利用重写的Load方法完成INI文件内容的读取和配置字典的初始化。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> IniConfigurationSource : FileConfigurationSource
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span><span style="color: rgb(0, 0, 0);"> IConfigurationProvider Build(IConfigurationBuilder builder)
+    {
+        EnsureDefaults(builder);
+        </span><span style="color: rgb(0, 0, 255);">return</span> <span style="color: rgb(0, 0, 255);">new</span> IniConfigurationProvider(<span style="color: rgb(0, 0, 255);">this</span><span style="color: rgb(0, 0, 0);">);
+    }
+ }
+
+</span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> IniConfigurationProvider : FileConfigurationProvider
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span><span style="color: rgb(0, 0, 0);"> IniConfigurationProvider(IniConfigurationSource source);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">override</span> <span style="color: rgb(0, 0, 255);">void</span><span style="color: rgb(0, 0, 0);"> Load(Stream stream);
+}</span></pre></div><p>既然JsonConfigurationSource和XmlConfigurationSource的注册可以通过调用IConfigurationBuilder接口的扩展方法AddJsonFile和AddXmlFile来完成，“Microsoft.Extensions. Configuration.Ini”这个NuGet包会也会为IniConfigurationSource定义如下所示的AddIniFile扩展方法。</p><div class="cnblogs_code" style="padding: 5px; border: 1px solid rgb(204, 204, 204); border-image: none; background-color: rgb(245, 245, 245);"><pre><code><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> <span style="color: rgb(0, 0, 255);">class</span><span style="color: rgb(0, 0, 0);"> IniConfigurationExtensions
+{
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddIniFile( <span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span><span style="color: rgb(0, 0, 0);"> path);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddIniFile( <span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> optional);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddIniFile( <span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, <span style="color: rgb(0, 0, 255);">string</span> path, <span style="color: rgb(0, 0, 255);">bool</span> optional,  <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> reloadOnChange);
+    </span><span style="color: rgb(0, 0, 255);">public</span> <span style="color: rgb(0, 0, 255);">static</span> IConfigurationBuilder AddIniFile( <span style="color: rgb(0, 0, 255);">this</span> IConfigurationBuilder builder, IFileProvider provider, <span style="color: rgb(0, 0, 255);">string</span> path,  <span style="color: rgb(0, 0, 255);">bool</span> optional, <span style="color: rgb(0, 0, 255);">bool</span><span style="color: rgb(0, 0, 0);"> reloadOnChange);
+}</span></pre></div><p><a name="_msocom_1"></a></p><p><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-01.html">[ASP.NET Core 3框架揭秘] 配置[1]：读取配置数据[上篇]</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-02.html">[ASP.NET Core 3框架揭秘] 配置[2]：读取配置数据[下篇]</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-03.html">[ASP.NET Core 3框架揭秘] 配置[3]：配置模型总体设计</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-04.html">[ASP.NET Core 3框架揭秘] 配置[4]：将配置绑定为对象</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-05.html">[ASP.NET Core 3框架揭秘] 配置[5]：配置数据与数据源的实时同步</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-06.html">[ASP.NET Core 3框架揭秘] 配置[6]：多样化的配置源[上篇]</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-07.html">[ASP.NET Core 3框架揭秘] 配置[7]：多样化的配置源[中篇]</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-08.html">[ASP.NET Core 3框架揭秘] 配置[8]：多样化的配置源[下篇]</a><br><a href="https://www.cnblogs.com/artech/p/inside-asp-net-core-05-09.html">[ASP.NET Core 3框架揭秘] 配置[9]：自定义配置源</a></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

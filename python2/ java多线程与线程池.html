@@ -1,0 +1,129 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修 java多线程与线程池' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center> java多线程与线程池</center></div><div class='banquan'>原文出处:本文由博客园博主软件老王提供。<br/>
+原文连接:https://www.cnblogs.com/ruanjianlaowang/p/12014490.html</div><br>
+    <h3 id="场景描述">1. 场景描述</h3>
+<p>以前多线程也常用，这次因需再页面上用到多线程，如下图，总结下，有需要的朋友可以参考下。</p>
+<p><img src="./images/ java多线程与线程池0.png" /></p>
+<h3 id="解决方案">2. 解决方案</h3>
+<h4 id="线程池概念">2.1 线程池概念</h4>
+<p>线程池官方定义不说了，通俗说下：池子的概念，事先（预定义）创建后，后续的线程可以直接从池子中拿，好处：</p>
+<p>（1）来创建线程比较消耗资源，不用重复创建；</p>
+<p>（2）池子事先定义好，避免无节制创建线程，导致系统出现不可预测风险。</p>
+<h4 id="创建方式">2.2 创建方式</h4>
+<p>采用jdk自带的线程池创建方式，jdk1.5开始提供，在java.util.concurrent 的包下面。</p>
+<p>表面上有两种创建方式，其实一种。</p>
+<p>（1）一种是采用new ThreadPoolExecutor进行创建；</p>
+<pre><code><code>  public ThreadPoolExecutor(int corePoolSize,
+                              int maximumPoolSize,
+                              long keepAliveTime,
+                              TimeUnit unit,
+                              BlockingQueue&lt;Runnable&gt; workQueue,
+                              ThreadFactory threadFactory,
+                              RejectedExecutionHandler handler) {</code></pre>
+<p>（2）一种是采用Executors.newFixedThreadPool(3)，不过还是调用的new ThreadPoolExecutor进行的线程池创建，赋值了几个默认参数而已。</p>
+<pre><code><code>new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue&lt;Runnable&gt;());</code></pre>
+<h4 id="参数含义">2.3 参数含义</h4>
+<p>一共有 7 个参数：</p>
+<p><strong>（1）corePoolSize</strong></p>
+<p>核心线程数，当有任务进来的时候，如果当前线程数还未达到 corePoolSize 个数，则创建核心线程，核心线程有几个特点：</p>
+<p>1、当线程数未达到核心线程最大值的时候，新任务进来，即使有空闲线程，也不会复用，仍然新建核心线程；2、核心线程一般不会被销毁，即使是空闲的状态，但是如果通过方法 allowCoreThreadTimeOut(boolean value) 设置为 true 时，超时也同样会被销毁；3、生产环境首次初始化的时候，可以调用 prestartCoreThread() 方法来预先创建所有核心线程，避免第一次调用缓慢；</p>
+<p><strong>（2）maximumPoolSize</strong></p>
+<p>除了有核心线程外，有些策略是当核心线程完全无空闲的时候，还会创建一些临时的线程来处理任务，maximumPoolSize 就是核心线程 + 临时线程的最大上限。临时线程有一个超时机制，超过了设置的空闲时间没有事儿干，就会被销毁。</p>
+<p><strong>（3）keepAliveTime</strong></p>
+<p>这个就是上面两个参数里所提到的超时时间，也就是线程的最大空闲时间，默认用于非核心线程，通过 allowCoreThreadTimeOut(boolean value) 方法设置后，也会用于核心线程。</p>
+<p><strong>（4）unit</strong></p>
+<p>这个参数配合上面的 keepAliveTime ，指定超时的时间单位，秒、分、时等。</p>
+<p><strong>（5）workQueue</strong></p>
+<p>等待执行的任务队列，如果核心线程没有空闲的了，新来的任务就会被放到这个等待队列中。</p>
+<p><strong>（6）threadFactory</strong></p>
+<p>它是一个接口，用于实现生成线程的方式、定义线程名格式、是否后台执行等等，可以用 Executors.defaultThreadFactory() 默认的实现即可，也可以用 Guava 等三方库提供的方法实现，如果有特殊要求的话可以自己定义。它最重要的地方应该就是定义线程名称的格式，便于排查问题了吧。</p>
+<p><strong>（7）handler</strong></p>
+<p>当没有空闲的线程处理任务，并且等待队列已满（当然这只对有界队列有效），再有新任务进来的话，就要做一些取舍了，而这个参数就是指定取舍策略的，有下面四种策略可以选择：</p>
+<p>ThreadPoolExecutor.AbortPolicy：直接抛出异常，这是默认策略；<br />
+ThreadPoolExecutor.DiscardPolicy：直接丢弃任务，但是不抛出异常。<br />
+ThreadPoolExecutor.DiscardOldestPolicy：丢弃队列最前面的任务，然后将新来的任务加入等待队列<br />
+ThreadPoolExecutor.CallerRunsPolicy：由线程池所在的线程处理该任务，比如在 main 函数中创建线程池，如果执行此策略，将有 main 线程来执行该任务</p>
+<h4 id="测试验证">2.4 测试验证</h4>
+<h5 id="测试线程">2.4.1 测试线程</h5>
+<pre><code><code>package com.yutong.laowang.test;
+
+public class ThreadTest extends Thread{
+    @Override
+    public void run() {
+        System.out.println(&quot;软件老王：&quot; +Thread.currentThread().getName());
+  }
+}</code></pre>
+<h5 id="executors创建">2.4.2 Executors创建</h5>
+<pre><code><code>  private static void test4() {
+        Executor mExecutor = Executors.newFixedThreadPool(3);
+        for (int i = 0; i &lt; 10; i++) {
+            Thread thread = new ThreadTest();
+            mExecutor.execute(thread);
+        }
+    }</code></pre>
+<p>结果：</p>
+<pre><code><code>软件老王：pool-2-thread-2
+软件老王：pool-2-thread-3
+软件老王：pool-2-thread-1
+软件老王：pool-2-thread-3
+软件老王：pool-2-thread-2
+软件老王：pool-2-thread-1
+软件老王：pool-2-thread-3
+软件老王：pool-2-thread-2
+软件老王：pool-2-thread-3
+软件老王：pool-2-thread-1</code></pre>
+<h5 id="threadpoolexecutor创建">2.4.3 ThreadPoolExecutor创建</h5>
+<pre><code><code> private static void test3() {
+        int poolSize = 5;
+        int queueSize = 100;
+        ExecutorService executorService = new ThreadPoolExecutor(poolSize, poolSize, 0L, TimeUnit.SECONDS,
+                new ArrayBlockingQueue&lt;Runnable&gt;(queueSize), new ThreadPoolExecutor.AbortPolicy());
+                
+        for (int i=0;i&lt;10;i++) {
+            executorService.submit(new ThreadTest());
+        }
+    }</code></pre>
+<p>结果：</p>
+<pre><code><code>软件老王：pool-2-thread-1
+软件老王：pool-2-thread-3
+软件老王：pool-2-thread-4
+软件老王：pool-2-thread-2
+软件老王：pool-2-thread-5
+软件老王：pool-2-thread-5
+软件老王：pool-2-thread-1
+软件老王：pool-2-thread-2
+软件老王：pool-2-thread-2
+软件老王：pool-2-thread-1</code></pre>
+<h5 id="线程停用">2.4.4 线程停用</h5>
+<pre><code><code>thread.interrupt();
+---有时候不一定能执行成功，一般会结合判断使用,软件老王，例如：
+在ThreadTest类中进行判断，默认为false，当满足条件下为true，停用线程。
+ public volatile boolean exit = false;
+</code></pre>
+<hr />
+<p>I’m 「软件老王」，如果觉得还可以的话，关注下呗，后续更新秒知！欢迎讨论区、同名公众号留言交流！</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

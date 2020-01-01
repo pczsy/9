@@ -1,0 +1,126 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修WPF之Treeview实现MVVM双向绑定' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>WPF之Treeview实现MVVM双向绑定</center></div><div class='banquan'>原文出处:本文由博客园博主傅小灰提供。<br/>
+原文连接:https://www.cnblogs.com/cplemom/p/12078859.html</div><br>
+    <p><code>Treeview</code>分别有两个数据模板<code>HierarchicalDataTemplate</code>(层级数据模板)和<code>DataTemplate</code>(数据模板),分别应用于生成子数据项和普通数据项。<br />
+在使用过程中，如果对两个模板的<code>DataType</code>设置为同一类型，运行时会直接报错。<br />
+<img src="./images/WPF之Treeview实现MVVM双向绑定0.png" /></p>
+<p>大概原因是添加了俩个相同Key的资源(因为<code>HierarchicalDataTemplate</code>和<code>DataTemplate</code>都是定义在<code>&lt;TreeView.Resources&gt;</code>标签中)。<br />
+<strong>代码：</strong></p>
+<pre><code><code>public class TypeTreeModel :TypeModel
+{
+    public ObservableCollection&lt;TypeTreeModel&gt; ChildList { get; set; } 
+        = new ObservableCollection&lt;TypeTreeModel&gt;();
+}
+public class TypeModel
+{
+    public int Id { get; set; }
+    public string Name { get; set; }
+}
+
+&lt;TreeView x:Name=&quot;treeView&quot; ItemsSource=&quot;{Binding TypeList}&quot; MinWidth=&quot;200&quot; MaxHeight=&quot;200&quot; &gt;
+    &lt;TreeView.Resources&gt;
+        &lt;HierarchicalDataTemplate DataType=&quot;{x:Type vm:TypeTreeModel}&quot; ItemsSource=&quot;{Binding ChildList}&quot;&gt;
+            &lt;TextBlock Text=&quot;{Binding Name}&quot; Margin=&quot;3 2&quot;/&gt;
+        &lt;/HierarchicalDataTemplate&gt;
+        &lt;DataTemplate DataType=&quot;{x:Type vm:TypeModel}&quot;&gt;
+            &lt;TextBlock Text=&quot;{Binding Name}&quot; ToolTip=&quot;{Binding Id}&quot; Margin=&quot;3 2&quot;&gt;&lt;/TextBlock&gt;
+        &lt;/DataTemplate&gt;
+    &lt;/TreeView.Resources&gt;
+&lt;/TreeView&gt;</code></pre>
+<p><strong>效果图：</strong><br />
+<img src="./images/WPF之Treeview实现MVVM双向绑定1.png" /></p>
+<p><code>TypeList</code>一般都是数据库取出来的数据处理嵌套后的结果。有时候会遇到需求，对于不同的分类有不同的类型。根据双向绑定的规则，我们只需要修改<code>ViewModel</code>中<code>TypeList</code>的内容就可以了。<br />
+<span style="color:red;"><br />
+<strong>注意:</strong> <code>ObservableCollection</code>只有在列表项发生变化时才会触发页面刷新，即新增或删除时才会反应到页面上。若采用直接赋值的写法，不会触发页面刷新。<br />
+</span><br />
+推荐更新数据时候的写法：</p>
+<pre><code><code> //清空原先的列表
+TypeList.Clear();
+list.ForEach(d =&gt;
+{
+    TypeList.Add(d);
+});</code></pre>
+<h4 id="treeview.selecteditem双向绑定">TreeView.SelectedItem双向绑定</h4>
+<blockquote>
+<p><code>TreeView.SelectedItem</code>是<code>ReadOnly</code>的，所以不能通过简单的绑定方法去获取选中项</p>
+</blockquote>
+<p>最终还是要通过绑定<code>Treeview</code>的<code>SelectedItemChanged</code>事件，来修改<code>ViewModel</code>中的数据<br />
+<strong>1.直接绑定事件</strong></p>
+<pre><code><code>&lt;TreeView ItemsSource=&quot;{Binding TypeList}&quot; SelectedItemChanged=&quot;TreeView_OnSelectedItemChanged&quot; /&gt;
+
+private void TreeView_OnSelectedItemChanged(object sender, RoutedPropertyChangedEventArgs&lt;object&gt; e)
+{
+    vm.SelectItem = (Cluster)e.NewValue;
+}</code></pre>
+<p><strong>2.通过<code>Command</code>绑定事件</strong></p>
+<ul>
+<li>在项目中引用 <code>System.Windows.Interactivity.WPF</code>(简单来说该插件可以将页面控件的<code>Event</code>转为ViewModel中的<code>Command</code>)</li>
+<li>在窗体中添加引用</li>
+</ul>
+<pre><code><code>xmlns:i=&quot;clr-namespace:System.Windows.Interactivity;assembly=System.Windows.Interactivity&quot;</code></pre>
+<ul>
+<li>绑定<code>Command</code>到<code>SelectedItemChanged</code>事件</li>
+</ul>
+<pre><code><code>&lt;TreeView x:Name=&quot;treeView&quot; ItemsSource=&quot;{Binding TypeList}&quot;&gt;
+&lt;i:Interaction.Triggers&gt;
+    &lt;i:EventTrigger EventName=&quot;SelectedItemChanged&quot;&gt;
+        &lt;i:InvokeCommandAction Command=&quot;{Binding SelectItemChangeCommand}&quot;
+               CommandParameter=&quot;{Binding ElementName=treeView,Path=SelectedItem}&quot;/&gt;
+    &lt;/i:EventTrigger&gt;
+&lt;/i:Interaction.Triggers&gt;
+&lt;/TreeView&gt;</code></pre>
+<p>ViewModel:</p>
+<pre><code><code>public class TreeViewModel : ViewModelBase
+{
+    public ObservableCollection&lt;TypeTreeModel&gt; TypeList;
+    
+    private TypeModel selectItem;
+    public TypeModel SelectItem
+    {
+        get { return selectItem; }
+        set { this.MutateVerbose(ref selectItem, value, RaisePropertyChanged()); }
+    }
+    public TreeViewModel()
+    {
+        TypeList = GetData();
+    }
+
+    public ICommand SelectItemChangeCommand
+    {
+        get
+        {
+            return new CommandBase((param) =&gt; 
+            {
+                if(param != null)
+                    SelectItem = (TypeModel)param;
+            });
+        }
+    }
+}</code></pre>
+<p><strong>效果图：</strong><br />
+<img src="./images/WPF之Treeview实现MVVM双向绑定2.png" /></p>
+<p><code>ViewModelBase</code>和<code>CommandBase</code>是自己封装的基类，就是为了写WPF的双向绑定简单点，有兴趣的可以评论向我要。<br />
+<strong>Demo地址：</strong> <a href="https://github.com/fxhui/TreeViewDemo" class="uri">https://github.com/fxhui/TreeViewDemo</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

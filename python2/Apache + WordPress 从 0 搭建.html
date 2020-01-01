@@ -1,0 +1,115 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Apache + WordPress 从 0 搭建' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Apache + WordPress 从 0 搭建</center></div><div class='banquan'>原文出处:本文由博客园博主极客挖掘机提供。<br/>
+原文连接:https://www.cnblogs.com/babycomeon/p/12038179.html</div><br>
+    <p><img src="./images/Apache + WordPress 从 0 搭建0.png" /></p>
+<h2 id="引言">引言</h2>
+<p>又到周末了，周末小编一般不更新系列文章，原因嘛是因为要攒稿子，年底工作比较忙，不攒点稿子是要断更的：（</p>
+<p>所以周末一般聊点简单轻松加愉快的东西，小编现在的博客站是由 HEXO 进行搭建的，最近随着博客文章数量的增加，编译时间越来越长，想着将 HEXO 替换为 WordPress ，这样也方便小编随时发布文章，之前 HEXO 的环境只在家里的电脑上有搭建，每次发布必须在家里的电脑上操作，有些不方便，本次就先搭建个 WordPress ，看下效果先。这个应该叫技术预研：）</p>
+<p>WordPress 官网：<a href="https://zh-cn.wordpress.com/" class="uri">https://zh-cn.wordpress.com/</a> 。</p>
+<p>先看下百度百科对 WordPress 的介绍：</p>
+<blockquote>
+<p>WordPress是使用PHP语言开发的博客平台，用户可以在支持PHP和MySQL数据库的服务器上架设属于自己的网站。也可以把 WordPress当作一个内容管理系统（CMS）来使用。</p>
+<p>WordPress是一款个人博客系统，并逐步演化成一款内容管理系统软件，它是使用PHP语言和MySQL数据库开发的,用户可以在支持 PHP 和 MySQL数据库的服务器上使用自己的博客。</p>
+<p>WordPress有许多第三方开发的免费模板，安装方式简单易用。不过要做一个自己的模板，则需要你有一定的专业知识。比如你至少要懂的标准通用标记语言下的一个应用HTML代码、CSS、PHP等相关知识。</p>
+</blockquote>
+<h2 id="环境准备">环境准备</h2>
+<p>先看下使用 WordPress 搭建自己的博客系统需要什么准备。</p>
+<ul>
+<li>PHP 环境</li>
+<li>Mysql 数据库</li>
+<li>WordPress 程序包</li>
+<li>Apache 服务</li>
+</ul>
+<p>小编使用的系统为 CentOS 7.6 ，所以本文还是介绍在 CentOS 下搭建 WordPress 博客系统。</p>
+<h2 id="wordpress-安装">WordPress 安装</h2>
+<h3 id="php-环境安装">PHP 环境安装</h3>
+<p>首先还是先安装 PHP 环境，可以使用如下语句，一次性安装 PHP 外加一些常用的组件：</p>
+<pre><code><code>yum -y install php php-mysql php-gd php-ldap php-odbc php-pear php-xml php-xmlrpc php-mbstring php-snmp php-soap curl curl-devel</code></pre>
+<p>安装完成后可以使用命令查看当前 PHP 是否安装成功：</p>
+<pre><code><code>php -v</code></pre>
+<p>结果如下：</p>
+<pre><code><code>PHP 5.4.16 (cli) (built: Nov  1 2019 16:04:20) 
+Copyright (c) 1997-2013 The PHP Group
+Zend Engine v2.4.0, Copyright (c) 1998-2013 Zend Technologies</code></pre>
+<h3 id="apache-服务安装">Apache 服务安装</h3>
+<p>我们的 WordPress 是运行在 Apache 的 Web 服务上的，所以要安装 Apache 服务，命令如下：</p>
+<pre><code><code>yum -y install httpd</code></pre>
+<p>等待进度条走完即可，下面是一些常用的有关 Apache 服务的命令：</p>
+<pre><code><code># 启动apache服务
+systemctl start httpd
+# 重启apache服务
+systemctl restart httpd
+# 关闭apache服务
+systemctl stop httpd
+# 设置开机自动启动
+systemctl enable httpd
+# 检查服务状态
+systemctl status httpd.service</code></pre>
+<p>安装完成后，我们可以启动 Apache 服务看下效果：</p>
+<p><img src="./images/Apache + WordPress 从 0 搭建1.png" /></p>
+<h3 id="wordpress-安装-1">WordPress 安装</h3>
+<p>这就到了重头戏， WordPress 安装，最近很不辛， WordPress 的官方网站在中国区都无法访问，具体原因未知。</p>
+<p>不过经过小编的努力，还是找到了 WordPress 最新版的下载地址，如下：</p>
+<pre><code><code>https://cn.wordpress.org/latest-zh_CN.zip</code></pre>
+<p>可以 CentOS 的 opt 目录中，直接输入如下命令：</p>
+<pre><code><code>wget https://cn.wordpress.org/latest-zh_CN.zip
+# 解压至 Apache 服务路径下
+unzip -o latest-zh_CN.zip -d /var/www/html</code></pre>
+<p>如果报错当前无 unzip 命令，可以使用如下命令尝试解决：</p>
+<pre><code><code>yum -y install unzip</code></pre>
+<p>这样就算安装完成了，至于 Mysql 的安装，小编就不介绍了，在之前的很多篇文章中都有介绍过，需要的同学可以访问 <a href="https://www.geekdigging.com/2019/10/03/2387202964/">《Python 简易爬虫实战》</a> 获取。</p>
+<h2 id="启动">启动</h2>
+<p>我们可以重启 Apache 服务，使用 <a href="http://ip:port/wordpress" class="uri">http://ip:port/wordpress</a> 在浏览器访问，查看我们上面刚刚部署完成的 WordPress 了。</p>
+<p>可是。。。。。。。。。</p>
+<p>访问浏览器地址的时候竟然报错了！！！</p>
+<pre><code><code>Your server is running PHP version 5.4.16 but WordPress 5.3 requires at least 5.6.20.</code></pre>
+<p>这个意思是说当前安装的 PHP 版本过低，如果需要运行 WordPress 5.3，需要更高版本的 PHP ，好吧，我们接着升级 PHP 。</p>
+<p>首先需要升级软件仓库：</p>
+<pre><code><code>rpm -Uvh https://mirror.webtatic.com/yum/el7/epel-release.rpm
+
+rpm -Uvh https://mirror.webtatic.com/yum/el7/webtatic-release.rpm</code></pre>
+<p>然后移除之前安装的 PHP ：</p>
+<pre><code><code>yum remove php-common</code></pre>
+<p>接着安装新的 PHP ：</p>
+<pre><code><code>yum install -y php56w php56w-opcache php56w-xml php56w-mcrypt php56w-gd php56w-devel php56w-mysql php56w-intl php56w-mbstring</code></pre>
+<p>最后重启 Apache 服务：</p>
+<pre><code><code>systemctl restart httpd</code></pre>
+<p>然后访问 <a href="http://ip:port/wordpress" class="uri">http://ip:port/wordpress</a> ，可以看到连接自动跳转到了 <a href="http://ip:port/wordpress/wp-admin/install.php" class="uri">http://ip:port/wordpress/wp-admin/install.php</a> ，然后顺着 WordPress 的指引，一步一步的填写站点相关信息和数据库的相关信息即可。</p>
+<p><img src="./images/Apache + WordPress 从 0 搭建2.png" /></p>
+<h2 id="主题">主题</h2>
+<p>WordPress 已经装好了，默认的主题风格小编实在有点受不了，至于 WordPress 主题的来源，大家可以看下 WordPress 的官方主题库：</p>
+<p><img src="./images/Apache + WordPress 从 0 搭建3.png" /></p>
+<p>由于这些主题大多数都是国外友人上传的，所以想找到符合国人审美的主题有点难度的。</p>
+<p>各位同学可以在度娘上或者是全球最大的同性交友网站（Github）上找一些，小编先随便找一个，演示下如何手工添加主题：</p>
+<p>小编在百度上找到了一个国人开发的主题：Vtrois-Kratos 。将这款主题的压缩包解压后，上传至 WordPress 的 theme 目录下，小编这里的目录为： <code>/var/www/html/wordpress/wp-content/themes</code> 。</p>
+<p>然后在 WordPress 的后台点开主题的配置，启用这款主题即可。</p>
+<p><img src="./images/Apache + WordPress 从 0 搭建4.png" /></p>
+<p>最终效果图如下：</p>
+<p><img src="./images/Apache + WordPress 从 0 搭建5.png" /></p>
+<p>感觉和现在的博客站风格有点像，接下来有域名的同学可以去服务商的 DNS 那边设置域名了，小编的本次搭建也就到这里结束了。</p>
+<p>顺便提一下，小编后续可能会将博客迁移至 WordPress ，主要存在的问题是 HEXO 博客迁移，想要不改变原有链接，不知道各位同学有没有什么好的建议。</p>
+<h2 id="参考">参考</h2>
+<p><a href="https://www.cnblogs.com/wuheng1991/p/8301878.html" class="uri">https://www.cnblogs.com/wuheng1991/p/8301878.html</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

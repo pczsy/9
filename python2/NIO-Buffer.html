@@ -1,0 +1,507 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修NIO-Buffer' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>NIO-Buffer</center></div><div class='banquan'>原文出处:本文由博客园博主杰哥很忙提供。<br/>
+原文连接:https://www.cnblogs.com/Jack-Blog/p/11996309.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#nio-buffer">NIO-Buffer</a><ul>
+        <li><a href="#目录">目录</a></li>
+        <li><a href="#前言">前言</a></li>
+        <li><a href="#什么是buffer">什么是Buffer</a></li>
+        <li><a href="#缓冲区类型">缓冲区类型</a></li>
+        <li><a href="#缓冲区存储类型">缓冲区存储类型</a></li>
+        <li><a href="#字节存放顺序">字节存放顺序</a></li>
+        <li><a href="#buffer使用">Buffer使用</a><ul>
+        <li><a href="#buffer">Buffer</a></li>
+        <li><a href="#bytebuffer">ByteBuffer</a></li>
+        </ul></li>
+        <li><a href="#总结">总结</a></li>
+        <li><a href="#相关文献">相关文献</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<hr />
+<hr />
+<h1 id="nio-buffer">NIO-Buffer</h1>
+<h2 id="目录">目录</h2>
+<p><a href="https://www.cnblogs.com/Jack-Blog/p/11991240.html">NIO-概览</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/11996309.html">NIO-Buffer</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12015516.html">NIO-Channel</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12040082.html">NIO-Channel接口分析</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12061595.html">NIO-SocketChannel源码分析</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12078767.html">NIO-FileChannel源码分析</a></p>
+<h2 id="前言">前言</h2>
+<p>本来是想学习Netty的，但是Netty是一个NIO框架，因此在学习netty之前，还是先梳理一下NIO的知识。通过剖析<a href="http://jdk.java.net/">源码</a>理解NIO的设计原理。</p>
+<blockquote>
+<p>本系列文章针对的是JDK1.8.0.161的源码。</p>
+</blockquote>
+<h2 id="什么是buffer">什么是Buffer</h2>
+<p>Buffer是NIO用于存放特定基元类型数据的容器。缓冲区是特定基元类型的元素的线性有限序列。通过容量(capacity)、限制(limit)和位置(position)三个属性控制数据的写入大小和可读大小。</p>
+<p><img src="./images/NIO-Buffer0.png" alt="Buffer.png" /></p>
+<ol>
+<li><p>容量</p>
+<p>容量是它包含的元素数。 缓冲区在创建初始化容量之后容量就不会再更改。</p></li>
+<li><p>偏移量</p>
+<p>偏移量是要读取或写入的下一个元素的索引。 偏移量不会大于其容量大小。</p></li>
+<li><p>限制大小</p>
+<p>缓冲区的限制大小是最大可读或可写的索引位置，缓冲区限制大小不会大于其容量。</p></li>
+<li><p>标志</p>
+<p>可以通过<code>mark()</code>方法打一个标志，通过<code>reset()</code>可以将偏移位置恢复到标志位置。</p></li>
+</ol>
+<p>Buffer可以在写模式和读模式进行切换。在写模式写入数据后切换到读模式可以确保读取的数据不会超过写入数据的容量大小。</p>
+<h2 id="缓冲区类型">缓冲区类型</h2>
+<p>除了bool类型以外每个基元类型都会有缓冲区</p>
+<table>
+<thead>
+<tr class="header">
+<th>类型</th>
+<th>缓冲区</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>byte</td>
+<td>ByteBuffer</td>
+</tr>
+<tr class="even">
+<td>char</td>
+<td>CharBuffer</td>
+</tr>
+<tr class="odd">
+<td>double</td>
+<td>DoubleBuffer</td>
+</tr>
+<tr class="even">
+<td>float</td>
+<td>FloatBuffer</td>
+</tr>
+<tr class="odd">
+<td>int</td>
+<td>IntBuffer</td>
+</tr>
+<tr class="even">
+<td>long</td>
+<td>LongBuffer</td>
+</tr>
+<tr class="odd">
+<td>short</td>
+<td>ShortBuffer</td>
+</tr>
+</tbody>
+</table>
+<h2 id="缓冲区存储类型">缓冲区存储类型</h2>
+<p>缓冲区分为<code>HeapBuffer</code>和<code>DirectBuffer</code></p>
+<p>HeapBuffer是堆缓冲区，分配在堆上，有java虚拟机负责垃圾回收。<br />
+DirectBuffer是Java Native Interface(JNI,Java本地接口)在虚拟机外的内存中分配了一块缓冲区。这块缓冲区不直接有GC回收，在DirectBuffer包装类对象被回收时，会通过Java Reference机制来释放该内存块。即当引用了DirectBuffer对象被GC回收后，操作系统才会释放DirectBuffer空间。</p>
+<blockquote>
+<p>DirectByteBuffer是通过虚引用(Phantom Reference)来实现堆外内存的释放的。虚引用主要被用来跟踪对象被垃圾回收的状态，通过查看引用队列中是否包含对象所对应的虚引用来判断它是否即将被垃圾回收，从而采取行动。它并不被期待用来取得目标对象的引用，而目标对象被回收前，它的引用会被放入一个 ReferenceQueue对象中，从而达到跟踪对象垃圾回收的作用。</p>
+</blockquote>
+<p>当使用HeapBuffer时，如果我们要向硬盘读取数据时，硬盘的数据会先复制到操作系统内核空间，操作系统内核再复制到堆缓冲区中，最后我们在从堆缓冲区读取字节数据。<br />
+当使用DirectBuffer时，如果我们要向硬盘读取数据时，硬盘的数据会先复制到操作系统内核空间，我们直接从内核空间读取字节数据。</p>
+<p>由于JVM堆中分配和释放内存比系统分配和释放内存更高效，因此DirectBuffer尽可能重用来提高性能。</p>
+<table>
+<thead>
+<tr class="header">
+<th>-</th>
+<th>HeapBuffer</th>
+<th>DirectBuffer</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>分配位置</td>
+<td>堆内</td>
+<td>堆外(操作系统内核)</td>
+</tr>
+<tr class="even">
+<td>谁来释放</td>
+<td>GC</td>
+<td>当GC回收完对象时，操作系统会释放堆外内存</td>
+</tr>
+<tr class="odd">
+<td>创建和释放性能</td>
+<td>高</td>
+<td>低</td>
+</tr>
+<tr class="even">
+<td>读写性能</td>
+<td>JVM多一次内存复制，性能低</td>
+<td>直接读取操作系统内核，性能高</td>
+</tr>
+</tbody>
+</table>
+<h2 id="字节存放顺序">字节存放顺序</h2>
+<p>大端模式(Big-Endian就是高位字节排放在内存的低地址端，低位字节排放在内存的高地址端)<br />
+小端模式：Little-Endian就是低位字节排放在内存的低地址端，高位字节排放在内存的高地址端。</p>
+<p>在NIO中以BufferOrder来区分大端还是小端。</p>
+<pre><code><code>public final class ByteOrder {
+    private String name;
+    public static final ByteOrder BIG_ENDIAN = new ByteOrder(&quot;BIG_ENDIAN&quot;);
+    public static final ByteOrder LITTLE_ENDIAN = new ByteOrder(&quot;LITTLE_ENDIAN&quot;);
+
+    private ByteOrder(String var1) {
+        this.name = var1;
+    }
+
+    public static ByteOrder nativeOrder() {
+        return Bits.byteOrder();
+    }
+
+    public String toString() {
+        return this.name;
+    }
+}</code></pre>
+<h2 id="buffer使用">Buffer使用</h2>
+<p>接下来以ByteHeapBuffer为例，讲解如何使用Buffer。</p>
+<h3 id="buffer">Buffer</h3>
+<table>
+<thead>
+<tr class="header">
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>position</td>
+<td>移动偏移量指针</td>
+</tr>
+<tr class="even">
+<td>limit</td>
+<td>移动限制大小指针</td>
+</tr>
+<tr class="odd">
+<td>mark</td>
+<td>打标记，寄了当前偏移量的位置。可使用reset恢复到标记位置</td>
+</tr>
+<tr class="even">
+<td>reset</td>
+<td>恢复到标记位置</td>
+</tr>
+<tr class="odd">
+<td>clear</td>
+<td>初始化指针,清理所有数据，转换为写模式(实际只是偏移指针，数据还在)</td>
+</tr>
+<tr class="even">
+<td>flip</td>
+<td>转换为读取模式</td>
+</tr>
+<tr class="odd">
+<td>rewind</td>
+<td>重置偏移量指针到初始状态，可以重新写入或重新读取</td>
+</tr>
+<tr class="even">
+<td>remaining</td>
+<td>可读或可写容量</td>
+</tr>
+<tr class="odd">
+<td>hasRemaining</td>
+<td>是否可读或可写</td>
+</tr>
+<tr class="even">
+<td>hasArray</td>
+<td>是否有数组缓存，若为堆缓冲区，则会有数据缓存，若为直接缓冲区，则没有。</td>
+</tr>
+<tr class="odd">
+<td>offset</td>
+<td>当前数组偏移量，当把当前数组切片时，无需复制内存，直接指向偏移量。</td>
+</tr>
+</tbody>
+</table>
+<h3 id="bytebuffer">ByteBuffer</h3>
+<p>为了更清晰的说明缓冲区的功能，接下来以ByteBuffer举例。</p>
+<blockquote>
+<p>各数据类型的缓冲区除了类型不一样，功能上基本是大同小异。</p>
+</blockquote>
+<table>
+<thead>
+<tr class="header">
+<th>方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>allocate</td>
+<td>申请堆缓冲区</td>
+</tr>
+<tr class="even">
+<td>allocateDirect</td>
+<td>申请直接缓冲区</td>
+</tr>
+<tr class="odd">
+<td>wrap</td>
+<td>将字节数组包在缓冲区中，可以理解为将字节数组转换为字节堆缓冲区</td>
+</tr>
+<tr class="even">
+<td>slice</td>
+<td>缓冲区切片，当前偏移量到当前限制大小的内存生成一个缓冲区，无需复制内存，直接指向偏移量。</td>
+</tr>
+<tr class="odd">
+<td>duplicate</td>
+<td>共享一份缓冲区，缓冲区内容修改会互相影响，读取互不影响</td>
+</tr>
+<tr class="even">
+<td>asReadOnlyBuffer</td>
+<td>拷贝一份只读的缓冲区。</td>
+</tr>
+<tr class="odd">
+<td>ix</td>
+<td>根据实际的offset偏移，对于外部来说是透明的，比如缓冲区切片之后，生成新的缓冲区实际是同一片内存，只是新的缓冲区存在offset偏移量，对切片后的缓冲区读写都会做偏移操作。</td>
+</tr>
+<tr class="even">
+<td>compact</td>
+<td>初始化指针,清理已读取数据，转换为写模式(实际只是偏移指针position，数据还在)</td>
+</tr>
+<tr class="odd">
+<td>getXXX</td>
+<td>读取数据</td>
+</tr>
+<tr class="even">
+<td>putXXX</td>
+<td>写入数据</td>
+</tr>
+<tr class="odd">
+<td>asXXXBuffer</td>
+<td>转换为指定类型的缓冲区，字节缓冲区可以转换为其他基元类型的缓冲区，其他基元类型缓冲区不能反过来转换</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>通过<code>asXXXBuffer</code>转换可以转换为对应的大端或小端数据可是读取方式，比如转换为double类型有<code>ByteBufferAsDoubleBufferB</code>和<code>ByteBufferAsDoubleBufferL</code>分别对应大端和小段。<br />
+对于<code>HeapByteBuffer</code>和<code>DirectByteBuffer</code>接口都是一样的，只是实现不一样，一个是操作堆内存，一个是操作直接内存。</p>
+</blockquote>
+<ol>
+<li>申请缓冲区
+<ul>
+<li>allocate</li>
+</ul>
+<pre><code><code>ByteBuffer byteBuffer = ByteBuffer.allocate(8);</code></pre>
+<ul>
+<li>allocateDirect</li>
+</ul>
+<pre><code><code>ByteBuffer byteBuffer = ByteBuffer.allocateDirect(8);</code></pre>
+<p><img src="./images/NIO-Buffer1.png" alt="20191206172704.png" /></p>
+<pre><code><code>DirectByteBuffer(int cap) {                   
+    super(-1, 0, cap, cap);
+    boolean pa = VM.isDirectMemoryPageAligned();  //是否页对齐
+    int ps = Bits.pageSize();    //获取pageSize大小
+    long size = Math.max(1L, (long) cap + (pa ? ps : 0));  //如果是页对齐的话，那么就加上一页的大小
+    Bits.reserveMemory(size, cap);   //在系统中保存总分配内存(按页分配)的大小和实际内存的大小
+
+    long base = 0;
+    try {
+        base = unsafe.allocateMemory(size);  //分配完堆外内存后就会返回分配的堆外内存基地址
+    } catch (OutOfMemoryError x) {
+        Bits.unreserveMemory(size, cap);
+        throw x;
+    }
+    unsafe.setMemory(base, size, (byte) 0);   //初始化内存
+    //计算地址
+    if (pa &amp;&amp; (base % ps != 0)) {
+        address = base + ps - (base &amp; (ps - 1));
+    } else {
+        address = base;
+    }
+    // 构建Cleaner对象用于跟踪DirectByteBuffer对象的垃圾回收，以实现当DirectByteBuffer被垃圾回收时，堆外内存也会被释放
+    cleaner = Cleaner.create(this, new Deallocator(base, size, cap));
+    att = null;
+}</code></pre></li>
+<li><p>写入数据</p>
+<pre><code><code>byte[] data = new byte[] {&#39;H&#39;,&#39;E&#39;,&#39;L&#39;,&#39;L&#39;,&#39;O&#39;};
+byteBuffer.put(data);</code></pre>
+<p><img src="./images/NIO-Buffer2.png" alt="20191206161256.png" /></p>
+<ul>
+<li><p>堆缓冲区写入数据data</p>
+<pre><code><code>public ByteBuffer put(byte[] src, int offset, int length) {
+//校验传入的参数是否合法
+checkBounds(offset, length, src.length);
+//在写入数据时首先会判断可写容量，大于容量则会抛出`BufferOverflowException`
+if (length &gt; remaining())
+    throw new BufferOverflowException();
+//将数据写入到指定的位置
+System.arraycopy(src, offset, hb, ix(position()), length);
+//更新偏移量
+position(position() + length);
+return this;
+}</code></pre></li>
+<li><p>直接缓冲区写入数据</p>
+<pre><code><code>public ByteBuffer put(byte[] src, int offset, int length) {
+    //当写入长度大于JNI_COPY_FROM_ARRAY_THRESHOLD(6)时写入
+    if ((length &lt;&lt; $LG_BYTES_PER_VALUE$) &gt; Bits.JNI_COPY_FROM_ARRAY_THRESHOLD) {
+        checkBounds(offset, length, src.length);
+        int pos = position();
+        int lim = limit();
+        assert (pos &lt;= lim);
+        int rem = (pos &lt;= lim ? lim - pos : 0);
+        if (length &gt; rem)
+            throw new BufferOverflowException();
+
+        Bits.copyFromArray(src, arrayBaseOffset, offset &lt;&lt; $LG_BYTES_PER_VALUE$,
+                            ix(pos), length &lt;&lt; $LG_BYTES_PER_VALUE$);
+        position(pos + length);
+    } else {
+        //当长度小于6时，逐字节写入
+        super.put(src, offset, length);
+    }
+}
+//super.put(src, offset, length);
+public ByteBuffer put(byte[] var1, int var2, int var3) {
+    checkBounds(var2, var3, var1.length);
+    if (var3 &gt; this.remaining()) {
+        throw new BufferOverflowException();
+    } else {
+        int var4 = var2 + var3;
+
+        for(int var5 = var2; var5 &lt; var4; ++var5) {
+            this.put(var1[var5]);
+        }
+
+        return this;
+    }
+}</code></pre>
+<p>这里以6为界限的目的是什么?会有多少性能差异，哪位同学清楚的话麻烦告知一下。</p></li>
+</ul></li>
+<li><p>转换为读模式</p>
+<pre><code><code>byteBuffer.flip();</code></pre>
+<p><img src="./images/NIO-Buffer3.png" alt="20191206153638.png" /></p>
+<pre><code><code>public final Buffer flip() {
+    //当前可读位置指向，写入的位置
+     this.limit = this.position;
+     //读取开始位置置为0
+     this.position = 0;
+     this.mark = -1;
+     return this;
+ }</code></pre></li>
+<li><p>读取数据</p>
+<pre><code><code> byte[] data1 = new byte[3];
+ byteBuffer.get(data1);</code></pre>
+<p><img src="./images/NIO-Buffer4.png" alt="20191206153935.png" /></p>
+<ul>
+<li>堆缓冲区读取数据data</li>
+</ul>
+<pre><code><code>public ByteBuffer get(byte[] dst, int offset, int length) {
+    //检查传入参数
+    checkBounds(offset, length, dst.length);
+    //超过可读大小抛出BufferUnderflowException异常
+    if (length &gt; remaining())
+        throw new BufferUnderflowException();
+    //根据实际this.offset偏移后的位置读取数据
+    System.arraycopy(hb, ix(position()), dst, offset, length);
+    position(position() + length);
+    return this;
+}</code></pre>
+<ul>
+<li>直接缓冲区读取数据data</li>
+</ul>
+<pre><code><code>public ByteBuffer get(byte[] dst, int offset, int length) {
+    //当读取长度大于6时复制，小于6时逐字节复制
+
+    if ((length &lt;&lt; $LG_BYTES_PER_VALUE$) &gt; Bits.JNI_COPY_TO_ARRAY_THRESHOLD) {
+        checkBounds(offset, length, dst.length);
+        int pos = position();
+        int lim = limit();
+        assert (pos &lt;= lim);
+        int rem = (pos &lt;= lim ? lim - pos : 0);
+        //超过可读大小抛出BufferUnderflowException异常
+        if (length &gt; rem)
+            throw new BufferUnderflowException();
+        Bits.copyToArray(ix(pos), dst, arrayBaseOffset,
+                            offset &lt;&lt; $LG_BYTES_PER_VALUE$,
+                            length &lt;&lt; $LG_BYTES_PER_VALUE$);
+        position(pos + length);
+    } else {
+        super.get(dst, offset, length);
+    }
+    return this;
+}</code></pre></li>
+<li><p>缓冲区切片</p>
+<pre><code><code> ByteBuffer sliceByteBuffer = byteBuffer.slice();</code></pre>
+<p><img src="./images/NIO-Buffer5.png" alt="20191206154630.png" /></p>
+<blockquote>
+<p>切片了之后换创建一个新的缓冲区，但是实际的数据内存指向的是同一块内存。</p>
+</blockquote></li>
+<li><p>初始化指针,清理已读取数据</p>
+<pre><code><code> data.compact();</code></pre>
+<p>此时将data初始化，会将未读取的2个字节复制到数组头部，同时转换为写模式。</p>
+<p><img src="./images/NIO-Buffer6.png" alt="20191206160222.png" /></p>
+<pre><code><code>public ByteBuffer compact() {
+    //复制未读取的数据到初始位置
+    System.arraycopy(this.hb, this.ix(this.position()), this.hb, this.ix(0), this.remaining());
+    //设置当前偏移量为未读取的长度即5-3=2
+    this.position(this.remaining());
+    //设置限制大小为容量大小
+    this.limit(this.capacity());
+    //设置标记为-1
+    this.discardMark();
+    return this;
+}</code></pre></li>
+<li><p>初始化指针，清理所有数据</p>
+<pre><code><code> data.clear();</code></pre>
+<p><img src="./images/NIO-Buffer7.png" alt="20191206160941.png" /></p>
+<p>完整代码</p>
+<pre><code><code>public static void main(String[] args) {
+
+     byte[] data = new byte[] {&#39;H&#39;,&#39;E&#39;,&#39;L&#39;,&#39;L&#39;,&#39;O&#39;};
+     System.out.println(new String(data));
+     ByteBuffer byteBuffer = ByteBuffer.allocate(8);
+     byteBuffer.put(data);
+     byteBuffer.flip();
+     byte[] data1 = new byte[3];
+     byteBuffer.get(data1);
+     System.out.println(new String(data1));
+     ByteBuffer sliceByteBuffer = byteBuffer.slice();
+     byte[] data2 = new byte[2];
+     sliceByteBuffer.get(data2);
+     System.out.println(new String(data2));
+     byteBuffer.compact();
+     byteBuffer.clear();
+ }</code></pre></li>
+</ol>
+<h2 id="总结">总结</h2>
+<p>NIO通过引入缓冲区的概念使得对字节操作比传统字节操作会方便一些，但是读写模式需要来回转换会让人有点头晕。</p>
+<h2 id="相关文献">相关文献</h2>
+<ol>
+<li><a href="https://blog.csdn.net/weixin_42405670/article/details/103267561">解锁网络编程之NIO的前世今生</a></li>
+<li><a href="https://www.cnblogs.com/imstudy/p/11108085.html">史上最强Java NIO入门：担心从入门到放弃的，请读这篇！</a></li>
+<li><a href="https://ifeve.com/java-nio-all/">Java NIO系列教程</a></li>
+<li><a href="https://www.jianshu.com/p/1ae227e6af61">深入理解DirectBuffer</a></li>
+<li><a href="https://blog.csdn.net/u010853261/article/details/53464322">《Java源码解析》NIO中的heap Buffer和direct Buffer区别</a></li>
+<li><a href="https://www.jianshu.com/p/c6a4aa09f530">Java Reference详解</a></li>
+<li><a href="https://www.cnblogs.com/cxchanpin/p/7160642.html">Direct Buffer vs. Heap Buffer</a></li>
+<li><a href="https://www.iteye.com/blog/gaojingsong-2370877">JAVA之Buffer介绍</a></li>
+<li><a href="https://www.cnblogs.com/little-white/p/3236548.html">详解大端模式和小端模式</a></li>
+<li><a href="https://www.jianshu.com/p/007052ee3773">堆外内存 之 DirectByteBuffer 详解</a></li>
+</ol>
+<hr />
+<blockquote>
+<p><img src="./images/NIO-Buffer8.png" alt="20191127212134.png" /><br />
+微信扫一扫二维码关注订阅号杰哥技术分享<br />
+出处：<a href="https://www.cnblogs.com/Jack-Blog/p/11996309.html" class="uri">https://www.cnblogs.com/Jack-Blog/p/11996309.html</a><br />
+作者：杰哥很忙<br />
+本文使用「CC BY 4.0」创作共享协议。欢迎转载，请在明显位置给出出处及链接。</p>
+</blockquote>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,171 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修堡垒机WebSSH进阶之实时监控和强制下线' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>堡垒机WebSSH进阶之实时监控和强制下线</center></div><div class='banquan'>原文出处:本文由博客园博主运维咖啡吧提供。<br/>
+原文连接:https://www.cnblogs.com/37Y37/p/12009094.html</div><br>
+    <blockquote>
+<p>这个功能我可以不用，但你不能没有</p>
+</blockquote>
+<p>前几篇文章实现了对<strong>物理机</strong>、<strong>虚拟机</strong>以及Kubernetes中<strong>Pod</strong>的WebSSH操作，可以方便的在web端对系统进行管理，同时也支持对所有操作进行<strong>全程录像</strong>，以方便后续的查看与审计</p>
+<p>这一篇文章接着实现一个看起来很炫酷，但实际上你可能不会经常使用，又必须要存在的功能：实时监控用户操作，在必要的时候将用户踢下线</p>
+<h2 id="实时查看操作">实时查看操作</h2>
+<p>django通过channels实现websocket中有一个非常重要的概念叫layer，layer可以将多个channel合并成一个group，我们可以发送消息给group，那么group里的每个channel都能收到</p>
+<p>关于Channel我有写过两篇文章结合<strong>聊天室</strong>和<strong>web端实现tail-f功能</strong>这两个案例来详细介绍，两篇文章是<a href="https://mp.weixin.qq.com/s/hqaPrPS7w3D-9SeegQAB2Q">『Django使用Channels实现WebSocket--上篇』</a>和<a href="https://mp.weixin.qq.com/s/r5SpyTjRl0jJeAuYE4Q_-Q">『Django使用Channels实现WebSocket--下篇』</a>，对上边提到的名词一脸懵逼的朋友可以通过这两篇文章来学习</p>
+<p>之前的WebSSH仅是单连接，只需要客户端和服务器建立长连接，然后处理指令就ok了，我们并没有启用channel的layer，实际上也可以看作是单channel，但要实现监控的功能，就需要将操作者和管理员(监控者)的多个channel合并在一起组成一个group，这样操作者的所有操作都可以发送给这个group，同处于这个group内监控者就能实时收到消息了，大概流程变化如下图所示</p>
+<p><img src="./images/堡垒机WebSSH进阶之实时监控和强制下线0.png" /></p>
+<p>接下来看下具体实现，以下所有代码均是在这篇文章的基础上进行说明讲解：<a href="https://mp.weixin.qq.com/s/a3eJjVTtuUjzwyk21nTBqQ">『Django实现WebSSH操作物理机或虚拟机』</a></p>
+<p>首先我们要启用layer，这个需要在settings.py中添加如下配置</p>
+<pre><code><code>CHANNEL_LAYERS = {
+    &#39;default&#39;: {
+        &#39;BACKEND&#39;: &#39;channels_redis.core.RedisChannelLayer&#39;,
+        &#39;CONFIG&#39;: {
+            &quot;hosts&quot;: [(&#39;ops-coffee.cn&#39;, 6379)],
+        },
+    },
+}</code></pre>
+<p>然后将处理WebSSH连接名为<code>SSHConsumer</code>的Consumer做改造，以使其支持layer，代码如下</p>
+<pre><code><code>class SSHConsumer(WebsocketConsumer):
+    def connect(self):
+        # 格式化参数
+        ssh_connect_args = args(self.scope)
+
+        # 新建录像记录
+        self.host = Host.objects.get(host=ssh_connect_args.get(&#39;host&#39;))
+        self.group_name = &#39;%s-%s-%d&#39; % (
+            ssh_connect_args.get(&#39;host&#39;), ssh_connect_args.get(&#39;username&#39;), time.time())
+
+        self.therecord = Record.objects.create(
+            host=self.host,
+            user=self.scope[&#39;user&#39;],
+            group=self.group_name,
+            channel=self.channel_name,
+            cols=ssh_connect_args.get(&#39;cols&#39;),
+            rows=ssh_connect_args.get(&#39;rows&#39;),
+            is_connecting=True
+        )
+
+        async_to_sync(self.channel_layer.group_add)(
+            self.group_name,
+            self.channel_name
+        )
+
+        self.accept()
+
+        # WebSocket连接成功后，连接ssh
+        self.ssh = SSHBridge(self.therecord, websocket=self)
+        self.ssh.connect(**ssh_connect_args)
+
+    def disconnect(self, close_code):
+        # 将连接状态置为False
+        self.therecord.is_connecting = False
+        self.therecord.save()
+
+        async_to_sync(self.channel_layer.group_discard)(
+            self.group_name,
+            self.channel_name
+        )
+
+        self.ssh.close()
+
+    def receive(self, text_data=None):
+        text_data = json.loads(text_data)
+
+        if text_data.get(&#39;flag&#39;) == &#39;resize&#39;:
+            self.ssh.resize_pty(cols=text_data[&#39;cols&#39;], rows=text_data[&#39;rows&#39;])
+        else:
+            self.ssh.shell(data=text_data.get(&#39;data&#39;, &#39;&#39;))
+
+    def ssh_message(self, event):
+        self.send(text_data=json.dumps(
+            event[&#39;message&#39;]
+        ))</code></pre>
+<p>在connect连接建立时新建一条记录，存储主机、用户、<code>group_name</code>、<code>channel_name</code>以及初始窗口的<code>cols</code>、<code>rows</code>信息，同时标记<code>is_connecting</code>为True，这里的<code>group_name</code>命名与文章<a href="https://mp.weixin.qq.com/s/XBKEfJKaucTFFcj-cS95LQ">『堡垒机的核心武器：WebSSH录像实现』</a>中我们定义的录像文件名规则一致，另外将这篇文章中新建录像记录的操作从<code>SSHBridge.record</code>中给转到了连接建立的connect中来，更合理也更方便</p>
+<p>在disconnect连接关闭时，将<code>is_connecting</code>标记为False，这样我们在前端页面上就可以根据这个标记来判断WebSSH是否正在连接，如果连接则展示<strong>监控</strong>和<strong>强制结束</strong>按钮，否则展示<strong>播放</strong>和<strong>命令提取</strong>按钮</p>
+<p>同时添加个ssh_message方法，用来接收发送到组的数据</p>
+<p>到这里，我们已经将WebSSH改造成了支持layer的模式，那么接下来就是要在用户点击监控的时候将用户与服务端建立的连接channel加入到上述group中</p>
+<p>新建一个名为<code>MonitorConsumer</code>的consumer，主要用来处理监控连接</p>
+<pre><code><code>class MonitorConsumer(WebsocketConsumer):
+    def connect(self):
+        pk = self.scope[&#39;url_route&#39;][&#39;kwargs&#39;].get(&#39;id&#39;)
+        self.group_name = Record.objects.get(id=pk).group
+
+        async_to_sync(self.channel_layer.group_add)(
+            self.group_name,
+            self.channel_name
+        )
+
+        self.accept()
+
+        # 判断用户已经结束了这个webssh连接时就关闭监控
+        self.connecting = Record.objects.get(id=pk).is_connecting
+        if not self.connecting:
+            self.close()
+
+    def disconnect(self, close_code):
+        async_to_sync(self.channel_layer.group_discard)(
+            self.group_name,
+            self.channel_name
+        )
+
+        self.close()
+
+    def receive(self, text_data=None):
+        pass
+
+    def ssh_message(self, event):
+        self.send(text_data=json.dumps(
+            event[&#39;message&#39;]
+        ))
+</code></pre>
+<p>MonitorConsumer与SSHConsumer有两个地方不一样，其一是<code>SSHConsumer</code>中我们直接新生成了个<code>group_name</code>，而<code>MonitorConsumer</code>中需要在connect时获取到要监控的ID，然后通过ID拿到<code>group_name</code>，将monitor连接加入到这个group，其二是监控只能看，不能操作，所以也不需要前端发送数据的<code>term.on</code>和Consumer的<code>receive</code>处理数据</p>
+<p>最后需要修改<code>SSHBridge</code>方法中发送给websocket的指令，从<code>self.websocket.send</code>改为发送到group的模式，如下</p>
+<pre><code><code>async_to_sync(self.websocket.channel_layer.group_send)(
+    self.group_name,
+    {
+        &#39;type&#39;: &#39;ssh.message&#39;,
+        &#39;message&#39;: message
+    }
+)</code></pre>
+<p>至此，监控功能就算完成了，什么？前端页面怎么弄？参考下之前的WebSSH界面，几乎可以完全复制</p>
+<h2 id="踢用户下线">踢用户下线</h2>
+<p>踢用户下线就比较简单了，逻辑是点击页面上的<strong>强制结束</strong>按钮，给后端view发送个请求带上这条记录的ID，view拿到ID后，通过ID找到group_name，然后向group发送<code>disconnect</code>消息，这个group里的所有channel在收到disconnect消息后就会断开连接了</p>
+<pre><code><code>from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+
+async_to_sync(get_channel_layer().group_send)(
+    Record.objects.get(id=pk).group,
+    {&#39;type&#39;: &#39;disconnect&#39;}
+)</code></pre>
+<h2 id="演示与说明">演示与说明</h2>
+<p><img src="./images/堡垒机WebSSH进阶之实时监控和强制下线1.png" /></p>
+<p>所有实现环环相扣，单看这一篇文章可能云里雾里，不知所云，但你如果能把这个系列文章都给看下的话，我想实现个简单的堡垒机应该没有问题吧，更重要的是你会对websocket以及django中的Channels有着更加深刻的理解和运用</p>
+<p>原本只是想给我最牛X的<a href="https://mp.weixin.qq.com/s/Nxh7mwPJPlbL3R9MdlkO_A">Alodi系统</a>添加个WebSSH，可以方便开发或测试在项目运行过程中出现问题时提供一个快速的调试途径，没想到这竟然写了一个系列，实现了这么多有趣好玩儿的功能</p>
+<p>最后想起了这句成语：有意栽花花不开，无心插柳柳成荫，真是奇妙~</p>
+<hr />
+<p><img src="./images/堡垒机WebSSH进阶之实时监控和强制下线2.png" alt="扫码关注公众号查看更多实用文章" /></p>
+<p>相关文章推荐阅读：</p>
+<ul>
+<li><a href="https://mp.weixin.qq.com/s/FHDyvHsh-oO1cn7AXk_4WA">Django实现WebSSH操作Kubernetes Pod</a></li>
+<li><a href="https://mp.weixin.qq.com/s/4jE9hivFG4GmbIA4kKq7Wg">Kubernetes WebSSH终端窗口自适应Resize</a></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

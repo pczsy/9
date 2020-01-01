@@ -1,0 +1,83 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python3定时器任务代码' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python3定时器任务代码</center></div><div class='banquan'>原文出处:本文由博客园博主撒欢提供。<br/>
+原文连接:https://www.cnblogs.com/frisk/p/11568264.html</div><br>
+    <p>使用threading写的一个定时器任务demo：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> sys
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> signal
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> datetime
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> threading
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">定时器</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> schedule_update():
+    t </span>=<span style="color: #000000;"> threading.Timer(0, event_func)
+    t.setDaemon(True)
+    t.start()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">执行函数</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> event_func():
+    now_time </span>= datetime.datetime.now().strftime(<span style="color: #800000;">'</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(now_time)
+    exec_update()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">update_openvas_dbs_from_cache()</span>
+    interval_time =<span style="color: #000000;"> delay_time()
+    t </span>=<span style="color: #000000;"> threading.Timer(interval_time, event_func)
+    t.setDaemon(True)
+    t.start()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">取时间点</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> delay_time():
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> now time</span>
+    now_time =<span style="color: #000000;"> datetime.datetime.now()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> tomorrow time</span>
+    next_time = now_time + datetime.timedelta(days=+1<span style="color: #000000;">)
+    next_year </span>=<span style="color: #000000;"> next_time.date().year
+    next_month </span>=<span style="color: #000000;"> next_time.date().month
+    next_day </span>=<span style="color: #000000;"> next_time.date().day
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> get tomorrow 00:00</span>
+    next_time = datetime.datetime.strptime(str(next_year)+<span style="color: #800000;">"</span><span style="color: #800000;">-</span><span style="color: #800000;">"</span>+str(next_month)+<span style="color: #800000;">"</span><span style="color: #800000;">-</span><span style="color: #800000;">"</span>+str(next_day)+<span style="color: #800000;">"</span><span style="color: #800000;"> 00:00:00</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">%Y-%m-%d %H:%M:%S</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> get secondes</span>
+    delay_time = (next_time -<span style="color: #000000;"> now_time).total_seconds()
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> delay_time
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> quit_sys(signum, frame):
+    sys.exit()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">接收C</span>
+<span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        signal.signal(signal.SIGINT, quit_sys)
+        signal.signal(signal.SIGTERM, quit_sys)
+        schedule_update()
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">schedule_update server starting up...\nHit Ctrl-C to quit.\n</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+            time.sleep(</span>1<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;">  Exception as e:
+        </span><span style="color: #0000ff;">print</span>(e)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

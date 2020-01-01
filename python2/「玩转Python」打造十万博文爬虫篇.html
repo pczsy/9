@@ -1,0 +1,126 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修「玩转Python」打造十万博文爬虫篇' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>「玩转Python」打造十万博文爬虫篇</center></div><div class='banquan'>原文出处:本文由博客园博主小柒2012提供。<br/>
+原文连接:https://www.cnblogs.com/smallSevens/p/11269447.html</div><br>
+    <p><img src="./images/「玩转Python」打造十万博文爬虫篇0.png" /></p>
+<h2 id="前言">前言</h2>
+<p>这里以爬取博客园文章为例，仅供学习参考，某些AD满天飞的网站太浪费爬虫的感情了。</p>
+<h2 id="爬取">爬取</h2>
+<ul>
+<li><p>使用 BeautifulSoup 获取博文</p></li>
+<li><p>通过 html2text 将 Html 转 Markdown</p></li>
+<li><p>保存 Markdown 到本地文件</p></li>
+<li><p>下载 Markdown 中的图片到本地并替换图片地址</p></li>
+<li><p>写入数据库</p></li>
+</ul>
+<h2 id="工具">工具</h2>
+<p>使用到的第三方类库：BeautifulSoup、html2text、PooledDB</p>
+<h2 id="代码">代码</h2>
+<p>获取博文：</p>
+<pre><code><code># 获取标题和文章内容
+def getHtml(blog):
+    res = requests.get(blog, headers=headers)
+    soup = BeautifulSoup(res.text, &#39;html.parser&#39;)
+    # 获取博客标题
+    title = soup.find(&#39;h1&#39;, class_=&#39;postTitle&#39;).text
+    # 去除空格等
+    title = title.strip()
+    # 获取博客内容
+    content = soup.find(&#39;div&#39;, class_=&#39;blogpost-body&#39;)
+    # 去掉博客外层的DIV
+    content = article.decode_contents(formatter=&quot;html&quot;)
+    info = {&quot;title&quot;: title, &quot;content&quot;: content}
+    return info</code></pre>
+<p>Html 转 Markdown：</p>
+<pre><code><code># 这里使用开源第三方库 html2text
+ md = text_maker.handle(info[&#39;content&#39;])</code></pre>
+<p>保存到本地文件：</p>
+<pre><code><code>
+def createFile(md, title):
+    print(&#39;系统默认编码：{}&#39;.format(sys.getdefaultencoding()))
+    save_file = str(title) +&quot;.md&quot;
+    # print(save_file)
+    print(&#39;准备写入文件：{}&#39;.format(save_file))
+    # r+ 打开一个文件用于读写。文件指针将会放在文件的开头。
+    # w+ 打开一个文件用于读写。如果该文件已存在则将其覆盖。如果该文件不存在，创建新文件。
+    # a+ 打开一个文件用于读写。如果该文件已存在，文件指针将会放在文件的结尾。文件打开时会是追加模式。如果该文件不存在，创建新文件用于读写。
+    f = codecs.open(save_file, &#39;w+&#39;, &#39;utf-8&#39;)
+    f.write(md)
+    f.close()
+    print(&#39;写入文件结束：{}&#39;.format(f.name))
+    return save_file</code></pre>
+<p>下载图片到本地并替换图片地址：</p>
+<pre><code><code>def replace_md_url(md_file):
+    &quot;&quot;&quot;
+    把指定MD文件中引用的图片下载到本地，并替换URL
+    &quot;&quot;&quot;
+
+    if os.path.splitext(md_file)[1] != &#39;.md&#39;:
+        print(&#39;{}不是Markdown文件，不做处理。&#39;.format(md_file))
+        return
+
+    cnt_replace = 0
+    # 日期时间为目录存储图片
+    dir_ts = time.strftime(&#39;%Y%m&#39;, time.localtime())
+    isExists = os.path.exists(dir_ts)
+    # 判断结果
+    if not isExists:
+        os.makedirs(dir_ts)
+    with open(md_file, &#39;r&#39;, encoding=&#39;utf-8&#39;) as f:  # 使用utf-8 编码打开
+        post = f.read()
+        matches = re.compile(img_patten).findall(post)
+        if matches and len(matches) &gt; 0:
+            for match in list(chain(*matches)):
+                if match and len(match) &gt; 0:
+                    array = match.split(&#39;/&#39;)
+                    file_name = array[len(array) - 1]
+                    file_name = dir_ts + &quot;/&quot; + file_name
+                    img = requests.get(match, headers=headers)
+                    f = open(file_name, &#39;ab&#39;)
+                    f.write(img.content)
+                    new_url = &quot;https://blog.52itstyle.vip/{}&quot;.format(file_name)
+                    # 更新MD中的URL
+                    post = post.replace(match, new_url)
+                    cnt_replace = cnt_replace + 1
+
+        # 如果有内容的话，就直接覆盖写入当前的markdown文件
+        if post and cnt_replace &gt; 0:
+            url = &quot;https://blog.52itstyle.vip&quot;
+            open(md_file, &#39;w&#39;, encoding=&#39;utf-8&#39;).write(post)
+            print(&#39;{0}的{1}个URL被替换到{2}/{3}&#39;.format(os.path.basename(md_file), cnt_replace, url, dir_ts))
+        elif cnt_replace == 0:
+            print(&#39;{}中没有需要替换的URL&#39;.format(os.path.basename(md_file)))</code></pre>
+<p>写入数据库：</p>
+<pre><code><code># 写入数据库
+def write_db(title, content, url):
+    sql = &quot;INSERT INTO blog (title, content,url) VALUES(%(title)s, %(content)s, %(url)s);&quot;
+    param = {&quot;title&quot;: title, &quot;content&quot;: content, &quot;url&quot;: url}
+    mysql.insert(sql, param)</code></pre>
+<h2 id="小结">小结</h2>
+<p>互联网时代一些开放的博客社区的确方便了很多，但是也伴随着随时消失的可能性，最好就是自己备份一份到本地；你也可以选择自己喜欢的博主，爬取下收藏。</p>
+<p>源码：<a href="https://gitee.com/52itstyle/Python" class="uri">https://gitee.com/52itstyle/Python</a></p>
+<p>演示：<a href="https://blog.52itstyle.top" class="uri">https://blog.52itstyle.top</a></p>
+<p>列表：<a href="https://blog.52itstyle.top/index" class="uri">https://blog.52itstyle.top/index</a></p>
+<p>详情：<a href="https://blog.52itstyle.top/49.shtml" class="uri">https://blog.52itstyle.top/49.shtml</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,330 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Netty源码分析之ChannelPipeline(二)—ChannelHandler的添加与删除' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Netty源码分析之ChannelPipeline(二)—ChannelHandler的添加与删除</center></div><div class='banquan'>原文出处:本文由博客园博主bigfan提供。<br/>
+原文连接:https://www.cnblogs.com/dafanjoy/p/11848432.html</div><br>
+    <p>上篇文章中，我们对Netty中ChannelPipeline的构造与初始化进行了分析与总结，本篇文章我们将对ChannelHandler的添加与删除操作进行具体的的代码分析；</p>
+<h2>一、ChannelHandler的添加</h2>
+<p>下面是Netty官方的一段demo源码，可以看到在服务端初始化时执行了向ChannelPipeline中添加自定义channelHandler的操作。</p>
+<div class="cnblogs_code">
+<pre><code>            ServerBootstrap b = <span style="color: #0000ff;">new</span><span style="color: #000000;"> ServerBootstrap();
+            b.group(bossGroup, workerGroup).channel(NioServerSocketChannel.</span><span style="color: #0000ff;">class</span>).option(ChannelOption.SO_BACKLOG, 100<span style="color: #000000;">)
+                    .handler(</span><span style="color: #0000ff;">new</span> LoggingHandler(LogLevel.INFO)).childHandler(<span style="color: #0000ff;">new</span> ChannelInitializer&lt;SocketChannel&gt;<span style="color: #000000;">() {
+                        @Override
+                        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> initChannel(SocketChannel ch) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+                            ChannelPipeline p </span>=<span style="color: #000000;"> ch.pipeline();
+                            </span><span style="color: #0000ff;">if</span> (sslCtx != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                                p.addLast(sslCtx.newHandler(ch.alloc()));
+                            }
+                            </span><span style="color: #008000;">//</span><span style="color: #008000;"> p.addLast(new LoggingHandler(LogLevel.INFO));
+                            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 向ChannelPipeline中添加自定义channelHandler</span>
+<span style="color: #000000;">                            p.addLast(serverHandler);
+                        }
+                    });</span></pre>
+</div>
+<p>我们可以看到上面的代码中调用ChannelPipeline的addLast方法实现了channelHandler的添加，下面我们就分析下addLast方法的具体源码实现</p>
+<p>首先看下addLast方方法的具体源码实现</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> ChannelPipeline addLast(EventExecutorGroup group, String name, ChannelHandler handler) {
+        </span><span style="color: #0000ff;">final</span><span style="color: #000000;"> AbstractChannelHandlerContext newCtx;
+        </span><span style="color: #0000ff;">synchronized</span> (<span style="color: #0000ff;">this</span><span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">判断handler是否被重复添加</span>
+<span style="color: #000000;">            checkMultiplicity(handler);
+
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">创建ChannelHandlerContext节点  filterName检查名称是否重复</span>
+            newCtx =<span style="color: #000000;"> newContext(group, filterName(name, handler), handler);
+
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">双向链表中增加ChannelHandlerContext</span>
+<span style="color: #000000;">            addLast0(newCtx);
+
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> If the registered is false it means that the channel was not registered on an eventLoop yet.
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> In this case we add the context to the pipeline and add a task that will call
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> ChannelHandler.handlerAdded(...) once the channel is registered.</span>
+            <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">registered) {
+                newCtx.setAddPending();
+                callHandlerCallbackLater(newCtx, </span><span style="color: #0000ff;">true</span><span style="color: #000000;">);
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">;
+            }
+
+            EventExecutor executor </span>=<span style="color: #000000;"> newCtx.executor();
+            </span><span style="color: #0000ff;">if</span> (!executor.inEventLoop()) {<span style="color: #008000;">//</span><span style="color: #008000;">判断是否在同一线程中</span>
+<span style="color: #000000;">                callHandlerAddedInEventLoop(newCtx, executor);
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">;
+            }
+        }
+        callHandlerAdded0(newCtx);
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<p>分析addLast方法代码可以看到，ChannelHandler的添加基本可以分为四步</p>
+<h3>1、验证ChannelHandler是否重复添加</h3>
+<p>我们看下checkMultiplicity方法的具体实现</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> checkMultiplicity(ChannelHandler handler) {
+        </span><span style="color: #0000ff;">if</span> (handler <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> ChannelHandlerAdapter) {
+            ChannelHandlerAdapter h </span>=<span style="color: #000000;"> (ChannelHandlerAdapter) handler;
+            </span><span style="color: #0000ff;">if</span> (!h.isSharable() &amp;&amp; h.added) {<span style="color: #008000;">//</span><span style="color: #008000;">如果该handler非共享且已经被添加</span>
+                <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> ChannelPipelineException(
+                        h.getClass().getName() </span>+
+                        " is not a @Sharable handler, so can't be added or removed multiple times."<span style="color: #000000;">);
+            }
+            h.added </span>= <span style="color: #0000ff;">true</span>;<span style="color: #008000;">//</span><span style="color: #008000;">添加过之后,修改标识</span>
+<span style="color: #000000;">        }
+    }</span></pre>
+</div>
+<h3>2、创建一个HandlerContext对象</h3>
+<pre><code>我们之前说过netty会把一个channelhandler封装成一个ChannelHandlerContext对象，如下面代码所示</pre>
+<div class="cnblogs_code">
+<pre><code>newCtx = newContext(group, filterName(name, handler), handler);</pre>
+</div>
+<pre><code>封装对象时，我们可以给要添加的channelhandler起一个名字，filterName方法可以判断该handler的命名是否重复</pre>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span><span style="color: #000000;"> String filterName(String name, ChannelHandler handler) {
+        </span><span style="color: #0000ff;">if</span> (name == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">return</span> generateName(handler);<span style="color: #008000;">//</span><span style="color: #008000;">返回一个默认名称</span>
+<span style="color: #000000;">        }
+        checkDuplicateName(name);
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> name;
+    }</span></pre>
+</div>
+<pre><code><span>checkDuplicateName方法会遍历链表中节点如果查询到有重复的name则会抛出异常<br /></span></pre>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> checkDuplicateName(String name) {
+        </span><span style="color: #0000ff;">if</span> (context0(name) != <span style="color: #0000ff;">null</span>) { <span style="color: #008000;">//</span><span style="color: #008000;">遍历节点,查找是否有重复name</span>
+            <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalArgumentException("Duplicate handler name: " +<span style="color: #000000;"> name);
+        }
+    }</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span><span style="color: #000000;"> AbstractChannelHandlerContext context0(String name) {
+        AbstractChannelHandlerContext context </span>=<span style="color: #000000;"> head.next;
+        </span><span style="color: #0000ff;">while</span> (context !=<span style="color: #000000;"> tail) {
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (context.name().equals(name)) {
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> context;
+            }
+            context </span>=<span style="color: #000000;"> context.next;
+        }
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<h3>3、向链表中添加添加context</h3>
+<p>前面进行了一系列判断后，通过addLast0方法我们把ChannelHandlerContext添加到pipeline中的双向链表中</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">相当于在tail节点前面插入一个节点，也就是addLast</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> addLast0(AbstractChannelHandlerContext newCtx) {
+        AbstractChannelHandlerContext prev </span>= tail.prev;<span style="color: #008000;">//</span><span style="color: #008000;">拿到tail节点的前置节点</span>
+        newCtx.prev = prev;<span style="color: #008000;">//</span><span style="color: #008000;">把当前context的前置节点置为 prev</span>
+        newCtx.next = tail;<span style="color: #008000;">//</span><span style="color: #008000;">把当前context的后置节点置为tail</span>
+        prev.next = newCtx;<span style="color: #008000;">//</span><span style="color: #008000;">把prev节点的后置节点置为context</span>
+        tail.prev = newCtx;<span style="color: #008000;">//</span><span style="color: #008000;">把tail节点的前置节点置为context</span>
+    }</pre>
+</div>
+<p>addLast0内部实现很简单，就是在tail节点前面插入一个节点，也就是把该ChannelHandlerContext放在链表的最后。</p>
+<h3>4、调用回调方法，通知添加成功</h3>
+<p>这一步就是当ChannelHandler添加到Pipeline中时调用，通过callHandlerAdded()回调方法通知ChannelHandler添加成功，执行handlerAdded()方法；</p>
+<p>首先判断当前线程与eventloop线程是否一致，不一致的话封装成task提交给eventloop线程，是同一线程直接执行callHandlerAdded0方法，我们看下方法具体实现</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> callHandlerAdded0(<span style="color: #0000ff;">final</span><span style="color: #000000;"> AbstractChannelHandlerContext ctx) {
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            ctx.callHandlerAdded();</span><span style="color: #008000;">//</span><span style="color: #008000;">调用callHandlerAdded回调方法</span>
+        } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Throwable t) {
+            </span><span style="color: #0000ff;">boolean</span> removed = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+            </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+                remove0(ctx);</span><span style="color: #008000;">//</span><span style="color: #008000;">如果出现异常的话，把该ctx删除</span>
+                ctx.callHandlerRemoved();<span style="color: #008000;">//</span><span style="color: #008000;">调用callHandlerRemoved回调方法</span>
+                removed = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+            } </span><span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Throwable t2) {
+                </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (logger.isWarnEnabled()) {
+                    logger.warn(</span>"Failed to remove a handler: " +<span style="color: #000000;"> ctx.name(), t2);
+                }
+            }
+
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (removed) {
+                fireExceptionCaught(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> ChannelPipelineException(
+                        ctx.handler().getClass().getName() </span>+
+                        ".handlerAdded() has thrown an exception; removed."<span style="color: #000000;">, t));
+            } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                fireExceptionCaught(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> ChannelPipelineException(
+                        ctx.handler().getClass().getName() </span>+
+                        ".handlerAdded() has thrown an exception; also failed to remove."<span style="color: #000000;">, t));
+            }
+        }
+    }</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">void</span> callHandlerAdded() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> We must call setAddComplete before calling handlerAdded. Otherwise if the handlerAdded method generates
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> any pipeline events ctx.handler() will miss them because the state will not allow it.</span>
+        <span style="color: #0000ff;">if</span> (setAddComplete()) {<span style="color: #008000;">//</span><span style="color: #008000;">在添加handler之前，保证状态为可添加状态</span>
+            handler().handlerAdded(<span style="color: #0000ff;">this</span><span style="color: #000000;">);
+        }
+    }</span></pre>
+</div>
+<p>通过上面代码实现，我们就可以通过重写ChannelHandler的handlerAdded方法，执行一些当ChannelHandler添加到Pipeline中时需要触发的功能逻辑。</p>
+<h2>二、ChannelHandler的删除</h2>
+<p>ChannelHandler的删除主要是通过ChannelPipeline的remove方法来实现的</p>
+<p>我们先看下remove方法源码具体实现</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> ChannelPipeline remove(ChannelHandler handler) {
+        remove(getContextOrDie(handler));</span><span style="color: #008000;">//</span><span style="color: #008000;">删除handler</span>
+        <span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">private</span> AbstractChannelHandlerContext remove(<span style="color: #0000ff;">final</span><span style="color: #000000;"> AbstractChannelHandlerContext ctx) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">不能删除头节点和尾节点</span>
+        <span style="color: #0000ff;">assert</span> ctx != head &amp;&amp; ctx !=<span style="color: #000000;"> tail;
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">加锁，保证线程安全</span>
+        <span style="color: #0000ff;">synchronized</span> (<span style="color: #0000ff;">this</span><span style="color: #000000;">) {
+            remove0(ctx);</span><span style="color: #008000;">//</span><span style="color: #008000;">在链表中删除context对象
+
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> If the registered is false it means that the channel was not registered on an eventloop yet.
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> In this case we remove the context from the pipeline and add a task that will call
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> ChannelHandler.handlerRemoved(...) once the channel is registered.
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">这里主要判断下该pipline对应channel是否已经注册到eventloop上</span>
+            <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">registered) {
+                callHandlerCallbackLater(ctx, </span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ctx;
+            }
+
+            
+            EventExecutor executor </span>=<span style="color: #000000;"> ctx.executor();
+            </span><span style="color: #0000ff;">if</span> (!executor.inEventLoop()) {<span style="color: #008000;">//</span><span style="color: #008000;">判断是否在同一线程中</span>
+                executor.execute(<span style="color: #0000ff;">new</span><span style="color: #000000;"> Runnable() {
+                    @Override
+                    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> run() {
+                        callHandlerRemoved0(ctx);
+                    }
+                });
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ctx;
+            }
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">调用回调方法，通知handler已删除</span>
+<span style="color: #000000;">        callHandlerRemoved0(ctx);
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ctx;
+    }</span></pre>
+</div>
+<p>删除操作整个流程与添加类似</p>
+<h3>1、获取ChannelHandlerContext对象</h3>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">根据传入的handler拿到其包装的ChannelHandlerContext对象</span>
+    <span style="color: #0000ff;">private</span><span style="color: #000000;"> AbstractChannelHandlerContext getContextOrDie(ChannelHandler handler) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">根据context方法从链表中获取该handler的ChannelHandlerContext对象</span>
+        AbstractChannelHandlerContext ctx =<span style="color: #000000;"> (AbstractChannelHandlerContext) context(handler);
+        </span><span style="color: #0000ff;">if</span> (ctx == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> NoSuchElementException(handler.getClass().getName());
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ctx;
+        }
+    }</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> ChannelHandlerContext context(ChannelHandler handler) {
+        </span><span style="color: #0000ff;">if</span> (handler == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> NullPointerException("handler"<span style="color: #000000;">);
+        }
+
+        AbstractChannelHandlerContext ctx </span>=<span style="color: #000000;"> head.next;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">遍历链表拿到该handler封装的ChannelHandlerContext对象</span>
+        <span style="color: #0000ff;">for</span><span style="color: #000000;"> (;;) {
+
+            </span><span style="color: #0000ff;">if</span> (ctx == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+            }
+
+            </span><span style="color: #0000ff;">if</span> (ctx.handler() ==<span style="color: #000000;"> handler) {
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ctx;
+            }
+
+            ctx </span>=<span style="color: #000000;"> ctx.next;
+        }
+    }</span></pre>
+</div>
+<h3>2、判断是否是首尾节点</h3>
+<p>首先判断删除的节点既不是头节点也不是尾节点</p>
+<div class="cnblogs_code">
+<pre><code>   <span style="color: #008000;">//</span><span style="color: #008000;">不能删除头节点和尾节点</span>
+   <span style="color: #0000ff;">assert</span> ctx != head &amp;&amp; ctx != tail;</pre>
+</div>
+<h3>3、执行删除操作</h3>
+<p>然后通过remove0方法删除指定Context节点</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> remove0(AbstractChannelHandlerContext ctx) {
+        AbstractChannelHandlerContext prev </span>= ctx.prev;<span style="color: #008000;">//</span><span style="color: #008000;">获取当前节点的前置节点</span>
+        AbstractChannelHandlerContext next = ctx.next;<span style="color: #008000;">//</span><span style="color: #008000;">获取当前节点的后置节点</span>
+        prev.next = next;<span style="color: #008000;">//</span><span style="color: #008000;">把prev后置节点设置为next</span>
+        next.prev = prev;<span style="color: #008000;">//</span><span style="color: #008000;">把next前置节点设置为prev</span>
+    }</pre>
+</div>
+<h3>&nbsp;4、调用回调方法，通知删除成功</h3>
+<p>同样会判断当前线程与eventloop线程是否一致，不一致的话封装成task提交给eventloop线程</p>
+<div class="cnblogs_code">
+<pre><code> EventExecutor executor =<span style="color: #000000;"> ctx.executor();
+            </span><span style="color: #0000ff;">if</span> (!executor.inEventLoop()) {<span style="color: #008000;">//</span><span style="color: #008000;">判断是否在同一线程中</span>
+                executor.execute(<span style="color: #0000ff;">new</span><span style="color: #000000;"> Runnable() {
+                    @Override
+                    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> run() {
+                        callHandlerRemoved0(ctx);
+                    }
+                });
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ctx;
+            }</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code> <span style="color: #008000;">//</span><span style="color: #008000;">调用回调方法，通知handler已删除</span>
+ callHandlerRemoved0(ctx);</pre>
+</div>
+<p>调用callHandlerRemoved()回调方法，通知触发handlerRemoved删除成功。</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> callHandlerRemoved0(<span style="color: #0000ff;">final</span><span style="color: #000000;"> AbstractChannelHandlerContext ctx) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> Notify the complete removal.</span>
+        <span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            ctx.callHandlerRemoved();</span><span style="color: #008000;">//</span><span style="color: #008000;">调用ctx中的回调方法</span>
+        } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Throwable t) {
+            fireExceptionCaught(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> ChannelPipelineException(
+                    ctx.handler().getClass().getName() </span>+ ".handlerRemoved() has thrown an exception."<span style="color: #000000;">, t));
+        }
+    }</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">void</span> callHandlerRemoved() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> Only call handlerRemoved(...) if we called handlerAdded(...) before.</span>
+            <span style="color: #0000ff;">if</span> (handlerState ==<span style="color: #000000;"> ADD_COMPLETE) {
+                handler().handlerRemoved(</span><span style="color: #0000ff;">this</span>);<span style="color: #008000;">//</span><span style="color: #008000;">通知handler删除成功事件</span>
+<span style="color: #000000;">            }
+        } </span><span style="color: #0000ff;">finally</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> Mark the handler as removed in any case.</span>
+<span style="color: #000000;">            setRemoved();
+        }
+    }</span></pre>
+</div>
+<h2>三、总结</h2>
+<p>通过上面的内容，我们梳理了channelHandler被封装成ChannelHandlerContext对象后，基于ChannelPipeline的双向链表的添加和删除操作，整个流程还是比较简单清晰的。其中如有不足与不正确的地方还望指出与海涵</p>
+<p>&nbsp;</p>
+<p><strong>关注微信公众号，查看更多技术文章。</strong></p>
+<p class="p">&nbsp;</p>
+<p><img src="./images/Netty源码分析之ChannelPipeline(二)—ChannelHandler的添加与删除0.png" alt="" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

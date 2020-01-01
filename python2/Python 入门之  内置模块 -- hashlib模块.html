@@ -1,0 +1,84 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 入门之  内置模块 -- hashlib模块' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 入门之  内置模块 -- hashlib模块</center></div><div class='banquan'>原文出处:本文由博客园博主永亮提供。<br/>
+原文连接:https://www.cnblogs.com/caiyongliang/p/11530282.html</div><br>
+    <h1 id="python-入门之-内置模块----hashlib模块">Python 入门之 内置模块 -- hashlib模块</h1>
+<h2 id="hashlib">1、hashlib</h2>
+<h4 id="摘要算法加密算法">摘要算法，加密算法</h4>
+<h3 id="主要用途">（1）主要用途：</h3>
+<h4 id="加密-md5-sha1-sha256-sha512">&lt;1&gt; 加密 : md5 sha1 sha256 sha512</h4>
+<h6 id="md5加密速度快安全系数低">md5，加密速度快，安全系数低</h6>
+<h6 id="sha512-加密速度慢安全系数高">sha512 加密速度慢，安全系数高</h6>
+<h4 id="校验-md5-sha1-sha256-sha512值">&lt;2&gt; 校验 : md5 sha1 sha256 sha512值</h4>
+<pre><code><code>import hashlib</code></pre>
+<h3 id="hashlib的特征以及使用要点">（2）hashlib的特征以及使用要点：</h3>
+<h4 id="bytes类型数据-----通过hashlib算法-----固定长度的字符串">&lt;1&gt; bytes类型数据 ---&gt; 通过hashlib算法 ---&gt; 固定长度的字符串</h4>
+<h4 id="当要加密的内容相同时得到的密文一定是一样的">&lt;2&gt; 当要加密的内容相同时，得到的密文一定是一样的</h4>
+<h4 id="当明文不一样时密文不一定一样">&lt;3&gt; 当明文不一样时，密文不一定一样</h4>
+<h4 id="转化过程不可逆">&lt;4&gt; 转化过程不可逆</h4>
+<h3 id="md5加密">（3）md5加密：</h3>
+<h4 id="普通加密">&lt;1&gt; 普通加密：</h4>
+<pre><code><code>import hashlib
+md5 = hashlib.md5()   # 初始化
+md5.update(&quot;alex&quot;.encode(&quot;utf-8&quot;))   # 将明文转换成字节添加到新初始化的md5中
+print(md5.hexdigest())   # 进行加密</code></pre>
+<pre><code><code>        #现在可以进行简单的破解  -- 撞库</code></pre>
+<h4 id="加盐加密----提高安全性">&lt;2&gt; 加盐加密 -- 提高安全性</h4>
+<h5 id="加固定盐">加固定盐</h5>
+<pre><code><code>import hashlib
+md5 = hashlib.md5(&quot;rimo_dsb&quot;.encode(&quot;utf-8&quot;))   # 初始化
+md5.update(&quot;alex&quot;.encode(&quot;utf-8&quot;))   # 将明文转换成字节添加到新初始化的md5中
+print(md5.hexdigest())   # 进行加密</code></pre>
+<h5 id="加动态盐">加动态盐</h5>
+<pre><code><code>import hashlib
+user = input(&quot;username:&quot;)
+pwd = input(&quot;password:&quot;)
+
+md5 = hashlib.md5(user.encode(&quot;utf-8&quot;))   # 初始化
+md5.update(pwd.encode(&quot;utf-8&quot;))   # 将明文转换成字节添加到新初始化的md5中
+print(md5.hexdigest())   # 进行加密</code></pre>
+<p>中文内容编码不同时密文是不一致的，英文的</p>
+<pre><code><code>import hashlib
+sha1 = hashlib.sha1()
+sha1.update(&quot;日魔就是一个大SB&quot;.encode(&quot;utf-8&quot;))
+print(sha1.hexdigest())
+
+sha1 = hashlib.sha1()
+sha1.update(&quot;日魔就是一个大SB&quot;.encode(&quot;gbk&quot;))
+print(sha1.hexdigest())</code></pre>
+<h3 id="文件的一致性校验">（3）文件的一致性校验：</h3>
+<p>​ 如何验证我们下载的资源是否有病毒呢？这就需要文件的一致性校验了。在我们下载一个软件时，往往都带有一个MD5或者shax值，当我们下载完成这个应用程序时你要是对比大小根本看不出什么问题，你应该对比他们的md5值，如果两个md5值相同，就证明这个应用程序是安全的，如果你下载的这个文件的MD5值与服务端给你提供的不同，那么就证明你这个应用程序肯定是植入病毒了（文件损坏的几率很低）</p>
+<h6 id="例如-校验pyhton解释器的md5值是否相同">例如： 校验Pyhton解释器的Md5值是否相同</h6>
+<pre><code><code>import hashlib
+def file_check(file_path):
+    with open(file_path,mode=&#39;rb&#39;) as f1:
+        md5= hashlib.md5()
+        while True:
+            content = f1.read(1024)   # 2049 1025 1
+            if content:
+                md5.update(content)
+            else:
+                return md5.hexdigest()
+print(file_check(&#39;python-3.6.6-amd64.exe&#39;))</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

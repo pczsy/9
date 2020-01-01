@@ -1,0 +1,211 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修IoTClient开发5 - ModBusRtu协议' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>IoTClient开发5 - ModBusRtu协议</center></div><div class='banquan'>原文出处:本文由博客园博主农码一生提供。<br/>
+原文连接:https://www.cnblogs.com/zhaopei/p/12047465.html</div><br>
+    <h1 id="前言">前言</h1>
+<p>前面我们介绍了<a href="https://www.cnblogs.com/zhaopei/p/11839515.html">ModBusTcp协议</a>。今天我们接着来介绍ModBusRtu协议。和ModBusTcp不同的是ModBusRtu基于串口通信，ModBusTcp是基于Tcp以太网通信。<br />
+所以我们在讲解ModBusRtu协议之前会先介绍下串口通信。</p>
+<h1 id="串口通信">串口通信</h1>
+<p>串口出现在1980年前后，当初主要目的是用来做电脑外设设备的连接，如鼠标、键盘等。现在最新的电脑慢慢的取消了原始的串口接口，不过依然广泛用于工控和测量等设备。</p>
+<h2 id="串口通信参数">串口通信参数</h2>
+<p>串口通信指的是串口按位(bit)发送和接收字节，串口通信参数主要有波特率、数据位、停止位、校验位。</p>
+<h2 id="波特率">波特率</h2>
+<p>波特率表达的是串口通信的速率，一秒钟内传送的信号单元(码元)个数。信号单元一般包含10位(7个数据位、1个校验位、1到2个停止位)。注意：波特率和距离成反比</p>
+<h2 id="数据位">数据位</h2>
+<p>通信中实际的数据，有效值为6、7和8。</p>
+<h2 id="停止位">停止位</h2>
+<p>用来表示单个包的最后一位，有效值为1、1.5和2。停止位可用来表示传输的结束和校正时钟同步。注意：停止位的位数越多，时钟同步的容忍程度越大，但是数据传输率会越慢。</p>
+<h2 id="校验位">校验位</h2>
+<p>奇偶校验作为通信中的检错方式，如果发现错误则重新发送。</p>
+<table>
+<thead>
+<tr class="header">
+<th>示例数据</th>
+<th>偶校验位</th>
+<th>奇校验位</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0000000</td>
+<td>00000000</td>
+<td>00000001</td>
+</tr>
+<tr class="even">
+<td>1010001</td>
+<td>10100011</td>
+<td>10100010</td>
+</tr>
+<tr class="odd">
+<td>1101001</td>
+<td>11010010</td>
+<td>11010011</td>
+</tr>
+<tr class="even">
+<td>1111111</td>
+<td>11111111</td>
+<td>11111110</td>
+</tr>
+</tbody>
+</table>
+<p>从上可以看出奇偶校验就是在数据最后加一位，使数据中的1的数量保持偶数或奇数。</p>
+<h2 id="波特率和比特率-扩展知识">波特率和比特率 <em>（扩展知识）</em></h2>
+<p>比特率是我们常用来表达宽带速率的一种方法。看上去和波特率很像，如果波特率的信号码元只传1比特(bit)，那么它们之间是相等的。如果波特率的信号码元传10比特，那么波特率是比特率的10倍。所以，波特率和比特率表达的意义是不一样的，不要搞混了。</p>
+<h2 id="宽带比特率的实际下载速度-扩展知识">宽带比特率的实际下载速度 <em>（扩展知识）</em></h2>
+<p>Mbps和Mbit/s等效、kbit/s和kbps等效、bps和bit/s等效<br />
+1Mbps(Mbit/s) = 1<em>1024kbit(kbit/s) = 1</em>1024*1024bps(bit/s)，注意他们的单位都是bit(比特)，而不是byte(字节)，所以实际下载速度要除以八。1024 / 8 = 128 kb/s。</p>
+<h1 id="crc16校验">CRC16校验</h1>
+<p>CRC，Cyclic Redundancy Check循环冗余检验，是基于数据计算一组效验码，用于核对数据传输过程中是否被更改或传输错误。而ModBusRtu用到的是其中的CRC16校验。<br />
+其计算原理，可参考 <a href="https://www.bilibili.com/video/av63987698?from=search&amp;seid=2694821566388860623">1</a>、<a href="https://www.cnblogs.com/esestt/archive/2007/08/09/848856.html">2</a>、<a href="https://zh.wikipedia.org/wiki/%E5%BE%AA%E7%92%B0%E5%86%97%E9%A4%98%E6%A0%A1%E9%A9%97">3</a><br />
+以下是CRC16反向算法，经测试可用于ModBusRtu的CRC计算。</p>
+<pre><code><code>public class CRC16
+{
+    /// &lt;summary&gt;
+    /// 验证CRC16校验码
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;value&quot;&gt;校验数据&lt;/param&gt;
+    /// &lt;param name=&quot;poly&quot;&gt;多项式码&lt;/param&gt;
+    /// &lt;param name=&quot;crcInit&quot;&gt;校验码初始值&lt;/param&gt;
+    /// &lt;returns&gt;&lt;/returns&gt;
+    public static bool CheckCRC16(byte[] value, ushort poly = 0xA001, ushort crcInit = 0xFFFF)
+    {
+        if (value == null || !value.Any())
+            throw new ArgumentException(&quot;生成CRC16的入参有误&quot;);
+
+        var crc16 = GetCRC16(value, poly, crcInit);
+        if (crc16[crc16.Length - 2] == crc16[crc16.Length - 1] &amp;&amp; crc16[crc16.Length - 1] == 0)
+            return true;
+        return false;
+    }
+
+    /// &lt;summary&gt;
+    /// 计算CRC16校验码
+    /// &lt;/summary&gt;
+    /// &lt;param name=&quot;value&quot;&gt;校验数据&lt;/param&gt;
+    /// &lt;param name=&quot;poly&quot;&gt;多项式码&lt;/param&gt;
+    /// &lt;param name=&quot;crcInit&quot;&gt;校验码初始值&lt;/param&gt;
+    /// &lt;returns&gt;&lt;/returns&gt;
+    public static byte[] GetCRC16(byte[] value, ushort poly = 0xA001, ushort crcInit = 0xFFFF)
+    {
+        if (value == null || !value.Any())
+            throw new ArgumentException(&quot;生成CRC16的入参有误&quot;);
+
+        //运算
+        ushort crc = crcInit;
+        for (int i = 0; i &lt; value.Length; i++)
+        {
+            crc = (ushort)(crc ^ (value[i]));
+            for (int j = 0; j &lt; 8; j++)
+            {
+                crc = (crc &amp; 1) != 0 ? (ushort)((crc &gt;&gt; 1) ^ poly) : (ushort)(crc &gt;&gt; 1);
+            }
+        }
+        byte hi = (byte)((crc &amp; 0xFF00) &gt;&gt; 8);  //高位置
+        byte lo = (byte)(crc &amp; 0x00FF);         //低位置
+
+        byte[] buffer = new byte[value.Length + 2];
+        value.CopyTo(buffer, 0);
+        buffer[buffer.Length - 1] = hi;
+        buffer[buffer.Length - 2] = lo;
+        return buffer;
+    }
+}</code></pre>
+<h1 id="协议报文分析">协议报文分析</h1>
+<h3 id="数据读取-请求报文01-03-00-04-00-01-c5-cb">数据【读取-请求报文】：01 03 00 04 00 01 C5 CB</h3>
+<ul>
+<li>01 站号</li>
+<li>03 功能码</li>
+<li>00 04 读取的寄存器的起始地址</li>
+<li>00 01 读取寄存器的个数</li>
+<li>C5 CB 为CRC16的校验码【使用上面的CRC16类进行的计算结果，CRC16.GetCRC16([01,03,00,04,00,01])】</li>
+</ul>
+<h3 id="数据读取-响应报文01-03-02-00-21-78-5c">数据【读取-响应报文】：01 03 02 00 21 78 5C</h3>
+<ul>
+<li>01 站号</li>
+<li>03 功能码</li>
+<li>02 数据的字节长度</li>
+<li>00 21 数据</li>
+<li>78 5C 为CRC16的校验码</li>
+</ul>
+<h3 id="数据写入-请求报文01-10-00-04-00-01-02-00-21-67-cc">数据【写入-请求报文】：01 10 00 04 00 01 02 00 21 67 CC</h3>
+<ul>
+<li>01 站号</li>
+<li>10 功能码</li>
+<li>00 04 写入的寄存器的起始地址</li>
+<li>00 01 写入寄存器的个数</li>
+<li>02 写字节的个数</li>
+<li>00 21 要写的数据</li>
+<li>67 CC 为CRC16的校验码</li>
+</ul>
+<h3 id="数据写入-响应报文01-10-00-04-00-01-40-08">数据【写入-响应报文】：01 10 00 04 00 01 40 08</h3>
+<ul>
+<li>01 站号</li>
+<li>10 功能码</li>
+<li>00 04 写入的寄存器的起始地址</li>
+<li>00 01 写入寄存器的个数</li>
+<li>40 08 为CRC16的校验码</li>
+</ul>
+<p>有了报文的分析，具体的协议实现也就不难了。完整实现可参考<a href="https://github.com/zhaopeiym/IoTClient/blob/master/IoTClient/Clients/ModBus/ModBusRtuClient.cs" class="uri">https://github.com/zhaopeiym/IoTClient/blob/master/IoTClient/Clients/ModBus/ModBusRtuClient.cs</a></p>
+<h1 id="iotclient中modbusrtu协议的使用">IoTClient中ModBusRtu协议的使用</h1>
+<h3 id="安装">安装</h3>
+<p><a href="https://www.nuget.org/packages/IoTClient/">Nuget安装</a> <code>Install-Package IoTClient</code><br />
+或图形化安装<br />
+<img src="./images/IoTClient开发5 - ModBusRtu协议0.png" /></p>
+<h3 id="使用">使用</h3>
+<pre><code><code>//1、实例化客户端 - [COM端口名称,波特率,数据位,停止位,奇偶校验]
+ModBusRtuClient client = new ModBusRtuClient(&quot;COM3&quot;, 9600, 8, StopBits.One, Parity.None);
+
+//2、写操作 - 参数依次是：地址 、值 、站号 、功能码
+client.Write(&quot;4&quot;, (short)33, 2, 16);
+client.Write(&quot;4&quot;, (short)3344, 2, 16);
+
+//3、读操作 - 参数依次是：地址 、站号 、功能码
+var value = client.ReadInt16(&quot;4&quot;, 2, 3).Value;
+var value2 = client.ReadInt32(&quot;4&quot;, 2, 3).Value;
+
+//4、如果没有主动Open，则会每次读写操作的时候自动打开自动和关闭连接，这样会使读写效率大大减低。所以建议手动Open和Close。
+client.Open();
+
+//5、读写操作都会返回操作结果对象Result
+var result = client.ReadInt16(&quot;4&quot;, 2, 3);
+//5.1 读取是否成功（true或false）
+var isSucceed = result.IsSucceed;
+//5.2 读取失败的异常信息
+var errMsg = result.Err;
+//5.3 读取操作实际发送的请求报文
+var requst  = result.Requst;
+//5.4 读取操作服务端响应的报文
+var response = result.Response;
+//5.5 读取到的值
+var value3 = result.Value;</code></pre>
+<h1 id="参考">参考</h1>
+<ul>
+<li>同步至索引目录：<a href="https://www.cnblogs.com/zhaopei/p/11651790.html">《物联网基础组件IoTClient开发系列》</a></li>
+<li><a href="https://baike.baidu.com/item/%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1">https://baike.baidu.com/item/%E4%B8%B2%E5%8F%A3%E9%80%9A%E4%BF%A1</a></li>
+<li><a href="https://baike.baidu.com/item/%E6%AF%94%E7%89%B9%E7%8E%87/1022775">https://baike.baidu.com/item/%E6%AF%94%E7%89%B9%E7%8E%87/1022775</a></li>
+<li><a href="https://zh.wikipedia.org/wiki/%E5%A5%87%E5%81%B6%E6%A0%A1%E9%AA%8C%E4%BD%8D">https://zh.wikipedia.org/wiki/%E5%A5%87%E5%81%B6%E6%A0%A1%E9%AA%8C%E4%BD%8D</a></li>
+<li><a href="https://www.cnblogs.com/esestt/archive/2007/08/09/848856.html" class="uri">https://www.cnblogs.com/esestt/archive/2007/08/09/848856.html</a></li>
+<li><a href="https://zh.wikipedia.org/wiki/%E5%BE%AA%E7%92%B0%E5%86%97%E9%A4%98%E6%A0%A1%E9%A9%97">https://zh.wikipedia.org/wiki/%E5%BE%AA%E7%92%B0%E5%86%97%E9%A4%98%E6%A0%A1%E9%A9%97</a></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

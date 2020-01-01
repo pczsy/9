@@ -1,0 +1,82 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Flask session到期时间设置 用户登录与登出' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Flask session到期时间设置 用户登录与登出</center></div><div class='banquan'>原文出处:本文由博客园博主Jack_Zhai提供。<br/>
+原文连接:https://www.cnblogs.com/zhaiweiwei/p/11558114.html</div><br>
+    <p>flask版本 1.1.1</p>
+<p>最近学习Flask开发，看官方文档产生疑问，就是<code>session</code>有效期的问题，默认貌似是没有有效期的，只有关闭浏览器<code>session</code>才会失效，其实控制<code>session</code>的有效期非常简单，简单到只需要添加两行代码就可以实现，先看看官方<code>session</code>的示例代码。</p>
+<h4 id="官方文档示例代码">官方文档示例代码</h4>
+<p>官方示例简单明了的演示了<code>session</code>的使用，代码一共为3个页面，首页、登陆和登出<br />
+访问首页时，如果用户没有登陆或者<code>session</code>到期时，会提示<code>You are not logged in</code>。<br />
+访问登陆页时，如果是<code>POST</code>请求取出<code>username</code>保存到<code>session</code>中，并跳转到首页。<br />
+访问登出页面时，从<code>session</code>中移除<code>username</code>，并跳转到首页。</p>
+<pre><code><code>from flask import Flask, session, redirect, url_for, escape, request
+
+app = Flask(__name__)
+
+# Set the secret key to some random bytes. Keep this really secret!
+app.secret_key = b&#39;_5#y2L&quot;F4Q8z\n\xec]/&#39;
+
+@app.route(&#39;/&#39;)
+def index():
+    if &#39;username&#39; in session:
+        return &#39;Logged in as %s&#39; % escape(session[&#39;username&#39;])
+    return &#39;You are not logged in&#39;
+
+@app.route(&#39;/login&#39;, methods=[&#39;GET&#39;, &#39;POST&#39;])
+def login():
+    if request.method == &#39;POST&#39;:
+        session[&#39;username&#39;] = request.form[&#39;username&#39;]
+        return redirect(url_for(&#39;index&#39;))
+    return &#39;&#39;&#39;
+        &lt;form method=&quot;post&quot;&gt;
+            &lt;p&gt;&lt;input type=text name=username&gt;
+            &lt;p&gt;&lt;input type=submit value=Login&gt;
+        &lt;/form&gt;
+    &#39;&#39;&#39;
+
+@app.route(&#39;/logout&#39;)
+def logout():
+    # remove the username from the session if it&#39;s there
+    session.pop(&#39;username&#39;, None)
+    return redirect(url_for(&#39;index&#39;))
+
+if __name__ == &quot;__main__&quot;:
+    app.run()
+    
+    </code></pre>
+<p>把上面的代码保存起来运行，用浏览器访问各个功能，按F12键，查看<code>Request Headers</code>和<code>Response Headers</code>并观察它们的变化，发现登陆后在<code>Request Headers</code>的<code>Cookie</code>中多了<code>session=xxx</code>，这是因为我们在<code>login</code>视图函数中将用户提交的<code>username</code>保存在<code>session</code>中</p>
+<p>怎么设置session的到期时间呢</p>
+<h4 id="设置到期时间">设置到期时间</h4>
+<p>在<code>login</code>视图函数中添加以下两行代码</p>
+<pre><code><code>...
+...
+def login():   
+    session.permanent = True
+    app.permanent_session_lifetime = timedelta(minutes=1) # 设置session到期时间
+    ...
+...</code></pre>
+<p>设置到期时间后，在到期后会提示需要登录，在<code>session</code>到期前刷新浏览器，会重新计算<code>session</code>的到期时间</p>
+<p>在学习之前，有使用<code>flask_restful</code>开发过一个简单的API，是通过Token进行访问限制的，需要什么功能都是直接搜来用的，一直觉得在会话这款应该比较难理解和学习，没想到这么简单，希望对大家有所帮助，如有不对指出，还请指正，谢谢。</p>
+<p>每次浏览器关闭后再次打开就需要重新登陆，这似乎并不好，接下来学习如果在本地保存登陆状态。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

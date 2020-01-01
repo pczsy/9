@@ -1,0 +1,164 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修用Python校准本地时间' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>用Python校准本地时间</center></div><div class='banquan'>原文出处:本文由博客园博主Singvis提供。<br/>
+原文连接:https://www.cnblogs.com/singvis/p/11768713.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#概念">1. 概念</a><ul>
+        <li><a href="#基本概念">1.1 基本概念</a></li>
+        <li><a href="#版本演进">1.2 版本演进</a></li>
+        </ul></li>
+        <li><a href="#示例演示">2. 示例演示</a><ul>
+        <li><a href="#前提条件">2.1 前提条件</a></li>
+        <li><a href="#完整代码">2.2 完整代码</a></li>
+        <li><a href="#其他问题">2.3 其他问题</a></li>
+        </ul></li>
+        <li><a href="#参考信息">3. 参考信息：</a></li>
+        </ul>
+    </div>
+</div>
+<h1 id="概念">1. 概念</h1>
+<h2 id="基本概念">1.1 基本概念</h2>
+<p>时间，对于我们来说很重要，什么时候做什么？什么时候发生什么？没有时间的概念，生活就乱了。</p>
+<p>在日常的运维当中，我们更关注告警的时间：什么时候发生、什么事故、影响范围、什么时候解决，都是有关联性的，所以时间的准确性是非常非常的重要。</p>
+<p>你可能会好奇，时间到底是怎么来的呢？作为网工的你，可能你也不是很清楚吧？</p>
+<p><img src="./images/用Python校准本地时间0.png" alt="What.gif" /></p>
+<ul>
+<li><p>你是不是只知道NTP？</p></li>
+<li><p>标准参考时钟是什么？</p></li>
+<li><p>时间戳'1573401600' , 能看出这个是什么时间点？</p></li>
+</ul>
+<p>原子钟和GPS是作为标准参考时钟，全世界都以它为时钟源。</p>
+<p>从你手表或电脑的时间同步到时钟源，中间可能经过多层级，每一层叫做 'stratum' ,只是精确度不一样而已。当然，我们肯定不是直接和原子钟同步，我们可以选择最近的主时钟源，比如中国/香港等等。</p>
+<p>或者，你们公司内网可能是同步到内网的主时钟服务器，然后同步到互联网去。</p>
+<p>说完了时钟源，那么得有一个时间标准吧，全世界每个国家时区都不一样，不能用一个时间给全地球用吧。</p>
+<p>GMT(Greenwich Mean Time)： 格林尼治标准时间，以太阳横穿格林尼治子午线（本初子午线）来计算，现不推荐；</p>
+<p>UTC( Universal Time Coordinated )：协调世界时间 ， 以原子时秒长为基础 ，接近GMT，作为世界标准时间。</p>
+<p>为了统一世界的时间，1884年的国际经度会议规规定将全球划分为24个时区（东、西各12个时区）。规定英国（格林尼治天文台旧址）为零时区（GMT+00），东1-12区，西1-12区，中国北京处于东8区（GMT+08）</p>
+<p><img src="./images/用Python校准本地时间1.png" alt="时区.gif" /></p>
+<p>举个栗子：</p>
+<pre><code><code>UTC 时间：2019-11-10 16:00:00
+北京时间：2019-11-11 00:00:00  (UTC + 8个小时)</code></pre>
+<p>时钟源和标准时间说完了，那么接下来讲下时间同步通信机制。</p>
+<ul>
+<li><p>网络时间协议NTP（Network Time Protocol）是TCP/IP协议族里面的一个应用层协议。</p></li>
+<li><p>NTP用于在一系列分布式时间服务器与客户端之间同步时钟。</p></li>
+<li><p>NTP的实现基于IP和UDP，NTP报文通过UDP传输，端口号是123。</p></li>
+</ul>
+<h2 id="版本演进">1.2 版本演进</h2>
+<table>
+<thead>
+<tr class="header">
+<th>版本</th>
+<th>时间</th>
+<th>协议号</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>NTPv1</td>
+<td>1988年6月</td>
+<td>RFC 1059</td>
+<td>首次提出了完整的NTP规则以及算法，但是NTPv1不支持认证和控制消息</td>
+</tr>
+<tr class="even">
+<td>NTPv2</td>
+<td>1989年9月</td>
+<td>RFC 1119</td>
+<td>支持认证和控制消息</td>
+</tr>
+<tr class="odd">
+<td>NTPv3</td>
+<td>1992年3月</td>
+<td>RFC 1305</td>
+<td>正式引入了校正原则，并改进了时钟选择和时钟过滤算法。NTPv3目前应用较为广泛,仅支持IPv4</td>
+</tr>
+<tr class="even">
+<td>NTPv4</td>
+<td>2010年6月</td>
+<td>RFC 5905</td>
+<td>支持IPv4和IPv6，安全性更高。</td>
+</tr>
+</tbody>
+</table>
+<h1 id="示例演示">2. 示例演示</h1>
+<h2 id="前提条件">2.1 前提条件</h2>
+<p>准备好三方库：<code>ntplib</code></p>
+<p>安装方法：</p>
+<pre class="python"><code>pip3 install -i [https://pypi.douban.com/simple/](https://pypi.douban.com/simple/) ntplib</code></pre>
+<p>环境：Windows + Python3</p>
+<h2 id="完整代码">2.2 完整代码</h2>
+<pre class="python"><code>#!/usr/bin/env python3
+#-*- coding:UTF-8 -*-
+#欢迎关注微信公众号：点滴技术
+#这里有靠谱、有价值、免费分享
+​
+import ntplib
+import os,datetime
+​
+hosts = [&#39;0.cn.pool.ntp.org&#39;,&#39;1.cn.pool.ntp.org&#39;,&#39;2.cn.pool.ntp.org&#39;,&#39;3.cn.pool.ntp.org&#39;]
+​
+def ntp_client():
+ #创建实例，NTPClient()是一个类
+ t = ntplib.NTPClient()
+ for host in hosts:
+ try:
+ #ntp server可以填写主机和域名，建议用域名
+ #缺省端口为ntp， 版本为2， 超时为5s
+ #作用：查询 NTP 服务器，并返回对象
+ r = t.request(host , port=&#39;ntp&#39;, version=4, timeout=5)
+ if r:
+ break
+ except Exception as e:
+ pass
+ #显示的是时间戳
+ t = r.tx_time
+
+ #使用datetime模块,格式化：x年x月x日 时:分:秒.毫秒
+ _date,_time = str(datetime.datetime.fromtimestamp(t))[:22].split(&#39; &#39;)
+​
+ print(&quot;调整前时间是：&quot;, datetime.datetime.now())
+ os.system(&#39;date {} &amp;&amp; time {}&#39;.format(_date, _time))
+ print(&quot;调整后时间是：&quot;, datetime.datetime.now())
+​
+if __name__ == &#39;__main__&#39;:
+ #适用于Windows
+ ntp_client()</code></pre>
+<p>在windowns环境下，通过'管理员'运行'cmd',进入到对应的文件路径，运行结果如下所示：</p>
+<p><img src="./images/用Python校准本地时间2.png" alt="结果.png" /></p>
+<p>备注：截至目前，尚未找到能够在pycharm直接运行代码，报错 “客户端没有所需的特权”，后续研究 'ctypes' 看能否实现。</p>
+<h2 id="其他问题">2.3 其他问题</h2>
+<p>关于pycharm运行'os.system()' 出现中文乱码问题，需要改下编码问题，设置如下：</p>
+<p><img src="./images/用Python校准本地时间3.png" alt="pycharm_改编码.png" /></p>
+<h1 id="参考信息">3. 参考信息：</h1>
+<p><a href="https://www.pool.ntp.org/zone/asia">亚洲NTP服务器池：</a></p>
+<p><a href="https://tool.lu/timestamp/">时间戳转换</a></p>
+<p><a href="https://time.is/zh/">UTC</a></p>
+<p><a href="https://www.timeanddate.com/time/zones/">时区</a></p>
+<hr />
+<p>如果喜欢的我的文章，欢迎关注我的公众号：点滴技术，扫码关注，不定期分享</p>
+<p><img src="./images/用Python校准本地时间4.png" alt="点滴技术" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

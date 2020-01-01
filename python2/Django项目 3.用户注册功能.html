@@ -1,0 +1,2065 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django项目 3.用户注册功能' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django项目 3.用户注册功能</center></div><div class='banquan'>原文出处:本文由博客园博主Tmclri提供。<br/>
+原文连接:https://www.cnblogs.com/Tmclri/p/11529951.html</div><br>
+    <h3 class="md-end-block md-heading"><span class="md-plain">本章内容的补充知识点</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">导入库的良好顺序：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1.系统库<span class="md-tab"> <span class="md-plain">2.django库<span class="md-tab"> <span class="md-plain">3.自己定义的库（第三方库）</span></span></span></span></span></p>
+<p class="md-end-block md-p">&nbsp;</p>
+<p class="md-end-block md-p"><span class="md-plain">redis缓存数据库的数据调用速度快，但是不利于长时间保存。</span></p>
+<p class="md-end-block md-p"><span class="md-plain">mysql用于长时间存储，但是调用比较慢。</span></p>
+<p class="md-end-block md-p md-focus"><span class="md-plain">session会话存储的内容（以字典的方式存放）放在redis缓存里面，要设置过期时间</span></p>
+<p class="md-end-block md-p md-focus">&nbsp;</p>
+<h1 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">用户注册功能</span></h1>
+<h2 class="md-end-block md-heading"><span class="md-plain">一、用户模型设计</span></h2>
+<h4 class="md-end-block md-heading"><span class="md-plain">1. 用户表字段分析</span></h4>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">用户名</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">密码</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">手机号</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">邮箱</span></p>
+</li>
+</ul>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.用户模型设计</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">django的强大之处在于开发效率高，内置了权限模块之类的很多常用功能。在开始一个新的django项目时，如果权限模块中的User模型不满足项目要求，我们需要扩展或者自定义User模型。</span></p>
+<p class="md-end-block md-p"><span><strong>扩展User模型有两种方法</strong><span class="md-plain md-expand">：</span></span></p>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">如果你不需要改变数据库存储内容，只是改变行为，那么可以建立有一个基于User模型的代理模型。</span></p>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">如果想存储与User模型关联的信息，可以使用OneToOneField到包含其他信息字段的模型。这种one-to-one模型经常被称作Profile模型，因为它可能存储站点用户的非身份验证的相关信息。例如：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.contrib.auth.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> User
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Employee(models.Model):
+    user </span>= models.OneToOneField(User, on_delete=<span style="color: #000000;">models.CASCADE)
+    department </span>= models.CharField(max_length=100)</pre>
+</div>
+</li>
+</ol>
+<p class="md-end-block md-p"><span><strong>自定义User模型</strong><span class="md-plain">：</span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">如果不想使用django内置的权限系统，当然你需要自定义用户模型，这种情况不讨论。当然也不建议这么做，django内置权限系统有大的自定义功能扩展，而不是重复造轮子。</span></p>
+<p class="md-end-block md-p md-focus"><span class="md-plain">开启一个新项目，官方强烈推荐用户自定义用户模型，即是默认的用户模型目前已经足够，但是未来可能会要扩展。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.contrib.auth.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> AbstractUser
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> User(AbstractUser):
+    </span><span style="color: #0000ff;">pass</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-expand"><strong><span class="md-html-inline">注意:</span></strong><span class="md-plain">不要忘记在settings.py中设置<span><code>AUTH_USER_MODEL</code><span class="md-plain">指向它。</span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">一旦已经创立数据库表之后再去修改<span><code>AUTH_USER_MODEL</code><span class="md-plain">，会困难很多，因为它会影响外键和多对多关系。这个改动并不能自动完成，需要手动修复（巨坑）。</span></span></span></p>
+<p class="md-end-block md-p md-focus"><a href="https://docs.djangoproject.com/zh-hans/2.2/topics/auth/customizing/#extending-the-existing-user-model"><span class="md-plain">官方文档</span></a></p>
+<h4 class="md-end-block md-heading"><span class="md-plain md-expand">3.用户模型代码</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">根据上面的分析我们的用户模型代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.db <span style="color: #0000ff;">import</span><span style="color: #000000;"> models
+</span><span style="color: #0000ff;">from</span> django.contrib.auth.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> AbstractUser, UserManager as _UserManager
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> UserManager(_UserManager):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    自定义 user manager 修改在使用`python manage.py createsuperuser`命令时
+    可以提供email
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span> create_superuser(self, username, password, email=None, **<span style="color: #000000;">extra_fields):
+        </span><span style="color: #0000ff;">return</span> super().create_superuser(username=username, password=password, email=email, **<span style="color: #000000;">extra_fields)
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> User(AbstractUser):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    add mobile, email_active fields to Django user model.
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    mobile </span>= models.CharField(<span style="color: #800000;">'</span><span style="color: #800000;">手机号</span><span style="color: #800000;">'</span>, max_length=11, unique=True, help_text=<span style="color: #800000;">'</span><span style="color: #800000;">手机号</span><span style="color: #800000;">'</span>, error_messages={<span style="color: #800000;">'</span><span style="color: #800000;">unique</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">此手机号码已注册</span><span style="color: #800000;">'</span><span style="color: #000000;">})
+
+    email_active </span>= models.BooleanField(<span style="color: #800000;">'</span><span style="color: #800000;">邮箱状态</span><span style="color: #800000;">'</span>, default=<span style="color: #000000;">False)
+
+    </span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Meta:
+        db_table </span>= <span style="color: #800000;">'</span><span style="color: #800000;">tb_user</span><span style="color: #800000;">'</span>    <span style="color: #008000;">#</span><span style="color: #008000;"> 指定数据库表名</span>
+        verbose_name = <span style="color: #800000;">'</span><span style="color: #800000;">用户</span><span style="color: #800000;">'</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 在admin站点中显示名称</span>
+        verbose_name_plural = verbose_name  <span style="color: #008000;">#</span><span style="color: #008000;"> 显示复数</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__str__</span><span style="color: #000000;">(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.username
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> A list of the field names that will be prompted for</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> when create a user via createsuperuser management command.</span>
+    REQUIRED_FIELDS = [<span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> specify manager</span>
+    objects = UserManager()</pre>
+</div>
+<p>在settings.py文件中添加如下配置：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 自定义用户模型</span>
+AUTH_USER_MODEL = <span style="color: #800000;">'</span><span style="color: #800000;">user.User</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>然后运行命令进行数据库迁移：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 1. 相当于 在该app下建立 migrations目录，并记录下你所有的关于modes.py的改动，比如0001_initial.py， 但是这个改动还没有作用到数据库文件你可以手动打开这个文件，看看里面是什么</span>
+<span style="color: #000000;">python manage.py makemigrations
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 2. 将该改动作用到数据库文件，比如产生table之类</span>
+<span style="color: #000000;">python manage.py migrate</span></pre>
+</div>
+<p>再创建一个管理用户</p>
+<div class="cnblogs_code">
+<pre><code>(tzproject) ~/code/<span style="color: #000000;">tztz$ python manage.py createsuperuser
+用户名: admin
+手机号: 158xxxxxxxx
+Password: 
+Password (again): 
+密码长度太短。密码必须包含至少 </span><span style="color: #800080;">8</span><span style="color: #000000;"> 个字符。
+这个密码太常见了。
+Bypass password validation and create user anyway</span>? [y/<span style="color: #000000;">N]: y
+Superuser created successfully.</span></pre>
+</div>
+<p><span style="font-size: 1em;">1.设计接口思路</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">分析业务逻辑，明确在这个业务中需要涉及到几个相关子业务，将每个子业务党组欧一个接口来设计</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">分析接口的功能任务，明确接口的访问方式与返回数据：</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">接口的请求方式，如GET，POST，PUT等</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">接口的URL路径定义</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">需要接受的参数及参数格式（如路径参数，查询字符串，请求表单，JSON等）</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">返回的数据及数据格式</span></p>
+</li>
+</ul>
+</li>
+</ul>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.注册功能分析</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">流程图</span></p>
+</li>
+</ol>
+<p><span class="md-plain"><img src="./images/Django项目 3.用户注册功能0.png" alt="" /></span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;　　</p>
+<ol class="ol-list" start="2">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">功能</span></p>
+</li>
+</ol>
+<p class="md-end-block md-p"><span class="md-plain">根据流程图总结注册业务包含如下功能</span></p>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">注册页面</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">图片验证码</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">用户名检测是否注册</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain md-expand">手机号检测是否注册</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">短信验证码</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">注册保存用户数据</span></p>
+</li>
+</ul>
+<p class="md-end-block md-p md-focus"><span class="md-plain">因为图片验证码，短信验证码考虑到后续可能会在其他业务中用到，因此将验证码功能独立出来，创建一个新应用<span><strong>verification</strong><span class="md-plain">。</span></span></span></p>
+<h2 class="md-end-block md-heading"><span class="md-plain md-expand">三、图形验证码功能实现</span></h2>
+<h4 class="md-end-block md-heading"><span class="md-plain">1.接口设计</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">接口说明：</span></p>
+<table style="height: 88px; width: 306px;" border="0">
+<tbody>
+<tr>
+<td>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">类目</span></span></th></tr>
+</thead>
+</table>
+</td>
+<td>说明</td>
+</tr>
+<tr>
+<td>
+<table class="md-table">
+<tbody>
+<tr class="md-end-block md-focus-container">
+<td><span class="td-span md-focus"><span class="md-plain md-expand">请求方法 </span></span></td>
+</tr>
+</tbody>
+</table>
+</td>
+<td>GET</td>
+</tr>
+<tr>
+<td>url定义</td>
+<td>/image_code/</td>
+</tr>
+<tr>
+<td>参数格式</td>
+<td>查询参数</td>
+</tr>
+</tbody>
+</table>
+<p class="md-end-block md-p md-focus"><span class="md-plain">参数说明：</span></p>
+<table style="height: 44px; width: 363px;" border="0">
+<tbody>
+<tr>
+<td>参数名</td>
+<td>类型</td>
+<td>是否必须</td>
+<td>描述</td>
+</tr>
+<tr>
+<td>rand</td>
+<td>字符串</td>
+<td>否</td>
+<td><br />
+<table class="md-table">
+<tbody>
+<tr class="md-end-block md-focus-container">
+<td><span class="td-span"><span class="md-plain">输入的用户名</span></span></td>
+
+
+
+</tr>
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</td>
+
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+<p class="md-end-block md-p"><span class="md-plain">返回结果：</span><span class="md-plain">验证码图片</span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.后端代码</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">将验证码生成模块复制到根目录utils文件夹下</span></p>
+
+
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">创建新的app <span><strong>verification</strong><span class="md-plain">专门用来处理验证</span></span></span></p>
+<div class="cnblogs_code">
+<pre><code>cd ~/code/tztz/apps/<span style="color: #000000;">
+python ..</span>/manage.py startapp verification</pre>
+</div>
+</li>
+</ol>
+<p class="md-end-block md-p"><span class="md-plain">别忘了在settings文件中注册app</span></p>
+<p class="md-end-block md-p"><span class="md-html-inline md-expand">必须在这里要先安装pillow才能用chptcha（pip install pillow）</span></p>
+<ol class="ol-list" start="3">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">constants.py（用于设置常量的文件） 和 verification/views.py代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> constants.py 文件</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 保存设置常量，单位秒</span>
+IMAGE_CODE_EXPIRES = 300</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> views.py 文件</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> logging
+
+</span><span style="color: #0000ff;">from</span> django.http <span style="color: #0000ff;">import</span><span style="color: #000000;"> HttpResponse
+
+</span><span style="color: #0000ff;">from</span> utils.captcha.captcha <span style="color: #0000ff;">import</span><span style="color: #000000;"> captcha
+</span><span style="color: #0000ff;">from</span> . <span style="color: #0000ff;">import</span> constants  <span style="color: #008000;">#</span><span style="color: #008000;"> 先要在本app中创建constants.py文件</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> 日志器</span>
+logger = logging.getLogger(<span style="color: #800000;">'</span><span style="color: #800000;">django</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> image_code_view(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    生成图片验证码
+    url:/image_code/
+    :param request:
+    :return:
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    text, image </span>=<span style="color: #000000;"> captcha.generate_captcha()
+    request.session[</span><span style="color: #800000;">'</span><span style="color: #800000;">image_code</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> text
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将验证码存入session中</span>
+<span style="color: #000000;">    request.session.set_expiry(constants.IMAGE_CODE_EXPIRES)
+    logger.info(</span><span style="color: #800000;">'</span><span style="color: #800000;">Image code:{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(text))
+
+    </span><span style="color: #0000ff;">return</span> HttpResponse(content=image, content_type=<span style="color: #800000;">'</span><span style="color: #800000;">image/jpg</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">
+<p>verification/urls.py代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> path
+</span><span style="color: #0000ff;">from</span> . <span style="color: #0000ff;">import</span><span style="color: #000000;"> views
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> url的命名空间</span>
+app_name = <span style="color: #800000;">'</span><span style="color: #800000;">verification</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+urlpatterns </span>=<span style="color: #000000;"> [
+    path(</span><span style="color: #800000;">'</span><span style="color: #800000;">image_code/</span><span style="color: #800000;">'</span>, views.image_code_view, name=<span style="color: #800000;">'</span><span style="color: #800000;">image_code</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+]</span></pre>
+</div>
+</li>
+<li class="md-list-item md-focus-container">根urls.py代码如下：
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> path, include
+
+urlpatterns </span>=<span style="color: #000000;"> [
+    path(</span><span style="color: #800000;">''</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">news.urls</span><span style="color: #800000;">'</span><span style="color: #000000;">)),
+    path(</span><span style="color: #800000;">''</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">verification.urls</span><span style="color: #800000;">'</span><span style="color: #000000;">)),
+]</span></pre>
+</div>
+<p>验证码的走向图:<br /><img src="./images/Django项目 3.用户注册功能1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+
+</li>
+
+
+</ol>
+<h2 class="md-end-block md-heading"><span class="md-plain">四、注册页面</span></h2>
+<h4 class="md-end-block md-heading"><span class="md-plain">1.接口设计</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">接口说明：</span></p>
+<table style="height: 88px; width: 367px;" border="0">
+<tbody>
+<tr>
+<td>类目</td>
+<td><br />
+<table class="md-table">
+<thead>
+<tr class="md-end-block md-focus-container"><th><span class="td-span"><span class="md-plain">说明</span></span></th></tr>
+
+
+
+</thead>
+
+
+
+</table>
+
+
+</td>
+
+
+</tr>
+<tr>
+<td>
+<table class="md-table">
+<tbody>
+<tr class="md-end-block md-focus-container">
+<td><span class="td-span md-focus"><span class="md-plain md-expand">请求方法 </span></span></td>
+
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
+</td>
+<td>GET</td>
+
+
+</tr>
+<tr>
+<td>url定义</td>
+<td>
+<table class="md-table">
+<tbody>
+<tr class="md-end-block md-focus-container">
+<td><span class="td-span md-focus"><span class="md-plain md-expand">&nbsp;</span></span></td>
+<td><span class="td-span"><span class="md-plain">/user/register/</span></span></td>
+
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
+</td>
+
+
+</tr>
+<tr>
+<td>参数格式</td>
+<td>&nbsp;</td>
+
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+
+
+</li>
+<li class="md-list-item md-focus-container">返回结果:&nbsp;注册页面</li>
+
+
+</ol>
+<h4 class="md-end-block md-heading"><span class="md-plain md-expand">2.后端代码</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">user/views.py</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> render
+</span><span style="color: #0000ff;">from</span> django.views <span style="color: #0000ff;">import</span><span style="color: #000000;"> View
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> RegisterView(View):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(self, request):
+        </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">user/register.html</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">user/urls.py
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> path, include
+</span><span style="color: #0000ff;">from</span> . <span style="color: #0000ff;">import</span><span style="color: #000000;"> views
+app_name </span>= <span style="color: #800000;">'</span><span style="color: #800000;">user</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+urlpatterns </span>=<span style="color: #000000;"> [
+    path(</span><span style="color: #800000;">'</span><span style="color: #800000;">register/</span><span style="color: #800000;">'</span>, views.RegisterView.as_view(), name=<span style="color: #800000;">'</span><span style="color: #800000;">register</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+]</span></pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">根urls.py
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> path, include
+
+urlpatterns </span>=<span style="color: #000000;"> [
+    path(</span><span style="color: #800000;">''</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">news.urls</span><span style="color: #800000;">'</span><span style="color: #000000;">)),
+    path(</span><span style="color: #800000;">'</span><span style="color: #800000;">user/</span><span style="color: #800000;">'</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">user.urls</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+]</span></pre>
+</div>
+<p>&nbsp;</p>
+</li>
+</ol>
+<h4 class="md-end-block md-heading"><span class="md-plain">3.前端页面代码</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain md-expand">user/register.html代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}注册{% endblock title %}
+
+{% block link %}
+</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">link </span><span style="color: #ff0000;">rel</span><span style="color: #0000ff;">="stylesheet"</span><span style="color: #ff0000;"> href</span><span style="color: #0000ff;">="{% static 'css/user/auth.css' %}"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock link %}
+
+{% block main_start %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">main </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="container"</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="register-contain"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="top-contain"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h4 </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="please-register"</span><span style="color: #0000ff;">&gt;</span>请注册<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h4</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="javascript:void(0);"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="login"</span><span style="color: #0000ff;">&gt;</span>立即登录 <span style="color: #ff0000;">&amp;gt;</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">action</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> method</span><span style="color: #0000ff;">="post"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-contain"</span><span style="color: #0000ff;">&gt;</span>
+
+
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入用户名"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #ff0000;"> autocomplete</span><span style="color: #0000ff;">="off"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入密码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入确认密码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password_repeat"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="tel"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入手机号"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="telephone"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #ff0000;"> autocomplete</span><span style="color: #0000ff;">="off"</span><span style="color: #ff0000;"> autofocus</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入图形验证码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="captcha_graph"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-captcha"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="javascript:void(0);"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="captcha-graph-img"</span><span style="color: #0000ff;">&gt;</span>
+          <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{% url 'verification:image_code' %}"</span><span style="color: #ff0000;"> alt</span><span style="color: #0000ff;">="验证码"</span><span style="color: #ff0000;"> title</span><span style="color: #0000ff;">="点击刷新"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入短信验证码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="sms_captcha"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-captcha"</span><span style="color: #ff0000;"> autocomplete</span><span style="color: #0000ff;">="off"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="javascript:void(0);"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="sms-captcha"</span><span style="color: #ff0000;"> title</span><span style="color: #0000ff;">="发送验证码"</span><span style="color: #0000ff;">&gt;</span>获取短信验证码<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="立即注册"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="register-btn"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">main</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock main_start %}
+{% block script %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">script </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{% static 'js/user/auth.js' %}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">script</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock script %}</span></pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">
+<h4 class="md-end-block md-heading"><span class="md-plain">js代码</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">点击验证码图片刷新的js代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code>$(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+    let $img </span>= $('.form-contain .form-item .captcha-graph-img img'<span style="color: #000000;">);
+    
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.点击刷新图像验证码</span>
+    $img.click(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+        $img.attr(</span>'src', '/image_code/?rand=' +<span style="color: #000000;"> Math.random())
+    });
+});</span></pre>
+</div>
+<p>&nbsp;</p>
+</li>
+</ol>
+<h2 class="md-end-block md-heading"><span class="md-plain md-expand">五、json响应数据结构设计</span></h2>
+<h4 class="md-end-block md-heading"><span class="md-plain">1.结构设计</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">实际项目是多人协同开发，特别是前后端交互，后端返回数据结构要一致。</span></p>
+<div class="cnblogs_code">
+<pre><code>{"errno": "0", "errmsg": "OK", "data": {...}}</pre>
+</div>
+<table style="height: 88px; width: 452px;" border="0">
+<tbody>
+<tr>
+<td>字段</td>
+<td>类型</td>
+<td>说明</td>
+</tr>
+<tr>
+<td>errno</td>
+<td>字符串</td>
+<td><br />
+<table class="md-table">
+<tbody>
+<tr class="md-end-block md-focus-container">
+<td><span class="td-span"><span class="md-plain">错误编码</span></span></td>
+
+
+
+</tr>
+
+
+
+</tbody>
+
+
+
+</table>
+
+
+</td>
+
+
+</tr>
+<tr>
+<td>errmsg</td>
+<td>字符串</td>
+<td>错误信息</td>
+
+
+</tr>
+<tr>
+<td>data</td>
+<td>&nbsp;</td>
+<td>返回数据</td>
+
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+<p>在项目根目录中utils文件夹下创建res_code.py文件，用于定义错误编码，代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Code:
+    OK </span>= <span style="color: #800000;">"</span><span style="color: #800000;">0</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    DBERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4001</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    NODATA </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4002</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    DATAEXIST </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4003</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    DATAERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4004</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    METHERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4005</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    SMSERROR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4006</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    SMSFAIL </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4007</span><span style="color: #800000;">"</span><span style="color: #000000;">
+
+    SESSIONERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4101</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    LOGINERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4102</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    PARAMERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4103</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    USERERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4104</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    ROLEERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4105</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    PWDERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4106</span><span style="color: #800000;">"</span><span style="color: #000000;">
+
+    SERVERERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4500</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    UNKOWNERR </span>= <span style="color: #800000;">"</span><span style="color: #800000;">4501</span><span style="color: #800000;">"</span><span style="color: #000000;">
+
+
+error_map </span>=<span style="color: #000000;"> {
+    Code.OK: </span><span style="color: #800000;">"</span><span style="color: #800000;">成功</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.DBERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">数据库查询错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.NODATA: </span><span style="color: #800000;">"</span><span style="color: #800000;">无数据</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.DATAEXIST: </span><span style="color: #800000;">"</span><span style="color: #800000;">数据已存在</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.DATAERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">数据错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.METHERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">方法错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.SMSERROR: </span><span style="color: #800000;">"</span><span style="color: #800000;">发送短信验证码异常</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.SMSFAIL: </span><span style="color: #800000;">"</span><span style="color: #800000;">发送短信验证码失败</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+
+    Code.SESSIONERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">用户未登录</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.LOGINERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">用户登录失败</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.PARAMERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">参数错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.USERERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">用户不存在或未激活</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.ROLEERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">用户身份错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.PWDERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">密码错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+
+    Code.SERVERERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">内部错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    Code.UNKOWNERR: </span><span style="color: #800000;">"</span><span style="color: #800000;">未知错误</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+}</span></pre>
+</div>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">2.快捷方法</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">为了方便定义一个快捷方法，在utils目录下创建json_res.py文件（也可以直接在res_code文件中直接加上）代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.http <span style="color: #0000ff;">import</span><span style="color: #000000;"> JsonResponse
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 在res_code文件中时不用加下面这个导入</span>
+<span style="color: #0000ff;">from</span> .res_code <span style="color: #0000ff;">import</span><span style="color: #000000;"> Code
+
+
+</span><span style="color: #0000ff;">def</span> json_response(errno=Code.OK, errmsg=<span style="color: #800000;">''</span>, data=None, kwargs=<span style="color: #000000;">None):
+json_dict </span>=<span style="color: #000000;"> {
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">errno</span><span style="color: #800000;">'</span><span style="color: #000000;">: errno,
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">errmsg</span><span style="color: #800000;">'</span><span style="color: #000000;">: errmsg,
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span><span style="color: #000000;">: data
+    }
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 额外的字段的扩展</span>
+    <span style="color: #0000ff;">if</span> kwargs <span style="color: #0000ff;">and</span><span style="color: #000000;"> isinstance(kwargs, dict) :
+        json_dict.update(kwargs)
+    
+    </span><span style="color: #0000ff;">return</span> JsonResponse(json_dict)</pre>
+</div>
+<h2 class="md-end-block md-heading"><span class="md-plain">六、判断用户是否注册功能实现</span></h2>
+<h4 class="md-end-block md-heading"><span class="md-plain">1.接口设计</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">接口说明：</span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">类目</span></span></th><th><span class="td-span"><span class="md-plain">说明</span></span></th></tr>
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">请求方法</span></span></td>
+<td><span class="td-span"><span class="md-plain">GET</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">url定义</span></span></td>
+<td><span class="td-span"><span><code>/username/(?P&lt;username&gt;\w{5,20})/</code></span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">参数格式</span></span></td>
+<td><span class="td-span"><span class="md-plain">url路径参数 </span></span></td>
+</tr>
+</tbody>
+</table>
+<p class="md-end-block md-p"><span class="md-plain md-expand">参数说明：</span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">参数名</span></span></th><th><span class="td-span"><span class="md-plain">类型</span></span></th><th><span class="td-span"><span class="md-plain">是否必须</span></span></th><th><span class="td-span"><span class="md-plain">描述</span></span></th></tr>
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">username</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">输入的用户名</span></span></td>
+</tr>
+</tbody>
+</table>
+<p class="md-end-block md-p md-focus"><span class="md-plain">返回结果：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{
+    </span>"errno": "0"<span style="color: #000000;">, 
+     </span>"errmsg": "OK"<span style="color: #000000;">,                     # 错误信息
+     </span>"data"<span style="color: #000000;">: {
+        </span>"username": "username"<span style="color: #000000;">,            # 查询的用户名
+        </span>"count": 1<span style="color: #000000;">                        # 用户名查询的数量
+    }
+}</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.后端代码</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">创建新的app <span class="md-expand"><strong>verification</strong><span class="md-plain">专门用来处理验证（上面图形验证码中已经创建,所以这个是多余的）</span></span></span></p>
+<div class="cnblogs_code">
+<pre><code>cd ~/code/tztz/apps/<span style="color: #000000;">
+python ..</span>/manage.py startapp verification</pre>
+</div>
+</li>
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p"><span class="md-plain md-expand">verification/views.py代码</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> user.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> User
+</span><span style="color: #0000ff;">from</span> utils.json_res <span style="color: #0000ff;">import</span><span style="color: #000000;"> json_response
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> check_username_view(request, username):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    校验用户名
+    url: /username/(?p&lt;username&gt;\w{5,20})/
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    data </span>=<span style="color: #000000;"> {
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span><span style="color: #000000;">: username,
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">count</span><span style="color: #800000;">'</span>: User.objects.filter(username=<span style="color: #000000;">username).count()
+    }
+
+    </span><span style="color: #0000ff;">return</span> json_response(data=data)</pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">verification/urls.py代码
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> path, re_path
+</span><span style="color: #0000ff;">from</span> . <span style="color: #0000ff;">import</span><span style="color: #000000;"> views
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> url的命名空间</span>
+app_name = <span style="color: #800000;">'</span><span style="color: #800000;">verification</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+urlpatterns </span>=<span style="color: #000000;"> [
+    path(</span><span style="color: #800000;">'</span><span style="color: #800000;">image_code/</span><span style="color: #800000;">'</span>, views.image_code_view, name=<span style="color: #800000;">'</span><span style="color: #800000;">image_code</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+    re_path(</span><span style="color: #800000;">'</span><span style="color: #800000;">username/(?P&lt;username&gt;\w{5,20})/</span><span style="color: #800000;">'</span>, views.check_username_view, name=<span style="color: #800000;">'</span><span style="color: #800000;">check_username</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+]</span></pre>
+</div>
+<p>&nbsp;</p>
+</li>
+</ol>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">3.前端页面代码</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">user/register.html代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{% extends 'base/base.html' %}
+{% load static %}
+{% block title %}注册{% endblock title %}
+
+{% block link %}
+</span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">link </span><span style="color: #ff0000;">rel</span><span style="color: #0000ff;">="stylesheet"</span><span style="color: #ff0000;"> href</span><span style="color: #0000ff;">="{% static 'css/user/auth.css' %}"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock link %}
+
+{% block main_start %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">main </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="container"</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="register-contain"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="top-contain"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h4 </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="please-register"</span><span style="color: #0000ff;">&gt;</span>请注册<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h4</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="javascript:void(0);"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="login"</span><span style="color: #0000ff;">&gt;</span>立即登录 <span style="color: #ff0000;">&amp;gt;</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">form </span><span style="color: #ff0000;">action</span><span style="color: #0000ff;">=""</span><span style="color: #ff0000;"> method</span><span style="color: #0000ff;">="post"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-contain"</span><span style="color: #0000ff;">&gt;</span>
+
+
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入用户名"</span><span style="color: #ff0000;"> id</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="username"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span> <span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入密码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="password"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入确认密码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="password_repeat"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="tel"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入手机号"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="telephone"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #ff0000;"> autocomplete</span><span style="color: #0000ff;">="off"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入图形验证码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="captcha_graph"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-captcha"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="javascript:void(0);"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="captcha-graph-img"</span><span style="color: #0000ff;">&gt;</span>
+          <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{% url 'verification:image_code' %}"</span><span style="color: #ff0000;"> alt</span><span style="color: #0000ff;">="验证码"</span><span style="color: #ff0000;"> title</span><span style="color: #0000ff;">="点击刷新"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="请输入短信验证码"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="sms_captcha"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-captcha"</span><span style="color: #ff0000;"> autocomplete</span><span style="color: #0000ff;">="off"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">a </span><span style="color: #ff0000;">href</span><span style="color: #0000ff;">="javascript:void(0);"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="sms-captcha"</span><span style="color: #ff0000;"> title</span><span style="color: #0000ff;">="发送验证码"</span><span style="color: #0000ff;">&gt;</span>获取短信验证码<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">a</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-item"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="submit"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="立即注册"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="register-btn"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">form</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">main</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock main_start %}
+
+{% block script %}
+    </span><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">script </span><span style="color: #ff0000;">src</span><span style="color: #0000ff;">="{% static 'js/user/auth.js' %}"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">script</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+{% endblock script %}</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain">4.前端js代码</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">user/auth.js代码：</span></p>
+<div class="cnblogs_code">
+<pre><code>$(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义状态变量</span>
+    let isUsernameReady = <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isMobileReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isSmsCodeReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.点击刷新图像验证码</span>
+    let $img = $('.form-contain .form-item .captcha-graph-img img'<span style="color: #000000;">);
+    
+
+    $img.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+        $img.attr(</span>'src', '/image_code/?rand=' +<span style="color: #000000;"> Math.random())
+    });
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.鼠标离开用户名输入框校验用户名</span>
+    let $username = $('#username'<span style="color: #000000;">);
+    $username.blur(fnCheckUsername);
+    
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckUsername () {
+        isUsernameReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let sUsername </span>= $username.val();    <span style="color: #008000;">//</span><span style="color: #008000;">获取用户字符串</span>
+        <span style="color: #0000ff;">if</span> (sUsername === ''<span style="color: #000000;">){
+            message.showError(</span>'用户名不能为空！'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (!(/^\w{5,20}$/<span style="color: #000000;">).test(sUsername)){
+            message.showError(</span>'请输入5-20个字符的用户名'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        $.ajax({
+            url: </span>'/username/' + sUsername + '/'<span style="color: #000000;">,
+            type: </span>'GET'<span style="color: #000000;">,
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.data.count !== 0<span style="color: #000000;">){
+                    message.showError(data.data.username </span>+ '已经注册，请重新输入！'<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showInfo(data.data.username </span>+ '可以正常使用！'<span style="color: #000000;">)
+                    isUsernameReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.检测密码是否一致</span>
+    let $passwordRepeat = $('input[name="password_repeat"]'<span style="color: #000000;">);
+    $passwordRepeat.blur(fnCheckPassword);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckPassword () {
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let password </span>= $('input[name="password"]'<span style="color: #000000;">).val();
+        let passwordRepeat </span>=<span style="color: #000000;"> $passwordRepeat.val();
+        </span><span style="color: #0000ff;">if</span> (password === '' || passwordRepeat === ''<span style="color: #000000;">){
+            message.showError(</span>'密码不能为空'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password !==<span style="color: #000000;"> passwordRepeat){
+            message.showError(</span>'两次密码输入不一致'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password ===<span style="color: #000000;"> passwordRepeat){
+            isPasswordReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+        }
+    }</span></pre>
+</div>
+<h2 class="md-end-block md-heading">&nbsp;</h2>
+<h2 class="md-end-block md-heading"><span class="md-plain">七、判断手机号码是否注册功能</span></h2>
+<h4 class="md-end-block md-heading md-focus"><span class="md-plain md-expand">1.接口设计</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">接口说明：<br /></span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">类目</span></span></th><th><span class="td-span"><span class="md-plain">说明</span></span></th></tr>
+
+
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">请求方法</span></span></td>
+<td><span class="td-span"><span class="md-plain">GET</span></span></td>
+
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">url定义</span></span></td>
+<td><span class="td-span"><span><code>/mobile/(?P&lt;mobile&gt;\1[3-9]\d{9})/</code></span></span></td>
+
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">参数格式</span></span></td>
+<td><span class="td-span"><span class="md-plain">url路径参数</span></span></td>
+
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+<p class="md-end-block md-p"><span class="md-plain">参数说明：</span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">参数名</span></span></th><th><span class="td-span"><span class="md-plain">类型</span></span></th><th><span class="td-span"><span class="md-plain">是否必须</span></span></th><th><span class="td-span"><span class="md-plain">描述</span></span></th></tr>
+
+
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">moblie</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">输入的手机号码</span></span></td>
+
+
+</tr>
+
+
+</tbody>
+
+
+</table>
+<p class="md-end-block md-p md-focus"><span class="md-plain">返回结果：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{
+    </span>"errno": "0"<span style="color: #000000;">, 
+     </span>"errmsg": "OK"<span style="color: #000000;">, 
+     </span>"data"<span style="color: #000000;">: {
+        </span>"mobile": "13xxxxxxxxx"<span style="color: #000000;">,            # 查询的手机号
+        </span>"count": 1<span style="color: #000000;">                        # 手机号查询的数量
+    }
+}</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain md-expand">2.后端代码</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">verification/views.py代码</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> &middot;&middot;&middot;&middot;</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> check_mobile_view(request, mobile):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    校验手机号是否存在
+    url:/moblie/(?P&lt;moblie&gt;1[3-9]\d{9})/
+    :param request:
+    :param username:
+    :return:
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    data </span>=<span style="color: #000000;"> {
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">: mobile,
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">count</span><span style="color: #800000;">'</span>: User.objects.filter(mobile=<span style="color: #000000;">mobile).count()
+    }
+
+    </span><span style="color: #0000ff;">return</span> json_response(data=data)</pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">verification/urls.py
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> path, re_path
+</span><span style="color: #0000ff;">from</span> . <span style="color: #0000ff;">import</span><span style="color: #000000;"> views
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> url的命名空间</span>
+app_name = <span style="color: #800000;">'</span><span style="color: #800000;">verification</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+urlpatterns </span>=<span style="color: #000000;"> [
+    path(</span><span style="color: #800000;">'</span><span style="color: #800000;">image_code/</span><span style="color: #800000;">'</span>, views.image_code_view, name=<span style="color: #800000;">'</span><span style="color: #800000;">image_code</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+    re_path(</span><span style="color: #800000;">'</span><span style="color: #800000;">username/(?P&lt;username&gt;\w{5,20})/</span><span style="color: #800000;">'</span>, views.check_username_view, name=<span style="color: #800000;">'</span><span style="color: #800000;">check_username</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+    re_path(</span><span style="color: #800000;">'</span><span style="color: #800000;">mobile/(?P&lt;mobile&gt;1[3-9]\d{9})/</span><span style="color: #800000;">'</span>, views.check_mobile_view, name=<span style="color: #800000;">'</span><span style="color: #800000;">check_mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+]</span></pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">前端js代码:
+<div class="cnblogs_code">
+<pre><code>$(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义状态变量</span>
+    let isUsernameReady = <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isMobileReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isSmsCodeReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.点击刷新图像验证码</span>
+    let $img = $('.form-contain .form-item .captcha-graph-img img'<span style="color: #000000;">);
+    
+
+    $img.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+        $img.attr(</span>'src', '/image_code/?rand=' +<span style="color: #000000;"> Math.random())
+    });
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.鼠标离开用户名输入框校验用户名</span>
+    let $username = $('#username'<span style="color: #000000;">);
+    $username.blur(fnCheckUsername);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckUsername () {
+        isUsernameReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let sUsername </span>= $username.val();    <span style="color: #008000;">//</span><span style="color: #008000;">获取用户字符串</span>
+        <span style="color: #0000ff;">if</span> (sUsername === ''<span style="color: #000000;">){
+            message.showError(</span>'用户名不能为空！'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (!(/^\w{5,20}$/<span style="color: #000000;">).test(sUsername)){
+            message.showError(</span>'请输入5-20个字符的用户名'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        $.ajax({
+            url: </span>'/username/' + sUsername + '/'<span style="color: #000000;">,
+            type: </span>'GET'<span style="color: #000000;">,
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.data.count !== 0<span style="color: #000000;">){
+                    message.showError(data.data.username </span>+ '已经注册，请重新输入！'<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showInfo(data.data.username </span>+ '可以正常使用！'<span style="color: #000000;">)
+                    isUsernameReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.检测密码是否一致</span>
+    let $passwordRepeat = $('input[name="password_repeat"]'<span style="color: #000000;">);
+    $passwordRepeat.blur(fnCheckPassword);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckPassword () {
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let password </span>= $('input[name="password"]'<span style="color: #000000;">).val();
+        let passwordRepeat </span>=<span style="color: #000000;"> $passwordRepeat.val();
+        </span><span style="color: #0000ff;">if</span> (password === '' || passwordRepeat === ''<span style="color: #000000;">){
+            message.showError(</span>'密码不能为空'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password !==<span style="color: #000000;"> passwordRepeat){
+            message.showError(</span>'两次密码输入不一致'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password ===<span style="color: #000000;"> passwordRepeat){
+            isPasswordReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+        }
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.检查手机号码是否可用</span>
+    let $mobile = $('input[name="mobile"]'<span style="color: #000000;">);
+    $mobile.blur(fnCheckMobile);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckMobile () {
+        isMobileReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        let sMobile </span>=<span style="color: #000000;"> $mobile.val();
+        </span><span style="color: #0000ff;">if</span>(sMobile === ''<span style="color: #000000;">){
+            message.showError(</span>'手机号码不能为空'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span>(!(/^1[3-9]\d{9}$/<span style="color: #000000;">).test(sMobile)){
+            message.showError(</span>'手机号码格式不正确'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+
+        $.ajax({
+            url: </span>'/mobile/' + sMobile + '/'<span style="color: #000000;">,
+            type: </span>'GET'<span style="color: #000000;">,
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.data.count !== 0<span style="color: #000000;">){
+                    message.showError(data.data.mobile </span>+ '已经注册，请重新输入！'<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showInfo(data.data.mobile </span>+ '可以正常使用！'<span style="color: #000000;">);
+                    isMobileReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+
+    }
+});</span></pre>
+</div>
+<p>&nbsp;</p>
+</li>
+</ol>
+<h2 class="md-end-block md-heading"><span class="md-plain md-expand">八、获取短信验证码功能</span></h2>
+<h4 class="md-end-block md-heading"><span class="md-plain">1.业务流程分析</span></h4>
+<ul class="ul-list" data-mark="-">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">校验手机号码</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">检查图片验证码是否正确</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">检查是否在60s内发送记录</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">生成短信验证码</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">发送短信</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">保存短信验证码与发送记录</span></p>
+</li>
+</ul>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.接口设计</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">接口说明：</span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">类目</span></span></th><th><span class="td-span"><span class="md-plain">说明</span></span></th></tr>
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">请求方法</span></span></td>
+<td><span class="td-span"><span class="md-plain">POST</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">url定义</span></span></td>
+<td><span class="td-span"><span><code>/sms_code/</code></span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">参数格式</span></span></td>
+<td><span class="td-span"><span class="md-plain">表单</span></span></td>
+</tr>
+</tbody>
+</table>
+<p class="md-end-block md-p"><span class="md-plain">参数说明：</span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">参数名</span></span></th><th><span class="td-span"><span class="md-plain">类型</span></span></th><th><span class="td-span"><span class="md-plain">是否必须</span></span></th><th><span class="td-span"><span class="md-plain">描述</span></span></th></tr>
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">moblie</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">用户输入的手机号码</span></span></td>
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">captcha</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">用户输入的验证码文本</span></span></td>
+</tr>
+</tbody>
+</table>
+<p class="md-end-block md-p md-focus"><span class="md-plain">返回结果：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{
+    </span>"errno": "0"<span style="color: #000000;">, 
+     </span>"errmsg": "发送短信验证码成功!"<span style="color: #000000;">, 
+}</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain">3.后端代码</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">verification/views.py代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> logging
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> random
+
+</span><span style="color: #0000ff;">from</span> django.http <span style="color: #0000ff;">import</span><span style="color: #000000;"> HttpResponse
+</span><span style="color: #0000ff;">from</span> django.views <span style="color: #0000ff;">import</span><span style="color: #000000;"> View
+</span><span style="color: #0000ff;">from</span> django_redis <span style="color: #0000ff;">import</span><span style="color: #000000;"> get_redis_connection
+
+</span><span style="color: #0000ff;">from</span> user.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> User
+</span><span style="color: #0000ff;">from</span> utils.json_res <span style="color: #0000ff;">import</span><span style="color: #000000;"> json_response
+</span><span style="color: #0000ff;">from</span> utils.res_code <span style="color: #0000ff;">import</span><span style="color: #000000;"> Code, error_map
+</span><span style="color: #0000ff;">from</span> utils.captcha.captcha <span style="color: #0000ff;">import</span><span style="color: #000000;"> captcha
+</span><span style="color: #0000ff;">from</span> utils.yuntongxun.sms <span style="color: #0000ff;">import</span><span style="color: #000000;"> CCP
+
+</span><span style="color: #0000ff;">from</span> . <span style="color: #0000ff;">import</span><span style="color: #000000;"> constants
+</span><span style="color: #0000ff;">from</span> .forms <span style="color: #0000ff;">import</span><span style="color: #000000;"> CheckImagForm
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 日志器</span>
+logger = logging.getLogger(<span style="color: #800000;">'</span><span style="color: #800000;">django</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> image_code_view(request):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    生成图片验证码
+    url:/image_code/
+    :param request:
+    :return:
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    text, image </span>=<span style="color: #000000;"> captcha.generate_captcha()
+    request.session[</span><span style="color: #800000;">'</span><span style="color: #800000;">image_code</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> text
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将验证码存入session中</span>
+<span style="color: #000000;">    request.session.set_expiry(constants.IMAGE_CODE_EXPIRES)
+    logger.info(</span><span style="color: #800000;">'</span><span style="color: #800000;">Image code:{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(text))
+
+    </span><span style="color: #0000ff;">return</span> HttpResponse(content=image, content_type=<span style="color: #800000;">'</span><span style="color: #800000;">image/jpg</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> check_username_view(request, username):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    校验用户名是否存在
+    url:/username/(?P&lt;username&gt;\w{5,20})/
+    :param request:
+    :param username:
+    :return:
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    data </span>=<span style="color: #000000;"> {
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span><span style="color: #000000;">: username,
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">count</span><span style="color: #800000;">'</span>: User.objects.filter(username=<span style="color: #000000;">username).count()
+    }
+
+    </span><span style="color: #0000ff;">return</span> json_response(data=<span style="color: #000000;">data)
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> check_mobile_view(request, mobile):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    校验手机号是否存在
+    url:/moblie/(?P&lt;moblie&gt;1[3-9]\d{9})/
+    :param request:
+    :param username:
+    :return:
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    data </span>=<span style="color: #000000;"> {
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">: mobile,
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">count</span><span style="color: #800000;">'</span>: User.objects.filter(mobile=<span style="color: #000000;">mobile).count()
+    }
+
+    </span><span style="color: #0000ff;">return</span> json_response(data=<span style="color: #000000;">data)
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> SmsCodeView(View):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    发送短信验证码
+    POST /sms_codes/
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> post(self, request):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1.校验参数</span>
+<span style="color: #000000;">
+        form </span>= CheckImagForm(request.POST, request=<span style="color: #000000;">request)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> form.is_valid():
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.获取手机</span>
+            mobile = form.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 3.生成手机验证码</span>
+            sms_code = <span style="color: #800000;">''</span>.join([random.choice(<span style="color: #800000;">'</span><span style="color: #800000;">0123456789</span><span style="color: #800000;">'</span>) <span style="color: #0000ff;">for</span> _ <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(constants.SMS_CODE_LENGTH)])
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 4.发送手机验证码</span>
+            ccp =<span style="color: #000000;"> CCP()
+            </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+                res </span>= ccp.send_template_sms(mobile, [sms_code, constants.SMS_CODE_EXPIRES], <span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+                </span><span style="color: #0000ff;">if</span> res ==<span style="color: #000000;"> 0:
+                    logger.info(</span><span style="color: #800000;">'</span><span style="color: #800000;">发送短信验证码[正常][mobile: %s sms_code: %s]</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> (mobile, sms_code))
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                    logger.error(</span><span style="color: #800000;">'</span><span style="color: #800000;">发送短信验证码[失败][moblie: %s sms_code: %s]</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> (mobile, sms_code))
+                    </span><span style="color: #0000ff;">return</span> json_response(errno=Code.SMSFAIL, errmsg=<span style="color: #000000;">error_map[Code.SMSFAIL])
+            </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+                logger.error(</span><span style="color: #800000;">'</span><span style="color: #800000;">发送短信验证码[异常][mobile: %s message: %s]</span><span style="color: #800000;">'</span> %<span style="color: #000000;"> (mobile, e))
+                </span><span style="color: #0000ff;">return</span> json_response(errno=Code.SMSERROR, errmsg=<span style="color: #000000;">error_map[Code.SMSERROR])
+
+
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 5.保存到redis数据库</span>
+            <span style="color: #008000;">#</span><span style="color: #008000;"> 创建短信验证码发送记录</span>
+            sms_flag_key = <span style="color: #800000;">'</span><span style="color: #800000;">sms_flag_{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(mobile)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建短信验证码内容记录</span>
+            sms_text_key = <span style="color: #800000;">'</span><span style="color: #800000;">sms_text_{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(mobile)
+
+            redis_conn </span>= get_redis_connection(alias=<span style="color: #800000;">'</span><span style="color: #800000;">verify_code</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            pl </span>=<span style="color: #000000;"> redis_conn.pipeline()
+
+            </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+                pl.setex(sms_flag_key, constants.SMS_CODE_INTERVAL, </span>1<span style="color: #000000;">)
+                pl.setex(sms_text_key, constants.SMS_CODE_EXPIRES</span>*60<span style="color: #000000;">, sms_code)
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 让管道通知redis执行命令</span>
+<span style="color: #000000;">                pl.execute()
+                </span><span style="color: #0000ff;">return</span> json_response(errmsg=<span style="color: #800000;">"</span><span style="color: #800000;">短信验证码发送成功！</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+                logger.error(</span><span style="color: #800000;">'</span><span style="color: #800000;">redis 执行异常：{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(e))
+
+                </span><span style="color: #0000ff;">return</span> json_response(errno=Code.UNKOWNERR, errmsg=<span style="color: #000000;">error_map[Code.UNKOWNERR])
+
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将表单的报错信息进行拼接</span>
+            err_msg_list =<span style="color: #000000;"> []
+            </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> form.errors.get_json_data().values():
+                err_msg_list.append(item[0].get(</span><span style="color: #800000;">'</span><span style="color: #800000;">message</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(item[0].get('message'))   # for test</span>
+            err_msg_str = <span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span>.join(err_msg_list)  <span style="color: #008000;">#</span><span style="color: #008000;"> 拼接错误信息为一个字符串</span>
+
+            <span style="color: #0000ff;">return</span> json_response(errno=Code.PARAMERR, errmsg=err_msg_str)</pre>
+</div>
+</li>
+<li class="md-list-item">verification/forms.py文件代码如下：
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django <span style="color: #0000ff;">import</span><span style="color: #000000;"> forms
+</span><span style="color: #0000ff;">from</span> django.core.validators <span style="color: #0000ff;">import</span><span style="color: #000000;"> RegexValidator
+</span><span style="color: #0000ff;">from</span> django_redis <span style="color: #0000ff;">import</span><span style="color: #000000;"> get_redis_connection
+
+</span><span style="color: #0000ff;">from</span> user.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> User
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建手机号的正则校验器</span>
+mobile_validator = RegexValidator(r<span style="color: #800000;">'</span><span style="color: #800000;">^1[3-9]\d{9}$</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">手机号码格式不正确</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> CheckImagForm(forms.Form):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    check image code
+    </span><span style="color: #800000;">"""</span>
+
+    <span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self, *args, **<span style="color: #000000;">kwargs):
+        self.request </span>= kwargs.pop(<span style="color: #800000;">'</span><span style="color: #800000;">request</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        super().</span><span style="color: #800080;">__init__</span>(*args, **<span style="color: #000000;">kwargs)
+
+    mobile </span>= forms.CharField(max_length=11, min_length=11, validators=<span style="color: #000000;">[mobile_validator, ],
+                             error_messages</span>=<span style="color: #000000;">{
+                                 </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">手机长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                 </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">手机长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                 </span><span style="color: #800000;">'</span><span style="color: #800000;">required</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">手机号不能为空</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                             })
+
+    captcha </span>= forms.CharField(max_length=4, min_length=4<span style="color: #000000;">,
+                              error_messages</span>=<span style="color: #000000;">{
+                                  </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">验证码长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                  </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">图片验证码长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                  </span><span style="color: #800000;">'</span><span style="color: #800000;">required</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">图片验证码不能为空</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                              })
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> clean(self):
+        clean_data </span>=<span style="color: #000000;"> super().clean()
+        mobile </span>= clean_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        captcha </span>= clean_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">captcha</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 1.校验图片验证码</span>
+        image_code = self.request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">image_code</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">not</span> image_code) <span style="color: #0000ff;">or</span> (image_code.upper() !=<span style="color: #000000;"> captcha.upper()):
+            </span><span style="color: #0000ff;">raise</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">图片验证码校验失败！</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2.校验是否在60秒内已发送过短信</span>
+        redis_conn = get_redis_connection(alias=<span style="color: #800000;">'</span><span style="color: #800000;">verify_code</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> redis_conn.get(<span style="color: #800000;">'</span><span style="color: #800000;">sms_flag_{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(mobile)):
+            </span><span style="color: #0000ff;">raise</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">获取短信验证码过于频繁</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 3.校验手机号码是否已注册</span>
+        <span style="color: #0000ff;">if</span> User.objects.filter(mobile=<span style="color: #000000;">mobile).count():
+            </span><span style="color: #0000ff;">raise</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">手机号已注册，请重新输入</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item">verification/constants.py代码如下：
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 图片验证码过期时间 单位秒</span>
+IMAGE_CODE_EXPIRES = 300
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 短信验证码长度</span>
+SMS_CODE_LENGTH = 4
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 短信验证码发送间隔 秒</span>
+SMS_CODE_INTERVAL = 60
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 短信验证码过期时间 分</span>
+SMS_CODE_EXPIRES = 5
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 短信发送模板</span>
+SMS_CODE_TEMP_ID = 1</pre>
+</div>
+<p>&nbsp;</p>
+</li>
+</ol>
+<h4 class="md-end-block md-heading"><span class="md-plain">4.短信验证码平台-云通讯</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">本项目中使用的短信验证码平台为云通讯平台，<span class=" md-link"><a href="https://doc.yuntongxun.com/space/5a5098313b8496dd00dcdd7f"><span class="md-plain">文档参考地址</span></a></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">主要是因为可以免费测试，注册后赠送8元用于测试。</span></p>
+<p class="md-end-block md-p md-focus"><span class="md-plain">开发参数：</span><img src="./images/Django项目 3.用户注册功能2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code>_accountSid = <span style="color: #800000;">'</span><span style="color: #800000;">开发者主账号中的ACCOUNT SID</span><span style="color: #800000;">'</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 说明：主账号Token，登陆云通讯网站后，可在控制台-应用中看到开发者主账号AUTH TOKEN</span>
+_accountToken = <span style="color: #800000;">'</span><span style="color: #800000;">开发者主账号中的AUTH TOKEN</span><span style="color: #800000;">'</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 请使用管理控制台首页的APPID或自己创建应用的APPID</span>
+_appId = <span style="color: #800000;">'</span><span style="color: #800000;">开发者主账号中的AppID(默认)</span><span style="color: #800000;">'</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 说明：请求地址，生产环境配置成app.cloopen.com</span>
+_serverIP = <span style="color: #800000;">'</span><span style="color: #800000;">sandboxapp.cloopen.com</span><span style="color: #800000;">'</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 说明：请求端口 ，生产环境为8883</span>
+_serverPort = <span style="color: #800000;">"</span><span style="color: #800000;">8883</span><span style="color: #800000;">"</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 说明：REST API版本号保持不变</span>
+_softVersion = <span style="color: #800000;">'</span><span style="color: #800000;">2013-12-26</span><span style="color: #800000;">'</span></pre>
+</div>
+<p>设置测试手机号码</p>
+<p><img src="./images/Django项目 3.用户注册功能3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h4 class="md-end-block md-heading"><span class="md-plain">5.前端js代码</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">user/auth.js代码：</span></p>
+<div class="cnblogs_code">
+<pre><code>$(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义状态变量</span>
+    let isUsernameReady = <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isMobileReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isSmsCodeReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.点击刷新图像验证码</span>
+    let $img = $('.form-contain .form-item .captcha-graph-img img'<span style="color: #000000;">);
+    
+
+    $img.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+        $img.attr(</span>'src', '/image_code/?rand=' +<span style="color: #000000;"> Math.random())
+    });
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.鼠标离开用户名输入框校验用户名</span>
+    let $username = $('#username'<span style="color: #000000;">);
+    $username.blur(fnCheckUsername);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckUsername () {
+        isUsernameReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let sUsername </span>= $username.val();    <span style="color: #008000;">//</span><span style="color: #008000;">获取用户字符串</span>
+        <span style="color: #0000ff;">if</span> (sUsername === ''<span style="color: #000000;">){
+            message.showError(</span>'用户名不能为空！'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (!(/^\w{5,20}$/<span style="color: #000000;">).test(sUsername)){
+            message.showError(</span>'请输入5-20个字符的用户名'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        $.ajax({
+            url: </span>'/username/' + sUsername + '/'<span style="color: #000000;">,
+            type: </span>'GET'<span style="color: #000000;">,
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.data.count !== 0<span style="color: #000000;">){
+                    message.showError(data.data.username </span>+ '已经注册，请重新输入！'<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showInfo(data.data.username </span>+ '可以正常使用！'<span style="color: #000000;">)
+                    isUsernameReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.检测密码是否一致</span>
+    let $passwordRepeat = $('input[name="password_repeat"]'<span style="color: #000000;">);
+    $passwordRepeat.blur(fnCheckPassword);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckPassword () {
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let password </span>= $('input[name="password"]'<span style="color: #000000;">).val();
+        let passwordRepeat </span>=<span style="color: #000000;"> $passwordRepeat.val();
+        </span><span style="color: #0000ff;">if</span> (password === '' || passwordRepeat === ''<span style="color: #000000;">){
+            message.showError(</span>'密码不能为空'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password !==<span style="color: #000000;"> passwordRepeat){
+            message.showError(</span>'两次密码输入不一致'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password ===<span style="color: #000000;"> passwordRepeat){
+            isPasswordReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+        }
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.检查手机号码是否可用</span>
+    let $mobile = $('input[name="mobile"]'<span style="color: #000000;">);
+    $mobile.blur(fnCheckMobile);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckMobile () {
+        isMobileReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        let sMobile </span>=<span style="color: #000000;"> $mobile.val();
+        </span><span style="color: #0000ff;">if</span>(sMobile === ''<span style="color: #000000;">){
+            message.showError(</span>'手机号码不能为空'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span>(!(/^1[3-9]\d{9}$/<span style="color: #000000;">).test(sMobile)){
+            message.showError(</span>'手机号码格式不正确'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+
+        $.ajax({
+            url: </span>'/mobile/' + sMobile + '/'<span style="color: #000000;">,
+            type: </span>'GET'<span style="color: #000000;">,
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.data.count !== 0<span style="color: #000000;">){
+                    message.showError(data.data.mobile </span>+ '已经注册，请重新输入！'<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showInfo(data.data.mobile </span>+ '可以正常使用！'<span style="color: #000000;">);
+                    isMobileReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 5.发送手机验证码</span>
+    let $smsButton = $('.sms-captcha'<span style="color: #000000;">);
+    $smsButton.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+        let sCaptcha </span>= $('input[name="captcha_graph"]'<span style="color: #000000;">).val();
+        </span><span style="color: #0000ff;">if</span>(sCaptcha === ''<span style="color: #000000;">){
+            message.showError(</span>'请输入验证码'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span>(!<span style="color: #000000;">isMobileReady){
+            fnCheckMobile();
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+
+        $.ajax({
+            url: </span>'/sms_code/'<span style="color: #000000;">,
+            type: </span>'POST'<span style="color: #000000;">,
+            data: {
+                mobile: $mobile.val(),
+                captcha: sCaptcha
+            },
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.errno !== '0'<span style="color: #000000;">){
+                    message.showError(data.errmsg)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showSuccess(data.errmsg);
+                    let num </span>= 60<span style="color: #000000;">;
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">设置计时器</span>
+                    let t = setInterval(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+                        </span><span style="color: #0000ff;">if</span>(num===1<span style="color: #000000;">){
+                            clearInterval(t)
+                        }
+                    })
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+
+    });
+});</span></pre>
+</div>
+<p>因为用到了post方法，django默认带有csrf防护，所以在base/common.js中添加如下代码：</p>
+<div class="cnblogs_code">
+<pre><code>$(()=&gt;<span style="color: #000000;">{
+    let $navLi </span>= $('#header .nav .menu li'<span style="color: #000000;">);
+    $navLi.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;">(){
+        $(</span><span style="color: #0000ff;">this</span>).addClass('active').siblings('li').removeClass('active'<span style="color: #000000;">)
+    });
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> getCookie(name) {
+        </span><span style="color: #0000ff;">var</span> cookieValue = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">if</span> (document.cookie &amp;&amp; document.cookie !== ''<span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">var</span> cookies = document.cookie.split(';'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">var</span> i = 0; i &lt; cookies.length; i++<span style="color: #000000;">) {
+                </span><span style="color: #0000ff;">var</span> cookie =<span style="color: #000000;"> cookies[i].trim();
+                </span><span style="color: #008000;">//</span><span style="color: #008000;"> Does this cookie string begin with the name we want?</span>
+                <span style="color: #0000ff;">if</span> (cookie.substring(0, name.length + 1) === (name + '='<span style="color: #000000;">)) {
+                    cookieValue </span>= decodeURIComponent(cookie.substring(name.length + 1<span style="color: #000000;">));
+                    </span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+                }
+            }
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> cookieValue;
+    }
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> csrfSafeMethod(method) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> these HTTP methods do not require CSRF protection</span>
+        <span style="color: #0000ff;">return</span> (/^(GET|HEAD|OPTIONS|TRACE)$/<span style="color: #000000;">.test(method));
+    }
+    $.ajaxSetup({
+        beforeSend: </span><span style="color: #0000ff;">function</span><span style="color: #000000;">(xhr, settings) {
+            </span><span style="color: #0000ff;">if</span> (!csrfSafeMethod(settings.type) &amp;&amp; !<span style="color: #0000ff;">this</span><span style="color: #000000;">.crossDomain) {
+                xhr.setRequestHeader(</span>"X-CSRFToken", getCookie('csrftoken'<span style="color: #000000;">));
+            }
+        }
+    });
+});</span></pre>
+</div>
+<p><span class="md-plain md-expand">详解<span class="md-link md-expand"><a href="https://docs.djangoproject.com/en/2.2/ref/csrf/#acquiring-the-token-if-csrf-use-sessions-and-csrf-cookie-httponly-are-false"><span class="md-plain">django文档</span></a></span></span></p>
+<h2 class="md-end-block md-heading"><span class="md-plain md-expand">九、注册功能</span></h2>
+<h4 class="md-end-block md-heading"><span class="md-plain">1.业务流程分析</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">判断用户名是否为空，是否已注册</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">判断密码是否为空，格式是否正确</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">判断两次密码是否一致</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">判断手机号码是否为空，格式是否正确</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">判断短信验证码是否为空，格式是否正确，是否与真实短信验证码相同</span></p>
+</li>
+</ol>
+<h4 class="md-end-block md-heading"><span class="md-plain">2.接口设计</span></h4>
+<p class="md-end-block md-p md-focus"><span class="md-plain">接口说明：</span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">类目</span></span></th><th><span class="td-span"><span class="md-plain">说明</span></span></th></tr>
+
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">请求方法</span></span></td>
+<td><span class="td-span"><span class="md-plain">POST</span></span></td>
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">url定义</span></span></td>
+<td><span class="td-span"><span><code>/user/register/</code></span></span></td>
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">参数格式</span></span></td>
+<td><span class="td-span"><span class="md-plain">表单</span></span></td>
+
+</tr>
+
+</tbody>
+
+</table>
+<p class="md-end-block md-p"><span class="md-plain">注意：post请求，前端请求要带上csrf token</span></p>
+<p class="md-end-block md-p"><span class="md-plain">参数说明：</span></p>
+<table class="md-table">
+<thead>
+<tr class="md-end-block"><th><span class="td-span"><span class="md-plain">参数名</span></span></th><th><span class="td-span"><span class="md-plain">类型</span></span></th><th><span class="td-span"><span class="md-plain">是否必须</span></span></th><th><span class="td-span"><span class="md-plain">描述</span></span></th></tr>
+
+</thead>
+<tbody>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">username</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">用户输入的用户名</span></span></td>
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">password</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">用户输入的密码</span></span></td>
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">password_repeat</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">用户输入的重复密码</span></span></td>
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">mobile</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">用户输入的手机号码</span></span></td>
+
+</tr>
+<tr class="md-end-block">
+<td><span class="td-span"><span class="md-plain">sms_code</span></span></td>
+<td><span class="td-span"><span class="md-plain">字符串</span></span></td>
+<td><span class="td-span"><span class="md-plain">是</span></span></td>
+<td><span class="td-span"><span class="md-plain">用户输入的短信验证码</span></span></td>
+
+</tr>
+
+</tbody>
+
+</table>
+<p class="md-end-block md-p"><span class="md-plain">返回结果：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">{
+    </span>"errno": "0"<span style="color: #000000;">, 
+     </span>"errmsg": "恭喜您，注册成功!"<span style="color: #000000;">, 
+}</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain md-expand">3.后端代码</span></h4>
+<ol class="ol-list" start="">
+<li class="md-list-item md-focus-container">
+<p class="md-end-block md-p md-focus"><span class="md-plain">user/views.py代码：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> render
+</span><span style="color: #0000ff;">from</span> django.views <span style="color: #0000ff;">import</span><span style="color: #000000;"> View
+
+</span><span style="color: #0000ff;">from</span> .forms <span style="color: #0000ff;">import</span><span style="color: #000000;"> RegisterForm
+</span><span style="color: #0000ff;">from</span> .models <span style="color: #0000ff;">import</span><span style="color: #000000;"> User
+</span><span style="color: #0000ff;">from</span> utils.json_res <span style="color: #0000ff;">import</span><span style="color: #000000;"> json_response
+</span><span style="color: #0000ff;">from</span> utils.res_code <span style="color: #0000ff;">import</span><span style="color: #000000;"> Code, error_map
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> RegisterView(View):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(self, request):
+        </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">user/register.html</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> post(self, request):
+        form </span>=<span style="color: #000000;"> RegisterForm(request.POST)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> form.is_valid():
+            username </span>= form.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            password </span>= form.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">password</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            mobile </span>= form.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            User.objects.create_user(username</span>=username, password=password, mobile=<span style="color: #000000;">mobile)
+            </span><span style="color: #0000ff;">return</span> json_response(errmsg=<span style="color: #800000;">'</span><span style="color: #800000;">恭喜你，注册成功！</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个错误信息列表</span>
+            err_msg_list =<span style="color: #000000;"> []
+            </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> form.errors.values():
+                err_msg_list.append(item[0])
+            err_msg_str </span>= <span style="color: #800000;">'</span><span style="color: #800000;">/</span><span style="color: #800000;">'</span><span style="color: #000000;">.join(err_msg_list)
+
+            </span><span style="color: #0000ff;">return</span> json_response(errno=Code.PARAMERR, errmsg=err_msg_str)</pre>
+</div>
+<p>&nbsp;</p>
+</li>
+<li class="md-list-item md-focus-container">
+<p>user/forms.py代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+
+</span><span style="color: #0000ff;">from</span> django <span style="color: #0000ff;">import</span><span style="color: #000000;"> forms
+</span><span style="color: #0000ff;">from</span> django_redis <span style="color: #0000ff;">import</span><span style="color: #000000;"> get_redis_connection
+
+</span><span style="color: #0000ff;">from</span> .models <span style="color: #0000ff;">import</span><span style="color: #000000;"> User
+</span><span style="color: #0000ff;">from</span> verification.constants <span style="color: #0000ff;">import</span><span style="color: #000000;"> SMS_CODE_LENGTH
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> RegisterForm(forms.Form):
+    username </span>= forms.CharField(label=<span style="color: #800000;">'</span><span style="color: #800000;">用户名</span><span style="color: #800000;">'</span>, max_length=20, min_length=5<span style="color: #000000;">,
+                               error_messages</span>=<span style="color: #000000;">{
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">用户名长度要小于20</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">用户名长度要大于4</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">required</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">用户名不能为空</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                               })
+    password </span>= forms.CharField(label=<span style="color: #800000;">'</span><span style="color: #800000;">密码</span><span style="color: #800000;">'</span>, max_length=20, min_length=6<span style="color: #000000;">,
+                               error_messages</span>=<span style="color: #000000;">{
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">密码长度要小于20</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">密码长度要大于5</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">required</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">用户名不能为空</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                               })
+    password_repeat </span>= forms.CharField(label=<span style="color: #800000;">'</span><span style="color: #800000;">确认密码</span><span style="color: #800000;">'</span>, max_length=20, min_length=6<span style="color: #000000;">,
+                                      error_messages</span>=<span style="color: #000000;">{
+                                          </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">密码长度要小于20</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                          </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">密码长度要大于5</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                          </span><span style="color: #800000;">'</span><span style="color: #800000;">required</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">用户名不能为空</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                                      })
+    mobile </span>= forms.CharField(label=<span style="color: #800000;">'</span><span style="color: #800000;">手机号码</span><span style="color: #800000;">'</span>, max_length=11, min_length=11<span style="color: #000000;">,
+                             error_messages</span>=<span style="color: #000000;">{
+                                 </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">手机号码长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                 </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">手机号码长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                 </span><span style="color: #800000;">'</span><span style="color: #800000;">required</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">手机号码不能为空</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                             })
+    sms_code </span>= forms.CharField(label=<span style="color: #800000;">'</span><span style="color: #800000;">短信验证码</span><span style="color: #800000;">'</span>, max_length=SMS_CODE_LENGTH, min_length=<span style="color: #000000;">SMS_CODE_LENGTH,
+                               error_messages</span>=<span style="color: #000000;">{
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">短信验证码长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">短信验证码长度有误长度有误</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                                   </span><span style="color: #800000;">'</span><span style="color: #800000;">required</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">短信验证码不能为空</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                               })
+</span><span style="color: #008000;">#</span><span style="color: #008000;">## clean_username这种是单独校验，写多少就校验多少，上面的错了，下面的同方照样执行</span><span style="color: #008000;">
+#</span><span style="color: #008000;">## clean一般用于多个字段联合校验，但是只要上面错了下面就不会校验了</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> clean_username(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        校验用户名
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        username </span>= self.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> User.objects.filter(username=<span style="color: #000000;">username).exists():
+            </span><span style="color: #0000ff;">return</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">用户名已存在！</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> username
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> clean_mobile(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        校验手机号
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        mobile </span>= self.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> re.match(r<span style="color: #800000;">'</span><span style="color: #800000;">^1[3-9]\d{9}$</span><span style="color: #800000;">'</span><span style="color: #000000;">, mobile):
+            </span><span style="color: #0000ff;">raise</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">手机号码格式不正确</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #0000ff;">if</span> User.objects.filter(mobile=<span style="color: #000000;">mobile).exists():
+            </span><span style="color: #0000ff;">raise</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">手机号码已注册！</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> mobile
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> clean(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        校验，密码，和短信验证码
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        clean_data </span>=<span style="color: #000000;"> super().clean()
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 校验密码是否一致</span>
+        password = clean_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">password</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        password_repeat </span>= clean_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">password_repeat</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> password !=<span style="color: #000000;"> password_repeat:
+            </span><span style="color: #0000ff;">raise</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">两次密码不一致！</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 校验短信验证码</span>
+        sms_code = clean_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">sms_code</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        moblie </span>= clean_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">mobile</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        redis_conn </span>= get_redis_connection(alias=<span style="color: #800000;">'</span><span style="color: #800000;">verify_code</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        real_code </span>= redis_conn.get(<span style="color: #800000;">'</span><span style="color: #800000;">sms_text_{}</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(moblie))
+        </span><span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">not</span> real_code) <span style="color: #0000ff;">or</span> (real_code.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>) !=<span style="color: #000000;"> sms_code):
+            </span><span style="color: #0000ff;">raise</span> forms.ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">短信验证码错误!</span><span style="color: #800000;">'</span>)</pre>
+</div>
+</li>
+</ol>
+<p>clean_username和clean的差别用法：<img src="./images/Django项目 3.用户注册功能4.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;<span class="md-plain md-expand">4.前端js代码</span></p>
+<div class="cnblogs_code">
+<pre><code>$(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 定义状态变量</span>
+    let isUsernameReady = <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">,
+        isMobileReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.点击刷新图像验证码</span>
+    let $img = $('.form-contain .form-item .captcha-graph-img img'<span style="color: #000000;">);
+    
+
+    $img.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+        $img.attr(</span>'src', '/image_code/?rand=' +<span style="color: #000000;"> Math.random())
+    });
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.鼠标离开用户名输入框校验用户名</span>
+    let $username = $('#username'<span style="color: #000000;">);
+    $username.blur(fnCheckUsername);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckUsername () {
+        isUsernameReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let sUsername </span>= $username.val();    <span style="color: #008000;">//</span><span style="color: #008000;">获取用户字符串</span>
+        <span style="color: #0000ff;">if</span> (sUsername === ''<span style="color: #000000;">){
+            message.showError(</span>'用户名不能为空！'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (!(/^\w{5,20}$/<span style="color: #000000;">).test(sUsername)){
+            message.showError(</span>'请输入5-20个字符的用户名'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        $.ajax({
+            url: </span>'/username/' + sUsername + '/'<span style="color: #000000;">,
+            type: </span>'GET'<span style="color: #000000;">,
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.data.count !== 0<span style="color: #000000;">){
+                    message.showError(data.data.username </span>+ '已经注册，请重新输入！'<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showInfo(data.data.username </span>+ '可以正常使用！'<span style="color: #000000;">)
+                    isUsernameReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.检测密码是否一致</span>
+    let $passwordRepeat = $('input[name="password_repeat"]'<span style="color: #000000;">);
+    $passwordRepeat.blur(fnCheckPassword);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckPassword () {
+        isPasswordReady </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        let password </span>= $('input[name="password"]'<span style="color: #000000;">).val();
+        let passwordRepeat </span>=<span style="color: #000000;"> $passwordRepeat.val();
+        </span><span style="color: #0000ff;">if</span> (password === '' || passwordRepeat === ''<span style="color: #000000;">){
+            message.showError(</span>'密码不能为空'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password !==<span style="color: #000000;"> passwordRepeat){
+            message.showError(</span>'两次密码输入不一致'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span> (password ===<span style="color: #000000;"> passwordRepeat){
+            isPasswordReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+        }
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.检查手机号码是否可用</span>
+    let $mobile = $('input[name="mobile"]'<span style="color: #000000;">);
+    $mobile.blur(fnCheckMobile);
+
+    </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> fnCheckMobile () {
+        isMobileReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        let sMobile </span>=<span style="color: #000000;"> $mobile.val();
+        </span><span style="color: #0000ff;">if</span>(sMobile === ''<span style="color: #000000;">){
+            message.showError(</span>'手机号码不能为空'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span>(!(/^1[3-9]\d{9}$/<span style="color: #000000;">).test(sMobile)){
+            message.showError(</span>'手机号码格式不正确'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+
+        $.ajax({
+            url: </span>'/mobile/' + sMobile + '/'<span style="color: #000000;">,
+            type: </span>'GET'<span style="color: #000000;">,
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.data.count !== 0<span style="color: #000000;">){
+                    message.showError(data.data.mobile </span>+ '已经注册，请重新输入！'<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showInfo(data.data.mobile </span>+ '可以正常使用！'<span style="color: #000000;">);
+                    isMobileReady </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 5.发送手机验证码</span>
+    let $smsButton = $('.sms-captcha'<span style="color: #000000;">);
+    $smsButton.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+        let sCaptcha </span>= $('input[name="captcha_graph"]'<span style="color: #000000;">).val();
+        </span><span style="color: #0000ff;">if</span>(sCaptcha === ''<span style="color: #000000;">){
+            message.showError(</span>'请输入验证码'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span>(!<span style="color: #000000;">isMobileReady){
+            fnCheckMobile();
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+
+        $.ajax({
+            url: </span>'/sms_code/'<span style="color: #000000;">,
+            type: </span>'POST'<span style="color: #000000;">,
+            data: {
+                mobile: $mobile.val(),
+                captcha: sCaptcha
+            },
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (data) {
+                </span><span style="color: #0000ff;">if</span>(data.errno !== '0'<span style="color: #000000;">){
+                    message.showError(data.errmsg)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    message.showSuccess(data.errmsg);
+                    let num </span>= 60<span style="color: #000000;">;
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">设置计时器</span>
+                    let t = setInterval(<span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+                        </span><span style="color: #0000ff;">if</span>(num===1<span style="color: #000000;">){
+                            clearInterval(t)
+                        }
+                    })
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (xhr, msg) {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        });
+
+    });
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 6.注册</span>
+    let $submitBtn = $('.register-btn'<span style="color: #000000;">);
+    $submitBtn.click(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (e) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">阻止默认提交</span>
+<span style="color: #000000;">        e.preventDefault();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 1.检查用户名</span>
+        <span style="color: #0000ff;">if</span>(!<span style="color: #000000;">isUsernameReady){
+            fnCheckUsername();
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2.检查密码</span>
+        <span style="color: #0000ff;">if</span>(!<span style="color: #000000;">isPasswordReady){
+            fnCheckPassword();
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3.检查电话号码</span>
+        <span style="color: #0000ff;">if</span>(!<span style="color: #000000;">isMobileReady){
+            fnCheckMobile();
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4.检查短信验证码</span>
+        let sSmsCode = $('input[name="sms_captcha"]'<span style="color: #000000;">).val();
+        </span><span style="color: #0000ff;">if</span>(sSmsCode === ''<span style="color: #000000;">){
+            message.showError(</span>'短信验证码不能为空！'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+        </span><span style="color: #0000ff;">if</span>(!(/^\d{4}$/<span style="color: #000000;">).test(sSmsCode)){
+            message.showError(</span>'短信验证码长度不正确，必须是4位数字！'<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">
+        }
+
+        $.ajax({
+            url: </span>'/user/register/'<span style="color: #000000;">,
+            type: </span>'POST'<span style="color: #000000;">,
+            data:{
+                username: $username.val(),
+                password: $(</span>'input[name="password"]'<span style="color: #000000;">).val(),
+                password_repeat: $passwordRepeat.val(),
+                mobile: $mobile.val(),
+                sms_code: sSmsCode
+            },
+            dataType: </span>'json'<span style="color: #000000;">,
+            success: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> (res) {
+                </span><span style="color: #0000ff;">if</span>(res.errno === '0'<span style="color: #000000;">){
+                    message.showSuccess(</span>'恭喜您，注册成功!'<span style="color: #000000;">);
+                    setTimeout(</span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+                        </span><span style="color: #008000;">//</span><span style="color: #008000;">注册成功后重定向到登录页面</span>
+                        window.location.href = '/user/login/'<span style="color: #000000;">
+                    }, </span>3000<span style="color: #000000;">)
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">注册失败</span>
+<span style="color: #000000;">                    message.showError(res.errmsg)
+                }
+            },
+            error: </span><span style="color: #0000ff;">function</span><span style="color: #000000;"> () {
+                message.showError(</span>'服务器超时，请重试！'<span style="color: #000000;">)
+            }
+        })
+
+    });
+});</span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,70 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修django模型中有外键关系的表删除相关设置' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>django模型中有外键关系的表删除相关设置</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11461384.html</div><br>
+    <h1 id="自我总结">0904自我总结</h1>
+<h1 id="django模型中有外键关系的表删除相关设置">django模型中有外键关系的表删除相关设置</h1>
+<h2 id="一.一对一">一.一对一</h2>
+<p>例如有<code>Author、AuthorDetail两表</code></p>
+<pre><code><code>author = models.OneToOneField(to=&#39;Author&#39;, null=True,
+        related_name=&#39;detail&#39;,
+        db_constraint=False,
+        on_delete=models.CASCADE
+    )</code></pre>
+<p>1）关系字段放在AuthorDetail表中：作者删除详情删除，详情删除作者保留<br />
+2）作者找详情用 外键related_name(detail)，详情找作者用 外键字段(author)<br />
+3）db_constraint断开表关联，on_delete规定逻辑关联删除动作，models.CASCADE级联删除</p>
+<h2 id="二.一对多">二.一对多</h2>
+<p>例如<code>Book、Publish两表</code></p>
+<pre><code><code>publish = models.ForeignKey(to=&#39;Publish&#39;, null=True,
+        related_name=&#39;books&#39;,
+        db_constraint=False,
+        on_delete=models.DO_NOTHING,
+        
+    )</code></pre>
+<p>1）关系字段放在Book表中(多的一方)：出版社删除书外键不动，书删除没有任何影响<br />
+2）出版社找书用 外键related_name(books)，书找出版社 外键字段(publish)<br />
+3）db_constraint断开表关联，on_delete规定逻辑关联删除动作，models.DO_NOTHING关联无动作</p>
+<h2 id="三.以外键字段关联">三.以外键字段关联</h2>
+<p>1）断关联，删除关联表记录，外键值置空<br />
+db_constraint=False, on_delete=models.SET_NULL, null=True,</p>
+<p>2）断关联，删除关联表记录，外键值置默认值<br />
+db_constraint=False, on_delete=models.SET_DEFAULT, default=1,</p>
+<p>注意:<code>on_delete</code>必须声明<code>models.DO_NOTHING</code>为删除级联关系, <code>models.CASCAD</code>为级联关系,'SET_NULL'置空,<code>SET_DEFAULT</code>设为默认值</p>
+<p>两者区别</p>
+<ul>
+<li>models.SET关联表内容删了,关联的相关内容不会删除</li>
+<li>models.CASCAD关联表内容删了,关联的相关内容会删除</li>
+</ul>
+<p><code>db_constraint</code>关系断开后,但是不影响联表查询</p>
+<h2 id="四.多对多关系">四.多对多关系</h2>
+<p>例如<code>Book、Author两表</code></p>
+<pre><code><code>authors = models.ManyToManyField(to=&#39;Author&#39;, null=True,
+        related_name=&#39;books&#39;,
+        db_constraint=False,
+    )</code></pre>
+<p>1）关系字段放在任意一方都可以：出版社删除或书删除彼此不影响，但关系表一定级联删除<br />
+2）正向找 外键字段，反向找 外键字段related_name<br />
+3）db_constraint断开表关联，on_delete不存在(不设置，本质在第三张表中设置，且一定是级联)</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

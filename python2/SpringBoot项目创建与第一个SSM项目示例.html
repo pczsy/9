@@ -1,0 +1,323 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修SpringBoot项目创建与第一个SSM项目示例' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>SpringBoot项目创建与第一个SSM项目示例</center></div><div class='banquan'>原文出处:本文由博客园博主空夜提供。<br/>
+原文连接:https://www.cnblogs.com/eknown/p/12032322.html</div><br>
+    <p>本节介绍SpringBoot创建第一个示例SSM项目的完整过程，使用工具STS，与IDEA操作基本类似。</p>
+<p>示例代码在：<a href="https://github.com/laolunsi/spring-boot-examples" class="uri">https://github.com/laolunsi/spring-boot-examples</a></p>
+<hr />
+<h2 id="前言">前言</h2>
+<p>根据几位网友反馈的结果，重新编辑了这篇文章。此篇文章先从环境配置开始，然后到项目创建，最后讲述SSM框架整合，展现一个完整SpringBoot项目创建与使用的过程。</p>
+<p>基于maven搭建直接SSM或者SSH框架的麻烦之处，被各种配置文件（尤其是xml）折磨的在座各位应该深有体会。而SpringBoot的出现正好解决了这个问题，抛弃各种繁琐的配置，我们只需要一个application.properties文件就可以解决这些问题。</p>
+<p>下面进入正题。</p>
+<hr />
+<h2 id="一环境搭建">一、环境搭建</h2>
+<p>首先下载一个专为Spring设计的eclipse版本——<a href="http://spring.io/tools">Spring Tool Suite</a>，简称STS。它是Eclipse的一个特殊版本，界面和操作与Eclipse都非常类似，下载zip包可以直接运行。<br />
+<strong>注：IDEA和STS创建springboot项目的步骤和界面是完全一样的。创建的项目结构也相近，sts创建的项目可以直接导入IDEA使用。</strong></p>
+<p>先看一下界面：<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例0.png" alt="file" /></p>
+<hr />
+<h2 id="二创建springboot项目">二、创建SpringBoot项目</h2>
+<p>解压压缩包后运行下面的exe文件（上面有绿色图标的），然后你会看到上面的界面。<br />
+然后点击左上角，File——new——Spring Starter Project。下面是详细步骤：<br />
+第一步，new——&gt;Spring Starter Project.<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例1.png" alt="file" /></p>
+<p>接着，name填入项目名称，group随意，其他的不用管，这里的service URL指Spring boot官网地址。<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例2.png" alt="file" /></p>
+<p>然后，version默认选择，Available中输入查找，选中以下五项：Web、DevTools、MySQL、Mybatis、Thymeleaf。<br />
+（注：这里的环境可以先不选，之后根据需要在maven的依赖配置文件pom.xml中添加即可。我这里先行加上，等会儿一一介绍用途）。<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例3.png" alt="file" /></p>
+<p>最后点击next/finish均可，等待一会儿，项目创建完毕，目录如下：<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例4.png" alt="file" /></p>
+<p>注：如果resources下的static或者templates文件夹不存在的话，不用着急，这个是因为我上面选择了那些依赖才创建的，后面手动加一下也没关系。</p>
+<hr />
+<h2 id="三项目启动">三、项目启动</h2>
+<p>到目前为止，SpringBoot项目已经创建完毕了。<br />
+我们可以看到启动类SpringBootDemoApplication.java这个类。</p>
+<pre><code><code>package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringBootDemoApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SpringBootDemoApplication.class, args);
+    }
+}</code></pre>
+<p>这个类是干嘛的呢？<br />
+我们看到其中有main方法。<br />
+没错，SpringBoot项目就是使用这个类启动的，右击这个类，run as——Spring Boot App，项目就会启动。<br />
+这里有一个误区：为什么按照我这里步骤创建会报错。<br />
+这是由于我之前选择添加了Web等依赖，此时项目是无法直接执行的——看控制台日志就能看出是数据库没有配置的原因。而如果我没有添加这些依赖，直接运行SpringBootWebApplication.java文件，就可以启动项目了。<br />
+下面，我们讲解一下环境配置的问题——配置完成后就可以运行这个空的SSM项目了哦。</p>
+<hr />
+<h2 id="四环境配置">四、环境配置</h2>
+<h3 id="maven之pom.xml">4.1 maven之pom.xml</h3>
+<p>为什么要先讲maven呢？<br />
+因为我之前说SSM——Spring+SpringMVC+Mybatis项目。这个应该是大家比较感兴趣的——目前企业里这一类项目大多数都是SSM框架了。以前很火的SSH现在被使用的并不多。说个盘外话，SSH真的坑。<br />
+看一下我的pom.xml，如果依赖添加不对的话请对照一下：</p>
+<pre class="xml"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+    xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
+    &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+
+    &lt;groupId&gt;com.example&lt;/groupId&gt;
+    &lt;artifactId&gt;SpringBootDemo&lt;/artifactId&gt;
+    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+    &lt;packaging&gt;jar&lt;/packaging&gt;
+
+    &lt;name&gt;SpringBootDemo&lt;/name&gt;
+    &lt;description&gt;Demo project for Spring Boot&lt;/description&gt;
+
+    &lt;parent&gt;
+        &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+        &lt;artifactId&gt;spring-boot-starter-parent&lt;/artifactId&gt;
+        &lt;version&gt;2.0.6.RELEASE&lt;/version&gt;
+        &lt;relativePath/&gt; &lt;!-- lookup parent from repository --&gt;
+    &lt;/parent&gt;
+
+    &lt;properties&gt;
+        &lt;project.build.sourceEncoding&gt;UTF-8&lt;/project.build.sourceEncoding&gt;
+        &lt;project.reporting.outputEncoding&gt;UTF-8&lt;/project.reporting.outputEncoding&gt;
+        &lt;java.version&gt;1.8&lt;/java.version&gt;
+    &lt;/properties&gt;
+
+    &lt;dependencies&gt;
+        &lt;!-- springboot推荐的模板引擎，要想映射HTML/JSP，必须引入thymeleaf --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-thymeleaf&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-web&lt;/artifactId&gt;
+        &lt;/dependency&gt;
+        
+        &lt;!-- mybatis --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.mybatis.spring.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;mybatis-spring-boot-starter&lt;/artifactId&gt;
+            &lt;version&gt;1.3.2&lt;/version&gt;
+        &lt;/dependency&gt;
+
+        &lt;!-- 热部署用，改变代码不需要重启项目  --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-devtools&lt;/artifactId&gt;
+            &lt;scope&gt;runtime&lt;/scope&gt;
+        &lt;/dependency&gt;
+        
+        &lt;!-- mysql连接  --&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;mysql&lt;/groupId&gt;
+            &lt;artifactId&gt;mysql-connector-java&lt;/artifactId&gt;
+            &lt;scope&gt;runtime&lt;/scope&gt;
+        &lt;/dependency&gt;
+        &lt;dependency&gt;
+            &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+            &lt;artifactId&gt;spring-boot-starter-test&lt;/artifactId&gt;
+            &lt;scope&gt;test&lt;/scope&gt;
+        &lt;/dependency&gt;
+    &lt;/dependencies&gt;
+
+    &lt;build&gt;
+        &lt;plugins&gt;
+            &lt;plugin&gt;
+                &lt;groupId&gt;org.springframework.boot&lt;/groupId&gt;
+                &lt;artifactId&gt;spring-boot-maven-plugin&lt;/artifactId&gt;
+            &lt;/plugin&gt;
+        &lt;/plugins&gt;
+    &lt;/build&gt;
+
+
+&lt;/project&gt;
+</code></pre>
+<hr />
+<h3 id="配置文件application.properties">4.2 配置文件application.properties</h3>
+<p>SpringBoot项目的配置是基于application.properties这个文件的。在里面配置数据库、Mybatis映射文件乃至更高级的Redis、RabbitMQ等等（这里的配置文件重新修改过，github上为最新）。<br />
+<strong>注意：下面配置的数据库地址、账号和密码，必须完全与你本机一样！</strong>如果你的数据库账号是其他名字，比如admin，请修改下面的配置。</p>
+<pre class="yml"><code># server config
+server.port: 8081
+
+# mysql
+spring.datasource.url: jdbc:mysql://localhost:3306/umanager?useSSL=false&amp;autoReconnect=true
+spring.datasource.username: root
+spring.datasource.password: root
+spring.datasource.driver-class-name: com.mysql.jdbc.Driver
+spring.datasource.dbcp2.validation-query: &#39;select 1&#39;
+spring.datasource.dbcp2.test-on-borrow: true
+spring.datasource.dbcp2.test-while-idle: true
+spring.datasource.dbcp2.time-between-eviction-runs-millis: 27800
+spring.datasource.dbcp2.initial-size: 5
+spring.datasource.dbcp2.min-idle: 5
+spring.datasource.dbcp2.max-idle: 100
+spring.datasource.dbcp2.max-wait-millis: 10000
+
+# thymleaf
+spring.thymeleaf.cache : false
+    
+# mybatis
+mybatis.mapper-locations: classpath:mapper/*.xml
+mybatis.configuration.map-underscore-to-camel-case: true</code></pre>
+<h3 id="启动项目">4.3 启动项目</h3>
+<p>找到SpringBootDemoApplication类，Run As——Spring Boot App，项目启动成功，控制台不报错。<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例5.png" alt="file" /></p>
+<hr />
+<h2 id="五springbootssm框架整合示例">五、SpringBoot+SSM框架整合示例</h2>
+<p>第一步，建立数据库——这个很重要哦。根据我们在application.properties的配置建立数据库及表，我这里使用了umanager数据库，以及user表，下面贴上我的建库建表语句：</p>
+<pre class="sql"><code>SET FOREIGN_KEY_CHECKS=0;
+
+-- ----------------------------
+-- Table structure for user
+-- ----------------------------
+DROP TABLE IF EXISTS `user`;
+CREATE TABLE `user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `address` varchar(255) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8;
+
+-- ----------------------------
+-- Records of user
+-- ----------------------------
+INSERT INTO `user` VALUES (&#39;1&#39;, &#39;ja&#39;, &#39;123&#39;, &#39;江苏&#39;);
+INSERT INTO `user` VALUES (&#39;2&#39;, &#39;BL&#39;, &#39;123&#39;, &#39;新加坡&#39;);</code></pre>
+<p>第二步，创建BasicController.java（完整的项目目录看最下面）</p>
+<pre><code><code>package com.example.demo.controller;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
+
+import com.example.demo.model.bean.User;
+import com.example.demo.model.dao.UserDAO;
+
+// @RestController = @Controller + @ResponseBody
+@RestController 
+public class BasicController {
+    
+    @Autowired
+    private UserDAO userDAO;
+    
+    @GetMapping(value = &quot;&quot;)
+    public String index() {
+        return &quot;login&quot;; // 此处表示返回值是一个值为“login”的String。不指向界面的原因是类的注解是@RestController
+    }
+    
+    
+    @GetMapping(value = &quot;index.do&quot;)
+    public ModelAndView index2() {
+        return new ModelAndView(&quot;login&quot;); // 此处指向界面
+    }
+    
+    
+    @GetMapping(value = &quot;login.do&quot;)
+    public Object login(String name, String password) {
+        System.out.println(&quot;传入参数：name=&quot; + name + &quot;, password=&quot; + password);
+        if (StringUtils.isEmpty(name)) {
+            return &quot;name不能为空&quot;;
+        } else if (StringUtils.isEmpty(password)) {
+            return &quot;password不能为空&quot;;
+        }
+        User user = userDAO.find(name, password);
+        if (user != null) {
+            return user;
+        } else {
+            return &quot;用户名或密码错误&quot;;
+        }
+    }
+
+}</code></pre>
+<p>这个类使用了User类和注入了UserDAO接口。我们同样创建这两个类：</p>
+<pre><code><code>public class User implements Serializable {
+    
+    private static final long serialVersionUID = -5611386225028407298L;
+    
+    private Integer id;
+    private String name;
+    private String password;
+    private String address;
+
+    // 省略get和set方法，大家自己设置即可
+}</code></pre>
+<pre><code><code>package com.example.demo.model.dao;
+
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+
+import com.example.demo.model.bean.User;
+
+@Mapper
+public interface UserDAO {
+    
+    public User find(@Param(&quot;name&quot;)String name, @Param(&quot;password&quot;)String password);
+
+    // 注： CRTL+Shift+O，快捷导入所有import
+}</code></pre>
+<p>下面还需要mybatis映射接口到SQL语句的文件，根据application.properties中的配置<code>mybatis.mapper-locations: classpath:mapper/*.xml</code>,在resources文件夹下新建mapper文件夹，下面放入Mybatis的xml文件。<br />
+此处写一个UserDAO.xml：</p>
+<pre class="xml"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot; ?&gt;
+&lt;!DOCTYPE mapper PUBLIC &quot;-//mybatis.org//DTD Mapper 3.0//EN&quot; &quot;http://mybatis.org/dtd/mybatis-3-mapper.dtd&quot; &gt;
+&lt;mapper namespace=&quot;com.example.demo.model.dao.UserDAO&quot;&gt;
+  &lt;select id=&quot;find&quot; resultType=&quot;com.example.demo.model.bean.User&quot;&gt;
+    SELECT id, name, password, address from user where name = #{name} and password = #{password}
+  &lt;/select&gt;
+&lt;/mapper&gt;</code></pre>
+<p>还需要一个login.html页面，放在resources/templates文件夹下：</p>
+<pre class="html"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;!-- meta这一句指定编码格式，能够防止中文乱码  --&gt;
+&lt;meta charset=&quot;UTF-8&quot; /&gt;
+&lt;head&gt;
+  &lt;title&gt;登录&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;form action=&quot;/login.do&quot; method=&quot;GET&quot;&gt;
+          用户名：&lt;input type=&quot;text&quot; id=&quot;name&quot; name=&quot;name&quot; /&gt;
+          密码：  &lt;input type=&quot;password&quot; id=&quot;password&quot; name=&quot;password&quot; /&gt;
+    &lt;input type=&quot;button&quot; value=&quot;登录&quot; onclick=&quot;submit()&quot; /&gt;
+  &lt;/form&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>下面，我们来看一下项目目录结构：<br />
+<img src="02-SpringBoot%20SSM.assets/70-20191211222243726.png" alt="在这里插入图片描述" /><br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例7.png" alt="file" /></p>
+<hr />
+<h2 id="六启动和测试">六、启动和测试</h2>
+<p>到目前为止，我们已经在SpringBoot中整合了SSM框架，下面运行看一下效果。启动Application类后，控制台无错。在浏览器输入：<code>http://localhost:8081/</code>，看到如下界面：<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例8.png" alt="file" /><img src="./images/SpringBoot项目创建与第一个SSM项目示例9.png" alt="file" /><br />
+这个<code>login</code>字符串，就是请求<code>http://localhost:8081/</code>经BasicController处理获得的。</p>
+<p>下面测试一下登录功能，输入<code>http://localhost:8081/index.do</code>，看到如下界面：<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例10.png" alt="file" /></p>
+<p>输入你的数据库user表中的一个正确用户，点击登录，获得如下示例数据：<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例11.png" alt="file" /></p>
+<p>如果输入错误的数据，则：<br />
+<img src="./images/SpringBoot项目创建与第一个SSM项目示例12.png" alt="file" /></p>
+<p>这说明SSM框架已经整合成功了！我们的SpringBoot+SSM第一个示例也就圆满完成！！！</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

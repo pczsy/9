@@ -1,0 +1,173 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修JavaEE基础(01)：Servlet实现方式，生命周期执行过程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>JavaEE基础(01)：Servlet实现方式，生命周期执行过程</center></div><div class='banquan'>原文出处:本文由博客园博主知了一笑提供。<br/>
+原文连接:https://www.cnblogs.com/cicada-smile/p/12009050.html</div><br>
+    <blockquote>
+<p>本文源码：<a href="https://github.com/cicadasmile/java-base-parent">GitHub·点这里</a> || <a href="https://gitee.com/cicadasmile/java-base-parent">GitEE·点这里</a></p>
+</blockquote>
+<h1 id="一servlet简介">一、Servlet简介</h1>
+<p>Java编写的服务器端程序，具有独立于平台和协议的特性，主要功能在于交互式地浏览和生成数据，生成动态Web内容。使用Servlet，可以收集来自网页表单的用户输入，呈现来自数据库或者其他源的记录，还可以动态创建网页。</p>
+<h1 id="二实现方式">二、实现方式</h1>
+<h2 id="继承httpservlet">1、继承HttpServlet</h2>
+<ul>
+<li>API简介</li>
+</ul>
+<p>继承自 GenericServlet. 遵守 HTTP协议实现，以设计模式的角度看，HttpServlet担任抽象模板角色，模板方法：由service()方法担任。基本方法：由doPost()、doGet()等方法担任。service()方法流程，省略了部分判断逻辑。该方法调用七个do方法中的一个或几个，完成对客户端请求的响应。这些do方法需要由HttpServlet的具体子类提供，这种API封装是典型的模板方法模式。</p>
+<ul>
+<li>代码案例</li>
+</ul>
+<pre><code><code>public class ServletOneImpl extends HttpServlet {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        response.getWriter().print(&quot;执行：doGet&quot;);
+    }
+
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        response.getWriter().print(&quot;执行：doPost&quot;);
+    }
+}</code></pre>
+<h2 id="继承genericservlet">2、继承GenericServlet</h2>
+<ul>
+<li>API 简介</li>
+</ul>
+<p>Servlet 接口和 ServletConfig 接口的实现类. 一个抽象类. 其中的 service 方法为抽象方法。</p>
+<ul>
+<li>代码案例</li>
+</ul>
+<pre><code><code>public class ServletTwoImpl extends GenericServlet {
+    @Override
+    public void service(ServletRequest servletRequest, ServletResponse servletResponse)
+            throws ServletException, IOException {
+        HttpServletResponse response = (HttpServletResponse)servletResponse ;
+        response.setContentType(&quot;text/html;charset=utf-8&quot;);
+        response.getWriter().print(&quot;执行：service&quot;);
+    }
+}</code></pre>
+<h2 id="实现servlet接口">3、实现Servlet接口</h2>
+<ul>
+<li>API 简介</li>
+</ul>
+<p>Servlet是一个接口，其中包含init、getServletConfig、service、getServletInfo、destroy几个核心方法。</p>
+<ul>
+<li>代码案例</li>
+</ul>
+<pre><code><code>public class ServletThreeImpl implements Servlet {
+    @Override
+    public void init(ServletConfig servletConfig) throws ServletException {
+        servletConfig.getServletName();
+        System.out.println(&quot;init 被调用...&quot;);
+    }
+    @Override
+    public void service(ServletRequest servletRequest, ServletResponse servletResponse)
+            throws ServletException, IOException {
+        System.out.println(&quot;ThreadId：&quot;+Thread.currentThread().getId());
+        System.out.println(&quot;service 被调用...&quot;);
+        HttpServletResponse response = (HttpServletResponse)servletResponse ;
+        response.getWriter().print(&quot;Servlet.Life&quot;);
+    }
+    @Override
+    public void destroy() {
+        System.out.println(&quot;destroy 被调用...&quot;);
+    }
+    @Override
+    public ServletConfig getServletConfig() {
+        System.out.println(&quot;getServletConfig 被调用...&quot;);
+        return null;
+    }
+    @Override
+    public String getServletInfo() {
+        System.out.println(&quot;getServletInfo 被调用...&quot;);
+        return null;
+    }
+}</code></pre>
+<h1 id="三生命周期">三、生命周期</h1>
+<ul>
+<li>加载和实例化</li>
+</ul>
+<p>当Servlet容器启动或客户端发送请求时，Servlet容器会查找是否存在该Servlet实例，若存在，则直接读取该实例响应请求；如果不存在，就创建一个Servlet实例(属于单例设计模式)。load-on-startup 可以配置创建时序。</p>
+<ul>
+<li>初始化：init()</li>
+</ul>
+<p>实例化后，Servlet容器将调用init方法一次，初始化当前 Servlet。</p>
+<ul>
+<li>服务：service()</li>
+</ul>
+<p>初始化后，Servlet处于响应请求的就绪状态。当接收到客户端请求时，调用service()的方法处理客户端请求，HttpServlet的service()方法会根据不同的请求 调用不同的模板方法。</p>
+<ul>
+<li>销毁：destroy()</li>
+</ul>
+<p>当Servlet容器关闭时，Servlet实例也随时销毁。关闭 Tomcat 服务时可以通过日志打印看到该方法的执行。</p>
+<h1 id="四运行配置">四、运行配置</h1>
+<h2 id="web.xml配置">1、web.xml配置</h2>
+<pre><code><code>&lt;servlet&gt;
+    &lt;servlet-name&gt;servletOneImpl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;com.node01.servlet.impl.ServletOneImpl&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;servletOneImpl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/servletOneImpl&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;
+&lt;servlet&gt;
+    &lt;servlet-name&gt;servletTwoImpl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;com.node01.servlet.impl.ServletTwoImpl&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;servletTwoImpl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/servletTwoImpl&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;
+&lt;servlet&gt;
+    &lt;servlet-name&gt;servletThreeImpl&lt;/servlet-name&gt;
+    &lt;servlet-class&gt;com.node01.servlet.impl.ServletThreeImpl&lt;/servlet-class&gt;
+&lt;/servlet&gt;
+&lt;servlet-mapping&gt;
+    &lt;servlet-name&gt;servletThreeImpl&lt;/servlet-name&gt;
+    &lt;url-pattern&gt;/servletThreeImpl&lt;/url-pattern&gt;
+&lt;/servlet-mapping&gt;</code></pre>
+<p>请求：<code>http://localhost:6003/servletOneImpl</code> 测试。</p>
+<ul>
+<li>servlet-name：Servlet 注册名称。</li>
+<li>servlet-class：Servlet 全路径类名。</li>
+<li>serlvet-mapping：同一个Servlet可以被映射到多个URL上。</li>
+<li>url-pattern：Servlet 访问的映射路径。</li>
+</ul>
+<h2 id="线程池运行">2、线程池运行</h2>
+<p>观察上述第三种Servlet实现方式的日志打印：<code>Thread.currentThread().getId());</code>。</p>
+<pre><code><code>ThreadId：32
+ThreadId：33
+ThreadId：32
+ThreadId：31
+ThreadId：32</code></pre>
+<p>这里不难发现，Servlet以线程池的方式执行的。</p>
+<h1 id="五源代码地址">五、源代码地址</h1>
+<pre><code><code>GitHub·地址
+https://github.com/cicadasmile/java-base-parent
+GitEE·地址
+https://gitee.com/cicadasmile/java-base-parent</code></pre>
+<p><img src="./images/JavaEE基础(01)：Servlet实现方式，生命周期执行过程0.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

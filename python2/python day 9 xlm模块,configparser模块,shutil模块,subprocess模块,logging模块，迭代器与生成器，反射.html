@@ -1,0 +1,554 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python day 9 xlm模块,configparser模块,shutil模块,subprocess模块,logging模块，迭代器与生成器，反射' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python day 9 xlm模块,configparser模块,shutil模块,subprocess模块,logging模块，迭代器与生成器，反射</center></div><div class='banquan'>原文出处:本文由博客园博主bluestarpin提供。<br/>
+原文连接:https://www.cnblogs.com/lanxing0422/p/pythonday9.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#python-day-9">python day 9</a><ul>
+        <li><a href="#xml模块">1. xml模块</a><ul>
+        <li><a href="#初识xml">1.1 初识xml</a></li>
+        <li><a href="#遍历xml文档的指定节点">1.2 遍历xml文档的指定节点</a></li>
+        <li><a href="#通过python手工创建xml文档">1.3 通过python手工创建xml文档</a></li>
+        <li><a href="#创建节点的两种方式">1.4 创建节点的两种方式</a></li>
+        <li><a href="#总结">1.5 总结</a></li>
+        </ul></li>
+        <li><a href="#configparser模块">2. configparser模块</a></li>
+        <li><a href="#shutil模块">3. shutil模块</a></li>
+        <li><a href="#subprocess模块">4. subprocess模块</a></li>
+        <li><a href="#logging模块">5. logging模块</a></li>
+        <li><a href="#生成器generator与迭代器iterator">6. 生成器(generator)与迭代器(iterator)</a></li>
+        <li><a href="#反射">7. 反射</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="python-day-9">python day 9</h1>
+<p>2019/10/12</p>
+<p>学习资料来自老男孩教育</p>
+<h2 id="xml模块">1. xml模块</h2>
+<p>xml模块是在json没有出来之前，用于不同语言之间通信，交换，处理xml格式数据的一种方式。</p>
+<h3 id="初识xml">1.1 初识xml</h3>
+<pre><code><code>import requests
+
+from xml.etree import ElementTree as ET
+
+# 使用第三方模块requests发送HTTP请求，或者XML格式内容
+response = requests.get(&#39;http://www.webxml.com.cn//webservices/qqOnlineWebService.asmx/qqCheckOnline?qqCode=375132083&#39;)
+result = response.text  # 字符串类型
+
+# 使用xml包中的ElementTree解析XML格式内容
+# XML接收一个字符串作为参数，将其格式化特殊的对象
+node = ET.XML(result)
+
+#获取内容
+if node.text ==&#39;Y&#39;:
+    print(&#39;在线&#39;)</code></pre>
+<pre><code><code>
+import requests
+
+response2 = requests.get(&#39;http://www.webxml.com.cn/WebServices/TrainTimeWebService.asmx/getDetailInfoByTrainCode?TrainCode=K234&amp;UserID=starpinlan&#39;)
+result2 = response2.text  #字符串str
+
+from xml.etree import ElementTree as ET
+
+root = ET.XML(result2)  #&lt;class &#39;xml.etree.ElementTree.Element&#39;&gt;
+# print(type(node2))
+
+for node in root.iter(&#39;TrainDetailInfo&#39;):  #iter方法是找到root这个对象中的后代标签名是TrainDetailInfo的所有元素
+    print(node.tag,node.attrib)  #输出它的标签名，以及它的属性
+    print(node.find(&#39;TrainStation&#39;).text) #find方法是找到指定名称的第一个子标签
+
+</code></pre>
+<h3 id="遍历xml文档的指定节点">1.2 遍历xml文档的指定节点</h3>
+<ul>
+<li>创建一个xml文档，写入如下内容：</li>
+</ul>
+<pre><code><code>
+s1 = &#39;&#39;&#39;
+&lt;data&gt;
+    &lt;country name=&quot;Liechtenstein&quot;&gt;
+        &lt;rank updated=&quot;yes&quot;&gt;2&lt;/rank&gt;
+        &lt;year id=&quot;year&quot;&gt;2024&lt;/year&gt;
+        &lt;gdppc&gt;141100&lt;/gdppc&gt;
+        &lt;neighbor direction=&quot;E&quot; name=&quot;Austria&quot; /&gt;
+        &lt;neighbor direction=&quot;W&quot; name=&quot;Switzerland&quot; /&gt;
+    &lt;/country&gt;
+    &lt;country name=&quot;Singapore&quot;&gt;
+        &lt;rank updated=&quot;yes&quot;&gt;5&lt;/rank&gt;
+        &lt;year id=&quot;year&quot;&gt;2027&lt;/year&gt;
+        &lt;gdppc&gt;59900&lt;/gdppc&gt;
+        &lt;neighbor direction=&quot;N&quot; name=&quot;Malaysia&quot; /&gt;
+    &lt;/country&gt;
+    &lt;country name=&quot;Panama&quot;&gt;
+        &lt;rank updated=&quot;yes&quot;&gt;69&lt;/rank&gt;
+        &lt;year id=&quot;year&quot;&gt;2027&lt;/year&gt;
+        &lt;gdppc&gt;13600&lt;/gdppc&gt;
+        &lt;neighbor direction=&quot;W&quot; name=&quot;Costa Rica&quot; /&gt;
+        &lt;neighbor direction=&quot;E&quot; name=&quot;Colombia&quot; /&gt;
+    &lt;/country&gt;
+&lt;/data&gt;
+&#39;&#39;&#39;
+
+with open(&#39;xmltest.xml&#39;,&#39;w+&#39;,encoding=&#39;utf-8&#39;) as f:
+    f.write(s1)
+    f.flush()</code></pre>
+<ul>
+<li>读取xml文档，不修改原文件</li>
+</ul>
+<pre><code><code>
+from xml.etree import ElementTree as ET
+#使用XML格式化字符串
+root = ET.XML(open(&#39;xmltest.xml&#39;,encoding=&#39;utf-8&#39;).read())  #此种方式只能读取，不可修改文件
+print(root.tag)
+for node in root.iter(&#39;country&#39;):
+    print(node.tag,node.attrib,node.find(&#39;year&#39;).text)
+    child_node = node.find(&#39;year&#39;)  #找到标签名为year的所有节点
+    new_year = int(child_node.text)+1 #将year标签的值加1
+    child_node.text = str(new_year)
+    child_node.set(&#39;name&#39;,&#39;year&#39;)  #设置属性name，其值为year
+    # del child_node.attrib[&#39;name&#39;]  #删除name属性键值对
+
+#保存文件需要另创建一个新文件
+tree = ET.ElementTree(root)  #创建一个内容为root的ElementTree对象
+tree.write(&#39;newxml.xml&#39;,encoding=&#39;utf-8&#39;)  #一定要通过write写入文件。</code></pre>
+<ul>
+<li>使用parse方法解析文件，可以修改原文件。</li>
+</ul>
+<pre><code><code>
+#使用ElementTree的parse方法解析文件
+
+from xml.etree import ElementTree as ET
+
+tree = ET.parse(&#39;xmltest.xml&#39;)  #parse方法可以打开文件，并解析其内容
+# print(tree,type(tree))  # &lt;class &#39;xml.etree.ElementTree.ElementTree&#39;&gt;
+root = tree.getroot()   # getroot方法获得最顶层的根节点
+# print(root.tag)  # data
+
+for node in root.iter(&#39;year&#39;):
+    print(node.tag,node.text)
+    new_year = int(node.text) + 1
+    node.text = str(new_year)
+    node.set(&#39;id&#39;,&#39;year&#39;)  # 设置id属性，其值为year，
+    print(node.attrib)    #  attrib是字典形式
+
+tree.write(&#39;xmltest.xml&#39;)  #parse可以直接修改原文件</code></pre>
+<ul>
+<li>查看一个节点都有哪些方法</li>
+</ul>
+<pre><code><code>from xml.etree  import ElementTree as ET
+
+tree = ET.parse(&#39;xmltest.xml&#39;)
+root = tree.getroot()
+print(dir(root))  #查看节点都有哪些方法
+
+&#39;&#39;&#39;
+[&#39;__class__&#39;, &#39;__copy__&#39;, &#39;__deepcopy__&#39;, &#39;__delattr__&#39;, &#39;__delitem__&#39;, &#39;__dir__&#39;, &#39;__doc__&#39;, 
+ &#39;__eq__&#39;, &#39;__format__&#39;, &#39;__ge__&#39;, &#39;__getattribute__&#39;, &#39;__getitem__&#39;, &#39;__getstate__&#39;, &#39;__gt__&#39;, 
+ &#39;__hash__&#39;, &#39;__init__&#39;, &#39;__init_subclass__&#39;, &#39;__le__&#39;, &#39;__len__&#39;, &#39;__lt__&#39;, &#39;__ne__&#39;, &#39;__new__&#39;, 
+ &#39;__reduce__&#39;, &#39;__reduce_ex__&#39;, &#39;__repr__&#39;, &#39;__setattr__&#39;, &#39;__setitem__&#39;, &#39;__setstate__&#39;, &#39;__sizeof__&#39;, 
+ &#39;__str__&#39;, &#39;__subclasshook__&#39;, &#39;append&#39;, &#39;attrib&#39;, &#39;clear&#39;, &#39;extend&#39;, &#39;find&#39;, &#39;findall&#39;, &#39;findtext&#39;, 
+ &#39;get&#39;, &#39;getchildren&#39;, &#39;getiterator&#39;, &#39;insert&#39;, &#39;items&#39;, &#39;iter&#39;, &#39;iterfind&#39;, &#39;itertext&#39;, &#39;keys&#39;, &#39;makeelement&#39;, 
+ &#39;remove&#39;, &#39;set&#39;, &#39;tag&#39;, &#39;tail&#39;, &#39;text&#39;]
+ #常用tag,attrib,find,text,set,iter,get,append,clear,extend,findall,getchildren,insert,makeelement
+ &#39;&#39;&#39;</code></pre>
+<h3 id="通过python手工创建xml文档">1.3 通过python手工创建xml文档</h3>
+<pre><code><code>from xml.etree import ElementTree as ET
+
+root = ET.Element(&#39;namelist&#39;)  #通过Element类创建一个名为namelist的xml元素（对象）
+print(root,type(root))  # &lt;Element &#39;namelist&#39; at 0x00000184AD6C21D8&gt; &lt;class &#39;xml.etree.ElementTree.Element&#39;&gt;
+name1 = ET.SubElement(root,&#39;name&#39;,attrib={&#39;enrolled&#39;:&#39;yes&#39;})  # 给root创建子节点，子节点的标签名是name，属性
+name1.text = &#39;lanxing&#39;  #给内容赋值
+age1 = ET.SubElement(name1,&#39;age&#39;,attrib={&#39;checked&#39;:&#39;no&#39;})  # 给name1创建子节点
+age1.text = &#39;18&#39;
+sex1 = ET.SubElement(name1,&#39;sex&#39;,attrib={&#39;sex&#39;:&#39;male&#39;})
+sex1.text = &#39;male&#39;
+
+name2 = ET.SubElement(root,&#39;name&#39;,attrib={&#39;enrolled&#39;:&#39;yes&#39;})  # 给root创建子节点，子节点的标签名是name，属性
+name2.text = &#39;蓝星&#39;  #给内容赋值
+age2 = ET.SubElement(name2,&#39;age&#39;,attrib={&#39;checked&#39;:&#39;no&#39;})  # 给name1创建子节点
+age2.text = &#39;28&#39;  # 必须是字符串才可以序列化
+sex2 = ET.SubElement(name2,&#39;sex&#39;,attrib={&#39;sex&#39;:&#39;male&#39;})
+sex2.text = &#39;female&#39;
+
+tree = ET.ElementTree(root)  # 通过ElementTree类生成文档对象
+tree.write(&#39;xmltest2.xml&#39;,encoding=&#39;utf-8&#39;,xml_declaration=True)  #将文档对象写入文件，declaration表示声明文件，相当于注释。</code></pre>
+<h3 id="创建节点的两种方式">1.4 创建节点的两种方式</h3>
+<pre><code><code>from xml.etree import ElementTree as ET
+
+tree = ET.parse(&#39;xmltest.xml&#39;)
+
+root = tree.getroot()
+# 创建新节点的第一种方式：makeelement
+son = root.makeelement(&#39;son&#39;,{&#39;sex&#39;:&#39;male&#39;})
+print(son,type(son))  # &lt;Element &#39;son&#39; at 0x000002E1E1B10138&gt; &lt;class &#39;xml.etree.ElementTree.Element&#39;&gt;
+# 创建新节点的第二种方式：通过Element类进行创建，实际第一种方式也是调用Element类
+son2 = ET.Element(&#39;son2&#39;,{&#39;sex&#39;:&#39;male&#39;})
+son2.text = &#39;男&#39;
+# 将新节点添加到root上
+root.append(son)
+root.append(son2)
+
+tree.write(&#39;xmltest.xml&#39;,encoding=&#39;utf-8&#39;,short_empty_elements=False) # short参数是控制是否可简写的。</code></pre>
+<h3 id="总结">1.5 总结</h3>
+<pre><code><code>
+XML:
+    1，解析：
+            str：ElementTree.XML(str)
+            文件：ElementTree.parse(file)
+    2，Element对象操作：
+            tag,text,find,iter,get,set,findall,append,insert,remove。
+    3，重新写入文件：
+            ElementTree(Element(tag,attrib)).write(filepath,encoding=None)
+            必须是ElementTree对象才有写入方法。
+    4，创建XML：
+            root= Element(tag,attrib)
+            ele = root.makeelement(tag,attrib)
+            root.append(ele)
+            ElementTree.SubElement(root,tag,attrib)
+    5，缩进
+            from xml.dom import minidom
+
+            def prettify(root):
+                &#39;&#39;&#39;将节点转换成字符串，并添加缩进&#39;&#39;&#39;
+                rough_string = ET.tostring(root,&#39;utf-8&#39;)
+                reparsed = minidom.parseString(rough_string)
+
+                return reparsed.topprettyxml(indent=&#39;\t&#39;)
+    6，命名空间
+    7，非常重要
+            一切皆对象，type(obj)查看对象的类。dir(obj)查看对象具有的方法。</code></pre>
+<h2 id="configparser模块">2. configparser模块</h2>
+<p>configparser模块用来处理配置文件，配置文件是以.ini结尾的文件，长得像下面这样。</p>
+<blockquote>
+<p>[AutoUpdate] #[xxx]叫做节点<br />
+configfileurl = <a href="https://update.pan.baidu.com/autoupdate" class="uri">https://update.pan.baidu.com/autoupdate</a> # 键值对，左边的叫key，右边的叫value<br />
+autoupdatecheckdelay = 30<br />
+configfilekey1 = EDAD921681272C3E37F34020450A6963<br />
+configfilekey2 = 132150629469920000<br />
+lstm_autoupdate = 1570589347<br />
+isautoupdate = 0</p>
+<p>[PackageInstallInfo]<br />
+default = 2<br />
+c6aa1078e4d92ff0573452220ca2d8ae = 4</p>
+</blockquote>
+<pre><code><code>import configparser
+
+con = configparser.ConfigParser()  # 创建一个ConfigParser对象
+con.read(&#39;config.ini&#39;,encoding=&#39;utf-8&#39;) # 打开文件并读取文件内容，放进内存
+
+# 1，获取所有节点
+# con对象的sections方法，内存中寻找所有的[xxx],一个[xxx]就是一个配置文件的节点
+ret = con.sections() # 获取所有的节点名称，并返回一个列表
+print(ret)  # [&#39;AutoUpdate&#39;, &#39;PackageInstallInfo&#39;]
+
+# 2，获取指定节点下所有的键值对,将key与值作为元组，元组作为列表的元素返回。
+ret2 = con.items(&#39;AutoUpdate&#39;)
+print(ret2)  # [(&#39;configfileurl&#39;, &#39;https://update.pan.baidu.com/autoupdate&#39;), (&#39;isautoupdate&#39;, &#39;0&#39;), (&#39;autoupdatecheckdelay&#39;, &#39;30&#39;), (&#39;configfilekey1&#39;, &#39;EDAD921681272C3E37F34020450A6963&#39;), (&#39;configfilekey2&#39;, &#39;132150629469920000&#39;), (&#39;lstm_autoupdate&#39;, &#39;1570589347&#39;)]
+
+# 3，获取指定节点所有的键
+ret3 = con.options(&#39;PackageInstallInfo&#39;)
+print(ret3)  # [&#39;default&#39;, &#39;c6aa1078e4d92ff0573452220ca2d8ae&#39;]
+
+# 4, 获取指定节点下指定key的值,get(sections,key)
+value1 = con.get(&#39;PackageInstallInfo&#39;,&#39;default&#39;)  #默认返回字符串
+print(value1,type(value1))
+# 可以使用getint方法，自动将字符串转换为整数返回
+value2 = con.getint(&#39;PackageInstallInfo&#39;,&#39;default&#39;)
+print(value2,type(value2))
+# 可以使用getfloat方法，自动将字符串转换为浮点数返回
+value3 = con.getfloat(&#39;PackageInstallInfo&#39;,&#39;default&#39;)
+print(value3,type(value3))
+# 如果值是布尔值，可以使用getboolean方法，自动将字符串转换为布尔值返回
+# value4 = con.getboolean(&#39;PackageInstallInfo&#39;,&#39;default&#39;)  # 会报错，因为其值不是布尔值
+
+# 5，检查，添加，删除节点
+
+has_sec = con.has_section(&#39;AutoUpdate&#39;)  #判断是否有节点，如果有返回True
+print(has_sec)
+
+con.add_section(&#39;name&#39;)
+
+con.remove_section(&#39;name&#39;)
+
+# 添加，删除操作必须重新写入文件，否则不能持久化保存。
+
+
+# 6，检查，删除，设置指定节点内的键值对
+
+#检查
+has_opt =con.has_option(&#39;AutoUpdate&#39;,&#39;IsAutoUpdate&#39;)
+
+#删除
+con.remove_option(&#39;AutoUpdate&#39;,&#39;IsAutoUpdate&#39;)
+
+#设置
+con.set(&#39;AutoUpdate&#39;,&#39;IsAutoUpdate&#39;,&#39;0&#39;)
+
+con.write(open(&#39;config.ini&#39;,&#39;w&#39;))  #write写入得接收一个文件对象
+</code></pre>
+<h2 id="shutil模块">3. shutil模块</h2>
+<p>shutil模块是高级的文件，文件夹，压缩包处理模块。</p>
+<pre><code><code>import shutil
+# 将文件内容复制到另一个文件中
+# shutil.copyfileobj(fsrc,fdst[,length]) 将一个文件流对象复制给另一个文件流对象，长度是可选的。
+f1 =open(&#39;1.txt&#39;,&#39;r&#39;,encoding=&#39;utf-8&#39;)
+f2 =open(&#39;2.txt&#39;,&#39;w&#39;,encoding=&#39;utf-8&#39;)
+shutil.copyfileobj(f1,f2)
+f1.close()
+f2.close()
+
+# shutil.copyfile(src,dst),复制文件
+shutil.copyfile(&#39;1.txt&#39;,&#39;3.txt&#39;)
+
+# shutil.copymode(src,dst) 仅复制文件的权限，用户，组和内容都不变
+shutil.copymode(&#39;1.txt&#39;,&#39;2.txt&#39;)  #dst要存在
+# shutil.copystat(src,dst) 仅拷贝状态的信息，包括：mode bits, atime, mtime, flags
+shutil.copystat(&#39;1.txt&#39;, &#39;2.txt&#39;)
+# shutil.copy(src,dst) #复制文件和权限
+shutil.copy(&#39;1.txt&#39;,&#39;2.txt&#39;)
+# shutil.copy2(src,dst) # 复制文件和状态信息
+shutil.copy2(&#39;1.txt&#39;,&#39;2.txt&#39;)
+# shutil.ignore_patterns(*patterns)忽略某些格式的文件
+# shutil.copytree(src, dst, symlinks=False, ignore=None) 递归地去复制文件夹
+shutil.copytree(&#39;.&#39;,&#39;../day10&#39;,symlinks=True,ignore=shutil.ignore_patterns(&#39;*.py&#39;))
+
+# shutil.rmtree(path[, ignore_errors[, onerror]])
+shutil.rmtree(&#39;../day10&#39;)# 递归的去删除文件
+# shutil.move(src, dst) 递归的去移动文件，它类似mv命令，其实就是重命名。
+shutil.make_archive(base_name, format[,root_dir[,owner[,group[,logger]]]])
+# 创建压缩包并返回文件路径，
+# 其中base_name是指压缩包的文件包，也可以压缩包的路径。
+# format：压缩包种类，zip,tar,bztar,gztar.
+# root_dir: 要压缩的文件夹路径(默认当前目录)
+# owner：用户，默认当前用户
+# group：组，默认当前组
+# logger：用于记录日志，通常是logging.Logger对象
+shutil.make_archive(&#39;../test1&#39;,&#39;tar&#39;,&#39;.&#39;)</code></pre>
+<p>shutil 对压缩包的处理是调用 ZipFile 和 TarFile 两个模块来进行的，</p>
+<pre><code><code>import zipfile
+
+# 压缩
+z = zipfile.ZipFile(&#39;laxi.zip&#39;, &#39;w&#39;) #创建一个zip的压缩包对象
+z.write(&#39;a.log&#39;) # 往压缩包里面加入文件
+z.write(&#39;data.data&#39;)
+z.close()
+
+# 解压
+z = zipfile.ZipFile(&#39;laxi.zip&#39;, &#39;r&#39;)
+z.extractall() # 解压所有文件
+print(z.namelist())  # 获得压缩包内的所有文件名
+z.extract(&#39;1.txt&#39;) # 单独解压指定文件
+z.close()
+
+
+import tarfile
+
+# 压缩
+tar = tarfile.open(&#39;your.tar&#39;,&#39;w&#39;)  # 创建tar格式的压缩包
+tar.add(&#39;/Users/wupeiqi/PycharmProjects/bbs2.log&#39;, arcname=&#39;bbs2.log&#39;)  #往里面加入压缩文件，可以另外设置名字为bbs2.log
+tar.add(&#39;/Users/wupeiqi/PycharmProjects/cmdb.log&#39;, arcname=&#39;cmdb.log&#39;)
+tar.close()
+
+# 解压
+tar = tarfile.open(&#39;your.tar&#39;,&#39;r&#39;)
+tar.extractall()  # 可设置解压地址
+print(tar.getmembers())  #返回压缩包内的所有文件名
+tar.extractfile(&#39;1.txt&#39;)  #单独解压指定文件
+tar.close()</code></pre>
+<h2 id="subprocess模块">4. subprocess模块</h2>
+<p>专门用于python执行系统命令</p>
+<pre><code><code>import subprocess
+
+ret = subprocess.call(&#39;ipconfig&#39;)  # call执行系统命令，返回状态码
+print(ret)  # 成功的返回码是0
+
+ret2 = subprocess.check_call(&#39;ipconfig&#39;)  # 执行命令，返回状态码
+print(ret2)
+ret3 = subprocess.check_output(&#39;ipconfig&#39;)  # 执行命令，返回字节类型的命令结果
+print(ret3)
+
+&#39;&#39;&#39;
+Popen()用于执行复杂的系统命令
+
+参数：
+    args：shell命令，可以是字符串或者序列类型（如：list，元组）
+    bufsize：指定缓冲。0 无缓冲,1 行缓冲,其他 缓冲区大小,负值 系统缓冲
+    stdin, stdout, stderr：分别表示程序的标准输入、输出、错误句柄
+    preexec_fn：只在Unix平台下有效，用于指定一个可执行对象（callable object），它将在子进程运行之前被调用
+    close_sfs：在windows平台下，如果close_fds被设置为True，则新创建的子进程将不会继承父进程的输入、输出、错误管道。
+    所以不能将close_fds设置为True同时重定向子进程的标准输入、输出与错误(stdin, stdout, stderr)。
+    shell：同上
+    cwd：用于设置子进程的当前目录
+    env：用于指定子进程的环境变量。如果env = None，子进程的环境变量将从父进程中继承。
+    universal_newlines：不同系统的换行符不同，True -&gt; 同意使用 \n
+    startupinfo与createionflags只在windows下有效
+    将被传递给底层的CreateProcess()函数，用于设置子进程的一些属性，如：主窗口的外观，进程的优先级等等 
+&#39;&#39;&#39;
+
+subprocess.Popen(&#39;mkdir test&#39;,shell=True,cwd=&#39;.&#39;)  # shell是True的情况下，就是将前面的字符串当作命令来输入
+subprocess.Popen([&#39;ipconfig&#39;,&#39;dir&#39;])  # 执行多个命令
+
+obj = subprocess.Popen([&quot;python&quot;], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+obj.stdin.write(&quot;print(1)\n&quot;)
+obj.stdin.write(&quot;print(2)&quot;)
+obj.stdin.close()
+
+cmd_out = obj.stdout.read()
+obj.stdout.close()
+cmd_error = obj.stderr.read()
+obj.stderr.close()
+
+print(cmd_out)
+print(cmd_error)</code></pre>
+<h2 id="logging模块">5. logging模块</h2>
+<p><strong>线程安全，方便，多人来写时不会写脏数据</strong>。</p>
+<ul>
+<li><strong>只写单文件日志</strong></li>
+</ul>
+<pre><code><code>import logging
+
+logging.basicConfig(filename=&#39;log.log&#39;,
+                    format=&#39;%(asctime)s - %(name)s - %(levelname)s - %(module)s:  %(message)s&#39;,
+                    datefmt=&#39;%Y-%m-%d %H:%M:%S %p&#39;,
+                    level=logging.INFO,)  #level表示大于10的才会记录
+&#39;&#39;&#39;
+CRITICAL = 50
+FATAL = CRITICAL
+ERROR = 40
+WARNING = 30
+WARN = WARNING
+INFO = 20
+DEBUG = 10
+NOTSET = 0
+&#39;&#39;&#39;
+logging.critical(&#39;c&#39;)
+logging.fatal(&#39;f&#39;)
+logging.error(&quot;sssssss&quot;)
+logging.warning(&#39;w&#39;)
+logging.info(&#39;i&#39;)
+logging.debug(&#39;d&#39;)
+logging.log(logging.INFO,&#39;333&#39;)  #本质上都是调用的log方法。
+
+&#39;&#39;&#39;</code></pre>
+<ul>
+<li><strong>写多文件日志</strong></li>
+</ul>
+<pre><code><code>&#39;&#39;&#39;
+#logging模块写多文件日志取决于两个方法：
+    一个专门用于写日志
+    一个用于比较
+    def w():
+        pass
+    def w2():
+        pass
+    def b():
+        if agr&gt;30:
+            w()
+            w2()
+    b()
+定义文件：
+    创建文件
+    file_1_1 = logging.FileHandler(&#39;11_1.log&#39;,&#39;a&#39;)
+    创建格式
+    fmt = logging.Formatter(fmt=&quot;%s(asctime)s - %(name)s - %(levelname)s - %(module)s:  %(message)s&quot;)  
+    文件应用格式
+    file_1_1.setFormatter(fmt) 
+    
+    file_1_2 = logging.FileHandler(&#39;11_2.log&#39;,&#39;a&#39;)
+    创建格式
+    fmt = logging.Formatter(fmt=&quot;%s(asctime)s - %(name)s - %(levelname)s - %(module)s:  %(message)s&quot;)  
+    文件应用格式
+    file_1_1.setFormatter(fmt) 
+    
+用于比较的函数：
+    logger1 = logging.Logger(&#39;s1&#39;,level=logging.ERROR)  # 就是b()
+    logger1.addHandler(file_1_1)  # 将文件加入进来
+    logger1.addHandler(file_1_2)
+
+写日志：
+    logger1.critical(&#39;1111&#39;)
+&#39;&#39;&#39;</code></pre>
+<h2 id="生成器generator与迭代器iterator">6. 生成器(generator)与迭代器(iterator)</h2>
+<p>能够使用for循环都叫可迭代对象(iterable)，可以被next()函数调用并不断返回下一个值的对象叫迭代器(iterator)。</p>
+<p>生成器与迭代器都是可迭代对象，生成器都是迭代器对象，可迭代对象不一定是迭代器。可以通过iter()函数将可迭代对象转换为迭代器。</p>
+<ul>
+<li><strong>生成器</strong><br />
+python中，一边循环一边计算的机制叫做生成器，generator。<br />
+创建生成器，有两种方法。第一种通过列表生成式。<br />
+<code>a = (x for x in range(10) if x&gt;=2)</code>像这种通过列表生成式的就是一个生成器，可以通过for循环或者next()内置函数来获得生成器的值，生成器如果迭代完毕，则会报错。<br />
+<code>li = [x for x in rang(10) ]</code> 这个叫做列表推导式。与下面的函数是一个功能。</li>
+</ul>
+<pre><code><code>li = []
+for i in range(10):
+    li.append(i)</code></pre>
+<p>通过关键字yield来声明是生成器。</p>
+<pre><code><code>def f():
+    for x in range(10):
+        yield x
+# 这时 f()就是一个生成器
+
+print(next(f()))  # 可以next(generator)函数来创建生成器的下一个值
+print(f().__next__())  # 也可以通过__next__()方法
+for i in f():
+    print i
+ </code></pre>
+<h2 id="反射">7. 反射</h2>
+<pre><code><code>&#39;&#39;&#39;
+# 反射
+    通过字符串的形式，导入模块
+    通过字符串的形式，去模块中寻找指定的函数，并执行
+
+    反射：根据字符串的形式去某个对象中去操作它的成员
+    getattr:
+        import random
+        寻找函数
+        target_func = getattr(random,&#39;randint&#39;,None)
+        target_func()
+        寻找变量
+        target_var = getattr(random,&#39;sample&#39;,None)
+    hasattr:
+        hasattr(random,&#39;randint&#39;)
+    setattr:
+        setattr(random,&#39;randxy&#39;,lambda x,y:x+y)
+    delattr:
+        delattr(random,&#39;randxy&#39;)
+扩展：
+    导入模块：
+        import random as rd
+        rd = __import__(&#39;random.randint&#39;,fromlist=True)
+
+
+&#39;&#39;&#39;
+import random as rd
+# 本质是调用__import__来导入模块
+rm = __import__(&#39;random&#39;)
+
+# r1 = rm.randint(1,20)
+# print(r1)
+
+f1 = getattr(rm,&#39;randint&#39;) # random.randint本质上是调用了getattr方法，这种就叫做反射
+print(f1(1,20))
+</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

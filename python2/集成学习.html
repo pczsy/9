@@ -1,0 +1,157 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修集成学习' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>集成学习</center></div><div class='banquan'>原文出处:本文由博客园博主Infi_chu提供。<br/>
+原文连接:https://www.cnblogs.com/Infi-chu/p/11435501.html</div><br>
+    <p>&nbsp;Infi-chu:</p>
+<p><a href="http://www.cnblogs.com/Infi-chu/" target="_blank">http://www.cnblogs.com/Infi-chu/</a></p>
+<p>一、集成学习简介</p>
+<p>集成学习通过建立几个模型来解决单一预测问题。它的工作原理是<strong>生成多个分类器/模型</strong>，各自独立地学习和作出预测。<strong>这些预测最后结合成组合预测，因此优于任何一个单分类的做出预测。</strong></p>
+<p><img src="./images/集成学习0.png" alt="" /></p>
+<p>&nbsp;【注】</p>
+<p>只要单分类器的表现不太差，集成学习的结果总是要好于单分类器</p>
+<p>&nbsp;</p>
+<p>二、Bagging</p>
+<p>1.Bagging集成原理</p>
+<p>目标：把下面的圈和方块进行分类</p>
+<p><img src="./images/集成学习1.png" alt="" /></p>
+<p>实现过程：</p>
+<p>1）采样不同数据集</p>
+<p><img src="./images/集成学习2.png" alt="" /></p>
+<p>2）训练分类器</p>
+<p><img src="./images/集成学习3.png" alt="" /></p>
+<p>3）平权投票</p>
+<p><img src="./images/集成学习4.png" alt="" /></p>
+<p>4）实现过程总结</p>
+<p><img src="./images/集成学习5.png" alt="" /></p>
+<p>2.随机森林构造过程</p>
+<p>在机器学习中，<strong>随机森林是一个包含多个决策树的分类器</strong>，并且其输出的类别是由个别树输出的类别的众数而定。</p>
+<p><strong>随机森林</strong> <strong>= Bagging +</strong> <strong>决策树</strong></p>
+<p><img src="./images/集成学习6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>例如, 如果你训练了5个树, 其中有4个树的结果是True, 1个树的结果是False, 那么最终投票结果就是True</p>
+<p><strong>随机森林够造过程中的关键步骤</strong>（用N来表示训练用例（样本）的个数，M表示特征数目）：</p>
+<p>​ <strong>1）一次随机选出一个样本，有放回的抽样，重复N次（有可能出现重复的样本）</strong></p>
+<p>​ <strong>2） 随机去选出m个特征, m &lt;&lt;M，建立决策树</strong></p>
+<ul>
+<li>
+<p><strong>思考</strong></p>
+<ul>
+<li>
+<p>1.为什么要随机抽样训练集？　　</p>
+<p>如果不进行随机抽样，每棵树的训练集都一样，那么最终训练出的树分类结果也是完全一样的</p>
+</li>
+<li>
+<p>2.为什么要有放回地抽样？</p>
+<p>如果不是有放回的抽样，那么每棵树的训练样本都是不同的，都是没有交集的，这样每棵树都是&ldquo;有偏的&rdquo;，都是绝对&ldquo;片面的&rdquo;（当然这样说可能不对），也就是说每棵树训练出来都是有很大的差异的；而随机森林最后分类取决于多棵树（弱分类器）的投票表决。</p>
+</li>
+</ul>
+</li>
+</ul>
+<p>3.API</p>
+<ul>
+<li>sklearn.ensemble.RandomForestClassifier(n_estimators=10, criterion=&rsquo;gini&rsquo;, max_depth=None, bootstrap=True, random_state=None, min_samples_split=2)
+<ul>
+<li>n_estimators：integer，optional（default = 10）森林里的树木数量120,200,300,500,800,1200</li>
+<li>Criterion：string，可选（default =&ldquo;gini&rdquo;）分割特征的测量方法</li>
+<li>max_depth：integer或None，可选（默认=无）树的最大深度 5,8,15,25,30</li>
+<li>max_features="auto&rdquo;,每个决策树的最大特征数量
+<ul>
+<li>If "auto", then <code>max_features=sqrt(n_features)</code>.</li>
+<li>If "sqrt", then <code>max_features=sqrt(n_features)</code>(same as "auto").</li>
+<li>If "log2", then <code>max_features=log2(n_features)</code>.</li>
+<li>If None, then <code>max_features=n_features</code>.</li>
+</ul>
+</li>
+<li>bootstrap：boolean，optional（default = True）是否在构建树时使用放回抽样</li>
+<li>min_samples_split:节点划分最少样本数</li>
+<li>min_samples_leaf:叶子节点的最小样本数</li>
+</ul>
+</li>
+<li>超参数：n_estimator, max_depth, min_samples_split,min_samples_leaf</li>
+</ul>
+<p>4.eg</p>
+<div class="cnblogs_Highlighter">
+<pre><code># 实例化随机森林
+# 随机森林去进行预测
+rf = RandomForestClassifier()
+
+# 定义超参的选择列表
+param = {"n_estimators": [120,200,300,500,800,1200], "max_depth": [5, 8, 15, 25, 30]}
+
+# 使用GridSearchCV进行网格搜索
+# 超参数调优
+gc = GridSearchCV(rf, param_grid=param, cv=2)
+gc.fit(x_train, y_train)
+print("随机森林预测的准确率为：", gc.score(x_test, y_test))
+</pre>
+</div>
+<p>&nbsp;【注】</p>
+<ul>
+<li>随机森林的建立过程</li>
+<li>树的深度、树的个数等需要进行超参数调优</li>
+</ul>
+<p>5.bagging集成优点</p>
+<p>​ <strong>Bagging + 决策树/线性回归/逻辑回归/深度学习&hellip; = bagging集成学习方法</strong></p>
+<p>经过上面方式组成的集成学习方法:</p>
+<ol>
+<li>
+<p><strong>均可在原有算法上提高约2%左右的泛化正确率</strong></p>
+</li>
+<li>
+<p><strong>简单, 方便, 通用</strong></p>
+</li>
+</ol>
+<p>&nbsp;</p>
+<p>三、Boosting</p>
+<p>1.boosting集成原理</p>
+<p>定义：</p>
+<p><strong>随着学习的积累从弱到强</strong></p>
+<p><strong>简而言之：每新加入一个弱学习器，整体能力就会得到提升</strong></p>
+<p>代表算法：Adaboost，GBDT，XGBoost</p>
+<p>实现过程：</p>
+<ul>
+<li>训练第一个学习器</li>
+<li>调整数据分布</li>
+<li>训练第二个学习器</li>
+<li>再次调整数据分布</li>
+<li>依次训练学习器，调整数据分布</li>
+<li>整体过程实现</li>
+</ul>
+<p><img src="./images/集成学习7.png" alt="" /></p>
+<p>&nbsp;<img src="./images/集成学习8.png" alt="" /></p>
+<p><strong>bagging集成与boosting集成的区别：</strong></p>
+<p>区别一:数据方面</p>
+<p>Bagging：对数据进行采样训练；</p>
+<p>Boosting：根据前一轮学习结果调整数据的重要性。</p>
+<p>区别二:投票方面</p>
+<p>Bagging：所有学习器平权投票；</p>
+<p>Boosting：对学习器进行加权投票。</p>
+<p>区别三:学习顺序</p>
+<p>Bagging的学习是并行的，每个学习器没有依赖关系；</p>
+<p>Boosting学习是串行，学习有先后顺序。</p>
+<p>区别四:主要作用</p>
+<p>Bagging主要用于提高泛化性能（解决过拟合，也可以说降低方差）</p>
+<p>Boosting主要用于提高训练精度 （解决欠拟合，也可以说降低偏差）</p>
+<p><img src="./images/集成学习9.png" alt="" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

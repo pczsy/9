@@ -1,0 +1,186 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修数据库数据类型' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>数据库数据类型</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11185174.html</div><br>
+    <h1 id="自我总结">07.14自我总结</h1>
+<h2 id="mysql数据库数据类型">MYSQL数据库数据类型</h2>
+<h2 id="一.整数类型和浮点数典型">一.整数类型和浮点数典型</h2>
+<h3 id="有符号没符号">1.有符号/没符号</h3>
+<p>对于整数和负整数来说，默认情况下是有符号范围的</p>
+<p><code>默认</code>是<code>有符号</code></p>
+<p><code>有符号和没符号其实就是有没有包括负数,有符号是包括负数的</code></p>
+<p>设置成无符号:</p>
+<p>alter table 表名 变量名 数据类型 unsigned;</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;"></th>
+<th style="text-align: center;">严格模式</th>
+<th style="text-align: center;">非严格模式</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">有符号</td>
+<td style="text-align: center;">（-，+） 超出范围会报错</td>
+<td style="text-align: center;">（-，+） 超出范围取极值</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">无符号</td>
+<td style="text-align: center;">（0，+） 超出范围会报错</td>
+<td style="text-align: center;">（0，+） 超出范围取极值</td>
+</tr>
+</tbody>
+</table>
+<h3 id="严选非严选">2.严选/非严选</h3>
+<p>我们<code>不推荐使用非严格模式下</code>建立table，因为它会可能造成数据丢失的情况，所以我们必须在5.6版本中将mysql设置为严格模式。</p>
+<p>方法一：select@@sql_mode; @表示全局变量；@@表示会话级变量（局部）</p>
+<p>​ 临时设置set @@sql_mode ='NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES ';</p>
+<p>方法二:直接修改配置文件;</p>
+<p>​ [mysqld]</p>
+<p>​ sql_mode=NO_ENGINE_SUBSTITUTION,STRICT_TRANS_TABLES 并重启服务端mysql后生效.</p>
+<ul>
+<li><p>严选情况下,数据超过他的设置范围他会报错</p></li>
+<li><p>非严选情况下,数据超过他的设置范围不会报错,但是只存他设置大小的那一部分的数据,多余的会丢掉</p></li>
+</ul>
+<h3 id="常见的类型">3.常见的类型</h3>
+<h4 id="整数型">1.整数型</h4>
+<table>
+<thead>
+<tr class="header">
+<th>数据类型</th>
+<th>字节数</th>
+<th>符号范围</th>
+<th>有符号范围</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>TINYINT</td>
+<td>1</td>
+<td>0~255</td>
+<td>-128~127</td>
+</tr>
+<tr class="even">
+<td>SMALLINT</td>
+<td>2</td>
+<td>0~65535</td>
+<td>-32768~32767</td>
+</tr>
+<tr class="odd">
+<td>MEDIUMINT</td>
+<td>3</td>
+<td>0~16777215</td>
+<td>-8388608~8388607</td>
+</tr>
+<tr class="even">
+<td>INT</td>
+<td>4</td>
+<td>0~4294967295</td>
+<td>-2147483648~2147483647</td>
+</tr>
+<tr class="odd">
+<td>BIGINT</td>
+<td>8</td>
+<td>0~18446744073709551615</td>
+<td>-9223372036854775808<br />~9223372036854775807</td>
+</tr>
+</tbody>
+</table>
+<h3 id="浮点型">2.浮点型</h3>
+<table>
+<thead>
+<tr class="header">
+<th>数据类型</th>
+<th>字节数</th>
+<th>符号范围</th>
+<th>有符号范围</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>float</td>
+<td>4</td>
+<td>1.175494351E-38 <br/>~3.402823466E +38</td>
+<td>-3.402823466E+38~<br/>-1.175494351E-38</td>
+</tr>
+<tr class="even">
+<td>double</td>
+<td>8</td>
+<td>2.2250738585072014E-308<br/>~1.7976931348623157E+308</td>
+<td>-1.7976931348623157E+308<br/>~-2.2250738585072014E- 308</td>
+</tr>
+<tr class="odd">
+<td>decimal[(M[,D])]</td>
+<td>最大与<br/>double相同</td>
+<td>不固定</td>
+<td>不固定 10.2 decimal(3,1);</td>
+</tr>
+</tbody>
+</table>
+<h2 id="二.字符串类型">二.字符串类型</h2>
+<h3 id="char-与varchar">1.char 与varchar</h3>
+<p>char:定长字符串,字符长度0-255个字节之间,存储时占用固定字节空间</p>
+<p>相对于varchar来讲</p>
+<p>优点: 读取存储速度快于varchar</p>
+<p>varchar:可变长度字符串,字符长度在0-65532个字节,存储式占用空间实际字节长度+1,而+1是存的他的长度</p>
+<p><code>原因</code>:因为char我们如果规定6,然后输入3个字符,他后面的内容会用宫格来填充,而varchar不会用空格填充,所有存的时候空间节省了,而读的时候需要发送字符的数量所有读取会变慢</p>
+<h3 id="binary-与-varbinary">2.binary 与 varbinary</h3>
+<p>BINARY和VARBINARY类类似于CHAR和VARCHAR，不同的是它们包含二进制字符串而不要二进制字符串<br />
+输入值的和char 与varchar差不多的填充效果</p>
+<h3 id="text与blob">3.text与blob</h3>
+<p>blob:没有编码的二进制大字符串.(了解即可)</p>
+<p>text:具备编码的大字符串;</p>
+<p>都有四种</p>
+<ul>
+<li>tinyblob,tinytext:</li>
+<li>blob,text</li>
+<li>mediumblob,mediumtext</li>
+<li>longblob,longtext</li>
+</ul>
+<h3 id="enum与set">4.enum与set</h3>
+<p>规定这个里面输入内容是什么,你可以输入他的内容,也可以输入他的索引</p>
+<p>enum与set区别,enum只能输一个,set能输入一个或多个,且用集合的形式输入</p>
+<p><strong>注意: mysql会自动将字符串后面的空格删掉 所以你的数据在存储前应该先把空格处理掉 </strong></p>
+<h2 id="三.时间类型">三.时间类型</h2>
+<ul>
+<li><p>year :格式YYYT</p></li>
+<li>data:格式YYYY-MM-DD</li>
+<li>time:格式HH:MM:SS</li>
+<li>datatime:格式YYYY-MM-DD HH:MM:SS</li>
+<li><p>timestamp :格式YYYY-MM-DD HH:MM:SS (不用输入默认为数据插入时候的插入时间)</p></li>
+</ul>
+<p><strong>注意：</strong></p>
+<ul>
+<li>0-69 翻译为 2000-2069； 70-99 翻译为1790-1999</li>
+<li>year、date、time既可以用字符串也可以用数字输入值；current_time和now()输入系统当前日期</li>
+<li>time不仅可以表示一天的时间，也可以表示两个时间的时间间隔</li>
+<li>'D HH:MM:SS'格式的字符串，D表示日（0-34），HH的实际值为D*24+HH</li>
+<li>datetime、timestamp只能以字符串形式输入</li>
+<li>在使用timestamp时，输入current_timestamp输入系统当前日期和时间</li>
+<li>在使用timestamp时，输入null或不输入，系统会自动输入当前日期和时间</li>
+</ul>
+<p>​</p>
+<p>​</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

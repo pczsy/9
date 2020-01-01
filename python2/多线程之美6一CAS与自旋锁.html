@@ -1,0 +1,280 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修多线程之美6一CAS与自旋锁' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>多线程之美6一CAS与自旋锁</center></div><div class='banquan'>原文出处:本文由博客园博主夕阳下飞奔的猪提供。<br/>
+原文连接:https://www.cnblogs.com/flydashpig/p/12081566.html</div><br>
+    <h1 id="什么是cas">1、什么是CAS</h1>
+<p>CAS 即 compare and swap 比较并交换， 涉及到三个参数，内存值V, 预期值A, 要更新为的值B, 拿着预期值A与内存值V比较，相等则符合预期，将内存值V更新为B, 不相等，则不能更新V。</p>
+<p>为什么预期值A与内存值V不一样了呢？</p>
+<p>在多线程环境下，对于临界区的共享资源，所有线程都可以访问修改，这时为了保证数据不会发生错误，通常会对访问临界区资源加锁，同一时刻最多只能让一个线程访问(独占模式下)，这样会让线程到临界区时串行执行，加锁操作可能会导致并发性能降低，而循环CAS可以实现让多个线程不加锁去访问共享资源，却也可以保证数据正确性。 如 int share = 1，线程A获取到share的值1，想要将其修改为2，这时线程B抢先修改share = 3了，线程A这时拿着share =1 预期值与实际内存中已经变为3的值比较, 不相等，cas失败，这时就重新获取最新的share再次更新，需要不断循环，直到更新成功；这里可能会存在线程一直在进行循环cas，消耗cpu资源。</p>
+<p>cas缺点：</p>
+<p>1、存在ABA问题</p>
+<p>2、循环cas, 可能会花费大量时间在循环，浪费cpu资源</p>
+<p>3、只能更新一个值(也可解决，AtomicReference<T> 原子引用类泛型可指定对象，实现一个对象中包含多个属性值来解决只能更新一个值的问题)</p>
+<h1 id="原子类-atomic">2、原子类 Atomic</h1>
+<p>原子类在JUC的atomic包下提供了 AtomicInteger，AtomicBoolean, AtomicLong等基本数据类型原子类,还有可传泛型的AtomicReference<T>, 以及带有版本号的 AtomicStampedReference<T> , 可实现对象的原子更新, 其具体是怎样保证在多线程环境下，不加锁的情况也可以原子操作, 是其内部借助了Unsafe类，来保证更新的原子性。</p>
+<p>类图结构如下：</p>
+<p><img src="./images/多线程之美6一CAS与自旋锁0.png" /></p>
+<p>分别用AtomicInteger和 Integer 演示多个线程执行自增操作，是否能够保证原子性，执行结果是否正确</p>
+<p>代码如下：</p>
+<pre><code><code>/**
+ * @author zdd
+ * 2019/12/22 10:47 上午
+ * Description: 演示AtomicInteger原子类原子操作
+ */
+public class CasAtomicIntegerTest {
+    static  final Integer THREAD_NUMBER = 10;
+    static  AtomicInteger atomicInteger = new AtomicInteger(0);
+    static  volatile Integer integer = 0;
+
+    public static void main(String[] args) throws InterruptedException {
+        ThreadTask task = new ThreadTask();
+        Thread[] threads = new Thread[THREAD_NUMBER];
+        //1,开启10个线程
+        for (int j = 0; j &lt; THREAD_NUMBER; j++) {
+            Thread thread  = new Thread(task);
+            threads[j]= thread;
+        }
+        for (Thread thread:threads) {
+            //开启线程
+            thread.start();
+            //注： join 为了保证主线程在所有子线程执行完毕后再打印结果，否则主线程就阻塞等待
+           // thread.join();
+        }
+
+        // 主线程休眠5s, 等待所有子线程执行完毕再打印
+        TimeUnit.SECONDS.sleep(5);
+
+        System.out.println(&quot;执行完毕，atomicInteger的值为: &quot;+ atomicInteger.get());
+        System.out.println(&quot;执行完毕，integer的值为 : &quot;+ integer);
+    }
+
+    public static void  safeIncr() {
+        atomicInteger.incrementAndGet();
+    }
+    public static void  unSafeIncr() {
+        integer ++;
+    }
+
+    static class ThreadTask implements  Runnable{
+        @Override
+        public void run() {
+            // 任务体，分别安全和非安全方式自增1000次
+            for (int i = 0; i &lt; 1000; i++) {
+                safeIncr();
+            }
+            for (int i = 0; i &lt; 1000; i++) {
+                unSafeIncr();
+            }
+        }
+    }
+}</code></pre>
+<p>执行结果如下：</p>
+<p><img src="./images/多线程之美6一CAS与自旋锁1.png" /></p>
+<p><strong>疑问：</strong>上文代码中注，我本想让主线程调用每个子线程 join方法，保证主线程在所有子线程执行完毕之后再执行打印结果，然而这样执行导致非安全的Integer自增结果也正确，猜想是在执行join方法，导致这10个子线程排队有序在执行了？ 因此注释了该行代码 ，改为让主线程休眠几秒来保证在子线程执行后再打印。</p>
+<p>AtomicInteger如何保证原子性,AtomicInteger持有Unsafe对象，其大部分方法是本地方法，底层实现可保证原子操作。</p>
+<pre><code><code>public class AtomicInteger extends Number implements java.io.Serializable {
+    // setup to use Unsafe.compareAndSwapInt for updates
+    private static final Unsafe unsafe = Unsafe.getUnsafe();</code></pre>
+<p>来看一下 AtomicInteger 的自增方法 incrementAndGet()，先自增，再返回增加后的值。</p>
+<p>代码如下：</p>
+<pre><code><code>  public final int incrementAndGet() {
+       //调用unsafe的方法
+        return unsafe.getAndAddInt(this, valueOffset, 1) + 1;
+    }</code></pre>
+<p>继续看unsafe如何实现</p>
+<pre><code><code>  public final int getAndAddInt(Object var1, long var2, int var4) {
+        int var5;
+        do {
+          //1.获取当前对象的内存中的值A
+            var5 = this.getIntVolatile(var1, var2);
+          //2. var1,var2联合获取内存中的值V，var5是期望中的值A， var5+var4 是将要更新为的新值
+        } while(!this.compareAndSwapInt(var1, var2, var5, var5 + var4));
+       //3. 更新成功，跳出while循环，返回更新成功时内存中的值（可能下一刻就被其他线程修改）
+        return var5;
+    }</code></pre>
+<p>执行流程图如下：</p>
+<p><img src="./images/多线程之美6一CAS与自旋锁2.png" /></p>
+<p>Unsafe 的compareAndSwapInt是本地方法，可原子地执行更新操作，更新成功返回true,否则false</p>
+<pre><code><code>public final native boolean compareAndSwapInt(Object var1, long var2, int var4, int var5);</code></pre>
+<h1 id="cas的aba问题">3、CAS的ABA问题</h1>
+<p>什么是ABA问题？</p>
+<p>例如 线程A获取变量atomicInteger =100, 想要将其修改为2019 （此时还未修改）, 这时线程B抢先进来将atomicInteger先修改为101，再修改回atomicInteger =100，这时线程A开始去更新atomicInteger的值了，此时预期值和内存值相等，更新成功atomicInteger =2019；但是线程A 并不知道这个值其实已经被人修改过了。</p>
+<p>代码演示如下：</p>
+<pre><code><code>/**
+ * zdd
+ * Description: cas的ABA问题
+ */
+public class CasTest1 {
+
+   // static AtomicInteger atomicInteger = new AtomicInteger(100);
+   /* 这里使用原子引用类，传入Integer类型，
+    * 和AtomicInteger一样,AtomicReference使用更灵活，泛型可指定任何引用类型。
+    * 也可用上面注释代码
+    */
+    static AtomicReference&lt;Integer&gt;  reference = new AtomicReference&lt;&gt;(100);
+
+    public static void main(String[] args) {
+  
+      //1.开启线程A
+        new Thread(()-&gt; {
+            Integer expect =  reference.get();
+            try {
+                //模拟执行任务，让线程B抢先修改
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            System.out.println( &quot;执行3s任务后， 修改值是否成功 &quot;+ reference.compareAndSet(expect,2019)+ &quot;  当前值为： &quot;+ reference.get());
+        },&quot;A&quot;).start();     
+    //2.开启线程B
+        new Thread(()-&gt; {
+            // expect1 =100
+            Integer expect1 =  reference.get();
+            //1,先修改为101，再修改回100，产生ABA问题
+            reference.compareAndSet(expect1,101);
+            //expect2 =101
+            Integer expect2 =  reference.get();
+            reference.compareAndSet(expect2, 100);
+        },&quot;B&quot;).start();
+
+    }
+}      </code></pre>
+<p>执行结果如下：可见线程A修改成功</p>
+<pre><code><code>A 执行3s任务后， 修改值是否成功:true  当前值为： 2019</code></pre>
+<h1 id="aba问题的解决方式">4、ABA问题的解决方式</h1>
+<p>解决CAS的ABA问题，是参照数据库乐观锁，添加一个版本号，每更新一次，次数+1,就可解决ABA问题了。</p>
+<p>AtomicStampedReference</p>
+<pre><code><code>/**
+ * zdd
+ * 2019/11/4 6:30 下午
+ * Description:
+ */
+public class CasTest1 {
+  //设置初始值和版本号
+    static  AtomicStampedReference&lt;Integer&gt; stampedReference = new AtomicStampedReference&lt;&gt;(100,1);
+
+    public static void main(String[] args) {
+        //2，采用带有版本号的 
+        new Thread(()-&gt; {
+            Integer  expect = stampedReference.getReference();
+            int     stamp = stampedReference.getStamp();
+            try {
+                //休眠3s,让线程B执行完ABA操作
+                TimeUnit.SECONDS.sleep(3);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            //此时 stamp=1，与实际版本号3不等，这里更新失败就是stamp没有获取到最新的
+            System.out.println(&quot;是否修改成功： &quot;+stampedReference.compareAndSet(expect, 101, stamp, stamp +1));
+            System.out.println(&quot;当前 stamp 值： &quot; + stampedReference.getStamp()+ &quot;当前 reference: &quot; +stampedReference.getReference());
+
+        },&quot;A&quot;).start();
+
+        new Thread(()-&gt; {
+            Integer expect = stampedReference.getReference();
+            int stamp = stampedReference.getStamp();
+            try {
+                //休眠1s,让线程A获取都旧的值和版本号
+                TimeUnit.SECONDS.sleep(1);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            // 1，100 -&gt; 101, 版本号 1-&gt; 2
+            stampedReference.compareAndSet(expect, 101 , stamp, stamp+1);
+            //2, 101 -&gt;100, 版本号 2-&gt;3
+            Integer expect2 = stampedReference.getReference();
+            stampedReference.compareAndSet(expect2, 100, stampedReference.getStamp(), stampedReference.getStamp() + 1);
+
+        },&quot;B&quot;).start();
+    }
+}</code></pre>
+<p>执行结果如下：</p>
+<pre><code><code>是否修改成功： false
+当前 stamp 值： 3  当前 reference: 100</code></pre>
+<h1 id="利用cas实现自旋锁">5、利用cas实现自旋锁</h1>
+<pre><code><code>package cas;
+
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+/**
+ * @author zdd
+ * 2019/12/22 9:12 下午
+ * Description: 利用cas手动实现自旋锁
+ */
+public class SpinLockTest {
+
+    static   AtomicReference&lt;Thread&gt;  atomicReference = new AtomicReference&lt;&gt;();
+
+    public static void main(String[] args) {
+        SpinLockTest spinLockTest = new SpinLockTest();
+        //测试使用自旋锁，达到同步锁一样的效果 ,开启2个子线程
+        new Thread(()-&gt; {
+            spinLockTest.lock();
+            System.out.println(Thread.currentThread().getName()+&quot; 开始执行,startTime: &quot;+System.currentTimeMillis());
+            try {
+                //休眠3s
+                TimeUnit.SECONDS.sleep(3); } catch (InterruptedException e) { e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName()+&quot; 结束执行,endTime: &quot;+System.currentTimeMillis());
+            spinLockTest.unLock();
+        },&quot;线程A&quot;).start();
+
+        new Thread(()-&gt; {
+            spinLockTest.lock();
+            System.out.println(Thread.currentThread().getName()+&quot; 开始执行,startTime: &quot;+System.currentTimeMillis());
+            try {
+                //休眠3s
+                TimeUnit.SECONDS.sleep(3); } catch (InterruptedException e) { e.printStackTrace();
+            }
+            System.out.println(Thread.currentThread().getName()+&quot; 结束执行,endTime: &quot;+System.currentTimeMillis());
+            spinLockTest.unLock();
+        },&quot;线程B&quot;).start();
+    }
+    public static void lock() {
+      Thread currentThread =  Thread.currentThread();
+      for (;;) {
+          boolean flag =atomicReference.compareAndSet(null,currentThread);
+         //cas更新成功，则跳出循环，否则一直轮询
+          if(flag) {
+              break;
+          }
+      }
+    }
+    public static void unLock() {
+        Thread currentThread = Thread.currentThread();
+        Thread momeryThread  = atomicReference.get();
+        //比较内存中线程对象与当前对象，不等抛出异常，防止未获取到锁的线程调用unlock
+        if(currentThread != momeryThread) {
+            throw new IllegalMonitorStateException();
+        }
+        //释放锁
+        atomicReference.compareAndSet(currentThread,null);
+    }
+}</code></pre>
+<p>执行结果如下图：</p>
+<p><img src="./images/多线程之美6一CAS与自旋锁3.png" /></p>
+<h1 id="总结">6、总结</h1>
+<p>通过全文，我们可以知道cas的概念，它的优缺点；原子类的使用，内部借助Unsafe类循环cas更新操作实现无锁情况下保证原子更新操作，进一步我们能够自己利用循环cas实现自旋锁SpinLock,它与同步锁如ReentrantLock等区别在于自旋锁是在未获取到锁情况，一直在轮询，线程时非阻塞的，对cpu资源占用大，适合查询多修改少场景，并发性能高；同步锁是未获取到锁，阻塞等待，两者各有适用场景。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

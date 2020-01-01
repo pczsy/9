@@ -1,0 +1,79 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修springmvc运行流程简单解释（源码解析，文末附自己画的流程图）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>springmvc运行流程简单解释（源码解析，文末附自己画的流程图）</center></div><div class='banquan'>原文出处:本文由博客园博主ForrestGump01提供。<br/>
+原文连接:https://www.cnblogs.com/jenny2019/p/12007191.html</div><br>
+    <p>首先看一下DispatcherServlet结构：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）0.png" /></p>
+<p>观察HandlerExecutionChain对象的创建与赋值，这个方法用来表示执行这个方法的整条链。<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）1.png" /></p>
+<p>进入getHandler方法：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）2.png" /></p>
+<p>此时的变量handlerMappings为：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）3.png" /></p>
+<p>刚好对应我们的三个方法，说明了我们的方法映射全部存放在handlerMappings中，通过遍历handlerMapping来进行操作。<br />
+通过HandlerMapping来对HandlerExecutionChain赋值。<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）4.png" /></p>
+<p>执行完这一句参数有，说明获取了一条完整的链，可以来进行执行了，注意此时获取到的是所有拦截器，因为必须要走过所有拦截器。</p>
+<p><img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）5.png" /></p>
+<p><img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）6.png" /></p>
+<p>通过HandlerExecutionChain对象来获取HandlerAdapter对象，通过这个对象进行控制器方法的调用，并返回ModelAndView对象，再通过ModelAndView对象调用解析器创建视图对象，再通过视图对象的渲染方法来进行最终的用户的需求结果处理。<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）7.png" /></p>
+<p>完成这一步后使用ha调用拦截器的preHandle方法，如果放行，则执行handle方法，不放行，则返回：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）8.png" /></p>
+<p>进入此方法中：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）9.png" /></p>
+<p>下一步就是执行handler处理方法，执行完方法返回一个ModelAndView对象，使用此对象调用视图解析器创建视图对象，再根据视图对象调用其渲染方法将模型中的数据以特定的格式传输给用户。<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）10.png" /></p>
+<p>继续执行：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）11.png" /></p>
+<p>执行到这里以及执行完核心业务了，需要执行postHandler方法，注意这个注释，无论是不是有异常，最终都是到这个方法中，并且有相应的异常的话还是会返回一个ModalAndView对象，让错误的结果还是能正常返回，并给出相对友好的提示信息。<br />
+/**</p>
+<ul>
+<li>Handle the result of handler selection and handler invocation, which is</li>
+<li>either a ModelAndView or an Exception to be resolved to a ModelAndView.<br />
+*/<br />
+处理完postHandler方法之后，再执行processDispatcherResult方法。<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）12.png" /></li>
+</ul>
+<p>有异常的处理：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）13.png" /></p>
+<p>执行渲染方法：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）14.png" /></p>
+<p>进入方法，根据视图解析器获取视图，获得视图对象就返回：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）15.png" /></p>
+<p>解析完成，调用view的 render方法（注意不是DispatcherServlet的render方法）：</p>
+<p><img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）16.png" /></p>
+<p>view的render方法：<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）17.png" /><br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）18.png" /></p>
+<p>执行完渲染，跳转时执行拦截器的afterCompletion方法。<br />
+<img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）19.png" /></p>
+<p>进入方法：</p>
+<p><img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）20.png" /></p>
+<p>弄完这些，还要通过过滤器链等等，最终才完成一整个springmvc的执行流程。</p>
+<p>按照我自己的理解，画出了这么一幅流程图，希望对大家有帮助：</p>
+<p><img src="./images/springmvc运行流程简单解释（源码解析，文末附自己画的流程图）21.png" /></p>
+<p>我是福尔斯甘，如果对本篇有疑问，或者发现有什么错误之处，欢迎提出指出，觉得评论不方便的话，本人邮箱是96532354@qq.com，qq同号，欢迎共同学习讨论问题。<br />
+觉得不错的话可以点个推荐分享一下哦，谢谢大家的支持~~</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

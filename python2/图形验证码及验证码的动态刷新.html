@@ -1,0 +1,226 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修图形验证码及验证码的动态刷新' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>图形验证码及验证码的动态刷新</center></div><div class='banquan'>原文出处:本文由博客园博主呱唧_T_呱唧提供。<br/>
+原文连接:https://www.cnblogs.com/aitiknowledge/p/11669098.html</div><br>
+    <p>下列代码都是以自己的项目实例讲述的，相关的文本内容很少，主要说明全在代码注释中</p>
+<h2>自制图形验证码　　</h2>
+<p>　　这里所说的图形验证码都是自制的图形，通过画布、画笔、画笔字体的颜色绘制而成的。将验证码封装成一个类比较好管理，代码里有绝对详细的注释，当然大家可以直接复制。</p>
+<p>里面涉及的字体都是从系统电脑上自带的，大家直接复制当前目录下就可以了。</p>
+<div class="cnblogs_code">
+<pre><code>主目录/utils/captcha/<span style="color: #800080;">__init__</span><span style="color: #000000;">.py
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> random
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> string
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> Image:一个画布</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> ImageDraw:一个画笔</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> ImageFont:画笔的字体</span>
+<span style="color: #0000ff;">from</span> PIL <span style="color: #0000ff;">import</span><span style="color: #000000;"> Image, ImageDraw, ImageFont
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> Captcha验证码</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Captcha(object):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 生成4位数的验证码</span>
+    numbers = 4
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 验证码图片的宽度和高度</span>
+    size = (100, 30<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 验证码字体大小</span>
+    fontsize = 25
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 加入干扰线的条数</span>
+    line_number = 2
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 构建一个验证码源文本</span>
+    SOURCE =<span style="color: #000000;"> list(string.ascii_letters)
+    </span><span style="color: #0000ff;">for</span> index <span style="color: #0000ff;">in</span> range(0, 10<span style="color: #000000;">):
+        SOURCE.append(str(index))
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 用来绘制干扰线</span>
+<span style="color: #000000;">    @classmethod
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__gene_line</span><span style="color: #000000;">(cls, draw, width, height):
+        begin </span>=<span style="color: #000000;"> (random.randint(0, width), random.randint(0, height))
+        end </span>=<span style="color: #000000;"> (random.randint(0, width), random.randint(0, height))
+        draw.line([begin, end], fill</span>=cls.<span style="color: #800080;">__gene_random_color</span>(), width=2<span style="color: #000000;">)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 用来绘制干扰点</span>
+<span style="color: #000000;">    @classmethod
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__gene_points</span><span style="color: #000000;">(cls, draw, point_chance, width, height):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 大小限在【0， 100】中</span>
+        chance = min(100<span style="color: #000000;">, max(0, int(point_chance)))
+        </span><span style="color: #0000ff;">for</span> w <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(width):
+            </span><span style="color: #0000ff;">for</span> h <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(height):
+                tmp </span>= random.randint(0, 100<span style="color: #000000;">)
+                </span><span style="color: #0000ff;">if</span> tmp &gt; 100 -<span style="color: #000000;"> chance:
+                    draw.point((w, h), fill</span>=cls.<span style="color: #800080;">__gene_random_color</span><span style="color: #000000;">())
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 生成随机颜色</span>
+<span style="color: #000000;">    @classmethod
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__gene_random_color</span>(cls, start=0, end=255<span style="color: #000000;">):
+        random.seed()
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> (random.randint(start, end),
+                random.randint(start, end),
+                random.randint(start, end))
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 随机选择一个字体</span>
+<span style="color: #000000;">    @classmethod
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__gene_random_font</span><span style="color: #000000;">(cls):
+        fonts </span>=<span style="color: #000000;"> [
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">PAPYRUS.TTF</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">CENTAUR.TTF</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">Inkfree.ttf</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+            </span><span style="color: #800000;">"</span><span style="color: #800000;">verdana.ttf</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+        ]
+        font </span>=<span style="color: #000000;"> random.choice(fonts)
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span><span style="color: #800000;">utils/captcha/</span><span style="color: #800000;">"</span>+<span style="color: #000000;">font
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 用来随机生成一个字符串（包括英文和数字）</span>
+<span style="color: #000000;">    @classmethod
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> gene_text(cls, numbers):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> numbers是生成验证码的位数</span>
+        <span style="color: #0000ff;">return</span> <span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #000000;">.join(random.sample(cls.SOURCE, numbers))
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 生成验证码</span>
+<span style="color: #000000;">    @classmethod
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> gene_graph_captcha(cls):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 验证码图片的宽高</span>
+        width, height =<span style="color: #000000;"> cls.size
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建图片</span>
+        image = Image.new(<span style="color: #800000;">"</span><span style="color: #800000;">RGBA</span><span style="color: #800000;">"</span>, (width, height), cls.<span style="color: #800080;">__gene_random_color</span>(0, 100<span style="color: #000000;">))
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 验证码的字体</span>
+        font = ImageFont.truetype(cls.<span style="color: #800080;">__gene_random_font</span><span style="color: #000000;">(), cls.fontsize)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建画笔</span>
+        draw =<span style="color: #000000;"> ImageDraw.Draw(image)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 生成字符串</span>
+        text =<span style="color: #000000;"> cls.gene_text(cls.numbers)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取字体的尺寸</span>
+        font_width, font_height =<span style="color: #000000;"> font.getsize(text)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 填充字符串</span>
+        draw.text(((width-font_width)/2, (height-font_height)/2<span style="color: #000000;">),
+                  text, font</span>=font, fill=cls.<span style="color: #800080;">__gene_random_color</span>(150, 255<span style="color: #000000;">))
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 绘制干扰线</span>
+        <span style="color: #0000ff;">for</span> x <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(0, cls.line_number):
+            cls.</span><span style="color: #800080;">__gene_line</span><span style="color: #000000;">(draw, width, height)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 绘制干扰点</span>
+        cls.<span style="color: #800080;">__gene_points</span>(draw, 10<span style="color: #000000;">, width, height)
+        with open(</span><span style="color: #800000;">"</span><span style="color: #800000;">captcha.png</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">wb</span><span style="color: #800000;">"</span><span style="color: #000000;">) as fp:
+            image.save(fp)
+        </span><span style="color: #0000ff;">return</span> text, image</pre>
+</div>
+<h2>显示图形验证码</h2>
+<p>　　一般图形验证码都是在表单中，这样短时间内的数据及建议保存在redis缓存中（用户点击动态刷新图形验证码）。首先我们绘制图形验证码保存到项目的目录下（入口文件是主目录（项目目录）app.py文件，图片也保存到主目录下），然后通过url地址访问自制的图形验证码（这里我只添加主要的代码）</p>
+<div class="cnblogs_code">
+<pre><code>主目录/common/<span style="color: #000000;">views.py
+
+@bp.route(</span><span style="color: #800000;">"</span><span style="color: #800000;">/captcha</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> graph_captcha():
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    使用定义好的图形验证码类，来制作验证码
+    以验证码为键、验证码为值（为了用户的体验，让其忽略大小写）存储在redis缓存中
+    通过BytesIO字节流的方式保存和访问图片
+    :return: 图片响应
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 获取验证码</span>
+    text, image =<span style="color: #000000;"> Captcha.gene_graph_captcha()
+    cpcache.set(text.lower(), text.lower())
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> BytesIO:字节流</span>
+    out =<span style="color: #000000;"> BytesIO()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 保存图片</span>
+    image.save(out, <span style="color: #800000;">"</span><span style="color: #800000;">png</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 存储完图片，将文件的指针指向文件头，使下次保存图片能覆盖前面保存的图片，节省空间</span>
+<span style="color: #000000;">    out.seek(0)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 访问图片，并将其作为一个响应返回给前台</span>
+    resp =<span style="color: #000000;"> make_response(out.read())
+    resp.content_type </span>= <span style="color: #800000;">"</span><span style="color: #800000;">image/png</span><span style="color: #800000;">"</span>
+    <span style="color: #0000ff;">return</span> resp</pre>
+</div>
+<p>前端页面的代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="form-group"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">div </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="input-group"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">input </span><span style="color: #ff0000;">type</span><span style="color: #0000ff;">="text"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="form-control"</span><span style="color: #ff0000;"> name</span><span style="color: #0000ff;">="graph_captcha"</span><span style="color: #ff0000;"> placeholder</span><span style="color: #0000ff;">="图形验证码"</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">span </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="input-group-addon captcha-addon"</span><span style="color: #0000ff;">&gt;</span>
+            <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">img </span><span style="color: #ff0000;">id</span><span style="color: #0000ff;">="captcha-img"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="captcha-img"</span><span style="color: #ff0000;"> src</span><span style="color: #0000ff;">="{{ url_for("</span><span style="color: #ff0000;">common.graph_captcha") }}" alt</span><span style="color: #0000ff;">=""</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">span</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">div</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<h2>动态刷新验证码</h2>
+<p>　　无非就是再生成一张图形验证码，通过url再次访问就可以，但是这样做是非常麻烦的，这里我很难解释（很难！！！），大家就直接复制代码吧，这个代码就是点击图片生成一个新的url访问图片</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">这个文件放在公共的目录下就可以了
+
+</span><span style="color: #0000ff;">var</span> cpparam =<span style="color: #000000;"> {
+    setParam: </span><span style="color: #0000ff;">function</span><span style="color: #000000;">(href, key, value){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">重新加载整个页面</span>
+        <span style="color: #0000ff;">var</span> isReplaced = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">var</span> urlArray = href.split("?"<span style="color: #000000;">);
+        </span><span style="color: #0000ff;">if</span>(urlArray.length &gt; 1<span style="color: #000000;">){
+            </span><span style="color: #0000ff;">var</span> queryArray = urlArray[1].split("&amp;"<span style="color: #000000;">);
+            </span><span style="color: #0000ff;">for</span>(<span style="color: #0000ff;">var</span> i=0; i &lt; queryArray.length; i++<span style="color: #000000;">){
+                </span><span style="color: #0000ff;">var</span> paramArray = queryArray[i].split("="<span style="color: #000000;">);
+                </span><span style="color: #0000ff;">if</span>(paramArray[0] ==<span style="color: #000000;"> key){
+                    paramArray[</span>1] =<span style="color: #000000;"> value;
+                    queryArray[i] </span>= paramArray.join("="<span style="color: #000000;">);
+                    isReplaced </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+                    </span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+                }
+            }
+            </span><span style="color: #0000ff;">if</span>(!<span style="color: #000000;">isReplaced){
+                </span><span style="color: #0000ff;">var</span> params =<span style="color: #000000;"> {};
+                params[key] </span>=<span style="color: #000000;"> value;
+                </span><span style="color: #0000ff;">if</span>(urlArray.length &gt; 1<span style="color: #000000;">){
+                    href </span>= href + "$" +<span style="color: #000000;"> $.param(params);
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+                    href </span>= href + "?" +<span style="color: #000000;"> $.param(params);
+                }
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+                </span><span style="color: #0000ff;">var</span> params = queryArray.join("&amp;"<span style="color: #000000;">);
+                urlArray[</span>1] =<span style="color: #000000;"> params;
+                href </span>= urlArray.join("?"<span style="color: #000000;">);
+            }
+        }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+            </span><span style="color: #0000ff;">var</span> param =<span style="color: #000000;"> {};
+            param[key] </span>=<span style="color: #000000;"> value;
+            </span><span style="color: #0000ff;">if</span>(urlArray.length &gt; 1<span style="color: #000000;">){
+                href </span>= href + "$" +<span style="color: #000000;"> $.param(param);
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+                href </span>= href + "?" +<span style="color: #000000;"> $.param(param);
+            }
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> href;
+    }
+};</span></pre>
+</div>
+<p>　　对应html的js文件就需要实现元素（图片）点击刷新图片，调用上面的变量cpparam生成一章图片并访问。</p>
+<div class="cnblogs_code">
+<pre><code>$(<span style="color: #0000ff;">function</span><span style="color: #000000;">(){
+   $(</span>"#captcha-img").on("click", <span style="color: #0000ff;">function</span><span style="color: #000000;">(){
+       </span><span style="color: #0000ff;">var</span> self = $(<span style="color: #0000ff;">this</span><span style="color: #000000;">);
+       </span><span style="color: #0000ff;">var</span> src = self.attr("src"<span style="color: #000000;">);
+       </span><span style="color: #0000ff;">var</span> newsrc = cpparam.setParam(src, "xx"<span style="color: #000000;">, Math.random());
+       self.attr(</span>"src"<span style="color: #000000;">, newsrc);
+   });
+});</span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

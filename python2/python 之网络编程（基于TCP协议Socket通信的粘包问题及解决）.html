@@ -1,0 +1,192 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python 之网络编程（基于TCP协议Socket通信的粘包问题及解决）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python 之网络编程（基于TCP协议Socket通信的粘包问题及解决）</center></div><div class='banquan'>原文出处:本文由博客园博主small_white-提供。<br/>
+原文连接:https://www.cnblogs.com/mylu/p/11191862.html</div><br>
+    <h3 class="md-end-block md-heading md-focus"><span class="md-plain">8.4 粘包问题</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">粘包问题发生的原因：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">1.发送端需要等缓冲区满才发送出去，造成粘包(发送数据时间间隔很短,数据了很小,会合到一起,产生粘包),这样接收端，就难于分辨出来了，必须提供科学的拆包机制。 <span><strong>即面向流的通信是无消息保护边界的</strong><span class="md-plain">。</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">2.接收方不及时接收缓冲区的包，造成多个包接收（客户端发送了一段数据，服务端只收了一小部分，服务端下次再收的时候还是从缓冲区拿上次遗留的数据，产生粘包） </span></p>
+<p class="md-end-block md-p"><span class="md-plain">粘包问题主要还是因为接收方不知道消息之间的界限，不知道一次性提取多少字节的数据所造成的。</span></p>
+<h4 class="md-end-block md-heading"><span class="md-plain">8.41 stract模块</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">1、把整型数字转成bytes类型<span class="md-softbreak"> <span class="md-plain">2、转成的bytes是固定长度的</span></span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> struct
+​
+res</span>=struct.pack(<span style="color: #800000;">'</span><span style="color: #800000;">i</span><span style="color: #800000;">'</span>,20332)    <span style="color: #008000;">#</span><span style="color: #008000;"> i:整型 </span>
+<span style="color: #0000ff;">print</span>(res,len(res))          <span style="color: #008000;">#</span><span style="color: #008000;"> b'lO\x00\x00'   4</span>
+<span style="color: #000000;">​
+res2</span>=struct.unpack(<span style="color: #800000;">'</span><span style="color: #800000;">i</span><span style="color: #800000;">'</span><span style="color: #000000;">,res)
+</span><span style="color: #0000ff;">print</span>(res2[0])              <span style="color: #008000;">#</span><span style="color: #008000;"> 20332</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain">8.42 利用stract模块解决粘包</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">为字节流加上自定义固定长度报头，报头中包含字节流长度，然后一次send到对端，对端在接收时，先从缓存中取出定长的报头（报头中含有真实数据长度），然后再取真实数据</span></p>
+<p class="md-end-block md-p"><span class="md-plain">服务端：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> subprocess
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> struct
+........
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn,client_addr</span>=server.accept() <span style="color: #008000;">#</span><span style="color: #008000;">(连接对象，客户端的ip和端口)</span>
+    <span style="color: #0000ff;">print</span><span style="color: #000000;">(client_addr)
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            cmd</span>=conn.recv(1024<span style="color: #000000;">)
+            obj</span>=subprocess.Popen(cmd.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>),<span style="color: #008000;">#</span><span style="color: #008000;"> dir</span>
+                                 shell=<span style="color: #000000;">True,
+                                 stdout</span>=<span style="color: #000000;">subprocess.PIPE,
+                                 stderr</span>=<span style="color: #000000;">subprocess.PIPE
+                                 )
+            stdout</span>=<span style="color: #000000;">obj.stdout.read()
+            stderr</span>=<span style="color: #000000;">obj.stderr.read()
+​
+            total_size</span>=len(stdout) + len(stderr)<span style="color: #008000;">#</span><span style="color: #008000;"> 1、制作固定长度的报头 # 430</span>
+            header=struct.pack(<span style="color: #800000;">'</span><span style="color: #800000;">i</span><span style="color: #800000;">'</span><span style="color: #000000;">,total_size) 
+​
+            conn.send(header)                  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 2、发送报头</span>
+<span style="color: #000000;">​
+            conn.send(stdout)                  </span><span style="color: #008000;">#</span><span style="color: #008000;">3、发送真实的数据</span>
+            conn.send(stderr)                  <span style="color: #008000;">#</span><span style="color: #008000;">subprocess返回byte类型，但需要gbk解码</span>
+        <span style="color: #0000ff;">except</span><span style="color: #000000;"> ConnectionResetError:
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;">
+​
+    conn.close()
+server.close()</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">客户端：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> struct
+..........
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    cmd</span>=input(<span style="color: #800000;">'</span><span style="color: #800000;">&gt;&gt;&gt;: </span><span style="color: #800000;">'</span><span style="color: #000000;">).strip()
+    </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> cmd:<span style="color: #0000ff;">continue</span><span style="color: #000000;">
+    client.send(cmd.encode(</span><span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>))          <span style="color: #008000;">#</span><span style="color: #008000;"> dir</span>
+<span style="color: #000000;">​
+    header</span>=client.recv(4)                    <span style="color: #008000;">#</span><span style="color: #008000;">1、先收固定长度的报头</span>
+<span style="color: #000000;">​
+    total_size</span>=struct.unpack(<span style="color: #800000;">'</span><span style="color: #800000;">i</span><span style="color: #800000;">'</span>,header)[0]    <span style="color: #008000;">#</span><span style="color: #008000;">2、解析报头</span>
+    <span style="color: #0000ff;">print</span>(total_size)                        <span style="color: #008000;">#</span><span style="color: #008000;"> 430</span>
+<span style="color: #000000;">   
+    recv_size</span>=0                             <span style="color: #008000;">#</span><span style="color: #008000;">3、根据报头内的信息，收取真实的数据</span>
+    res=b<span style="color: #800000;">''</span>
+    <span style="color: #0000ff;">while</span> recv_size &lt;<span style="color: #000000;"> total_size:
+        recv_data</span>=client.recv(1024<span style="color: #000000;">)
+        res</span>+=<span style="color: #000000;">recv_data
+        recv_size</span>+=<span style="color: #000000;">len(recv_data)
+    </span><span style="color: #0000ff;">print</span>(res.decode(<span style="color: #800000;">'</span><span style="color: #800000;">gbk</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+client.close()</span></pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain">8.43 自定义报头</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">我们可以把报头做成字典，字典里包含将要发送的真实数据的详细信息，字典然后json序列化，编码成byte类型，然后用struck将数据<span><strong>长度</strong><span class="md-plain">打包成4个字节（4个自己足够用了）</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">发送时：</span></p>
+<p class="md-end-block md-p"><span class="md-plain">先发报头长度，再编码报头内容然后发送，最后发真实内容</span></p>
+<p class="md-end-block md-p"><span class="md-plain">接收时：先收报头长度，用struct取出来，根据取出的长度收取报头内容，然后解码，反序列化，从反序列化的结果中取出待取数据的详细信息，然后去取真实的数据内容</span></p>
+<p class="md-end-block md-p"><span class="md-plain">服务端：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> subprocess
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> struct
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+...........
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    conn,client_addr</span>=server.accept() <span style="color: #008000;">#</span><span style="color: #008000;">(连接对象，客户端的ip和端口)</span>
+    <span style="color: #0000ff;">print</span><span style="color: #000000;">(client_addr)
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            cmd</span>=conn.recv(1024<span style="color: #000000;">)
+            obj</span>=subprocess.Popen(cmd.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+                                 shell</span>=<span style="color: #000000;">True,
+                                 stdout</span>=<span style="color: #000000;">subprocess.PIPE,
+                                 stderr</span>=<span style="color: #000000;">subprocess.PIPE
+                                 )
+            stdout</span>=<span style="color: #000000;">obj.stdout.read()
+            stderr</span>=<span style="color: #000000;">obj.stderr.read()
+​
+            header_dic</span>={                            <span style="color: #008000;">#</span><span style="color: #008000;"> 1、制作报头</span>
+                <span style="color: #800000;">'</span><span style="color: #800000;">total_size</span><span style="color: #800000;">'</span>:len(stdout) +<span style="color: #000000;"> len(stderr),
+                </span><span style="color: #800000;">'</span><span style="color: #800000;">md5</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">123svsaef123sdfasdf</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                </span><span style="color: #800000;">'</span><span style="color: #800000;">filename</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">a.txt</span><span style="color: #800000;">'</span><span style="color: #000000;">
+            }
+            header_json </span>=<span style="color: #000000;"> json.dumps(header_dic)
+            header_bytes </span>= header_json.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+​
+            header_size</span>=len(header_bytes)             <span style="color: #008000;">#</span><span style="color: #008000;"> 2、先发送报头的长度</span>
+            conn.send(struct.pack(<span style="color: #800000;">'</span><span style="color: #800000;">i</span><span style="color: #800000;">'</span><span style="color: #000000;">,header_size))
+​
+            conn.send(header_bytes)                  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 3、发送报头</span>
+<span style="color: #000000;">​
+            conn.send(stdout)                        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 4、发送真实的数据</span>
+<span style="color: #000000;">            conn.send(stderr)
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> ConnectionResetError:
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;">
+    conn.close()
+server.close()</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">客户端：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> socket <span style="color: #0000ff;">import</span> *
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> struct
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+.........
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    cmd</span>=input(<span style="color: #800000;">'</span><span style="color: #800000;">&gt;&gt;&gt;: </span><span style="color: #800000;">'</span><span style="color: #000000;">).strip()
+    </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> cmd:<span style="color: #0000ff;">continue</span><span style="color: #000000;">
+    client.send(cmd.encode(</span><span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+    
+    header_size</span>=struct.unpack(<span style="color: #800000;">'</span><span style="color: #800000;">i</span><span style="color: #800000;">'</span>,client.recv(4))[0]     <span style="color: #008000;">#</span><span style="color: #008000;">1、先收报头的长度</span>
+    header_bytes=client.recv(header_size)               <span style="color: #008000;">#</span><span style="color: #008000;">2、接收报头</span>
+<span style="color: #000000;">​
+    header_json</span>=header_bytes.decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>)            <span style="color: #008000;">#</span><span style="color: #008000;">3、解析报头</span>
+    header_dic=<span style="color: #000000;">json.loads(header_json)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(header_dic)
+​
+    total_size</span>=header_dic[ <span style="color: #800000;">'</span><span style="color: #800000;">total_size</span><span style="color: #800000;">'</span>]                <span style="color: #008000;">#</span><span style="color: #008000;">4、根据报头内的信息，收取真实的数据</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> print(total_size)     #1025</span>
+<span style="color: #000000;">    
+    recv_size</span>=<span style="color: #000000;">0
+    res</span>=b<span style="color: #800000;">''</span>
+    <span style="color: #0000ff;">while</span> recv_size &lt;<span style="color: #000000;"> total_size:
+         recv_data</span>=client.recv(1024<span style="color: #000000;">)
+         res</span>+=<span style="color: #000000;">recv_data
+         recv_size</span>+=<span style="color: #000000;">len(recv_data)
+​
+    </span><span style="color: #0000ff;">print</span>(res.decode(<span style="color: #800000;">'</span><span style="color: #800000;">gbk</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+client.close()</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">客户端实现等待后重连：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> socket
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+​
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        client </span>=<span style="color: #000000;"> socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+​
+        client.connect((</span><span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>,8080<span style="color: #000000;">))
+        </span><span style="color: #0000ff;">break</span>
+    <span style="color: #0000ff;">except</span><span style="color: #000000;"> ConnectionRefusedError:
+        time.sleep(</span>3<span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">等待3秒。。。</span><span style="color: #800000;">'</span>)</pre>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

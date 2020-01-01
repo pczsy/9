@@ -1,0 +1,311 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python--面向对象之三个特性封装、继承、多态' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python--面向对象之三个特性封装、继承、多态</center></div><div class='banquan'>原文出处:本文由博客园博主梦想一步登天提供。<br/>
+原文连接:https://www.cnblogs.com/june-L/p/11669081.html</div><br>
+    <p><span style="font-size: 18px;">一、面向对象简介</span></p>
+<p><span style="font-size: 18px;">1、面向对象不是所有的情况都适用</span><br /><span style="font-size: 18px;">2、面向对象编程</span><br /><span style="font-size: 18px;">	　　a.定义类</span><br /><span style="font-size: 18px;">		　　　　class 类名:</span><br /><span style="font-size: 18px;">			　　　　　　def 方法1(self, 参数名):</span><br /><span style="font-size: 18px;">				　　　　　　　　方法体</span></p>
+<p><span style="font-size: 18px;">	　　b.根据类创建对象，使用对象去执行类中的方法</span><br /><span style="font-size: 18px;">		　　　　obj = 类名()</span><br /><span style="font-size: 18px;">		　　　　obj.方法名</span><br /><span style="font-size: 18px;">3、self,形参，python内部传递</span></p>
+<p><span style="font-size: 18px;">		4、函数式编程与面向对象式编程的区别</span></p>
+<p><img src="./images/python--面向对象之三个特性封装、继承、多态0.png" alt="" /><br /><span style="font-size: 18px;">示例：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #800000;">"""</span><span style="color: #800000;">
+面向对象编程初识
+</span><span style="color: #800000;">"""</span>
+<span style="color: #008000;">#</span><span style="color: #008000;">先定义一个类</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Hello():
+</span><span style="color: #008000;">#</span><span style="color: #008000;">定义一个方法</span>
+　　<span style="color: #0000ff;">def</span><span style="color: #000000;"> sayHell(self, name):
+　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">欢迎您！</span><span style="color: #800000;">'</span> +<span style="color: #000000;"> name)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">创建一个对象</span>
+obj =<span style="color: #000000;"> Hello()
+obj.sayHell(</span><span style="color: #800000;">'</span><span style="color: #800000;">yusheng_liang</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">二、面向对象--封装</span><br /><span style="font-size: 18px;">应用场景：</span><br /><span style="font-size: 18px;">	　　1、当同一类型的方法具有相同参数时，直接封装到对象即可</span><br /><span style="font-size: 18px;">	　　2、把类当做模板，创建多个对象（对象内封装的数据可以不一样）</span></p>
+<p><span style="font-size: 18px;">　　3、类名+括号</span><br /><span style="font-size: 18px;">	　　　　自动执行类中的__init__方法：创建了一个对象</span><br /><span style="font-size: 18px;">	　　　　在__init__方法中执行具体封装的操作</span><br /><span style="font-size: 18px;">	　　　　__init__有一个特殊名字：构造方法(初始化)	</span></p>
+<p><span style="font-size: 18px;">示例一：面向对象之封装，非主流的方式</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #800000;">"""</span><span style="color: #800000;">
+封装，非主流的方式
+</span><span style="color: #800000;">"""</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Foo():
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> add_foo(self):
+　　</span><span style="color: #0000ff;">print</span>(self.name) <span style="color: #008000;">#</span><span style="color: #008000;">打印已经封装好的对象属性</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> del_foo(self):
+　　</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(self.name)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">创建一个对象</span>
+obj1 =<span style="color: #000000;"> Foo()
+</span><span style="color: #008000;">#</span><span style="color: #008000;">在对象中封装数据</span>
+obj1.name = <span style="color: #800000;">'</span><span style="color: #800000;">yusheng_liang</span><span style="color: #800000;">'</span>
+<span style="color: #008000;">#</span><span style="color: #008000;">执行方法，执行过程中可以根据self去obj1中取已经封装在里面的数据</span>
+obj1.add_foo()</pre>
+</div>
+<p><br /><span style="font-size: 18px;">示例二：面向对象之封装，使用构造方法的方式封装数据</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #800000;">"""</span><span style="color: #800000;">
+封装，使用构造方法的方式封装数据
+</span><span style="color: #800000;">"""</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Foo():
+</span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, args):
+　　</span><span style="color: #800000;">"""</span><span style="color: #800000;">
+　　构造方法
+　　:param args:
+　　</span><span style="color: #800000;">"""</span><span style="color: #000000;">
+　　self.name </span>=<span style="color: #000000;"> args
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> add_foo(self):
+　　</span><span style="color: #0000ff;">print</span>(self.name) <span style="color: #008000;">#</span><span style="color: #008000;">打印已经封装好的对象属性</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> del_foo(self):
+　　</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(self.name)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">创建一个对象，实例，并且将yusheng_liang封装到对象中</span>
+obj1 = Foo(<span style="color: #800000;">'</span><span style="color: #800000;">yusheng_liang</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> #在对象中封装数据</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> obj1.name = 'yusheng_liang'</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;">执行方法，执行过程中可以根据self去obj1中取已经封装在里面的数据</span>
+obj1.add_foo()</pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">三、面向对象--继承</span></p>
+<p><span style="font-size: 18px;">　　1、派生类可以继承基类中所有的功能</span><br /><span style="font-size: 18px;">　　2、派生类和基类同时存在相同的功能时，优先找派生类的</span><br /><span style="font-size: 18px;">　　3、python类可以同时继承多个类（C#/java不可以），用逗号隔开，优先找自己的功能，再在继承类中从左到右的顺序查找功能</span></p>
+<p><span style="font-size: 18px;">　　4、多继承时的查找顺序如下：</span></p>
+<p><img src="./images/python--面向对象之三个特性封装、继承、多态1.png" alt="" /></p>
+<p><span style="font-size: 18px;">示例：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #800000;">"""</span><span style="color: #800000;">
+面向对象之继承
+</span><span style="color: #800000;">"""</span>
+<span style="color: #008000;">#</span><span style="color: #008000;">定义一个父类，又叫基类</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Animals:
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> say(self):
+　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">Hello, I am saying</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> run(self):
+　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">I am running</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">定义子类，又叫派生类，在括号中写上父类名</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Cat(Animals):
+　　</span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, name):
+　　　　self.name </span>=<span style="color: #000000;"> name
+
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> sing(self):
+　　　　</span><span style="color: #0000ff;">print</span>(self.name + <span style="color: #800000;">'</span><span style="color: #800000;"> 喵喵喵</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">定义子类，又叫派生类，在括号中写上父类名</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Dog(Animals):
+　　</span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, name):
+　　　　self.name </span>=<span style="color: #000000;"> name
+
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> sing(self):
+　　　　</span><span style="color: #0000ff;">print</span>(self.name + <span style="color: #800000;">'</span><span style="color: #800000;"> 汪汪汪</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+cat1</span>= Cat(<span style="color: #800000;">'</span><span style="color: #800000;">小猫咪</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cat1.sing()
+cat1.say()
+
+dog1 </span>= Dog(<span style="color: #800000;">'</span><span style="color: #800000;">小狗狗</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+dog1.sing()
+dog1.run()</span></pre>
+</div>
+<p><span style="font-size: 18px;">示例结果：</span></p>
+<p><img src="./images/python--面向对象之三个特性封装、继承、多态2.png" alt="" /></p>
+<p><br /><span style="font-size: 18px;">四、面向对象--多态，多种形态</span><br /><span style="font-size: 18px;">	　　python本身支持多态	</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #800000;">"""</span><span style="color: #800000;">
+多态
+</span><span style="color: #800000;">"""</span>
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Foo:
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> f1(self):
+　　　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">Foo</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Bar:
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> f1(self):
+　　　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">Bar</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> func(arg):
+　　　　</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(arg)
+
+func(Foo())
+func(Bar())</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">补充：</span><br /><span style="font-size: 18px;">	　　查找源码的过程（self.xxxx(), 从底层开始找）</span><br /><span style="font-size: 18px;">	　　执行父类的构造方式：</span><br /><span style="font-size: 18px;">		　　　　super(当前类, self).init()</span><br /><span style="font-size: 18px;">		　　　　父类.__init__(self,xxx)</span></p>
+<p><br /><span style="font-size: 18px;">五、面向对象的进阶</span></p>
+<p><span style="font-size: 18px;">5.1、利用反射查看面向对象成员归属</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span>
+<span style="color: #008080;"> 2</span> <span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #008080;"> 3</span> <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 4</span> <span style="color: #800000;">利用反射查看面向对象成员归属
+</span><span style="color: #008080;"> 5</span> <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 6</span> 
+<span style="color: #008080;"> 7</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Foo:
+</span><span style="color: #008080;"> 8</span> 
+<span style="color: #008080;"> 9</span> 　　<span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, name):
+</span><span style="color: #008080;">10</span> 　　　　self.name =<span style="color: #000000;"> name
+</span><span style="color: #008080;">11</span> 
+<span style="color: #008080;">12</span> 　　<span style="color: #0000ff;">def</span><span style="color: #000000;"> show(self):
+</span><span style="color: #008080;">13</span> 　　　　<span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">show</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">14</span> 
+<span style="color: #008080;">15</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 反射：以字符串的形式去对象（模块）中操作其成员</span>
+<span style="color: #008080;">16</span> <span style="color: #008000;">#</span><span style="color: #008000;"> 当反射对象为一个类时，只能找类里的成员</span>
+<span style="color: #008080;">17</span> obj = hasattr(Foo, <span style="color: #800000;">'</span><span style="color: #800000;">show1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">18</span> <span style="color: #0000ff;">print</span><span style="color: #000000;">(obj)
+</span><span style="color: #008080;">19</span> 
+<span style="color: #008080;">20</span> <span style="color: #008000;">#</span><span style="color: #008000;">当反射的对象为一个对象时，即可以找对象，找类的成员</span>
+<span style="color: #008080;">21</span> obj1 = Foo(<span style="color: #800000;">'</span><span style="color: #800000;">yusheng_liang</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">22</span> ret = hasattr(obj1, <span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">23</span> <span style="color: #0000ff;">print</span><span style="color: #000000;">(ret)
+</span><span style="color: #008080;">24</span> ret1 = hasattr(obj1, <span style="color: #800000;">'</span><span style="color: #800000;">show</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">25</span> <span style="color: #0000ff;">print</span>(ret1)</pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">5.2、面向对象类成员之静态字段，静态方法，类方法</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #800000;">"""</span><span style="color: #800000;">
+面向对象类成员之静态字段，静态方法，类方法
+</span><span style="color: #800000;">"""</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Provice:
+　　</span><span style="color: #008000;">#</span><span style="color: #008000;">静态字段</span>
+　　country = <span style="color: #800000;">"</span><span style="color: #800000;">中国</span><span style="color: #800000;">"</span>
+　　<span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, name):
+　　</span><span style="color: #008000;">#</span><span style="color: #008000;">普通字段，对象中</span>
+　　　　self.name =<span style="color: #000000;"> name
+
+　　</span><span style="color: #008000;">#</span><span style="color: #008000;">普通方法，类中</span>
+　　<span style="color: #0000ff;">def</span><span style="color: #000000;"> show(self):
+　　　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">show</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+　　</span><span style="color: #008000;">#</span><span style="color: #008000;">静态方法，没有self</span>
+<span style="color: #000000;">　　@staticmethod
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> static_obj(arg1, arg2):
+　　　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">我是一个静态方法，可以传递任何参数</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+　　</span><span style="color: #008000;">#</span><span style="color: #008000;">类方法</span>
+<span style="color: #000000;">　　@classmethod
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> class_obj(cls):
+　　　　</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">我是一个类方法：</span><span style="color: #800000;">'</span><span style="color: #000000;">, cls)
+
+　　</span><span style="color: #008000;">#</span><span style="color: #008000;">特性，将方法伪造成一种字段</span>
+<span style="color: #000000;">　　@property
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> end(self):
+　　　　tmp </span>= <span style="color: #800000;">"</span><span style="color: #800000;">%s 大大的好</span><span style="color: #800000;">"</span> %<span style="color: #000000;">self.name
+　　　　</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(tmp)
+
+　　</span><span style="color: #008000;">#</span><span style="color: #008000;">特性的设置值</span>
+<span style="color: #000000;">　　@end.setter
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> end(self,value):
+　　　　self.name </span>=<span style="color: #000000;"> value
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 1、通过类访问的有：静态字段、静态方法，类方法</span>
+<span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">------1、通过类访问的有：静态字段（每个对象都有一份）、静态方法（无需使用对象封装的内容），类方法------</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(Provice.country)       <span style="color: #008000;">#</span><span style="color: #008000;">静态字段</span>
+Provice.static_obj(1, 2)     <span style="color: #008000;">#</span><span style="color: #008000;">静态方法</span>
+Provice.class_obj()      <span style="color: #008000;">#</span><span style="color: #008000;">类方法</span>
+
+<span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">-------2、通过对象访问的有：普通字段（每个对象都不同的数据），类的方法（普通方法，使用对象中的数据）-----------</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 2、通过对象访问的有：普通字段，类的方法</span>
+obj = Provice(<span style="color: #800000;">"</span><span style="color: #800000;">广东</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+ret </span>= obj.show()</pre>
+<p># 3、特性的访问</p>
+<p>print('-------3、特性的访问----------')</p>
+<p>obj1 = Provice("China")<br />ret1 = obj1.end</p>
+<p>#设置end的参数值<br />obj1.end="我被重新设置了值"<br />print(obj1.end)</p>
+
+</div>
+<p><span style="font-size: 18px;">实例结果：</span></p>
+<p><img src="./images/python--面向对象之三个特性封装、继承、多态3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">5.3、面向对象之成员修饰符</span></p>
+<p><span style="font-size: 18px;">成员修饰符：公有和私有</span><br /><span style="font-size: 18px;">	私有的，自己好使，其他的谁都不好使</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">!/usr/bin/env python</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> -*- coding:utf-8 -*-</span>
+<span style="color: #800000;">"""</span><span style="color: #800000;">
+面向对象之成员修饰符
+静态字段，普通字段，静态方法，普通方法，类方法，
+</span><span style="color: #800000;">"""</span>
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Foo:
+　　xo </span>= <span style="color: #800000;">"</span><span style="color: #800000;">xo</span><span style="color: #800000;">"</span>
+　　<span style="color: #800080;">__ox</span> = <span style="color: #800000;">"</span><span style="color: #800000;">我是ox</span><span style="color: #800000;">"</span>
+
+　　<span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, bk):
+　　　　self.backend </span>=<span style="color: #000000;"> bk
+
+　　</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> fetch(self):
+　　　　</span><span style="color: #0000ff;">print</span>(Foo.<span style="color: #800080;">__ox</span><span style="color: #000000;">)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">静态方法的修饰符调用</span>
+<span style="color: #000000;">
+obj </span>= Foo(<span style="color: #800000;">'</span><span style="color: #800000;">123</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+obj.fetch()</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">六、面向对象的特殊成员</span></p>
+<p><span style="font-size: 18px;">6.1、特殊成员--call</span><br /><span style="font-size: 18px;">	实现了__call__方法的对象，相当于重载了（），可以实现调用功能。</span><br />	</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> A():
+</span><span style="color: #008080;">2</span>     <span style="color: #0000ff;">def</span> <span style="color: #800080;">__call__</span><span style="color: #000000;">(self,name):
+</span><span style="color: #008080;">3</span>         <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">%s is running!</span><span style="color: #800000;">"</span> %<span style="color: #000000;"> name)
+</span><span style="color: #008080;">4</span> 
+<span style="color: #008080;">5</span> a =<span style="color: #000000;"> A()
+</span><span style="color: #008080;">6</span> a(<span style="color: #800000;">"</span><span style="color: #800000;">people</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">7</span>     </pre>
+</div>
+<p><span style="font-size: 18px;"> 结果：</span><br /><span style="font-size: 18px;">	people is running!</span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 18px;">6.2、特殊成员之setitem</span><br /><span style="font-size: 18px;">	设置给定键的值</span></p>
+<p><span style="font-size: 18px;">6.3、特殊成员之getitem</span><br /><span style="font-size: 18px;">	返回键对应的值。</span></p>
+<p><span style="font-size: 18px;">6.4、特殊成员之delitem</span><br /><span style="font-size: 18px;">	删除给定键对应的元素。</span><br />	<br /><span style="font-size: 18px;">6.5、特殊成员之iter	</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Foo:
+</span><span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">def</span> <span style="color: #800080;">__iter__</span><span style="color: #000000;">(self):
+</span><span style="color: #008080;"> 4</span>         <span style="color: #0000ff;">yield</span> 1
+<span style="color: #008080;"> 5</span>         <span style="color: #0000ff;">yield</span> 2
+<span style="color: #008080;"> 6</span>         <span style="color: #0000ff;">yield</span> 3
+<span style="color: #008080;"> 7</span> 
+<span style="color: #008080;"> 8</span> obj =<span style="color: #000000;"> Foo()
+</span><span style="color: #008080;"> 9</span> <span style="color: #008000;">#</span><span style="color: #008000;">如果执行for对象时，自动会执行对象的iter方法，生成器    </span>
+<span style="color: #008080;">10</span> <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> obj:
+</span><span style="color: #008080;">11</span> <span style="color: #0000ff;">print</span>(i)            </pre>
+</div>
+<p><span style="font-size: 18px;"><em id="__mceDel">总结：方法的原理就是：当我们对类的属性item进行下标的操作时，首先会被__getitem__()、__setitem__()、__delitem__()拦截，从而进行我们在方法中设定的操作，如赋值，修改内容，删除内容等等。</em></span></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

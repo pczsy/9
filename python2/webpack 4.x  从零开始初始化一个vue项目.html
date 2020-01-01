@@ -1,0 +1,542 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修webpack 4.x  从零开始初始化一个vue项目' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>webpack 4.x  从零开始初始化一个vue项目</center></div><div class='banquan'>原文出处:本文由博客园博主DIV狂魔提供。<br/>
+原文连接:https://www.cnblogs.com/guangzan/p/12005981.html</div><br>
+    <h1 id="创建目录">创建目录</h1>
+<p>项目名称: vue-init<br />
+app<br />
+├─css<br />
+│ reset.scss<br />
+│<br />
+├─js<br />
+│ │ App.vue<br />
+│ │ main.js<br />
+│ │<br />
+│ ├─home<br />
+│ │ index.vue<br />
+│ │<br />
+│ └─router<br />
+│ index.js<br />
+│<br />
+└─views<br />
+index.html</p>
+<h1 id="安装webpack">安装webpack</h1>
+<pre><code><code>npm i -D webpack</code></pre>
+<h1 id="创建配置文件">创建配置文件</h1>
+<p>webpack.config.js<br />
+基础配置</p>
+<ul>
+<li>entry 入口</li>
+<li>module 模块</li>
+<li>plugins 插件</li>
+<li>output 输出</li>
+</ul>
+<p>进阶配置</p>
+<ul>
+<li>resolve</li>
+<li>devtool</li>
+<li>devServer</li>
+<li>...</li>
+</ul>
+<h1 id="基础配置">基础配置</h1>
+<h2 id="先写好基本机构">先写好基本机构</h2>
+<pre class="js"><code>module.exports = {
+    enter: {},
+    module: {},
+    plugins: [],
+    output: {}
+}
+</code></pre>
+<h2 id="配置入口文件以main.js作为打包入口文件">配置入口文件，以main.js作为打包入口文件</h2>
+<pre class="js"><code>    enter: {
+        app: &#39;./app/js/main.js&#39;
+    }</code></pre>
+<h2 id="配置module里面主要配置使用的各种loader">配置module，里面主要配置使用的各种loader</h2>
+<pre><code><code>   module: {
+        rules: [
+            {
+                test: /\.html$/,
+                use: [
+                    {
+                        loader: &#39;html-loader&#39;
+                    }
+                ]
+            },
+            {
+                test: /\.vue$/,
+                use: [
+                    {
+                        loader: &#39;vue-loader&#39;
+                    }
+                ]
+            },
+            {
+                test: /\.scss$/,
+                use: [
+                    { loader: &#39;style-loader&#39; },
+                    {
+                        loader: &#39;css-loader&#39;,
+                        options: {
+                            module: true
+                        }
+                    },
+                    { loader: &#39;sass-loader&#39; },
+                ]
+            },
+        ]
+    },</code></pre>
+<ul>
+<li>test 的值为正册表达式，配对文件后缀，表示什么文件对应的loader</li>
+<li>sass 需要使用多个loader，解析顺序是从右向左</li>
+<li><code>options: { module: true }</code> 开启css module</li>
+</ul>
+<h2 id="稍后再配置plugins先配置output">稍后再配置plugins,先配置output</h2>
+<pre class="js"><code>//在webpack.config.js顶部引入path
+const path = require(&#39;path&#39;);</code></pre>
+<pre class="js"><code>    output: {
+        filename: &#39;[name].min.js&#39;,
+        path: path.resolve(_dirname, &#39;dist&#39;)
+    }
+}
+</code></pre>
+<ul>
+<li>filename表示打包后输出的文件名</li>
+<li>[name] 对应 enter.app的值</li>
+<li>path 打包输出的路径</li>
+<li>path.resolve() webpack的执行环境是node，这里的path是node里的一个对象,用于处理文件路径和目录路径</li>
+</ul>
+<p>配置好了 我们开始安装loaders</p>
+<pre><code><code>npm i -D html-loader vue-loader style-loader css-loader sass-loader</code></pre>
+<p>如果有loader安装不成功请再单个安装它，或者换用cnpm</p>
+<h2 id="基础配置代码">基础配置代码</h2>
+<p>到这一步我们的基础配置已经做好，代码如下：</p>
+<pre class="js"><code>module.exports = {
+    enter: {
+        app: &#39;./app/js/main.js&#39;
+    },
+    module: {
+        rules: [
+            {
+                test: /\.html$/,
+                use: [
+                    {
+                        loader: &#39;html-loader&#39;
+                    }
+                ]
+            },
+            {
+                test: /\.vue$/,
+                use: [
+                    {
+                        loader: &#39;vue-loader&#39;
+                    }
+                ]
+            },
+            {
+                test: /\.scss$/,
+                use: [
+                    { loader: &#39;style-loader&#39; },
+                    {
+                        loader: &#39;css-loader&#39;,
+                        options: {
+                            module: true
+                        }
+                    },
+                    { loader: &#39;sass-loader&#39; },
+                ]
+            },
+        ]
+    },
+    plugins: [],
+    output: {
+        filename: &#39;[name].min.js&#39;,
+        path: path.resolve(_dirname, &#39;dist&#39;)
+    }
+}</code></pre>
+<h1 id="进阶配置">进阶配置</h1>
+<h2 id="使用devserver">使用devServer</h2>
+<pre class="js"><code>  devServer: {
+    contentBase: path.join(__dirname, &#39;dist&#39;),
+    compress: true,
+    port: 9000
+  }</code></pre>
+<ul>
+<li>contentBase 告诉服务器从哪个目录中提供内容。</li>
+<li>compress 压缩</li>
+<li>port 启动端口号</li>
+</ul>
+<p>配置好了 我们开始安装它</p>
+<pre><code><code>npm i -D webpack-dev-server</code></pre>
+<h1 id="测试">测试</h1>
+<h2 id="添加一些代码以供测试">添加一些代码以供测试</h2>
+<p>home/index.vue</p>
+<pre><code><code>&lt;template&gt;
+    &lt;div id=&quot;home&quot;&gt;
+        &lt;h1&gt;首页&lt;/h1&gt;
+        &lt;p&gt;123123&lt;p&gt;
+    &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {}
+&lt;/script&gt;
+
+&lt;style lang=&quot;scss&quot; scoped&gt;
+    .home {
+        color: red;
+        font-size: 80px;
+        p {
+            color: blue
+        }
+    }
+&lt;/style&gt;</code></pre>
+<p>router/index.js</p>
+<pre class="js"><code>import Vue from &quot;vue&quot;
+import Router from &quot;vue-router&quot;
+import Home from &quot;../home/index.vue&quot;
+
+Vue.use(Router);
+
+export default new Router({
+    routes: [{
+        path: &#39;/&#39;,
+        name: &#39;home&#39;,
+        component: Home
+    }]
+})</code></pre>
+<p>App.vue</p>
+<pre><code><code>&lt;template&gt;
+  &lt;div id=&quot;app&quot;&gt;
+    &lt;router-view&gt;&lt;/router-view&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default {
+    name: &#39;app&#39;
+};
+&lt;/script&gt;
+
+&lt;style lang=&quot;scss&quot; scoped&gt;
+&lt;/style&gt;</code></pre>
+<p>main.js</p>
+<pre class="js"><code>import Vue from &#39;vue&#39;
+import App from &#39;./App.vue&#39;
+import router from &#39;./router&#39;
+
+Vue.config.productionTip = false;
+
+new Vue({
+    router,
+    render: h =&gt; h(App)
+}).$mount(&quot;#app&quot;)</code></pre>
+<p>我们还需要安装 vue 和vue router</p>
+<pre><code><code>npm i vue vue-router</code></pre>
+<h2 id="让devserver跑起来">让devServer跑起来</h2>
+<p>还需要安装两个依赖</p>
+<pre><code><code>npm i -D html-webpack-plugin clean-webpack-plugin</code></pre>
+<p>webpack.config.js顶部加入如下代码</p>
+<pre><code><code>    const HtmlWebpackPlugin = require(&#39;html-webpack-plugin&#39;);
+    const { CleanWebpackPlugin } = require(&#39;clean-webpack-plugin&#39;); 
+    // 注意这里的写法， 这样写 const CleanWebpackPlugin 会报错</code></pre>
+<ul>
+<li><p>html-webpack-plugin</p>
+<blockquote>
+<p>官网文档解释：HtmlWebpackPlugin简化了HTML文件的创建，以便为你的webpack包提供服务。这对于在文件名中包含每次会随着编译而发生变化哈希的 webpack bundle 尤其有用。 你可以让插件为你生成一个HTML文件，使用lodash模板提供你自己的模板，或使用你自己的loader。另外你可以在github查看这个项目的详细配置。</p>
+</blockquote></li>
+<li><p>clean-webpack-plugin 在每次构建前清理 /dist 文件夹，这样只会生成用到的文件。</p></li>
+</ul>
+<p>配置plugins</p>
+<pre><code><code>    plugins: [
+        new CleanWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            template: &#39;./views/index.html&#39;
+        })
+    ],</code></pre>
+<p>index.html</p>
+<pre class="html"><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;ie=edge&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;div id=&quot;app&quot;&gt;&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>package.json 加入 &quot;start&quot;: &quot;webpack-dev-server --open&quot;</p>
+<pre><code><code>  &quot;scripts&quot;: {
+    &quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;,
+    &quot;start&quot;: &quot;webpack-dev-server --open&quot;
+  },</code></pre>
+<p>跑完发现一大堆报错</p>
+<ul>
+<li>You may need an additional loader to handle the result of these loaders. Vue-loader在15.*之后的版本都是 vue-loader的使用都是需要伴生 VueLoaderPlugin的</li>
+</ul>
+<pre><code><code>npm i vue-loader-plugin -S
+</code></pre>
+<p>webpack.config.js</p>
+<pre><code><code>const VueLoaderPlugin = require(&#39;vue-loader/lib/plugin&#39;)
+
+module.exports = {
+  // ...
+  plugins: [
+    new VueLoaderPlugin()
+  ]
+}</code></pre>
+<ul>
+<li>Cannot find module 'node-sass'<br />
+安装就完了，最后我们npm start 项目成功运行<br />
+<img src="./images/webpack 4.x  从零开始初始化一个vue项目0.png" /></li>
+</ul>
+<h1 id="使用px2rem">使用px2rem</h1>
+<pre><code><code>npm install -D px2rem-loader</code></pre>
+<pre><code><code>module: {
+        rules: [
+            {
+                test: /\.html$/,
+                use: &#39;html-loader&#39;
+            },
+            {
+                test: /\.vue$/,
+                use: &#39;vue-loader&#39;
+            },
+            {
+                test: /\.scss$/,
+                use: [
+                    &#39;vue-style-loader&#39;,
+                    &#39;css-loader&#39;,
+                    {
+                        loader: &#39;px2rem-loader&#39;,
+                        options: {
+                            remUnit: 75,
+                            remPrecision: 6
+                        }
+                    },
+                    &#39;sass-loader&#39;
+                ]
+            },
+        ]
+    },</code></pre>
+<p><img src="./images/webpack 4.x  从零开始初始化一个vue项目1.png" /></p>
+<blockquote>
+<p>这部分为什么这么配置，参考了Vue官方文档 -&gt; 单文件组建 -&gt; 针对高级用户 -&gt; VueLoader<br />
+原来的webpack3.x需要在vue-loader 下配置css 和 sass 并配置 px2rem。</p>
+</blockquote>
+<h1 id="使用css-module">使用css module</h1>
+<pre><code><code>// ...
+{
+    test: /\.scss$/,
+    use: [
+        &#39;vue-style-loader&#39;,
++        {
++            loader: &#39;css-loader&#39;,
++             options: {
++                 modules: true,
++                 localIdentName: &#39;[local]_[hash:base64:8]&#39;
++             }
++        },
+        {
+            loader: &#39;px2rem-loader&#39;,
+            options: {
+                remUnit: 75,
+                remPrecision: 6
+            }
+        },
+        &#39;sass-loader&#39;
+    ]
+},</code></pre>
+<p><img src="./images/webpack 4.x  从零开始初始化一个vue项目2.png" /></p>
+<blockquote>
+<p>如果你不知道如何使用css module 请参阅Vue官方文档 -&gt; 单文件组建 -&gt; 针对高级用户 -&gt; VueLoader -&gt; css module</p>
+</blockquote>
+<h1 id="css提取">css提取</h1>
+<pre><code><code>npm install -D mini-css-extract-plugin</code></pre>
+<pre><code><code>{
+    test: /\.scss$/,
+    use: [
+        MiniCssExtractPlugin.loader,
+        {
+            loader: &#39;css-loader&#39;,
+            options: {
+                modules: true
+            }
+        },
+        {
+            loader: &#39;px2rem-loader&#39;,
+            options: {
+                remUnit: 75,
+                remPrecision: 6
+            }
+        },
+        &#39;sass-loader&#39;
+    ]
+},</code></pre>
+<pre><code><code>plugins: [
+    // ... 
+    new MiniCssExtractPlugin({
+      filename: &#39;style.css&#39;
+    })
+  ]</code></pre>
+<h1 id="区分生产环境和开发环境">区分生产环境和开发环境</h1>
+<h2 id="webpack3">webpack3</h2>
+<p>我们需要使用webpack的DefinePlugin创建一个在编译时可以配置的全局常量。在webpack.config.js头部引入webpack</p>
+<pre><code><code>const webpack = require(&#39;webpack&#39;);</code></pre>
+<p>接下来我们把module.exports的值改为箭头函数,并传入一个参数env</p>
+<pre><code><code>module.exports = env =&gt; { 
+    if (!env) { env = {} }
+    return {
+        // 原来的配置
+    }
+}</code></pre>
+<p>我们先来做一个示例，例如我们在开发环境不需要css提取</p>
+<pre class="js"><code>module.exports = env =&gt; {
+    if (!env) { env = {} }
+
+    let plugins = [
+        new CleanWebpackPlugin(),
+        new HtmlWebpackPlugin({
+            template: &#39;./views/index.html&#39;
+        }),
+        new VueLoaderPlugin(),
+    ];
+
+    if (env.production) {
+        plugins.push(
+            new webpack.DefinePlugin({
+                &#39;process.env&#39;: {
+                    NODE_ENV: &#39;production&#39;
+                }
+            }),
+            new MiniCssExtractPlugin({
+                filename: &#39;style.css&#39;
+            })
+        )
+    }</code></pre>
+<ul>
+<li>process 对象是属于node的一个全局变量</li>
+<li>我们只需要根据是否传入了env.production，然后给plugins数组push生产环境下需要的MiniCssExtractPlugin插件</li>
+</ul>
+<p>对应的我们还有修改部分原来的代码</p>
+<pre><code><code>{
+    test: /\.scss$/,
+    use: [
+*       env.production?MiniCssExtractPlugin.loader:&#39;vue-style-loader&#39;,
+        {
+            loader: &#39;css-loader&#39;,
+            options: {
+                modules: true
+            }
+        },
+        {
+            loader: &#39;px2rem-loader&#39;,
+            options: {
+                remUnit: 75,
+                remPrecision: 6
+            }
+        },
+        &#39;sass-loader&#39;
+    ]
+},</code></pre>
+<p>以及原来的plugins配置我们直接将它的值变为我们上面定义的plugins。<br />
+package.json中我们需要添加命令</p>
+<pre><code><code>  &quot;scripts&quot;: {
+    &quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;,
+    &quot;start&quot;: &quot;webpack-dev-server --open&quot;,
+    &quot;watch&quot;: &quot;webpack --watch&quot;,
+    &quot;build&quot; : &quot;webpack --env.production&quot;
+  },</code></pre>
+<blockquote>
+<p>注意我们给webpack 传递了参数，我们就是利用这个参数来区分环境。</p>
+</blockquote>
+<pre><code><code>npm start</code></pre>
+<p><img src="./images/webpack 4.x  从零开始初始化一个vue项目3.png" /><br />
+控制台我们可以看到<br />
+css样式以style标签插入，并没有被提取，说明MiniCssExtractPlugin插件没有运行</p>
+<pre><code><code>npm run build</code></pre>
+<p>运行打包后的index.html,css样式以link标签插入，说明css被提取合并为一个文件，说明生产环境下MiniCssExtractPlugin插件运行了<br />
+<img src="./images/webpack 4.x  从零开始初始化一个vue项目4.png" /></p>
+<h2 id="webpack4">webpack4</h2>
+<p>上面是的做法看起来更好理解，webpack4中我们可以直接利用mode来区分开发环境和生产环境。头部我们不需要引入webpack了， 因为我们不需要依赖 DefinePlugin。<br />
+配置中新增：</p>
+<pre><code><code>mode: &#39;development&#39; //默认是 development</code></pre>
+<pre><code><code>module.exports = (env, argv) =&gt; {
+  if (argv.mode === &#39;production&#39;) {
+    //...
+  }
+
+  return config;
+};</code></pre>
+<h1 id="使用eslint">使用eslint</h1>
+<pre><code><code>npm i eslint -D</code></pre>
+<p>eslint支持多种格式的配置文件，同时支持把配置直接写在package.json中，我们直接在写在package.json中，如何配置呢？<br />
+vue项目可以直接使用vue官方推荐的插件</p>
+<pre><code><code>npm i eslint-plugin-vue -D</code></pre>
+<p>package.json添加如下：</p>
+<pre><code><code>{ 
+  // 其他配置
+ &quot;eslintConfig&quot;: {
+    &quot;root&quot;: true,
+    &quot;parserOptions&quot;: {
+      &quot;ecmaVersion&quot;: 2017
+    },
+    &quot;extends&quot;: [
+      &quot;mysticatea&quot;,
+      &quot;mysticatea/modules&quot;,
+      &quot;plugin:vue/recommended&quot;
+    ],
+    &quot;plugins&quot;: [
+      &quot;node&quot;
+    ],
+    &quot;env&quot;: {
+      &quot;browser&quot;: false
+    },
+    &quot;globals&quot;: {
+      &quot;applicationCache&quot;: false,
+      &quot;atob&quot;: false,
+      &quot;btoa&quot;: false,
+      &quot;console&quot;: false,
+      &quot;document&quot;: false,
+      &quot;location&quot;: false,
+      &quot;window&quot;: false
+    },
+    &quot;rules&quot;: {
+      &quot;node/no-extraneous-import&quot;: &quot;error&quot;,
+      &quot;node/no-missing-import&quot;: &quot;error&quot;,
+      &quot;node/no-unpublished-import&quot;: &quot;error&quot;,
+      &quot;vue/html-indent&quot;: [
+        &quot;error&quot;,
+        4
+      ],
+      &quot;vue/max-attributes-per-line&quot;: &quot;off&quot;
+    }
+  },
+  &quot;eslintIgnore&quot;: [
+    &quot;node_modules&quot;,
+    &quot;webpack.config.js&quot;
+  ]
+}</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

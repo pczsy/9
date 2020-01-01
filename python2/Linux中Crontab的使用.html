@@ -1,0 +1,128 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Linux中Crontab的使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Linux中Crontab的使用</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11747952.html</div><br>
+    <h2 id="一.安装依赖">一.安装依赖</h2>
+<p><code>yum install cronie</code></p>
+<h2 id="二.添加-crontab">二.添加 Crontab</h2>
+<p><code>crontab -e</code></p>
+<h2 id="三.查看crontab内容">三.查看crontab内容</h2>
+<p><code>crontab -l</code></p>
+<p>其中常见的一些内容</p>
+<pre><code><code>例子：
+# 每月的最后1天
+0 0 L * * *
+
+说明：
+Linux
+*    *    *    *    *
+-    -    -    -    -
+|     |    |    |    |
+|     |    |    |    +----- day of week (0 - 7) (Sunday=0 or 7) OR sun,mon,tue,wed,thu,fri,sat
+|     |    |    +---------- month (1 - 12) OR jan,feb,mar,apr ...
+|     |    +--------------- day of month (1 - 31)
+|     +-------------------- hour (0 - 23)
++------------------------- minute (0 - 59)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">字段</th>
+<th style="text-align: left;">是否必填</th>
+<th style="text-align: left;">允许值</th>
+<th style="text-align: left;">允许特殊字符</th>
+<th style="text-align: left;">备注</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Seconds</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">0–59</td>
+<td style="text-align: left;"><code>*``,``-</code></td>
+<td style="text-align: left;">标准实现不支持此字段。</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Minutes</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">0–59</td>
+<td style="text-align: left;"><code>*``,``-</code></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Hours</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">0–23</td>
+<td style="text-align: left;"><code>*``,``-</code></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Day of month</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">1–31</td>
+<td style="text-align: left;"><code>*``,``-``?``L``W</code></td>
+<td style="text-align: left;"><code>?``L``W</code>只有部分软件实现了</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Month</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">1–12 or JAN–DEC</td>
+<td style="text-align: left;"><code>*``,``-</code></td>
+<td style="text-align: left;"></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Day of week</td>
+<td style="text-align: left;">是</td>
+<td style="text-align: left;">0–6 or SUN–SAT</td>
+<td style="text-align: left;"><code>*``,``-``?``L``#</code></td>
+<td style="text-align: left;"><code>?``L``#</code>只有部分软件实现了</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Year</td>
+<td style="text-align: left;">否</td>
+<td style="text-align: left;">1970–2099</td>
+<td style="text-align: left;"><code>*``,``-</code></td>
+<td style="text-align: left;">标准实现不支持此字段。</td>
+</tr>
+</tbody>
+</table>
+<p>星号（*）：代表所有可能的值，例如month字段如果是星号，则表示在满足其它字段的制约条件后每月都执行该命令操作。<br />
+逗号（,）：可以用逗号隔开的值指定一个列表范围，例如，“1,2,5,7,8,9”<br />
+中杠（-）：可以用整数之间的中杠表示一个整数范围，例如“2-6”表示“2,3,4,5,6”<br />
+正斜线（/）：可以用正斜线指定时间的间隔频率，例如“0-23/2”表示每两小时执行一次。同时正斜线可以和星号一起使用，例如*/10，</p>
+<p><code>示例</code></p>
+<p><code>0 2 * * * xx.sh</code> .每天 02:00 执行任务</p>
+<p><code>0 5,17 * * * xx.sh</code> 每天 5:00和17:00执行任务</p>
+<p><code>* * * * *  xx.sh</code> 每分钟执行一次任务</p>
+<p><code>0 17 * * sun  xx.sh</code> 每周日 17:00 执行任务</p>
+<p><code>*/10 * * * * xx.sh</code> 每 10min 执行一次任务</p>
+<p><code>* * * jan,may,aug * xx.sh</code> .在特定的某几个月执行任务</p>
+<p><code>0 17 * * sun,fri xx.sh</code> 在每周五、周日的17点执行任务</p>
+<p><code>0 2 * * sun  [ $(date +%d) -le 07 ] &amp;&amp; xx.sh</code> 在某个月的第一个周日执行任务</p>
+<h2 id="四.程序配置sh文件">四.程序配置sh文件</h2>
+<ol>
+<li>把python的执行命令写入 .sh脚本</li>
+<li>给脚本添加可执行权限 chmod +x myspider.sh</li>
+<li>把.sh程序写入crontab配置文件中</li>
+</ol>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

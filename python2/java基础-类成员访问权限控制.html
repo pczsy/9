@@ -1,0 +1,222 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修java基础-类成员访问权限控制' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>java基础-类成员访问权限控制</center></div><div class='banquan'>原文出处:本文由博客园博主知识追寻者提供。<br/>
+原文连接:https://www.cnblogs.com/zszxz/p/12076695.html</div><br>
+    <h1 id="一-前言">一 前言</h1>
+<p>这篇文章是很基础的一文，没多大深度，对于开发人员必然是熟练于心。本篇文章的主题是为什么java要设置类成员访问级别？其原因也很简单，就是为了面向对象的封装特性；将类成员使用不同的访问级别控制，在数据封装后，其他的类成员想要访问当前类成员，就必须要有足够的权限才能访问；这样做的目的就是我可以随意修改不想让其他类成员没有权限访问的数据，只要约定好相关的协议，不影响其他类成员访问即可；</p>
+<h1 id="二-权限修饰词介绍">二 权限修饰词介绍</h1>
+<ol>
+<li>public 意指公有的意思，其修饰的成员权限最低，表示任何成员都可以访问；注意点是<strong>一个java源文件中只能有一个类被声明为public</strong>；</li>
+<li>defaut 默认级别，成员没有修饰符号，在同一个包内能被其他成员访问；</li>
+<li>protected 受保护的意思；表示子类能够继承父类的方法；在同一个包内被其修饰的成员，其子类能够访问；注意点是<strong>不可以修饰外部类</strong>；</li>
+<li>private 私有的意思；权限最高，表示只允许类内部成员可以访问；注意点是<strong>不可以修饰外部类</strong>；</li>
+</ol>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: center;">修饰符</th>
+<th style="text-align: center;">同一个类中</th>
+<th style="text-align: center;">同一个包中的其他类</th>
+<th style="text-align: center;">不同包的子类中</th>
+<th>不同包的非子类中</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: center;">public</td>
+<td style="text-align: center;">true</td>
+<td style="text-align: center;">true</td>
+<td style="text-align: center;">true</td>
+<td>true</td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">protected</td>
+<td style="text-align: center;">true</td>
+<td style="text-align: center;">true</td>
+<td style="text-align: center;">true</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: center;">default</td>
+<td style="text-align: center;">true</td>
+<td style="text-align: center;">true</td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: center;">private</td>
+<td style="text-align: center;">true</td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+<h1 id="三-具体实施">三 具体实施</h1>
+<h2 id="public">3.1 public</h2>
+<p>在com.youku1327.base.authority2 包中创建了一个星球类，有个成员是shine表示光线，对应的getShine方法使用public修改，方法意思是获得光线；</p>
+<pre><code><code>package com.youku1327.base.authority2;
+
+/**
+ * @Author lsc
+ * &lt;p&gt; 星球类 &lt;/p&gt;
+ */
+public class Planet {
+
+    private String shine = &quot;好耀眼&quot;;
+
+    public String getShine(){
+        return shine;
+    }
+}
+</code></pre>
+<p>在 com.youku1327.base.authority1 包中创建类ZSZXZ, 使用import com.youku1327.base.authority2.Planet；导入 Planet星球类；在main方法中创建星球类，调用获得光线的方法，得到输出结果是 好耀眼；验证了public权限最低，不同包之间得非子类就可以访问；</p>
+<pre><code><code>package com.youku1327.base.authority1;
+
+import com.youku1327.base.authority2.Planet;
+
+/**
+ * @Author lsc
+ * &lt;p&gt; &lt;/p&gt;
+ */
+public class ZSZXZ {
+
+    public static void main(String[] args) {
+        // 创建星球实体
+        Planet planet = new Planet();
+        // 访问公有成员
+        String shine = planet.getShine();
+        // 好耀眼
+        System.out.println(shine);
+    }
+
+}</code></pre>
+<h2 id="protected">3.2 protected</h2>
+<p>将 星球类的getShine方法修饰符号改为 protected;</p>
+<pre><code><code>package com.youku1327.base.authority2;
+
+/**
+ * @Author lsc
+ * &lt;p&gt; 星球类 &lt;/p&gt;
+ */
+public class Planet {
+
+    private String shine = &quot;好耀眼&quot;;
+
+    protected String getShine(){
+        return shine;
+    }
+}
+</code></pre>
+<p>在com.youku1327.base.authority1中创建Earth类继承星球类Planet（初学者只要理解extends关键字表示继承的意思），继承的方法是 getShine方法，然后在主类中创建地球实例，调用getShine方法，实际上是调用 Planet的 getShine 方法（super.getShine(),super意指高级，表示父类 ）；验证了不同包的子类可以调用父类被protected修饰的成员；</p>
+<pre><code><code>package com.youku1327.base.authority1;
+
+import com.youku1327.base.authority2.Planet;
+
+/**
+ * @Author lsc
+ * &lt;p&gt; 地球类&lt;/p&gt;
+ */
+public class Earth extends Planet {
+
+    @Override
+    protected String getShine() {
+        // 调用了父类的getShine方法
+        return super.getShine();
+    }
+    // 执行前注释掉ZSZXZ中的main方法
+    public static void main(String[] args) {
+        // 创建地球
+        Earth earth = new Earth();
+        // 好耀眼
+        System.out.println(earth.getShine());
+    }
+}
+
+</code></pre>
+<p>在回去看看原来的ZSZXZ类的getShine发现报错了；验证了不同包的非子类，使用protected修饰无法访问；</p>
+<p><img src="./images/java基础-类成员访问权限控制0.png" alt="在这里插入图片描述" /></p>
+<h2 id="default">3.3 default</h2>
+<p>将 Planet 星球类 的 getShine 方法的修饰符去掉，代码如下</p>
+<pre><code><code>package com.youku1327.base.authority2;
+
+/**
+ * @Author lsc
+ * &lt;p&gt; 星球类 &lt;/p&gt;
+ */
+public class Planet {
+
+    private String shine = &quot;好耀眼&quot;;
+
+    String getShine(){
+        return shine;
+    }
+}</code></pre>
+<p>随着发现 之前的地球类报错了，我们把整个地球类注释掉；验证了default修饰的成员不能夸包访问；</p>
+<p><img src="./images/java基础-类成员访问权限控制1.png" alt="在这里插入图片描述" /></p>
+<p>我们在 Planet 的同级包下创建Moon类，调用 Planet的getShine方法，成功执行；验证了default修饰的成员能在同一个包中被访问；</p>
+<pre><code><code>package com.youku1327.base.authority2;
+
+/**
+ * @Author lsc
+ * &lt;p&gt; &lt;/p&gt;
+ */
+public class Moon  {
+
+    public static void main(String[] args) {
+        // 创建星球实体
+        Planet planet = new Planet();
+        // 访问公有成员
+        String shine = planet.getShine();
+        // 好耀眼
+        System.out.println(shine);
+    }
+
+}</code></pre>
+<h2 id="private">3.4 private</h2>
+<p>将 Planet 星球类 的 getShine 方法的修饰符改为private;</p>
+<pre><code><code>package com.youku1327.base.authority2;
+
+/**
+ * @Author lsc
+ * &lt;p&gt; 星球类 &lt;/p&gt;
+ */
+public class Planet {
+
+    private String shine = &quot;好耀眼&quot;;
+
+    private String getShine(){
+        return shine;
+    }
+}</code></pre>
+<p>发现 之前的 的Moon类主方法中的getShine方法报错了，验证了private在同包不同类中不可以被访问；getShine() 中可以使用 shine 字段，验证了同一个类中可以使用private修饰的成员;</p>
+<pre><code><code> private String shine = &quot;好耀眼&quot;;
+
+    private String getShine(){
+        return shine;
+    }
+}</code></pre>
+<p>发现 之前的 的Moon类主方法中的getShine方法报错了，验证了private在同包不同类中不可以被访问；getShine() 中可以使用 shine 字段，验证了同一个类中可以使用private修饰的成员;</p>
+<p><img src="./images/java基础-类成员访问权限控制2.png" alt="在这里插入图片描述" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

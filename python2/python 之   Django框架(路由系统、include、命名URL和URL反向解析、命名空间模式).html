@@ -1,0 +1,163 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python 之   Django框架(路由系统、include、命名URL和URL反向解析、命名空间模式)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python 之   Django框架(路由系统、include、命名URL和URL反向解析、命名空间模式)</center></div><div class='banquan'>原文出处:本文由博客园博主small_white-提供。<br/>
+原文连接:https://www.cnblogs.com/mylu/p/11455898.html</div><br>
+    <h4 class="md-end-block md-heading md-focus"><span class="md-plain">12.36 Django的路由系统</span></h4>
+<p class="md-end-block md-p"><span><strong>基本格式：</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.conf.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> url
+urlpatterns </span>=<span style="color: #000000;"> [
+     url(正则表达式, views视图函数，参数，别名),
+]
+​
+正则表达式：   一个正则表达式字符串
+views视图函数：一个可调用对象，通常为一个视图函数或一个指定视图函数路径的字符串
+参数：        可选的要传递给视图函数的默认参数（字典形式）
+别名：        一个可选的name参数</span></pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.361 路由正则表达式</span></h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.conf.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> url
+</span><span style="color: #0000ff;">from</span> django.contrib <span style="color: #0000ff;">import</span><span style="color: #000000;"> admin
+</span><span style="color: #0000ff;">from</span> app01 <span style="color: #0000ff;">import</span><span style="color: #000000;"> views
+​
+urlpatterns </span>=<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^admin/</span><span style="color: #800000;">'</span><span style="color: #000000;">, admin.site.urls),
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^book_list/([0-9]{4})/(\d{2})</span><span style="color: #800000;">'</span>, views.book_list),<span style="color: #008000;">#</span><span style="color: #008000;">通过括号捕获位置参数:(4位数字)、(2位数字)</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> publisher_list(request, x, y)</span>
+<span style="color: #000000;">    
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^publisher_list/(?P&lt;n&gt;[0-9]{4})/(?P&lt;m&gt;\d{2})</span><span style="color: #800000;">'</span><span style="color: #000000;">, views.publisher_list),
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> publisher_list(request, n, m)     #通过括号捕获关键字参数</span>
+    
+    <span style="color: #008000;">#</span><span style="color: #008000;">传递额外的参数给视图函数（了解）</span>
+    url(r<span style="color: #800000;">'</span><span style="color: #800000;">^demo1/([0-9]{4})/(\d{2})/$</span><span style="color: #800000;">'</span>, views.demo1, {<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">egon</span><span style="color: #800000;">"</span><span style="color: #000000;">}),
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">可选的要传递给视图函数的字典形式参数,如果字典的key和分组命名匹配冲突，则以字典形式的额外参数为准</span>
+<span style="color: #000000;">​
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">view函数设置默认值参数  </span>
+    url(r<span style="color: #800000;">'</span><span style="color: #800000;">^blog/$</span><span style="color: #800000;">'</span>, views.page),                <span style="color: #008000;">#</span><span style="color: #008000;">使用默认值num=1 </span>
+    url(r<span style="color: #800000;">'</span><span style="color: #800000;">^blog/(?P&lt;num&gt;[0-9]+)/$</span><span style="color: #800000;">'</span>, views.page), <span style="color: #008000;">#</span><span style="color: #008000;">使用自己匹配到的值 </span>
+<span style="color: #000000;">]
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> views.py中，可以为num指定默认值</span>
+<span style="color: #0000ff;">def</span> page(request, num=<span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span><span style="color: #000000;">):
+    </span><span style="color: #0000ff;">pass</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">1、urlpatterns中的元素按照书写顺序从上往下逐一匹配正则表达式，一旦匹配成功则不再继续。<span class="md-softbreak"> <span class="md-plain">2、若要从URL中捕获一个值，只需要在它周围放置一对圆括号（<span><strong>分组匹配</strong><span class="md-plain">）。<span class="md-softbreak"> <span class="md-plain">3、不需要添加一个前导的反斜杠，因为每个URL 都有。例如，应该是^articles 而不是 ^/articles。<span class="md-softbreak"> <span class="md-plain">4、每个正则表达式前面的'r' 是可选的但是建议加上</span></span></span></span></span></span></span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">注意：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">是否开启URL访问地址后面不为'/'跳转至带有'/'的路径的配置项</span>
+APPEND_SLASH=<span style="color: #000000;">True
+</span><span style="color: #008000;">#</span><span style="color: #008000;">捕获的参数永远都是字符串</span><span style="color: #008000;">
+#</span><span style="color: #008000;">分组匹配，分组命名匹配， 不能混着用</span></pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.362 include其他的URLconfs</span></h5>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.conf.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> include, url
+urlpatterns </span>=<span style="color: #000000;"> [
+   url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^admin/</span><span style="color: #800000;">'</span><span style="color: #000000;">, admin.site.urls),
+   url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^app01/</span><span style="color: #800000;">'</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">app01.urls</span><span style="color: #800000;">'</span>)),  <span style="color: #008000;">#</span><span style="color: #008000;"> 可以包含其他的URLconfs文件</span>
+]</pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.363 命名URL和URL反向解析</span></h5>
+<div class="cnblogs_code">
+<pre><code>url(r<span style="color: #800000;">'</span><span style="color: #800000;">^home</span><span style="color: #800000;">'</span>, views.home, name=<span style="color: #800000;">'</span><span style="color: #800000;">home</span><span style="color: #800000;">'</span>),          <span style="color: #008000;">#</span><span style="color: #008000;">  给url匹配模式起别名为 home</span>
+url(r<span style="color: #800000;">'</span><span style="color: #800000;">^index/(\d*)</span><span style="color: #800000;">'</span>, views.index, name=<span style="color: #800000;">'</span><span style="color: #800000;">index</span><span style="color: #800000;">'</span>),  <span style="color: #008000;">#</span><span style="color: #008000;">  给url匹配模式起名为index</span></pre>
+</div>
+<p class="md-end-block md-p"><span><strong>在模板语言中根据别名找到url：</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">无参：</span>
+{% url <span style="color: #800000;">'</span><span style="color: #800000;">home</span><span style="color: #800000;">'</span> %<span style="color: #000000;">}
+</span><span style="color: #008000;">#</span><span style="color: #008000;">位置参数：</span>
+{% url <span style="color: #800000;">"</span><span style="color: #800000;">home</span><span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #800000;">2019</span><span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #800000;">9</span><span style="color: #800000;">"</span> %<span style="color: #000000;">}
+</span><span style="color: #008000;">#</span><span style="color: #008000;">关键字参数：</span>
+{% url <span style="color: #800000;">"</span><span style="color: #800000;">home</span><span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #800000;">year</span><span style="color: #800000;">"</span>=2019 <span style="color: #800000;">"</span><span style="color: #800000;">month</span><span style="color: #800000;">"</span>=9 %}</pre>
+</div>
+<p class="md-end-block md-p"><span><strong>在views.py中根据别名找到 url:</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> reverse
+</span><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> redirect
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> redirect_to_year(request):
+    year </span>= 2006
+    <span style="color: #008000;">#</span><span style="color: #008000;">无参URL：reverse('别名')</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">位置参数：reverse("别名", args=("2018", ))</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">关键字参数：reverse("别名", kwargs={"k1":参数1, ...})</span>
+    <span style="color: #0000ff;">return</span> redirect(reverse(<span style="color: #800000;">'</span><span style="color: #800000;">news-year-archive</span><span style="color: #800000;">'</span>, args=<span style="color: #000000;">(year,)))
+    </span><span style="color: #0000ff;">return</span> redirect(reverse(<span style="color: #800000;">'</span><span style="color: #800000;">news-year-archive</span><span style="color: #800000;">'</span>, kargs={<span style="color: #800000;">'</span><span style="color: #800000;">year</span><span style="color: #800000;">'</span>:2006}))</pre>
+</div>
+<h5 class="md-end-block md-heading"><span class="md-plain">12.364 命名空间模式</span></h5>
+<p class="md-end-block md-p"><span class="md-plain">project中的urls.py：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.conf.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> url, include
+ 
+urlpatterns </span>=<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^app01/</span><span style="color: #800000;">'</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">app01.urls</span><span style="color: #800000;">'</span>, namespace=<span style="color: #800000;">'</span><span style="color: #800000;">app01</span><span style="color: #800000;">'</span><span style="color: #000000;">)),
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^app02/</span><span style="color: #800000;">'</span>, include(<span style="color: #800000;">'</span><span style="color: #800000;">app02.urls</span><span style="color: #800000;">'</span>, namespace=<span style="color: #800000;">'</span><span style="color: #800000;">app02</span><span style="color: #800000;">'</span><span style="color: #000000;">)),
+]</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">app01中的urls.py:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.conf.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> url
+</span><span style="color: #0000ff;">from</span> app01 <span style="color: #0000ff;">import</span><span style="color: #000000;"> views
+ 
+app_name </span>= <span style="color: #800000;">'</span><span style="color: #800000;">app01</span><span style="color: #800000;">'</span><span style="color: #000000;">
+urlpatterns </span>=<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^(?P&lt;pk&gt;\d+)/$</span><span style="color: #800000;">'</span>, views.detail, name=<span style="color: #800000;">'</span><span style="color: #800000;">detail</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+]</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">app02中的urls.py:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.conf.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> url
+</span><span style="color: #0000ff;">from</span> app02 <span style="color: #0000ff;">import</span><span style="color: #000000;"> views
+ 
+app_name </span>= <span style="color: #800000;">'</span><span style="color: #800000;">app02</span><span style="color: #800000;">'</span><span style="color: #000000;">
+urlpatterns </span>=<span style="color: #000000;"> [
+    url(r</span><span style="color: #800000;">'</span><span style="color: #800000;">^(?P&lt;pk&gt;\d+)/$</span><span style="color: #800000;">'</span>, views.detail, name=<span style="color: #800000;">'</span><span style="color: #800000;">detail</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+]</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">现在，两个app中 url名称重复了,反转URL的时候就可以通过命名空间的名称得到当前的URL</span></p>
+<p class="md-end-block md-p"><span><strong>在模板语言中根据别名找到url：</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>{% url <span style="color: #800000;">"</span><span style="color: #800000;">命名空间:别名</span><span style="color: #800000;">"</span> 参数1, 参数2... %<span style="color: #000000;">}
+</span><span style="color: #008000;">#</span><span style="color: #008000;">无参：</span>
+{% url <span style="color: #800000;">'</span><span style="color: #800000;">app01:detail</span><span style="color: #800000;">'</span> %<span style="color: #000000;">}
+</span><span style="color: #008000;">#</span><span style="color: #008000;">位置参数：</span>
+{% url <span style="color: #800000;">"</span><span style="color: #800000;">app01:detail</span><span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #800000;">2019</span><span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #800000;">9</span><span style="color: #800000;">"</span> %<span style="color: #000000;">}
+</span><span style="color: #008000;">#</span><span style="color: #008000;">关键字参数：</span>
+{% url <span style="color: #800000;">'</span><span style="color: #800000;">app01:detail</span><span style="color: #800000;">'</span> pk=12  %<span style="color: #000000;">}
+{</span>% url <span style="color: #800000;">"</span><span style="color: #800000;">app01:detail</span><span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #800000;">year</span><span style="color: #800000;">"</span>=2019 <span style="color: #800000;">"</span><span style="color: #800000;">month</span><span style="color: #800000;">"</span>=9 %}</pre>
+</div>
+<p class="md-end-block md-p"><span><strong>在views.py中根据别名找到 url:</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.urls <span style="color: #0000ff;">import</span><span style="color: #000000;"> reverse
+</span><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> redirect
+​
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> redirect_to_year(request):
+    year </span>= 2006
+    <span style="color: #008000;">#</span><span style="color: #008000;">无参URL：reverse('命名空间:别名')</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">位置参数：reverse("命名空间:别名", args=(参数1， 参数2, ...))</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">关键字参数：reverse("命名空间:别名", kwargs={"k1":参数1, ...})</span>
+    <span style="color: #0000ff;">return</span> redirect(reverse(<span style="color: #800000;">'</span><span style="color: #800000;">app02:detail</span><span style="color: #800000;">'</span>, args=<span style="color: #000000;">(year,)))
+    </span><span style="color: #0000ff;">return</span> redirect(reverse(<span style="color: #800000;">'</span><span style="color: #800000;">app02:detail</span><span style="color: #800000;">'</span>, kwargs={<span style="color: #800000;">'</span><span style="color: #800000;">pk</span><span style="color: #800000;">'</span>:11}))</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">这样即使app中URL的命名相同，也可以反转得到正确的URL</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

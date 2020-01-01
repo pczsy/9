@@ -1,0 +1,98 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修django-搭建BBS关键点总结' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>django-搭建BBS关键点总结</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11414750.html</div><br>
+    <h1 id="自我总结">0826自我总结</h1>
+<h1 id="django-搭建bbs关键点总结">django-搭建BBS关键点总结</h1>
+<h2 id="一.关于开口子直接输入url访问文件内容">一.关于开口子,直接输入url访问文件内容</h2>
+<p><code>django</code>自带开了个口子是static文件可以直接访问到</p>
+<p>手动开口子</p>
+<p><code>urs.py</code></p>
+<pre><code><code>from django.views.static import serve
+
+
+urlpatterns = [
+    url(r&#39;^avatar/(?P&lt;path&gt;.*)&#39;, serve, kwargs={&#39;document_root&#39;: 开口文件的路径}),
+]
+#这里的r&#39;^avatar/(?P&lt;path&gt;.*),前面的路径等同于后面设置的路径,而下面正则匹配的内容为内容的拼接前面的就是完整的一个路径,这样就可以url直接访问文件夹</code></pre>
+<h2 id="二.关于登入验证码中解决并发的问题">二.关于登入验证码中解决并发的问题</h2>
+<p><code>解决方法</code>:将code存在session中</p>
+<p><code>注意点</code>:如果同时在一个浏览器中打开两个相同的网页,他的code以后的那个网站为准,这是session的特性</p>
+<h2 id="三.验证码的生成">三.验证码的生成</h2>
+<p><a href="https://www.cnblogs.com/pythonywy/p/11408318.html" class="uri">https://www.cnblogs.com/pythonywy/p/11408318.html</a></p>
+<h2 id="四.登入后的重要操作">四.登入后的重要操作</h2>
+<p>可以利用的auth模块中的login</p>
+<p>在登入成功的时候</p>
+<p>将uesr对象存放在request中方便后续操作</p>
+<p><code>auth.login(request,user)</code></p>
+<p>也可以在网页中完成是否登入的判断</p>
+<p><code>{% if request.user.is_authenticated %}</code></p>
+<p>完成注销操作</p>
+<p><code>auth.logout(request)</code></p>
+<h2 id="五.表单的查找">五.表单的查找</h2>
+<pre><code><code>#查询当前站点下所有标签对应的文章数
+
+#查询当前站点下所有分类对应的文章数
+# 查询所有分类对应的文章数
+# 分组查询固定规则：
+# filter 在annotate前表示where条件
+# values 在annotate前表示group by
+# filter 在annotate后表示having条件
+# values 在annotate后表示取值
+# category_ret=models.Category.objects.all().values(&#39;pk&#39;).annotate(cou=Count(&#39;article__nid&#39;)).values(&#39;title&#39;,&#39;cou&#39;)
+# 查询当前站点下所有分类对应的文章数
+category_ret=models.Category.objects.all().filter(blog=blog).annotate(cou=Count(&#39;article__nid&#39;)).values_list(&#39;title&#39;,&#39;cou&#39;,&#39;nid&#39;)
+print(category_ret)
+# 查询当前站点下所有标签对应的文章数
+tag_ret=models.Tag.objects.all().filter(blog=blog).annotate(cou=Count(&#39;article__nid&#39;)).values_list(&#39;title&#39;,&#39;cou&#39;,&#39;nid&#39;)
+print(tag_ret)
+#查询某年某月下对应的文章数
+
+&#39;&#39;&#39;
+            from django.db.models.functions import TruncMonth
+            Sales.objects
+            .annotate(month=TruncMonth(&#39;timestamp&#39;))  # Truncate to month and add to select list
+            .values(&#39;month&#39;)  # Group By month
+            .annotate(c=Count(&#39;id&#39;))  # Select the count of the grouping
+            .values(&#39;month&#39;, &#39;c&#39;)  # (might be redundant, haven&#39;t tested) select month and count
+
+    &#39;&#39;&#39;
+year_ret=models.Article.objects.all().annotate(month=TruncMonth(&#39;create_time&#39;)).values(&#39;month&#39;).annotate(c=Count(&#39;nid&#39;)).values_list(&#39;month&#39;,&#39;c&#39;)</code></pre>
+<p><code>关键点</code>:</p>
+<ul>
+<li>主键可以直接缩写成<code>pk</code></li>
+<li>关于annotate
+<ul>
+<li>只要是两个 model 类通过 ForeignKey 或者 ManyToMany 关联起来，那么就可以使用 annotate 方法来统计数量。</li>
+<li>annotate(字段名称=聚会函数)</li>
+<li>annotate 前面有values时候,主要是加快的查询的速度,values中必须要有annotate的依据</li>
+</ul></li>
+</ul>
+<h2 id="六.自定义文件夹存储路径">六.自定义文件夹存储路径</h2>
+<p><code>settings.py</code></p>
+<pre><code><code>#加这两句，以后再上传的图片，都放在media文件夹下
+MEDIA_URL = &quot;/media/&quot;
+MEDIA_ROOT = os.path.join(BASE_DIR, &quot;media&quot;)
+# MEDIA_ROOT = os.path.join(BASE_DIR, &quot;app01&quot;)</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,329 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修webpack实践（五）- babel的基础配置和使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>webpack实践（五）- babel的基础配置和使用</center></div><div class='banquan'>原文出处:本文由博客园博主小土豆biubiubiu提供。<br/>
+原文连接:https://www.cnblogs.com/HouJiao/p/12096555.html</div><br>
+    <p><span style="font-family: verdana, geneva; color: #000000;">webpack系列博客中代码均在github上：<a href="https://github.com/JEmbrace/webpack-practice"><span style="color: #000000;">https://github.com/JEmbrace/webpack-practice</span></a></span></p>
+<p><span style="text-decoration: underline;"><span style="font-family: verdana, geneva; color: #000000; text-decoration: underline;"><a href="https://www.cnblogs.com/HouJiao/p/11962152.html" target="_blank"><span style="color: #000000; text-decoration: underline;">《</span></a><a href="https://www.cnblogs.com/HouJiao/p/11962152.html" target="_blank"><span style="color: #000000; text-decoration: underline;">webpack实践（一）- 先入个门</span></a><a href="https://www.cnblogs.com/HouJiao/p/11962152.html" target="_blank"><span style="color: #000000; text-decoration: underline;">》</span></a></span></span></p>
+<p><span style="text-decoration: underline;"><span style="font-family: verdana, geneva; color: #000000;"><a href="https://www.cnblogs.com/HouJiao/p/12069492.html" target="_blank"><span style="color: #000000; text-decoration: underline;">《webpack实践（二）- webpack配置文件》</span></a></span></span></p>
+<p><span style="text-decoration: underline;"><span style="font-family: verdana, geneva; color: #000000;"><span style="color: #000000; text-decoration: underline;"><a href="https://www.cnblogs.com/HouJiao/p/12072292.html" target="_blank"><span style="text-decoration: underline;"><span style="font-family: verdana, geneva; color: #000000; text-decoration: underline;">《webpack实践（三）- html-webpack-plugin》</span></span></a></span></span></span></p>
+<p><span style="text-decoration: underline;"><span style="font-family: verdana, geneva; color: #000000;"><span style="color: #000000; text-decoration: underline;"><span style="text-decoration: underline;"><span style="font-family: verdana, geneva; color: #000000; text-decoration: underline;"><a href="https://www.cnblogs.com/HouJiao/p/12077252.html" target="_blank"><span style="text-decoration: underline;"><span style="font-family: verdana, geneva; color: #000000; text-decoration: underline;">《webpack实践（四）- html-webpack-plugin》</span></span></a></span></span></span></span></span></p>
+<p><a href="https://www.cnblogs.com/HouJiao/p/12096555.html" target="_blank"><span style="font-family: verdana, geneva; color: #000000;"><span style="color: #000000;"><span style="font-family: verdana, geneva; color: #000000;"><span style="font-family: verdana, geneva; color: #000000;">《webpack实践（五）- babel的基础配置和使用》</span></span></span></span></a></p>
+<h1><span style="font-family: verdana, geneva;">一.前言</span></h1>
+<p><span style="font-family: verdana, geneva;">　　前面我们总结了html-webpack-plugin这webpack插件的可选配置项：template、title、filename、inject和minify。html-webpack-plugin它可以帮我们生成一个默认模板或者配置使用我们自己的模板，将打包后的js文件自动引入模板中；它还可以压缩模板中的css、javascript代码。</span></p>
+<p><span style="font-family: verdana, geneva;">　　这篇文章就要来学习一个新的东西：babel。我们在做项目开发的时候，经常会想使用ES5+的新语法，然而各个浏览器对ES5+语法支持程度也都不一致，为了我们编写的代码可以运行在不同的浏览器上，最好是能将这些语法编译成为ES5的语法，那么这个bable就是帮我们完成这个编译工作的。</span></p>
+<h1><span style="font-family: verdana, geneva;">二.安装</span></h1>
+<p><span style="font-family: verdana, geneva;">　　结合<a href="https://www.webpackjs.com/loaders/babel-loader/" target="_blank">官方文档</a>，要想babel帮我们完成这个编译工作，需要分别安装：babel-loader、babel-core、babel-preset-env这个三个插件包。</span></p>
+<p><span style="font-family: verdana, geneva;">　　<img src="./images/webpack实践（五）- babel的基础配置和使用0.png" alt="" /></span></p>
+<p><span style="font-family: verdana, geneva;">　　<span style="background-color: #ff99cc; color: #ffffff;">备注：使用我的命令安装的bable-loader版本为8.0.6，而安装的babel-core和babel-preset-env版本均于babel-loader不匹配，在后续的打包过程也有错误出现，后面会告诉大家怎么去解决。若大家想不想反复有错误出现，可以跳转至文章最后查看正确的安装命令。</span></span></p>
+<h1><span style="font-family: verdana, geneva;">三.使用</span></h1>
+<p><strong><span style="font-family: verdana, geneva; font-size: 16px;">1.webpack.config.js配置</span></strong></p>
+<p><span style="font-family: verdana, geneva;">　　首先我们需要在webpack.config.js中配置如下选项</span></p>
+<p><span style="font-family: verdana, geneva;">　　<img src="./images/webpack实践（五）- babel的基础配置和使用1.png" alt="" /></span></p>
+<p><span style="font-family: verdana, geneva;">　　然后需要在rules中添加一条规则，这条规则需要明确指定两个内容：</span></p>
+<p><span style="font-family: verdana, geneva;">　　　　那些js文件需要编译处理</span></p>
+<p><span style="font-family: verdana, geneva;">　　　　需要编译处理的文件使用哪个插件处理</span></p>
+<p><span style="font-family: verdana, geneva;">　　那么下面我们就贴出一个最简单的配置代码</span></p>
+<p><span style="font-family: verdana, geneva;">　　<span style="text-decoration: underline; color: #808080;">webpack.config.js</span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">var</span> htmlWepackPlugin = require('html-webpack-plugin'<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">var</span> path = require('path'<span style="color: #000000;">);
+module.exports </span>=<span style="color: #000000;"> {
+  mode: </span>'development'<span style="color: #000000;">,
+  entry: {
+    main: </span>'./index.js'<span style="color: #000000;">
+  },
+  output: {
+    path: path.resolve(__dirname,</span>'dist'<span style="color: #000000;">),
+    filename: </span>'index.bundle.js'<span style="color: #000000;">
+  },
+  plugins:[
+    </span><span style="color: #0000ff;">new</span><span style="color: #000000;"> htmlWepackPlugin({
+      title: </span>'webpack实践（五）- babel-loader'<span style="color: #000000;">,
+      template: </span>'./index.html'<span style="color: #000000;">,
+      filename: </span>'template/resultIndex.html'<span style="color: #000000;">,
+      inject: </span>'head'<span style="color: #000000;">,
+      minify: {
+        removeComments: </span><span style="color: #0000ff;">true</span><span style="color: #000000;">,
+        minifyCSS: </span><span style="color: #0000ff;">true</span><span style="color: #000000;">,
+        minifyJS: </span><span style="color: #0000ff;">true</span><span style="color: #000000;">
+      }
+    })
+  ],
+  module: {
+    rules: [
+      {
+        test: </span>/\.js$/<span style="color: #000000;">,
+        use: {
+          loader: </span>'babel-loader'<span style="color: #000000;">
+        }
+      }
+    ]
+  }
+};</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong><span style="font-family: verdana, geneva; font-size: 16px;">&nbsp;2.新建包含ES5+的代码文件</span></strong></p>
+<p><span style="font-family: verdana, geneva;">　　接着，我们来使用ES6中的一些语法编写一些代码。</span></p>
+<p><span style="font-family: verdana, geneva;">　　在项目根目录下新建文件counter.js</span></p>
+<p><span style="font-family: verdana, geneva;">　　<img src="./images/webpack实践（五）- babel的基础配置和使用2.png" alt="" /></span></p>
+<p>　　<span style="background-color: #ff99cc; color: #ffffff;">备注：dist目录、index.html、index.js均是前几节中的文件。dist目录可以删除，其余两个文件后续还会使用到。</span></p>
+<p><span style="font-family: verdana, geneva;">　　编写counter.js文件</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+*    将两个数做对应的计算并返回结果
+*    使用到的ES6的基本语法有：
+*        函数扩展-为函数参数设置默认值
+*        模块导出-export命令
+</span><span style="color: #008000;">*/</span><span style="color: #000000;">
+class Counter {
+    constructor(x</span>=0,y=0<span style="color: #000000;">){
+        </span><span style="color: #0000ff;">this</span>.x =<span style="color: #000000;"> x;
+        </span><span style="color: #0000ff;">this</span>.y =<span style="color: #000000;"> y;
+    }
+    add(){
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span>.x+<span style="color: #0000ff;">this</span><span style="color: #000000;">.y;
+    }
+}
+
+export { Counter };</span></pre>
+</div>
+<p>　　然后在编辑项目根目录下的index.js</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+*    引用counter.js模块中的函数，传入参数，打印相加结果
+*    使用到的ES6的基本语法有：
+*       模块导入-import命令
+*       变量声明命令-let
+</span><span style="color: #008000;">*/</span><span style="color: #000000;">
+import { Counter } from </span>'./counter.js'<span style="color: #000000;">
+let a </span>= 100<span style="color: #000000;">;
+let b </span>= 200<span style="color: #000000;">;
+let counter </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> Counter(a,b);
+let result </span>=<span style="color: #000000;"> counter.add();
+console.log(</span>"add: a + b = " + result);</pre>
+</div>
+<p>　　编辑项目根目录下的index.html</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">meta </span><span style="color: #ff0000;">charset</span><span style="color: #0000ff;">="utf-8"</span> <span style="color: #0000ff;">/&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span><span style="background-color: #ffff00; color: #000000;">&lt;%</span><span style="background-color: #f5f5f5; color: #000000;">=</span><span style="background-color: #f5f5f5; color: #000000;"> htmlWebpackPlugin.options.title </span><span style="background-color: #ffff00; color: #000000;">%&gt;</span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">title</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span>
+            <span style="background-color: #f5f5f5; color: #008000;">/*</span><span style="background-color: #f5f5f5; color: #008000;"> 写点样式 </span><span style="background-color: #f5f5f5; color: #008000;">*/</span><span style="background-color: #f5f5f5; color: #800000;">
+            h1</span><span style="background-color: #f5f5f5; color: #000000;">{</span><span style="background-color: #f5f5f5; color: #ff0000;">
+                font-size</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> 12px</span><span style="background-color: #f5f5f5; color: #000000;">;</span><span style="background-color: #f5f5f5; color: #ff0000;">
+                color</span><span style="background-color: #f5f5f5; color: #000000;">:</span><span style="background-color: #f5f5f5; color: #0000ff;"> #ccc</span><span style="background-color: #f5f5f5; color: #000000;">;</span>
+            <span style="background-color: #f5f5f5; color: #000000;">}</span>
+        <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">style</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">head</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> 这里是h1标签 </span><span style="color: #008000;">--&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>webpack实践（五）- bable-loader<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">h1</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">body</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">html</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p><strong><span style="font-size: 16px;">3.打包查看结果</span></strong></p>
+<p>　　在项目根目录下运行webpack打包命令</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用3.png" alt="" /></p>
+<p>　　可以看到报错了：can't find module @babel/core，在本篇文章中，出错的原因是我们的babel-core版本不对，查看我们的package.json文件</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用4.png" alt="" /></p>
+<p>　　我们安装的bable-loader版本为8.0.6，而babel-core的版本为6.26.3，那<strong>官方文档中指示我们bable-loader8需要结合bable-core7，或者bable-loader7结合babel-core6</strong>。</p>
+<p>　　因此我们可以<strong>降低bable-loader</strong>的版本为7.x，或者<strong>升级bable-core</strong>的版本为7.x，本次我们选择将<strong>babel-core升级为7.x</strong>去解决这个问题。</p>
+<p>　　先卸载bable-core</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用5.png" alt="" /></p>
+<p>　　重新安装bable-core</p>
+<p>　　<span style="background-color: #ff99cc; color: #ffffff;">备注：安装babel-core7.x使用npm install @babel/core</span></p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用6.png" alt="" /></p>
+<p>　　可以看到我们已经成功安装了babel-core7.7.7</p>
+<p>　　现在我们在重新进行打包：</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用7.png" alt="" /></p>
+<p>　　打包完成，我们使用浏览器打开打包后的结果文件dist/template/resultIndex.html</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用8.png" alt="" /></p>
+<p>　　可以看到界面已经展示出效果，控制台也打印出正确结果。</p>
+<p>　　然后我们在查看一下我们的dist/index.bundle.js(这里只贴出部分重要代码；并且为了方便观看，将eval中的字符串进行手动了换行)</p>
+<div class="cnblogs_code">
+<pre><code>***/ "./counter.js"<span style="color: #000000;">:
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">!********************!*\
+  !*** ./counter.js ***!
+  \*******************</span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">! exports provided: Counter </span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> (<span style="color: #0000ff;">function</span><span style="color: #000000;">(module, __webpack_exports__, __webpack_require__) {
+
+</span>"use strict"<span style="color: #000000;">;
+eval(</span>"<span style="color: #000000;">__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */ 
+    __webpack_require__.d(__webpack_exports__, \"Counter\", 
+    function() { return Counter; });
+    \n/*\r\n*\t将两个数做对应的计算并返回结果
+    \r\n*\t使用到的ES6的基本语法有：
+    \r\n*\t\t函数扩展-为函数参数设置默认值
+    \r\n*\t\t模块导出-export命令
+    \r\n*/\n
+    class Counter {\n 
+        constructor(x = 0, y = 0) {\n    
+            this.x = x;\n    
+            this.y = y;\n  
+        }\n\n  
+        add() {\n    
+            return this.x + this.y;\n  
+        }\n\n}\n\n\n\n//# sourceURL=webpack:///./counter.js?</span>"<span style="color: #000000;">);
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span><span style="color: #000000;"> }),
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> "./index.js"<span style="color: #000000;">:
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">!******************!*\
+  !*** ./index.js ***!
+  \*****************</span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">! no exports provided </span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> (<span style="color: #0000ff;">function</span><span style="color: #000000;">(module, __webpack_exports__, __webpack_require__) {
+
+</span>"use strict"<span style="color: #000000;">;
+eval(</span>"<span style="color: #000000;">__webpack_require__.r(__webpack_exports__);\n/* harmony import */ 
+    var _counter_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./counter.js */ \"./counter.js\");
+    \n/*\r\n*\t引用counter.js模块中的函数，传入参数，打印相加结果
+    \r\n*\t使用到的ES6的基本语法有：
+    \r\n*       模块导入-import命令\r\n*\t\t变量声明命令-let
+    \r\n*/\n\n
+    let a = 100;\n
+    let b = 200;\n
+    let counter = new _counter_js__WEBPACK_IMPORTED_MODULE_0__[\"Counter\"](a, b);\n
+    let result = counter.add();\n
+    console.log(\"add: a + b = \" + result);\n\n//# sourceURL=webpack:///./index.js?</span>");</pre>
+</div>
+<p>　　我们可以看到，关于index.js和counter.js中使用ES6语法编写的代码貌似原封不动的存于于打包的结果文件中。关于这个问题呢，是因为我们的webpack.config.js文件缺失一项配置：Presets，即我们最开始安装的babel-preset-evn。</p>
+<p>　　<span style="color: #ff6600;">这里刚开始会有一个疑问，就是为什么结果文件并没有将ES6的语法编译，而浏览器却能打印出正常的结果。</span></p>
+<p><span style="color: #ff6600;">　　后面再经过一系列探究和实践，发现chrome已经可以运行ES6中的let语法和函数扩展-为函数参数设置默认值语法。</span></p>
+<p><span style="color: #ff6600;">　　而关于模块导出/导出的import和export语法，chrome本身并不支持，而是webpack将其进行了转化，这个转化结果浏览器可解析。</span></p>
+<p><span style="color: #ff6600;">　　因此最终我们在浏览器可以正常打印出结果。</span></p>
+<p>　　babel-preset-env它是一个预设的插件，它会根据我们代码运行的目标环境去编译那些目标环境不支持的特性。因此我们还需要配置这个选项，配置方法就是通过options属性设置。</p>
+<p>　　（关于预设的内容，在作者的另一篇文章中有简单介绍 《<a href="https://www.cnblogs.com/HouJiao/p/12108060.html" target="_blank">ES6-babel环境搭建</a>》）</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用9.png" alt="" /></p>
+<p>　　然后我们在运行打包命令</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用10.png" alt="" /></p>
+<p>　　咦，又报错了。</p>
+<p>　　这个问题呢，<strong>在本篇文章中，还是因为版本问题</strong>：babel-preset-env版本和babel-loader版本不匹配。看下面package.json的配置，可以看到babel-preset-env的版本是1.7.0</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用4.png" alt="" /></p>
+<p>　　那我们依然是卸载之前安装的babel-preset-env安装高版本的。</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用12.png" alt="" /></p>
+<p>　　重新安装</p>
+<p>　　<span style="background-color: #ff99cc; color: #ffffff;">备注：安装高版本的babel-preset-env依然需要使用npm instal @babel/preset-env</span></p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用13.png" alt="" /></p>
+<p>　　此时我们查看package.json文件，可以看到@babel/preset-env已经成功升级安装到7.7.7</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用14.png" alt="" /></p>
+<p>　　因为版本升级后，插件包的名称改变，因此我们还需要修改options.presets中设置的包名称</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用15.png" alt="" /></p>
+<p>　　然后在进行打包</p>
+<p>　　<img src="./images/webpack实践（五）- babel的基础配置和使用16.png" alt="" /></p>
+<p>　　这次没有报错，为了确认ES6的代码被成功编译，我们在看一下dist/index.bundle.js文件中的内容(这里依然还是贴出部分重要代码；并且为了方便观看，将eval中的字符串进行手动了换行)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> "./counter.js"<span style="color: #000000;">:
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">!********************!*\
+  !*** ./counter.js ***!
+  \*******************</span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">! exports provided: Counter </span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> (<span style="color: #0000ff;">function</span><span style="color: #000000;">(module, __webpack_exports__, __webpack_require__) {
+
+</span>"use strict"<span style="color: #000000;">;
+eval(</span>"<span style="color: #000000;">__webpack_require__.r(__webpack_exports__);\n/* harmony export (binding) */
+     __webpack_require__.d(__webpack_exports__, \"Counter\", 
+        function() { return Counter; });\n
+        function _classCallCheck(instance, Constructor) { i
+            f (!(instance instanceof Constructor)) { 
+                throw new TypeError(\"Cannot call a class as a function\"); 
+            } 
+        }\n\n
+        function _defineProperties(target, props) { 
+            for (var i = 0; i &lt; props.length; i++) { 
+                var descriptor = props[i]; 
+                descriptor.enumerable = descriptor.enumerable || false; 
+                descriptor.configurable = true; 
+                if (\"value\" in descriptor) 
+                    descriptor.writable = true; 
+                Object.defineProperty(target, descriptor.key, descriptor); 
+            } 
+        }\n\n
+        function _createClass(Constructor, protoProps, staticProps) { 
+            if (protoProps) 
+                _defineProperties(Constructor.prototype, protoProps); 
+            if (staticProps) 
+                _defineProperties(Constructor, staticProps); 
+                return Constructor; }\n\n
+            /*\r\n*\t将两个数做对应的计算并返回结果\r\n*\t
+            使用到的ES6的基本语法有：\r\n*\t\t函数扩展-为函数参数设置默认值\r\n*\t\t模块导出-export命令\r\n*/\n
+            var Counter =\n/*#__PURE__*/\n
+            function () {\n  
+                function Counter() {\n    
+                    var x = arguments.length &gt; 0 &amp;&amp; arguments[0] !== undefined ? arguments[0] : 0;\n    
+                    var y = arguments.length &gt; 1 &amp;&amp; arguments[1] !== undefined ? arguments[1] : 0;\n\n    
+                    _classCallCheck(this, Counter);\n\n    
+                    this.x = x;\n    
+                    this.y = y;\n  
+                }\n\n  
+                _createClass(Counter, [{\n    
+                            key: \"add\",\n    
+                            value: function add() {\n      
+                                return this.x + this.y;\n    }\n 
+                             }]);\n\n  
+                return Counter;\n
+            }();\n\n\n\n//# sourceURL=webpack:///./counter.js?</span>"<span style="color: #000000;">);
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span><span style="color: #000000;"> }),
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> "./index.js"<span style="color: #000000;">:
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">!******************!*\
+  !*** ./index.js ***!
+  \*****************</span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">! no exports provided </span><span style="color: #008000;">*/</span>
+<span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> (<span style="color: #0000ff;">function</span><span style="color: #000000;">(module, __webpack_exports__, __webpack_require__) {
+
+</span>"use strict"<span style="color: #000000;">;
+eval(</span>"<span style="color: #000000;">__webpack_require__.r(__webpack_exports__);\n/* harmony import */ 
+    var _counter_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./counter.js */ \"./counter.js\");
+    \n/*\r\n*\t引用counter.js模块中的函数，传入参数，打印相加结果\r\n*\t使用到的ES6的基本语法有：\r\n*       
+    模块导入-import命令\r\n*\t\t变量声明命令-let\r\n*/\n\n
+    var a = 100;\n
+    var b = 200;\n
+    var counter = new _counter_js__WEBPACK_IMPORTED_MODULE_0__[\"Counter\"](a, b);\n
+    var result = counter.add();\n
+    console.log(\"add: a + b = \" + result);\n\n//# sourceURL=webpack:///./index.js?</span>"<span style="color: #000000;">);
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">*</span><span style="color: #008000;">*/</span> })</pre>
+</div>
+<p>　　这次明显能看出来，index.js和counte.js中的一些ES6语法均被编译成为ES5的语法：let编译为var;函数的默认参数转化为<span style="color: #000000;">arguments</span>的逻辑。</p>
+<h1>四.总结</h1>
+<p>　　然后这一节简单使用babel编译ES6代码就结束了。</p>
+<p>　　在此总结一下:</p>
+<p>　　　　webpack中使用babel编译包含ES6语法的js文件，需要依次安装babel-loader、babel-core、babel-preset-env。</p>
+<p>　<span style="color: #ffffff; background-color: #ff99cc;">备注：这里一定一定要关注这几个插件包的版本。前面我演示的过程中，安装命令为npm install <span style="font-family: verdana, geneva;">babel-loader babel-core babel-preset-env，但实际上安装后的版本分别为 8.x、6.x和1.x。</span></span></p>
+<p><span style="font-family: verdana, geneva; color: #ffffff; background-color: #ff99cc;"><span style="background-color: #ffffff;">　　　　</span>如果大家不想在出错后反复卸载重装:</span></p>
+<p><span style="font-family: verdana, geneva; color: #ffffff; background-color: #ff99cc;"><span style="background-color: #ffffff;">　　　　　　</span>高版本安装命令为npm install <span style="font-family: verdana, geneva;">babel-loader@8.0.0-beta.0 @babel/core @babel/preset-env</span></span></p>
+<p><span style="font-family: verdana, geneva; color: #ffffff; background-color: #ff99cc;"><span style="font-family: verdana, geneva;"><span style="background-color: #ffffff;">　　　　　　</span>低<span style="font-family: verdana, geneva;">版本安装命令为npm install <span style="font-family: verdana, geneva;">babel-loader@7.1.4 babel-core babel-preset-env</span></span></span></span></p>
+<p><span style="font-family: verdana, geneva; color: #ffffff; background-color: #ff99cc;"><span style="font-family: verdana, geneva;"><span style="font-family: verdana, geneva;"><span style="font-family: verdana, geneva;"><span style="background-color: #ffffff;">　　　　</span>同时不同版本在配置预设的时候传入的包名称也是不一样的，文章中也有提到。</span></span></span></span></p>
+<p>&nbsp;</p>
+<p>　　　在实际项目开发中还会用到babel家族其他的一些插件需要配置，后续会继续更新。</p>
+<p>&nbsp;</p>
+<hr />
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/webpack实践（五）- babel的基础配置和使用17.png" alt="" /></p>
+<p>　　</p>
+<p>　　</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

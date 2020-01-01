@@ -1,0 +1,56 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修一段简单的关于字符串的 Java 代码竟考察了这么多东西' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>一段简单的关于字符串的 Java 代码竟考察了这么多东西</center></div><div class='banquan'>原文出处:本文由博客园博主Max_Lyu提供。<br/>
+原文连接:https://www.cnblogs.com/lyuzt/p/12075568.html</div><br>
+    <p><span style="font-size: 16px;"><strong>下面的代码运行结果是什么？解释一下为什么会有这些差异。</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>String s1 = "hello";<br />String s2 = s1 + ",world";<br />String s3 = "hello" + ",world";<br />String s4 = "hello,world";<br />String s5 = new String("hello,world");<br /><br />System.out.println(s2.equals(s4)); // true<br />System.out.println(s2==s4);　　　　　// false<br />System.out.println(s3==s4);　　　　　// true<br />System.out.println(s4==s5);　　　　　// false</pre>
+</div>
+<p>看似简单的代码，却有很多学问在里面。在此之前先非常简单地说一下JVM中的栈和堆，栈一般存放的是局部变量，对象的引用等；堆一般放对象、常量等，在 jdk1.7 以后的版本，字符串常量池也在堆中。</p>
+<h2>字符串常量池</h2>
+<p>　　一般情况下，创建字符串对象有两种方式，一种是字面值创建，一种是 new 创建，这两者是不一样的。</p>
+<p>　　如果是字面值创建的方式，如 String s4="hello,world"，JVM会先去字符串常量池中寻找有没有&ldquo;hello,world&rdquo;这个字符串，若有，则将其地址给 s4；若没有，则先在常量池里创建&ldquo;hello,world&rdquo;，然后再把地址给s4；而通过 new 的方式创建对象，则是在堆中创建&ldquo;hello,world&rdquo;对象，s5 指向这个对象。还是看图吧，比较直观：</p>
+<p>　　<img src="./images/一段简单的关于字符串的 Java 代码竟考察了这么多东西0.png" alt="" width="518" height="302" /></p>
+<h2>equals() 和 ==&nbsp;</h2>
+<p>　　这是 Java 面试常考点，有人可能会说 equals() 比较的是值，而 == 比较的是对象的引用（没错是我），直到被面试官吊打，才会老老实实去看 Object 类中 equals() 的源码：</p>
+<p>&nbsp; &nbsp;　<img src="./images/一段简单的关于字符串的 Java 代码竟考察了这么多东西1.png" alt="" /></p>
+<p>　　可以看到，equals() 方法体中，返回的是 <span style="color: #800000;">两个对象的引用的比较结果 。<span style="color: #000000;">但是，两个 String 类型 == 和 equals() 有时候结果却不一样。那是因为在 String 类中，equals() 被重写了：</span></span></p>
+<p><span style="color: #800000;"><span style="color: #000000;">　　<img src="./images/一段简单的关于字符串的 Java 代码竟考察了这么多东西2.png" alt="" width="355" height="409" /></span></span></p>
+<p><span style="color: #800000;"><span style="color: #000000;">　　可以看到，它先对比两个引用；若一样则直接返回 true，不一样就对它们的值进行比较。</span></span>因此，可以对 == 和 equals() 更好的区别了：</p>
+<p><span style="color: #800000;"><span style="color: #000000;">　　<img src="./images/一段简单的关于字符串的 Java 代码竟考察了这么多东西3.png" alt="" width="832" height="121" /></span></span></p>
+<h2>字符串的拼接</h2>
+<p>　　String 类被 final 修饰，因此字符串不能修改，当两个字符串相加时，是先生成 StringBuilder 对象，然后通过 append() 的方式将两个字符串拼接，再调用 toString() 方法生成新的字符串对象。所以只考虑 s1 和 s2，他们在 JVM 中是这样的：</p>
+<p>　　<img src="./images/一段简单的关于字符串的 Java 代码竟考察了这么多东西4.png" alt="" width="495" height="319" /></p>
+<p>　　但是像 String s3 = "hello" + ",world" 这样直接两个字面值相加的，java文件在编译期间就已经将这条语句做了优化，将其直接变成 "hello,world"，等到运行的时候就查找字符串常量池，因此 s3 == s4 返回的结果就为 true。</p>
+<h2>String、StringBuilder、StringBuffer</h2>
+<p>　　既然上面说到了 StringBuilder，那就顺便简单说一下这三者之间的区别。</p>
+<p>　　String 是常量，且每次需要在原来字符串基础上扩展都需要新建对象，导致速度会稍微慢一点，而且占内存，因此对于需要经常扩展的字符串，可以使用 StringBuilder 和 StringBuffer。但是&nbsp;StringBuilder 和 StringBuffer&nbsp;又有区别，即时两者很像，在速度上 StringBuilder 会快一些，因为 StringBuffer 的操作加了 synchronized ，即加了锁，使得操作相对比较慢，就举 append() 为例子，StringBuffer 中此方法的源码如下：</p>
+<p>　　<img src="./images/一段简单的关于字符串的 Java 代码竟考察了这么多东西5.png" alt="" /></p>
+<p>　　&nbsp;所以，一般在单线程的情况下，可以选择使用 StringBuilder；在多线程的情况下可以选择 StringBuffer .</p>
+<h2>总结</h2>
+<p>　　回到一开始的程序，我们可以大致地画出在 JVM 中的存储：</p>
+<p>　 　<img src="./images/一段简单的关于字符串的 Java 代码竟考察了这么多东西6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>　　</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

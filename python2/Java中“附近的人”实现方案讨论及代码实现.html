@@ -1,0 +1,463 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Java中“附近的人”实现方案讨论及代码实现' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Java中“附近的人”实现方案讨论及代码实现</center></div><div class='banquan'>原文出处:本文由博客园博主larscheng提供。<br/>
+原文连接:https://www.cnblogs.com/larscheng/p/12063409.html</div><br>
+    <h1 id="前言">前言</h1>
+<p>在我们平时使用的许多app中有<code>附近的人</code>这一功能，像微信、qq附近的人，哈罗、街兔附近的车辆。这些功能就在我们日常生活中出现。</p>
+<blockquote>
+<p>像类似于附近的人这一类业务，在Java中是如何实现的呢？</p>
+</blockquote>
+<p>本文就简单介绍下目前的几种解决方案，并提供简单的示例代码</p>
+<p>注: 本文仅涉及<code>附近的人</code>这一业务场景的解决方案讨论，并未涉及到相关的技术细节和方案优化，各位看官可以放心阅读。<br />
+<!-- more --></p>
+<h1 id="基本套路和方案">基本套路和方案</h1>
+<p>目前业内的解决方案大都依据geoHash展开，考虑到不同的数据量以及不同的业务场景，本文主要讨论以下3种方案</p>
+<ul>
+<li><strong>Mysql+外接正方形</strong></li>
+<li><strong>Mysql+geohash</strong></li>
+<li><strong>Redis+geohash</strong></li>
+</ul>
+<h1 id="mysql外接正方形">Mysql+外接正方形</h1>
+<p><code>外接矩形</code>的实现方式是相对较为简单的一种方式。</p>
+<p>假设给定某用户的位置坐标, 求在该用户指定范围内的其他用户信息</p>
+<blockquote>
+<p>此时可以将位置信息和距离范围简化成平面几何题来求解</p>
+</blockquote>
+<h2 id="实现思路">实现思路</h2>
+<p>以当前用户为圆心，以给定距离为半径画圆，那么在这个圆内的所有用户信息就是符合结果的信息，直接检索圆内的用户坐标难以实现，我们可以通过获取这个圆的<code>外接正方形</code>。</p>
+<p>通过外接正方形，获取<code>经度和纬度的最大最小值</code>，根据最大最小值可以将坐标在正方形内的用户信息搜索出来。</p>
+<p>此时在外接正方形中不属于圆形区域的部分就属于多余的部分，这部分用户信息距离当前用户（圆心）的距离必定是大于给定半径的，故可以将其剔除，最终获得指定范围内的附近的人</p>
+<p><img src="./images/Java中“附近的人”实现方案讨论及代码实现0.png" style="zoom:67%;" /></p>
+<h2 id="代码实现">代码实现</h2>
+<blockquote>
+<p>这里只贴出部分核心代码，详细的代码可见源码：<a href="https://github.com/larscheng/larscheng-learning-demo/tree/master/NearbySearch">NearBySearch</a></p>
+</blockquote>
+<p>在实现附近的人搜索中，需要根据位置经纬度点，进行一些距离和范围的计算，比如求球面外接正方形的坐标点，球面两坐标点的距离等，可以引入<a href="http://locationtech.github.io/spatial4j/apidocs/">Spatial4j</a>库。</p>
+<pre><code><code>        &lt;dependency&gt;
+            &lt;groupId&gt;com.spatial4j&lt;/groupId&gt;
+            &lt;artifactId&gt;spatial4j&lt;/artifactId&gt;
+            &lt;version&gt;0.5&lt;/version&gt;
+        &lt;/dependency&gt;</code></pre>
+<ol>
+<li>首先创建一张数据表<code>user</code></li>
+</ol>
+<pre class="sql"><code>CREATE TABLE `user` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL COMMENT &#39;名称&#39;,
+  `longitude` double DEFAULT NULL COMMENT &#39;经度&#39;,
+  `latitude` double DEFAULT NULL COMMENT &#39;纬度&#39;,
+  `create_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre>
+<ol>
+<li>假设已插入足够的测试数据，只要我们获取到外接正方形的四个关键点，就可以直接直接查询</li>
+</ol>
+<pre class="java"><code>    private SpatialContext spatialContext = SpatialContext.GEO;    
+    
+    /**
+     * 获取附近x米的人
+     *
+     * @param distance 距离范围 单位km
+     * @param userLng  当前经度
+     * @param userLat  当前纬度
+     * @return json
+     */
+    @GetMapping(&quot;/nearby&quot;)
+    public String nearBySearch(@RequestParam(&quot;distance&quot;) double distance,
+                               @RequestParam(&quot;userLng&quot;) double userLng,
+                               @RequestParam(&quot;userLat&quot;) double userLat) {
+        //1.获取外接正方形
+        Rectangle rectangle = getRectangle(distance, userLng, userLat);
+        //2.获取位置在正方形内的所有用户
+        List&lt;User&gt; users = userMapper.selectUser(rectangle.getMinX(), rectangle.getMaxX(), rectangle.getMinY(), rectangle.getMaxY());
+        //3.剔除半径超过指定距离的多余用户
+        users = users.stream()
+            .filter(a -&gt; getDistance(a.getLongitude(), a.getLatitude(), userLng, userLat) &lt;= distance)
+            .collect(Collectors.toList());
+        return JSON.toJSONString(users);
+    }
+    private Rectangle getRectangle(double distance, double userLng, double userLat) {
+        return spatialContext.getDistCalc()
+            .calcBoxByDistFromPt(spatialContext.makePoint(userLng, userLat), 
+                                 distance * DistanceUtils.KM_TO_DEG, spatialContext, null);
+    }</code></pre>
+<ol>
+<li>这里给出查询的sql</li>
+</ol>
+<pre class="sql"><code>    &lt;select id=&quot;selectUser&quot; resultMap=&quot;BaseResultMap&quot;&gt;
+        SELECT * FROM user
+        WHERE 1=1
+        and (longitude BETWEEN ${minlng} AND ${maxlng})
+        and (latitude BETWEEN ${minlat} AND ${maxlat})
+    &lt;/select&gt;</code></pre>
+<h1 id="mysqlgeohash">Mysql+geohash</h1>
+<p>前面介绍了通过Mysql存储用户的信息和gps坐标，通过计算外接正方形的坐标点来粗略筛选结果集，最终剔除超过范围的用户。</p>
+<blockquote>
+<p>而现在要提到的<code>Mysql+geohash</code>方案，同样是以Mysql为基础，只不过引入了geohash算法，同时在查询上借助索引。</p>
+</blockquote>
+<p>geohash被广泛应用于位置搜索类的业务中，本文不对它进行展开说明，有兴趣的同学可以看一下这篇博客:<a href="https://www.cnblogs.com/LBSer/p/3310455.html">[GeoHash核心原理解析]</a>，这里简单对它做一个描述：</p>
+<p>GeoHash算法将经纬度坐标点编码成一个字符串,距离越近的坐标，转换后的<code>geohash字符串越相似</code>,例如下表数据：</p>
+<table>
+<thead>
+<tr class="header">
+<th>用户</th>
+<th>经纬度</th>
+<th>Geohash字符串</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>小明</td>
+<td>116.402843,39.999375</td>
+<td>wx4g8c9v</td>
+</tr>
+<tr class="even">
+<td>小华</td>
+<td>116.3967,39.99932</td>
+<td>wx4g89tk</td>
+</tr>
+<tr class="odd">
+<td>小张</td>
+<td>116.40382,39.918118</td>
+<td>wx4g0ffe</td>
+</tr>
+</tbody>
+</table>
+<p>其中根据经纬度计算得到的geohash字符串，不同精度（字符串长度）代表了不同的距离误差。具体的不同精度的距离误差可参考下表：</p>
+<table>
+<thead>
+<tr class="header">
+<th>geohash码长度</th>
+<th>宽度</th>
+<th>高度</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>5,009.4km</td>
+<td>4,992.6km</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>1,252.3km</td>
+<td>624.1km</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>156.5km</td>
+<td>156km</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>39.1km</td>
+<td>19.5km</td>
+</tr>
+<tr class="odd">
+<td>5</td>
+<td>4.9km</td>
+<td>4.9km</td>
+</tr>
+<tr class="even">
+<td>6</td>
+<td>1.2km</td>
+<td>609.4m</td>
+</tr>
+<tr class="odd">
+<td>7</td>
+<td>152.9m</td>
+<td>152.4m</td>
+</tr>
+<tr class="even">
+<td>8</td>
+<td>38.2m</td>
+<td>19m</td>
+</tr>
+<tr class="odd">
+<td>9</td>
+<td>4.8m</td>
+<td>4.8m</td>
+</tr>
+<tr class="even">
+<td>10</td>
+<td>1.2m</td>
+<td>59.5cm</td>
+</tr>
+<tr class="odd">
+<td>11</td>
+<td>14.9cm</td>
+<td>14.9cm</td>
+</tr>
+<tr class="even">
+<td>12</td>
+<td>3.7cm</td>
+<td>1.9cm</td>
+</tr>
+</tbody>
+</table>
+<h2 id="实现思路-1">实现思路</h2>
+<p>使用Mysql存储用户信息，其中包括用户的经纬度信息和geohash字符串。</p>
+<ol>
+<li>添加新用户时计算该用户的geohash字符串，并存储到用户表中</li>
+<li>当要查询某一gps附近指定距离的用户信息时，通过比对geohash误差表确定需要的geohash字符串精度</li>
+<li>计算获得某一精度的当前坐标的geohash字符串，通过<code>WHERE geohash Like 'geohashcode%'</code>来查询数据集</li>
+<li>如果geohash字符串的精度远大于给定的距离范围时，查询出的结果集中必然存在在范围之外的数据</li>
+<li>计算两点之间距离，对于超出距离的数据进行剔除。</li>
+</ol>
+<h2 id="代码实现-1">代码实现</h2>
+<blockquote>
+<p>这里只贴出部分核心代码，详细的代码可见源码：<a href="https://github.com/larscheng/larscheng-learning-demo/tree/master/NearbySearch">NearBySearch</a></p>
+</blockquote>
+<p>同样的要涉及到坐标点的计算和geohash的计算，开始之前先导入<code>spatial4j</code></p>
+<ol>
+<li>创建数据表<code>user_geohash</code>,给geohash码添加索引</li>
+</ol>
+<pre class="sql"><code>CREATE TABLE `user_geohash` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) DEFAULT NULL COMMENT &#39;名称&#39;,
+  `longitude` double DEFAULT NULL COMMENT &#39;经度&#39;,
+  `latitude` double DEFAULT NULL COMMENT &#39;纬度&#39;,
+  `geo_code` varchar(64) DEFAULT NULL COMMENT &#39;经纬度所计算的geohash码&#39;,
+  `create_time` datetime DEFAULT NULL ON UPDATE CURRENT_TIMESTAMP COMMENT &#39;创建时间&#39;,
+  PRIMARY KEY (`id`),
+  KEY `index_geo_hash` (`geo_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;</code></pre>
+<ol>
+<li>添加用户信息和范围搜索逻辑</li>
+</ol>
+<pre class="java"><code>    private SpatialContext spatialContext = SpatialContext.GEO;
+
+    /***
+     * 添加用户
+     * @return
+     */
+    @PostMapping(&quot;/addUser&quot;)
+    public boolean add(@RequestBody UserGeohash user) {
+        //默认精度12位
+        String geoHashCode = GeohashUtils.encodeLatLon(user.getLatitude(),user.getLongitude());
+        return userGeohashService.save(user.setGeoCode(geoHashCode).setCreateTime(LocalDateTime.now()));
+    }
+
+
+    /**
+     * 获取附近指定范围的人
+     *
+     * @param distance 距离范围 单位km
+     * @param len      geoHash的精度
+     * @param userLng  当前经度
+     * @param userLat  当前纬度
+     * @return json
+     */
+    @GetMapping(&quot;/nearby&quot;)
+    public String nearBySearch(@RequestParam(&quot;distance&quot;) double distance,
+                               @RequestParam(&quot;len&quot;) int len,
+                               @RequestParam(&quot;userLng&quot;) double userLng,
+                               @RequestParam(&quot;userLat&quot;) double userLat) {
+        //1.根据要求的范围，确定geoHash码的精度，获取到当前用户坐标的geoHash码
+        String geoHashCode = GeohashUtils.encodeLatLon(userLat, userLng, len);
+        QueryWrapper&lt;UserGeohash&gt; queryWrapper = new QueryWrapper&lt;UserGeohash&gt;()
+                .likeRight(&quot;geo_code&quot;,geoHashCode);
+        //2.匹配指定精度的geoHash码
+        List&lt;UserGeohash&gt; users = userGeohashService.list(queryWrapper);
+        //3.过滤超出距离的
+        users = users.stream()
+                .filter(a -&gt;getDistance(a.getLongitude(),a.getLatitude(),userLng,userLat)&lt;= distance)
+                .collect(Collectors.toList());
+        return JSON.toJSONString(users);
+    }
+    
+    /***
+     * 球面中，两点间的距离
+     * @param longitude 经度1
+     * @param latitude  纬度1
+     * @param userLng   经度2
+     * @param userLat   纬度2
+     * @return 返回距离，单位km
+     */
+    private double getDistance(Double longitude, Double latitude, double userLng, double userLat) {
+        return spatialContext.calcDistance(spatialContext.makePoint(userLng, userLat),
+                spatialContext.makePoint(longitude, latitude)) * DistanceUtils.DEG_TO_KM;
+    }</code></pre>
+<p>通过上面几步，就可以实现这一业务场景，不仅提高了查询效率，并且保护了用户的隐私，不对外暴露坐标位置。并且对于同一位置的频繁请求，如果是同一个geohash字符串，可以加上缓存，减缓数据库的压力。</p>
+<h2 id="边界问题优化">边界问题优化</h2>
+<p>geohash算法将地图分为一个个矩形，对每个矩形进行编码，得到geohash码，但是<code>当前点与待搜索点距离很近但是恰好在两个区域</code>，用上面的方法则就不适用了。</p>
+<blockquote>
+<p>解决这一问题的办法：获取当前点所在区域附近的8个区域的geohash码，一并进行筛选。</p>
+</blockquote>
+<p>如何求解<code>附近的8个区域的geohash码</code>可参考<a href="https://blog.csdn.net/dokd229933/article/details/47021515">Geohash求当前区域周围8个区域编码的一种思路</a></p>
+<p>了解了思路，这里我们可以使用第三方开源库<code>ch.hsr.geohash</code>来计算，通过maven引入</p>
+<pre><code><code>        &lt;dependency&gt;
+            &lt;groupId&gt;ch.hsr&lt;/groupId&gt;
+            &lt;artifactId&gt;geohash&lt;/artifactId&gt;
+            &lt;version&gt;1.0.10&lt;/version&gt;
+        &lt;/dependency&gt;</code></pre>
+<p>对上一章节的<code>nearBySearch</code>方法进行修改如下：</p>
+<pre class="java"><code>
+    /**
+     * 获取附近指定范围的人
+     *
+     * @param distance 距离范围 单位km
+     * @param len      geoHash的精度
+     * @param userLng  当前经度
+     * @param userLat  当前纬度
+     * @return json
+     */
+    @GetMapping(&quot;/nearby&quot;)
+    public String nearBySearch(@RequestParam(&quot;distance&quot;) double distance,
+                               @RequestParam(&quot;len&quot;) int len,
+                               @RequestParam(&quot;userLng&quot;) double userLng,
+                               @RequestParam(&quot;userLat&quot;) double userLat) {
+
+
+        //1.根据要求的范围，确定geoHash码的精度，获取到当前用户坐标的geoHash码
+        GeoHash geoHash = GeoHash.withCharacterPrecision(userLat, userLng, len);
+        //2.获取到用户周边8个方位的geoHash码
+        GeoHash[] adjacent = geoHash.getAdjacent();
+
+        QueryWrapper&lt;UserGeohash&gt; queryWrapper = new QueryWrapper&lt;UserGeohash&gt;()
+            .likeRight(&quot;geo_code&quot;,geoHash.toBase32());
+        Stream.of(adjacent).forEach(a -&gt; queryWrapper.or().likeRight(&quot;geo_code&quot;,a.toBase32()));
+
+        //3.匹配指定精度的geoHash码
+        List&lt;UserGeohash&gt; users = userGeohashService.list(queryWrapper);
+        //4.过滤超出距离的
+        users = users.stream()
+                .filter(a -&gt;getDistance(a.getLongitude(),a.getLatitude(),userLng,userLat)&lt;= distance)
+                .collect(Collectors.toList());
+        return JSON.toJSONString(users);
+    }
+</code></pre>
+<h1 id="redisgeohash">Redis+GeoHash</h1>
+<p>基于前两种方案，我们可以发现gps这类数据属于<code>读多写少</code>的情况，如果使用redis来实现附近的人，想必效率会大大提高。</p>
+<blockquote>
+<p>自Redis 3.2开始，Redis基于<a href="https://en.wikipedia.org/wiki/Geohash">geohash</a>和<a href="http://redisdoc.com/sorted_set/index.html">有序集合Zset</a>提供了地理位置相关功能</p>
+</blockquote>
+<p>Redis提供6条命令，来帮助我们我完成大部分业务的需求，关于Redis提供的geohash操作命令介绍可阅读博客：<a href="https://juejin.im/post/5da40462f265da5baf410a11">Redis 到底是怎么实现“附近的人”这个功能的呢？</a></p>
+<p>本文主要介绍下，我们示例代码中用到的两个命令：</p>
+<ul>
+<li><code>GEOADD key longitude latitude member</code>：将给定的空间元素（纬度、经度、名字）添加到指定的键里面
+<ul>
+<li>例如添加小明的经纬度信息：GEOADD location 119.98866180732716 30.27465803229662 小明</li>
+</ul></li>
+<li><code>GEORADIUS key longitude latitude radius m|km|ft|mi [WITHCOORD] [WITHDIST] [WITHHASH] [ASC|DESC] [COUNT count]</code>: 根据给定地理位置坐标获取指定范围内的地理位置集合(附近的人)
+<ul>
+<li>例如查询某gps附近500m的用户坐标：GEORADIUS location 119.98866180732716 30.27465803229662 500 m WITHCOORD</li>
+</ul></li>
+</ul>
+<h2 id="实现思路-2">实现思路</h2>
+<ul>
+<li>添加用户坐标信息到redis（<code>GEOADD</code>），redis会将经纬度参数值转换为52位的geohash码，</li>
+<li>Redis以geohash码为score，将其他信息以Zset有序集合存入key中</li>
+<li>通过调用<code>GEORADIUS</code>命令，获取指定坐标点某一范围内的数据</li>
+<li>因geohash存在精度误差，剔除超过指定距离的数据</li>
+</ul>
+<h2 id="实现代码">实现代码</h2>
+<blockquote>
+<p>这里只贴出部分核心代码，详细的代码可见源码：<a href="https://github.com/larscheng/larscheng-learning-demo/tree/master/NearbySearch">NearBySearch</a></p>
+</blockquote>
+<pre class="java"><code>
+    @Autowired
+    private RedisTemplate&lt;String, Object&gt; redisTemplate;
+    
+    //GEO相关命令用到的KEY
+    private final static String KEY = &quot;user_info&quot;;
+
+    public boolean save(User user) {
+        Long flag = redisTemplate.opsForGeo().add(KEY, new RedisGeoCommands.GeoLocation&lt;&gt;(
+                user.getName(), 
+                new Point(user.getLongitude(), user.getLatitude()))
+        );
+        return flag != null &amp;&amp; flag &gt; 0;
+    }
+
+    /**
+     * 根据当前位置获取附近指定范围内的用户
+     * @param distance 指定范围 单位km ，可根据{@link org.springframework.data.geo.Metrics} 进行设置
+     * @param userLng 用户经度
+     * @param userLat 用户纬度
+     * @return
+     */
+    public String nearBySearch(double distance, double userLng, double userLat) {
+        List&lt;User&gt; users = new ArrayList&lt;&gt;();
+        // 1.GEORADIUS获取附近范围内的信息
+        GeoResults&lt;RedisGeoCommands.GeoLocation&lt;Object&gt;&gt; reslut = 
+            redisTemplate.opsForGeo().radius(KEY, 
+                        new Circle(new Point(userLng, userLat), new Distance(distance, Metrics.KILOMETERS)),
+                        RedisGeoCommands.GeoRadiusCommandArgs.newGeoRadiusArgs()
+                                .includeDistance()
+                                .includeCoordinates().sortAscending());
+        //2.收集信息，存入list
+        List&lt;GeoResult&lt;RedisGeoCommands.GeoLocation&lt;Object&gt;&gt;&gt; content = reslut.getContent();
+        //3.过滤掉超过距离的数据
+        content.forEach(a-&gt; users.add(
+                new User().setDistance(a.getDistance().getValue())
+                .setLatitude(a.getContent().getPoint().getX())
+                .setLongitude(a.getContent().getPoint().getY())));
+        return JSON.toJSONString(users);
+    }</code></pre>
+<h1 id="方案总结">方案总结</h1>
+<table>
+<thead>
+<tr class="header">
+<th>方案</th>
+<th>优势</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Mysql外接正方形</td>
+<td>逻辑清晰，实现简单，支持多条件筛选</td>
+<td>效率较低，不适合大数据量，不支持按距离排序</td>
+</tr>
+<tr class="even">
+<td>Mysql+Geohash</td>
+<td>借助索引有效提高效率，支持多条件筛选</td>
+<td>不支持按距离排序，存在数据库瓶颈</td>
+</tr>
+<tr class="odd">
+<td>Redis+Geohash</td>
+<td>效率高，集成便捷，支持距离排序</td>
+<td>不适合复杂对象存储，不支持多条件查询</td>
+</tr>
+</tbody>
+</table>
+<p>总结以上三种方案，各有优劣，在不同的业务场景下，可选择不同的方案来实现。</p>
+<p>当然目前附近的人的解决方案并不仅仅这三种，以上权当是这一功能的入门引子，希望对大家有所帮助。</p>
+<blockquote>
+<p>本文的三种方案均有源码提供，<a href="https://github.com/larscheng/larscheng-learning-demo/tree/master/NearbySearch">源码地址</a></p>
+</blockquote>
+<h1 id="参考文章">参考文章</h1>
+<p><a href="https://juejin.im/post/5da40462f265da5baf410a11">Redis 到底是怎么实现“附近的人”这个功能的呢？</a></p>
+<p><a href="https://blog.csdn.net/dokd229933/article/details/47021515">Geohash求当前区域周围8个区域编码的一种思路</a></p>
+<p><a href="https://www.cnblogs.com/LBSer/p/3310455.html">GeoHash核心原理解析</a></p>
+<hr />
+<ul>
+<li>文章作者: <a href="https://www.larscheng.com/">LarsCheng</a></li>
+<li>文章链接: 本文首发于个人博客：https://www.larscheng.com/</li>
+<li>发布方式：<a href="https://www.openwrite.cn/">OpenWrite 最懂你的科技自媒体管理平台</a></li>
+<li>版权声明: 本博客所有文章除特别声明外，均采用 CC BY-NC-SA 4.0 许可协议。转载请注明来自 LarsCheng's Blog！</li>
+</ul>
+<hr />
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

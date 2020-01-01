@@ -1,0 +1,1254 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修django项目后台权限管理功能。' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>django项目后台权限管理功能。</center></div><div class='banquan'>原文出处:本文由博客园博主记住我忘记我提供。<br/>
+原文连接:https://www.cnblogs.com/nmsghgnv/p/11369041.html</div><br>
+    <p>对后台管理员进行分角色，分类别管理，每个管理员登录账号后只显示自己负责的权限范围。</p>
+<p>创建后台管理数据库</p>
+<p>models.py文件内</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 管理员表</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Superuser(models.Model):
+    super_id</span>=models.AutoField(primary_key=<span style="color: #000000;">True)
+    super_name</span>=models.CharField(max_length=255<span style="color: #000000;">)
+    super_pwd</span>=models.CharField(max_length=255<span style="color: #000000;">)
+    role </span>= models.ManyToManyField(to=<span style="color: #800000;">'</span><span style="color: #800000;">Role</span><span style="color: #800000;">'</span><span style="color: #000000;">, )
+</span><span style="color: #008000;">#</span><span style="color: #008000;">后台菜单表</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Menu(models.Model):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    菜单表
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    name </span>= models.CharField(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">菜单名</span><span style="color: #800000;">'</span>, max_length=255<span style="color: #000000;">)
+    path </span>= models.CharField(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">路径</span><span style="color: #800000;">'</span>, max_length=255<span style="color: #000000;">,
+                            null</span>=<span style="color: #000000;">True,
+                            blank</span>=True)  <span style="color: #008000;">#</span><span style="color: #008000;"> null ：针对数据库，如果 null=True, 表示数据库的该字段可以为空，即在Null字段显示为YES。blank ：针对表单，如果 blank=True，表示你的表单填写该字段时可以不填，但是对数据库来说，没有任何影响</span>
+    pid = models.ForeignKey(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">关联的权限</span><span style="color: #800000;">'</span>, to=<span style="color: #800000;">'</span><span style="color: #800000;">Menu</span><span style="color: #800000;">'</span>, null=True, blank=True, related_name=<span style="color: #800000;">'</span><span style="color: #800000;">parents</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                            help_text</span>=<span style="color: #800000;">'</span><span style="color: #800000;">父id</span><span style="color: #800000;">'</span>, on_delete=<span style="color: #000000;">models.CASCADE)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> def __str__(self):</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">     return self.name</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> 权限表</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Permission(models.Model):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    权限表
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    name </span>= models.CharField(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">权限名</span><span style="color: #800000;">'</span>, max_length=255<span style="color: #000000;">)
+    path </span>= models.CharField(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">路径</span><span style="color: #800000;">'</span>, max_length=255<span style="color: #000000;">,
+                            null</span>=<span style="color: #000000;">True,
+                            blank</span>=True)  <span style="color: #008000;">#</span><span style="color: #008000;"> null ：针对数据库，如果 null=True, 表示数据库的该字段可以为空，即在Null字段显示为YES。blank ：针对表单，如果 blank=True，表示你的表单填写该字段时可以不填，但是对数据库来说，没有任何影响</span>
+    pid = models.ForeignKey(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">关联的权限</span><span style="color: #800000;">'</span>, to=<span style="color: #800000;">'</span><span style="color: #800000;">Permission</span><span style="color: #800000;">'</span>, null=True, blank=True, related_name=<span style="color: #800000;">'</span><span style="color: #800000;">parents</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+                            help_text</span>=<span style="color: #800000;">'</span><span style="color: #800000;">父id</span><span style="color: #800000;">'</span>, on_delete=<span style="color: #000000;">models.CASCADE)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">1对多</span>
+    menu = models.ForeignKey(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">所属菜单</span><span style="color: #800000;">'</span>, to=<span style="color: #800000;">'</span><span style="color: #800000;">Menu</span><span style="color: #800000;">'</span>, null=True, blank=True, help_text=<span style="color: #800000;">'</span><span style="color: #800000;">null表示不是菜单;非null表示是二级菜单</span><span style="color: #800000;">'</span>,on_delete=<span style="color: #000000;">models.CASCADE)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> def __str__(self):</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">     return self.name</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;">角色表</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> Role(models.Model):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    角色表
+    </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+    name </span>= models.CharField(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">角色名</span><span style="color: #800000;">'</span>, max_length=255<span style="color: #000000;">)
+    access </span>= models.CharField(verbose_name=<span style="color: #800000;">'</span><span style="color: #800000;">可以访问的权限</span><span style="color: #800000;">'</span>, max_length=255<span style="color: #000000;">,
+                              null</span>=<span style="color: #000000;">True,
+                              blank</span>=True)</pre>
+</div>
+<p>创建和迁移数据库命令</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">python manage.py makemigrations
+python manage.py migrate</span></pre>
+</div>
+<p>应用目录下定义中间件，my_middleware.py文件，用来使权限生效。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.utils.deprecation <span style="color: #0000ff;">import</span><span style="color: #000000;"> MiddlewareMixin
+</span><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> HttpResponse,redirect
+</span><span style="color: #0000ff;">from</span> blog.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Role,Superuser,Menu,Permission
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> json
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> AuthMiddleware(MiddlewareMixin):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 重写process_request方法</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> process_request(self, request):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果路径中包含back即为后台路径</span>
+        <span style="color: #0000ff;">if</span> <span style="color: #800000;">'</span><span style="color: #800000;">back/</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> request.path:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取用户登录的id</span>
+            super_id = request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判断是否登录，未登录则跳转至登录界面</span>
+            <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> super_id <span style="color: #0000ff;">and</span> request.path != <span style="color: #800000;">'</span><span style="color: #800000;">/back/index/login/</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+                </span><span style="color: #0000ff;">return</span> redirect(<span style="color: #800000;">'</span><span style="color: #800000;">/back/index/login/</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> super_id:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 判读当前登录用户，是否拥有访问此路径的权限</span>
+                role_objs = Superuser.objects.filter(super_id=super_id).first().role.all().values(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span>)<span style="color: #008000;">#</span><span style="color: #008000;"> 查询用户角色</span>
+                permission_obj = Permission.objects.filter(path=request.path).first()  <span style="color: #008000;">#</span><span style="color: #008000;"> 当前访问的权限id</span>
+                <span style="color: #008000;">#</span><span style="color: #008000;"> 如果查询到有权限对象</span>
+                <span style="color: #0000ff;">if</span><span style="color: #000000;"> permission_obj:
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义权限列表</span>
+                    permission_list=<span style="color: #000000;">[]
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 遍历角色对象</span>
+                    <span style="color: #0000ff;">for</span> role <span style="color: #0000ff;">in</span><span style="color: #000000;"> role_objs:
+                        </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(role['id'])</span>
+                        <span style="color: #008000;">#</span><span style="color: #008000;"> 获取角色的权限</span>
+                        access_obj=Role.objects.filter(id=role[<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">]).first()
+                        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 向权限列表中添加数据</span>
+                        permission_list.extend(access_obj.access.split(<span style="color: #800000;">"</span><span style="color: #800000;">,</span><span style="color: #800000;">"</span><span style="color: #000000;">))
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(permission_list)</span>
+                    <span style="color: #008000;">#</span><span style="color: #008000;"> 如果当前访问的权限id，不在权限列表汇总，返回无权限</span>
+                    <span style="color: #0000ff;">if</span> str(permission_obj.id) <span style="color: #0000ff;">not</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> permission_list:
+                        </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+                            res</span>={<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>:1,<span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">无权限</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+                            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+                    </span><span style="color: #008000;">#</span><span style="color: #008000;"> if permission_obj.id not in permission_list:</span>
+                        <span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">"</span><span style="color: #800000;">无权限</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+                    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                        </span><span style="color: #0000ff;">return</span> None</pre>
+</div>
+<p>settings.py文件中添加定义的中间件</p>
+<div class="cnblogs_code">
+<pre><code>MIDDLEWARE =<span style="color: #000000;"> [
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">django.middleware.security.SecurityMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">django.contrib.sessions.middleware.SessionMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">django.middleware.common.CommonMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">django.middleware.csrf.CsrfViewMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">django.contrib.auth.middleware.AuthenticationMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">django.contrib.messages.middleware.MessageMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">django.middleware.clickjacking.XFrameOptionsMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">blog.my_middlewares.AuthMiddleware</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+]</span></pre>
+</div>
+<p>写功能，</p>
+<p>菜单管理功能</p>
+<p>前端引入</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/jQuery-1.8.2.min.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/layer/layer.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;</pre>
+</div>
+<p>前端html</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">菜单列表、删除，编辑</span>
+&lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+    &lt;thead&gt;
+    &lt;tr&gt;<span style="color: #000000;">
+        {</span><span style="color: #008000;">#</span><span style="color: #008000;">                    &lt;th&gt;&lt;input name="" type="checkbox" value="" checked="checked"/&gt;&lt;/th&gt;#}</span>
+        &lt;th&gt;菜单序号&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">sort</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/back/images/px.gif</span><span style="color: #800000;">"</span>/&gt;&lt;/i&gt;&lt;/th&gt;
+        &lt;th&gt;菜单名称&lt;/th&gt;
+        &lt;th&gt;菜单等级&lt;/th&gt;
+        &lt;th&gt;上级菜单&lt;/th&gt;
+        &lt;th&gt;操作&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;/thead&gt;
+    &lt;tbody&gt;<span style="color: #000000;">
+    {</span>% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> menu_list %<span style="color: #000000;">}
+        </span>&lt;tr&gt;<span style="color: #000000;">
+            {</span><span style="color: #008000;">#</span><span style="color: #008000;">                        &lt;td&gt;&lt;input name="" type="checkbox" value=""/&gt;&lt;/td&gt;#}</span>
+            &lt;td&gt;{{ forloop.counter }}&lt;/td&gt;
+            &lt;td&gt;{{ v.name }}&lt;/td&gt;
+
+            &lt;td&gt;
+                &lt;h6&gt;一级菜单&lt;/h6&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+                &lt;h6&gt;无&lt;/h6&gt;
+            &lt;/td&gt;
+
+            &lt;td&gt;
+                &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink del_1</span><span style="color: #800000;">"</span>&gt;删除&lt;/a&gt;&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/editor_menu_f/{{ v.id }}/</span><span style="color: #800000;">"</span> data-editor=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.super_id }}</span><span style="color: #800000;">"</span>
+                   <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink editor</span><span style="color: #800000;">"</span>&gt;编辑&lt;/a&gt;
+
+            &lt;/td&gt;
+
+
+        &lt;/tr&gt;<span style="color: #000000;">
+    {</span>% endfor %<span style="color: #000000;">}
+    {</span>% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> menu_list_z %<span style="color: #000000;">}
+        </span>&lt;tr&gt;<span style="color: #000000;">
+            {</span><span style="color: #008000;">#</span><span style="color: #008000;">                        &lt;td&gt;&lt;input name="" type="checkbox" value=""/&gt;&lt;/td&gt;#}</span>
+            &lt;td&gt;{{ forloop.counter }}&lt;/td&gt;
+            &lt;td&gt;{{ v.name }}&lt;/td&gt;
+
+            &lt;td&gt;
+                &lt;h6&gt;二级菜单&lt;/h6&gt;
+            &lt;/td&gt;
+            &lt;td&gt;
+                &lt;h6&gt;{{ v.pid.name }}&lt;/h6&gt;
+            &lt;/td&gt;
+
+            &lt;td&gt;
+                &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink del_2</span><span style="color: #800000;">"</span>&gt;删除&lt;/a&gt;&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/editor_menu_z/{{ v.id }}/</span><span style="color: #800000;">"</span> data-editor=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.super_id }}</span><span style="color: #800000;">"</span>
+                   <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink editor</span><span style="color: #800000;">"</span>&gt;编辑&lt;/a&gt;
+
+            &lt;/td&gt;
+
+
+        &lt;/tr&gt;<span style="color: #000000;">
+    {</span>% endfor %<span style="color: #000000;">}
+
+    </span>&lt;/tbody&gt;
+&lt;/table&gt;
+
+<span style="color: #008000;">#</span><span style="color: #008000;">新增菜单</span>
+&lt;form method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> onsubmit=<span style="color: #800000;">"</span><span style="color: #800000;">return false</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">menu_1</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+    {</span>% csrf_token %<span style="color: #000000;">}
+    </span>&lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+        &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;新增一级菜单&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入菜单名称</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">menu_name</span><span style="color: #800000;">"</span>&gt;
+            &lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+    &lt;/table&gt;
+    &lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">提交</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">onsubmit</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">width: 100px; height: 30px;</span><span style="color: #800000;">"</span>&gt;
+&lt;/form&gt;
+&lt;br&gt;&lt;br&gt;
+&lt;form method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> onsubmit=<span style="color: #800000;">"</span><span style="color: #800000;">return false</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">menu_2</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+    {</span>% csrf_token %<span style="color: #000000;">}
+    </span>&lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+        &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;新增二级菜单&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入菜单名称</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">menu_name</span><span style="color: #800000;">"</span>&gt;
+            &lt;/th&gt;
+            &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入菜单路径</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">menu_path</span><span style="color: #800000;">"</span>&gt;
+            &lt;/th&gt;
+
+
+            &lt;th&gt;
+
+                &lt;select name=<span style="color: #800000;">"</span><span style="color: #800000;">pid</span><span style="color: #800000;">"</span>&gt;
+                    &lt;option value=<span style="color: #800000;">""</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">display: none</span><span style="color: #800000;">"</span>&gt;选择所属一级菜单&lt;/option&gt;<span style="color: #000000;">
+                    {</span>% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> menu_list %<span style="color: #000000;">}
+                        </span>&lt;option value=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span>&gt;{{ v.name }}&lt;/option&gt;<span style="color: #000000;">
+                    {</span>% endfor %<span style="color: #000000;">}
+                </span>&lt;/select&gt;
+
+            &lt;/th&gt;
+
+
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+    &lt;/table&gt;
+
+    &lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">提交</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">onsubmit2</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">width: 100px; height: 30px;</span><span style="color: #800000;">"</span>&gt;
+&lt;/form&gt;</pre>
+</div>
+<p>前端js</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script&gt;<span style="color: #000000;">
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    添加一级菜单#}</span>
+<span style="color: #000000;">    $(document).ready(function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_add/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#menu_1</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                    location.href</span>=<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        })
+    })
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">添加二级菜单#}</span>
+<span style="color: #000000;">    $(document).ready(function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit2</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_add1/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#menu_2</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                    location.href</span>=<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        })
+    });
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">    删除一级菜单#}</span>
+<span style="color: #000000;">$(document).ready(function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">.del_1</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            _this</span>=<span style="color: #000000;">this;
+            layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">删除一级菜单会连带删除所属二级菜单，确定删除吗？</span><span style="color: #800000;">'</span><span style="color: #000000;">,{
+                btn:[</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+            },function(){
+                id</span>=$(_this).data(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+                $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_del_f/</span><span style="color: #800000;">'</span>,{<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span>:id,<span style="color: #800000;">'</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">'</span><span style="color: #000000;">},function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>]==<span style="color: #000000;">0){
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                    location.href</span>=<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            },</span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            },function () {
+
+            })
+
+        })
+    })
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    删除二级菜单#}</span>
+<span style="color: #000000;">$(document).ready(function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">.del_2</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            _this</span>=<span style="color: #000000;">this;
+            layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">确定删除这个二级菜单吗？</span><span style="color: #800000;">'</span><span style="color: #000000;">,{
+                btn:[</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+            },function(){
+                id</span>=$(_this).data(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+                $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_del_z/</span><span style="color: #800000;">'</span>,{<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span>:id,<span style="color: #800000;">'</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">'</span><span style="color: #000000;">},function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>]==<span style="color: #000000;">0){
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                    location.href</span>=<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/menu_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            },</span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            },function () {
+
+            })
+
+        })
+    })
+</span>&lt;/script&gt;</pre>
+</div>
+<p>路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 新增一级菜单</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_add/</span><span style="color: #800000;">'</span>, article.menu_add, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 新增二级菜单</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_add1/</span><span style="color: #800000;">'</span>, article.menu_add1, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_add1/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除一级菜单</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_del_f/</span><span style="color: #800000;">'</span>, article.menu_del_f, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_del_f/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除二级菜单</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_del_z/</span><span style="color: #800000;">'</span>, article.menu_del_z, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_del_z/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑一级菜单</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_menu_f/(\d+)/</span><span style="color: #800000;">'</span>,article.editor_menu_f,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_menu_f/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑二级菜单</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_menu_z/(\d+)/</span><span style="color: #800000;">'</span>,article.editor_menu_z,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_menu_z/</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> collections <span style="color: #0000ff;">import</span><span style="color: #000000;"> OrderedDict
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 新增一级菜单</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> menu_add(request):
+    menu_list</span>=Menu.objects.filter(pid__isnull=<span style="color: #000000;">True)
+    menu_list_z</span>=Menu.objects.filter(pid__isnull=<span style="color: #000000;">False)
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        menu_name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">menu_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        menu_name_f_obj</span>=Menu.objects.filter(name=menu_name,pid_id__isnull=<span style="color: #000000;">True)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> menu_name_f_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">菜单名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> menu_name:
+            menu_obj</span>=Menu.objects.create(name=<span style="color: #000000;">menu_name)
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> menu_obj:
+                permission_obj</span>=Permission.objects.create(name=menu_name,menu_id=<span style="color: #000000;">menu_obj.id)
+                res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">请输入菜单名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;">  HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/menu_add.html</span><span style="color: #800000;">'</span><span style="color: #000000;">,locals())
+    
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 添加二级菜单</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> menu_add1(request):
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        menu_name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">menu_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        menu_path</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">menu_path</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        pid</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">pid</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        menu_name_z_obj </span>= Menu.objects.filter(name=menu_name,pid_id__isnull=<span style="color: #000000;">False)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> menu_name_z_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">菜单名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> menu_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入菜单名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> menu_path:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入菜单路径</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> pid:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 3, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未选择所属一级菜单</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        menu_obj</span>=Menu.objects.create(name=menu_name,path=menu_path,pid_id=<span style="color: #000000;">pid)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> menu_obj:
+            menu_id</span>=Permission.objects.filter(menu_id=<span style="color: #000000;">pid).first().id
+            permission_obj</span>=Permission.objects.create(name=menu_name,path=menu_path,menu_id=menu_obj.id,pid_id=<span style="color: #000000;">menu_id)
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除一级菜单</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> menu_del_f(request):
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        menu_id</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> menu_id:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">异常</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        menu_f</span>=Menu.objects.filter(id=<span style="color: #000000;">menu_id).delete()
+        menu_z</span>=Menu.objects.filter(pid_id=<span style="color: #000000;">menu_id).delete()
+        permission_f</span>=Permission.objects.filter(menu_id=menu_id).values(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">).first()
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(permission_f['id'])</span>
+        <span style="color: #0000ff;">if</span><span style="color: #000000;"> permission_f:
+            permission_z</span>=Permission.objects.filter(pid_id=permission_f[<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">]).delete()
+        permission_f </span>= Permission.objects.filter(menu_id=<span style="color: #000000;">menu_id).delete()
+        </span><span style="color: #0000ff;">if</span> menu_f <span style="color: #0000ff;">and</span><span style="color: #000000;"> permission_f:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">'</span><span style="color: #800000;">ok</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除二级菜单</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> menu_del_z(request):
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        menu_id</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> menu_id:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">异常</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        menu_obj</span>=Menu.objects.filter(id=<span style="color: #000000;">menu_id).delete()
+        permission_obj</span>=Permission.objects.filter(menu_id=<span style="color: #000000;">menu_id).delete()
+        </span><span style="color: #0000ff;">if</span> menu_obj <span style="color: #0000ff;">and</span><span style="color: #000000;"> permission_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除失败,请联系技术人员</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">'</span><span style="color: #800000;">ok</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑一级菜单</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> editor_menu_f(request,id):
+    menu_f_obj</span>=Menu.objects.filter(id=<span style="color: #000000;">id).first().name
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        menu_f_name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">menu_f</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> menu_f_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入菜单名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        menu_f_name_obj</span>=Menu.objects.filter(name=menu_f_name,pid_id__isnull=<span style="color: #000000;">True)
+        </span><span style="color: #0000ff;">if</span> menu_f_name_obj <span style="color: #0000ff;">and</span> menu_f_name !=<span style="color: #000000;"> menu_f_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">菜单名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        menu_obj</span>=Menu.objects.filter(id=id).update(name=<span style="color: #000000;">menu_f_name)
+        permission_obj</span>=Permission.objects.filter(menu_id=id).update(name=<span style="color: #000000;">menu_f_name)
+        </span><span style="color: #0000ff;">if</span> menu_obj <span style="color: #0000ff;">and</span><span style="color: #000000;"> permission_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改失败，请联系技术人员</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_menu_f.html</span><span style="color: #800000;">'</span><span style="color: #000000;">,locals())
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑二级菜单</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> editor_menu_z(request,id):
+    menu_obj</span>=Menu.objects.filter(id=<span style="color: #000000;">id).first()
+    menu_list</span>=Menu.objects.filter(pid_id__isnull=<span style="color: #000000;">True)
+    </span><span style="color: #0000ff;">if</span> request.method == <span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        menu_name </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">menu_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        menu_path </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">menu_path</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        pid </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">pid</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        menu_name_z_obj </span>= Menu.objects.filter(name=menu_name, pid_id__isnull=<span style="color: #000000;">False)
+        </span><span style="color: #0000ff;">if</span> menu_name_z_obj <span style="color: #0000ff;">and</span> menu_name !=<span style="color: #000000;">menu_obj.name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">菜单名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> menu_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入菜单名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> menu_path:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入菜单路径</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> pid:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 3, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未选择所属一级菜单</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        menu_obj </span>= Menu.objects.filter(id=id).update(name=menu_name, path=menu_path, pid_id=<span style="color: #000000;">pid)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> menu_obj:
+            menu_id </span>= Permission.objects.filter(menu_id=<span style="color: #000000;">pid).first().id
+            permission_obj </span>= Permission.objects.filter(menu_id=id).update(name=menu_name, path=<span style="color: #000000;">menu_path,
+                                                       pid_id</span>=<span style="color: #000000;">menu_id)
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改失败，请联系技术人员</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+
+
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_menu_z.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>#角色管理功能</p>
+<p>前端引入</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/jQuery-1.8.2.min.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/layer/layer.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;</pre>
+</div>
+<p>前端页面</p>
+<div class="cnblogs_code">
+<pre><code>&lt;div id=<span style="color: #800000;">"</span><span style="color: #800000;">tab2</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tabson</span><span style="color: #800000;">"</span>&gt;
+    &lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+        &lt;thead&gt;
+        &lt;tr&gt;<span style="color: #000000;">
+            {</span><span style="color: #008000;">#</span><span style="color: #008000;">                    &lt;th&gt;&lt;input name="" type="checkbox" value="" checked="checked"/&gt;&lt;/th&gt;#}</span>
+            &lt;th&gt;角色序号&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">sort</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/back/images/px.gif</span><span style="color: #800000;">"</span>/&gt;&lt;/i&gt;&lt;/th&gt;
+            &lt;th&gt;角色名称&lt;/th&gt;<span style="color: #000000;">
+            {</span><span style="color: #008000;">#</span><span style="color: #008000;">                    &lt;th&gt;角色权限&lt;/th&gt;#}</span>
+            &lt;th&gt;操作&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+        &lt;tbody&gt;<span style="color: #000000;">
+        {</span>% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> role_obj %<span style="color: #000000;">}
+            </span>&lt;tr&gt;<span style="color: #000000;">
+                {</span><span style="color: #008000;">#</span><span style="color: #008000;">                        &lt;td&gt;&lt;input name="" type="checkbox" value=""/&gt;&lt;/td&gt;#}</span>
+                &lt;td&gt;{{ forloop.counter }}&lt;/td&gt;
+                &lt;td&gt;{{ v.name }}&lt;/td&gt;<span style="color: #000000;">
+                {</span>% <span style="color: #0000ff;">if</span> v.id == 4 %<span style="color: #000000;">}
+                    </span>&lt;td&gt;
+                        &lt;h6&gt;不能对超级管理员进行操作&lt;/h6&gt;
+                    &lt;/td&gt;<span style="color: #000000;">
+                {</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+                    </span>&lt;td&gt;
+                        &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink del</span><span style="color: #800000;">"</span>&gt;删除&lt;/a&gt;&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                        </span>&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/editor_role/{{ v.id }}/</span><span style="color: #800000;">"</span> data-editor=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.super_id }}</span><span style="color: #800000;">"</span>
+                           <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink editor</span><span style="color: #800000;">"</span>&gt;编辑&lt;/a&gt;<span style="color: #000000;">
+                        {</span><span style="color: #008000;">#</span><span style="color: #008000;">                            &lt;a href="/back/article/role_add1/{{ v.id }}"&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&gt;&gt;设置权限&lt;/a&gt;#}</span>
+                    &lt;/td&gt;<span style="color: #000000;">
+                {</span>% endif %<span style="color: #000000;">}
+
+            </span>&lt;/tr&gt;<span style="color: #000000;">
+        {</span>% endfor %<span style="color: #000000;">}
+
+
+        </span>&lt;/tbody&gt;
+    &lt;/table&gt;<span style="color: #000000;">
+
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">######################################################################}</span>
+
+
+    &lt;br&gt;&lt;br&gt;
+
+
+&lt;/div&gt;
+
+&lt;th&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/role_add1/</span><span style="color: #800000;">"</span>&gt;&gt;&gt;新增角色 &lt;/a&gt;&lt;/th&gt;</pre>
+</div>
+<p>新增角色的html</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/jQuery-1.8.2.min.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+&lt;script src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/layer/layer.js</span><span style="color: #800000;">"</span>&gt;&lt;/script&gt;
+
+&lt;form method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> onsubmit=<span style="color: #800000;">"</span><span style="color: #800000;">return false</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+    {</span>% csrf_token %<span style="color: #000000;">}
+
+    </span>&lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+        &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th&gt;角色名称: &amp;nbsp;&amp;nbsp;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">role_name</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入角色名称</span><span style="color: #800000;">"</span>&gt;&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;th&gt;<span style="color: #000000;">
+                选择所有权限: </span>&lt;br&gt;<span style="color: #000000;">
+                {</span>% <span style="color: #0000ff;">for</span> k,v <span style="color: #0000ff;">in</span> permission_all.items %<span style="color: #000000;">}
+
+                    </span>&amp;nbsp;&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                    </span>&lt;input <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">checkall</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">checkbox</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">check[]</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                            {</span>% <span style="color: #0000ff;">if</span>  v.id|safe <span style="color: #0000ff;">in</span> permission_current %} checked=<span style="color: #800000;">"</span><span style="color: #800000;">true'</span><span style="color: #800000;">"</span>  {% endif %}&gt;
+                    &lt;label <span style="color: #0000ff;">for</span>=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span>&gt;{{ v.name }}&lt;/label&gt;
+                    &lt;div&gt;{% <span style="color: #0000ff;">for</span> v2 <span style="color: #0000ff;">in</span> v.children %}&lt;input <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">check</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">checkbox</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v2.id }}</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v2.id }}</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">check[]</span><span style="color: #800000;">"</span>  {% <span style="color: #0000ff;">if</span>  v2.id|safe <span style="color: #0000ff;">in</span> permission_current  %} checked=<span style="color: #800000;">"</span><span style="color: #800000;">true'</span><span style="color: #800000;">"</span>  {% endif %}&gt;&lt;label <span style="color: #0000ff;">for</span>=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v2.id }}</span><span style="color: #800000;">"</span>&gt;{{ v2.name }}&lt;/label&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; {% endfor %}&lt;/div&gt;<span style="color: #000000;">
+                {</span>% endfor %<span style="color: #000000;">}
+            </span>&lt;/th&gt;
+
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+    &lt;/table&gt;
+
+    &lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">提交</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">onsubmit</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">width: 100px; height: 30px;</span><span style="color: #800000;">"</span>&gt;
+    &lt;br&gt;&lt;br&gt;
+
+
+&lt;/form&gt;
+
+
+<span style="color: #008000;">#</span><span style="color: #008000;">js</span>
+&lt;script&gt;<span style="color: #000000;">
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    新建角色#}</span>
+<span style="color: #000000;">    $(document).ready(function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            _this </span>=<span style="color: #000000;"> this;
+            id </span>= $(_this).data(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+            console.log(id);
+            $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/role_add1/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">form</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">]);
+                    location.href</span>=<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/role_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        })
+    });
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">局部全选全不选#}</span>
+$(document).on(<span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">.checkall</span><span style="color: #800000;">'</span><span style="color: #000000;">,function () {
+        $(this).next().next().children().prop(</span><span style="color: #800000;">'</span><span style="color: #800000;">checked</span><span style="color: #800000;">'</span>,$(this).prop(<span style="color: #800000;">'</span><span style="color: #800000;">checked</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+    });
+    $(document).on(</span><span style="color: #800000;">'</span><span style="color: #800000;">click</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">.check</span><span style="color: #800000;">'</span><span style="color: #000000;">,function () {
+        $(this).parent().prev().prev().prop(</span><span style="color: #800000;">'</span><span style="color: #800000;">checked</span><span style="color: #800000;">'</span>,!$(<span style="color: #800000;">'</span><span style="color: #800000;">%s:not(:checked)</span><span style="color: #800000;">'</span>%<span style="color: #000000;">$(this).siblings()).length)
+    });
+</span>&lt;/script&gt;</pre>
+</div>
+<p>前端js</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script&gt;<span style="color: #000000;">
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">    增加职位#}</span>
+<span style="color: #000000;">    $(document).ready(function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/role_add/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#role_1</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">]);
+                    location.href </span>= <span style="color: #800000;">'</span><span style="color: #800000;">/back/article/role_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        })
+    });
+
+
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">        删除管理员#}</span>
+    $(<span style="color: #800000;">'</span><span style="color: #800000;">.del</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+        _this </span>=<span style="color: #000000;"> this;
+        layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">删除后不可恢复，确定删除吗？</span><span style="color: #800000;">'</span><span style="color: #000000;">, {
+            btn: [</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+        }, function () {
+            id </span>= $(_this).data(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+            $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/role_del/</span><span style="color: #800000;">'</span>, {<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span>: id, <span style="color: #800000;">'</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">'</span><span style="color: #000000;">}, function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">]);
+                    $(_this).parent().parent().remove()
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        }, function () {
+
+        });
+
+    });
+</span>&lt;/script&gt;</pre>
+</div>
+<p>路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 角色列表</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/role_add/</span><span style="color: #800000;">'</span>, article.role_add, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/role_add/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 新增角色</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/role_add1/</span><span style="color: #800000;">'</span>, article.role_add1, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/role_add1/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除角色</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/role_del/</span><span style="color: #800000;">'</span>, article.role_del, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/role_del/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑角色</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_role/(\d+)/</span><span style="color: #800000;">'</span>,article.editor_role,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_role/</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 角色列表</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> role_add(request):
+    permission_obj</span>=Permission.objects.filter(pid__isnull=<span style="color: #000000;">False)
+    role_obj</span>=<span style="color: #000000;">Role.objects.all()
+    permission_list</span>=<span style="color: #000000;">[]
+    permission_obj_new</span>=Permission.objects.filter(pid__isnull=<span style="color: #000000;">True)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> for i in permission_obj_new:</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">     permission_list.append(i.id)</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> print(permission_list)</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> print(permission_obj_new)</span>
+    <span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        role</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">role</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> role:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入职位名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        role_new</span>=Role.objects.create(name=<span style="color: #000000;">role)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> role_new:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/role_add.html</span><span style="color: #800000;">'</span><span style="color: #000000;">,locals())
+    
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 新增角色</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> role_add1(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> permission_current1 = Role.objects.filter(id=id).first()</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> if permission_current1.access:</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">     permission_current = permission_current1.access.split(",")</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> print(permission_current)</span>
+    permission_all =<span style="color: #000000;"> OrderedDict()
+    permission </span>= Permission.objects.filter(pid__isnull=<span style="color: #000000;">True).all()
+    </span><span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span><span style="color: #000000;"> permission:
+        permission2 </span>= Permission.objects.filter(pid=<span style="color: #000000;">v.id).all()
+        permission_all[v.id] </span>=<span style="color: #000000;"> {
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">: v.id,
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span><span style="color: #000000;">: v.name,
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">path</span><span style="color: #800000;">'</span><span style="color: #000000;">: v.path,
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">children</span><span style="color: #800000;">'</span><span style="color: #000000;">: permission2
+        }
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> role_obj=Role.objects.filter(id=id).first()</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> permission_obj = Permission.objects.filter(pid__isnull=False)</span>
+    <span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">role_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入角色名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        role_name_obj</span>=Role.objects.filter(name=<span style="color: #000000;">name)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> role_name_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">角色名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        check</span>=request.POST.getlist(<span style="color: #800000;">'</span><span style="color: #800000;">check[]</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        chk</span>=<span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">.join(check)
+        role_obj </span>= Role.objects.create(name=name,access=<span style="color: #000000;">chk)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> new_role_obj=Role.objects.filter(id=id).update(access=chk)</span>
+        <span style="color: #0000ff;">if</span><span style="color: #000000;"> role_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/role_add1.html</span><span style="color: #800000;">'</span><span style="color: #000000;">,locals())
+    
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除角色</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> role_del(request):
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        role_id</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> role_id:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未选择要删除的角色</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        role_del</span>=Role.objects.filter(id=<span style="color: #000000;">role_id).delete()
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> role_del:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除失败,请联系技术人员</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">'</span><span style="color: #800000;">ok</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑角色</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> editor_role(request,id):
+    role_obj</span>=Role.objects.filter(id=<span style="color: #000000;">id).first()
+    permission_current1 </span>= Role.objects.filter(id=<span style="color: #000000;">id).first()
+    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> permission_current1.access:
+        permission_current </span>= permission_current1.access.split(<span style="color: #800000;">"</span><span style="color: #800000;">,</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(permission_current)</span>
+    permission_all =<span style="color: #000000;"> OrderedDict()
+    permission </span>= Permission.objects.filter(pid__isnull=<span style="color: #000000;">True).all()
+    </span><span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span><span style="color: #000000;"> permission:
+        permission2 </span>= Permission.objects.filter(pid=<span style="color: #000000;">v.id).all()
+        permission_all[v.id] </span>=<span style="color: #000000;"> {
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">: v.id,
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span><span style="color: #000000;">: v.name,
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">path</span><span style="color: #800000;">'</span><span style="color: #000000;">: v.path,
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">children</span><span style="color: #800000;">'</span><span style="color: #000000;">: permission2
+        }
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        check </span>= request.POST.getlist(<span style="color: #800000;">'</span><span style="color: #800000;">check[]</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> print(check)</span>
+        chk = <span style="color: #800000;">'</span><span style="color: #800000;">,</span><span style="color: #800000;">'</span><span style="color: #000000;">.join(check)
+        new_role_obj </span>= Role.objects.filter(id=id).update(access=<span style="color: #000000;">chk)
+        role_name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">role_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> role_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入角色名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        role_name_old_obj</span>=Role.objects.filter(name=<span style="color: #000000;">role_name)
+        </span><span style="color: #0000ff;">if</span> role_name_old_obj <span style="color: #0000ff;">and</span> role_name !=<span style="color: #000000;"> role_obj.name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">角色名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        role_name_obj</span>=Role.objects.filter(id=id).update(name=<span style="color: #000000;">role_name)
+        </span><span style="color: #0000ff;">if</span> role_name_obj <span style="color: #0000ff;">and</span><span style="color: #000000;"> new_role_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改失败，请联系技术人员</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_role.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>#非菜单权限功能</p>
+<p>前端页面</p>
+<div class="cnblogs_code">
+<pre><code>&lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+ &lt;form method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> onsubmit=<span style="color: #800000;">"</span><span style="color: #800000;">return false</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+{</span>% csrf_token %<span style="color: #000000;">}
+    </span>&lt;thead&gt;
+     &lt;tr&gt;
+        &lt;th&gt;权限序号&lt;/th&gt;
+        &lt;th&gt;权限名称&lt;/th&gt;
+        &lt;th&gt;操作&lt;/th&gt;
+    &lt;/tr&gt;
+    &lt;/thead&gt;
+ &lt;thead&gt;<span style="color: #000000;">
+     {</span>% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> permission_obj %<span style="color: #000000;">}
+    </span>&lt;tr&gt;
+
+        &lt;th&gt;{{ forloop.counter }}&lt;/th&gt;
+        &lt;th&gt;{{ v.name }}&lt;/th&gt;
+
+        &lt;th&gt;
+            &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink del</span><span style="color: #800000;">"</span>&gt;删除&lt;/a&gt;
+            &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/editor_permission_it/{{ v.id }}</span><span style="color: #800000;">"</span> data-editor=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink editor</span><span style="color: #800000;">"</span>&gt;编辑&lt;/a&gt;
+
+        &lt;/th&gt;
+
+    &lt;/tr&gt;<span style="color: #000000;">
+    {</span>% endfor %<span style="color: #000000;">}
+    </span>&lt;/thead&gt;
+  &lt;/form&gt;
+&lt;/table&gt;
+
+
+&lt;form method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> onsubmit=<span style="color: #800000;">"</span><span style="color: #800000;">return false</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">menu_2</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+    {</span>% csrf_token %<span style="color: #000000;">}
+    </span>&lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+        &lt;thead&gt;
+        &lt;tr&gt;
+            &lt;th colspan=<span style="color: #800000;">"</span><span style="color: #800000;">2</span><span style="color: #800000;">"</span>&gt;新增权限&lt;/th&gt;
+        &lt;/tr&gt;
+        &lt;tr&gt;
+            &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入权限名称</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">permission_name</span><span style="color: #800000;">"</span>&gt;
+            &lt;/th&gt;
+            &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入权限路径</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">permission_path</span><span style="color: #800000;">"</span>&gt;
+            &lt;/th&gt;
+
+
+
+        &lt;/tr&gt;
+        &lt;/thead&gt;
+    &lt;/table&gt;
+
+    &lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">提交</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">onsubmit2</span><span style="color: #800000;">"</span> style=<span style="color: #800000;">"</span><span style="color: #800000;">width: 100px; height: 30px;</span><span style="color: #800000;">"</span>&gt;
+&lt;/form&gt;</pre>
+</div>
+<p>前端js</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script&gt;<span style="color: #000000;">
+    {</span><span style="color: #008000;">#</span><span style="color: #008000;">        删除其他权限#}</span>
+        $(<span style="color: #800000;">'</span><span style="color: #800000;">.del</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            _this</span>=<span style="color: #000000;">this
+            layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">删除后不可恢复，确定删除吗？</span><span style="color: #800000;">'</span><span style="color: #000000;">,{
+                btn:[</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+            },function(){
+                id</span>=$(_this).data(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+                $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/permission_it_del/</span><span style="color: #800000;">'</span>,{<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span>:id,<span style="color: #800000;">'</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">'</span><span style="color: #000000;">},function (data) {
+                    </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>]==<span style="color: #000000;">0){
+                        layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">]);
+                        $(_this).parent().parent().remove()
+                    }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+                        layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                    }
+                },</span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            },function () {
+
+            });
+
+        });
+
+        {</span><span style="color: #008000;">#</span><span style="color: #008000;">添加权限#}</span>
+<span style="color: #000000;">    $(document).ready(function () {
+        $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit2</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/permission_list/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#menu_2</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+                </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] ==<span style="color: #000000;"> 0) {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">]);
+                    location.href</span>=<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/permission_list/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                    layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                }
+            }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        })
+    });
+</span>&lt;/script&gt;</pre>
+</div>
+<p>路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 其他权限</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/permission_list/</span><span style="color: #800000;">'</span>,article.permission_list,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/permission_list/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除其他权限</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/permission_it_del/</span><span style="color: #800000;">'</span>,article.permission_it_del,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/permission_it_del/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑非菜单权限</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_permission_it/(\d+)/</span><span style="color: #800000;">'</span>,article.editor_permission_it,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_permission_it/</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 其他权限</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> permission_list(request):
+    permission_obj</span>=Permission.objects.filter(menu_id__isnull=True,pid_id__isnull=<span style="color: #000000;">True)
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        permission_name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">permission_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        permission_path</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">permission_path</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(permission_name,permission_path)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> permission_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入权限名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> permission_path:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入权限路径</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        permission_name_obj</span>=Permission.objects.filter(name=permission_name,menu_id__isnull=True,pid_id__isnull=<span style="color: #000000;">True)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> permission_name_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">权限名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        permission_new_obj</span>=Permission.objects.create(name=permission_name,path=<span style="color: #000000;">permission_path)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> permission_new_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">添加失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/permisson_list.html</span><span style="color: #800000;">'</span><span style="color: #000000;">,locals())
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除其他权限</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> permission_it_del(request):
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        id</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        permission_del_obj</span>=Permission.objects.filter(id=<span style="color: #000000;">id).delete()
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> permission_del_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">删除失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> HttpResponse(<span style="color: #800000;">'</span><span style="color: #800000;">ok</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑其他权限</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> editor_permission_it(request,id):
+    permission_obj</span>=Permission.objects.filter(id=<span style="color: #000000;">id).first()
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        permission_name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">permission_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        permission_path</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">permission_path</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> permission_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入权限名称</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> permission_path:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未输入权限路径</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        permission_name_obj</span>=Permission.objects.filter(name=<span style="color: #000000;">permission_name)
+        </span><span style="color: #0000ff;">if</span> permission_name_obj <span style="color: #0000ff;">and</span> permission_name !=<span style="color: #000000;"> permission_obj.name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">权限名称已存在，请重新编辑</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        permission_new_obj</span>=Permission.objects.filter(id=id).update(name=permission_name,path=<span style="color: #000000;">permission_path)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> permission_new_obj:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改失败，请联系技术人员</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_permission_it.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>#管理员列表功能</p>
+<p>前端html</p>
+<div class="cnblogs_code">
+<pre><code>&lt;div id=<span style="color: #800000;">"</span><span style="color: #800000;">tab2</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tabson</span><span style="color: #800000;">"</span>&gt;
+
+            &lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+                &lt;thead&gt;
+                &lt;tr&gt;<span style="color: #000000;">
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">                    &lt;th&gt;&lt;input name="" type="checkbox" value="" checked="checked"/&gt;&lt;/th&gt;#}</span>
+                    &lt;th&gt;管理员序号&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">sort</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/back/images/px.gif</span><span style="color: #800000;">"</span>/&gt;&lt;/i&gt;&lt;/th&gt;
+                    &lt;th&gt;管理员名称&lt;/th&gt;
+                    &lt;th&gt;管理员权限&lt;/th&gt;
+                    &lt;th&gt;操作&lt;/th&gt;
+                &lt;/tr&gt;
+                &lt;/thead&gt;
+                &lt;tbody&gt;<span style="color: #000000;">
+                {</span>% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> super_obj %<span style="color: #000000;">}
+                    </span>&lt;tr&gt;<span style="color: #000000;">
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">                        &lt;td&gt;&lt;input name="" type="checkbox" value=""/&gt;&lt;/td&gt;#}</span>
+                        &lt;td&gt;{{ forloop.counter }}&lt;/td&gt;
+                        &lt;td&gt;{{ v.super_name }}&lt;/td&gt;
+                        &lt;td&gt;{% <span style="color: #0000ff;">for</span> v2 <span style="color: #0000ff;">in</span> v.role.all %<span style="color: #000000;">}
+                            {{ v2.name }} </span>&amp;nbsp;&amp;<span style="color: #000000;">nbsp;
+                            {</span>% endfor %<span style="color: #000000;">}
+                        </span>&lt;/td&gt;<span style="color: #000000;">
+
+                    {</span>% <span style="color: #0000ff;">if</span> v.role.first.id == 4 %<span style="color: #000000;">}
+                        </span>&lt;td&gt;
+                            &lt;h6&gt;不能对超级管理员进行操作&lt;/h6&gt;
+                        &lt;/td&gt;<span style="color: #000000;">
+                        {</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+                        </span>&lt;td&gt;
+                            &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> data-id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.super_id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink del</span><span style="color: #800000;">"</span>&gt;删除&lt;/a&gt;
+                            &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/editor_back/{{ v.super_id }}</span><span style="color: #800000;">"</span> data-editor=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.super_id }}</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelink editor</span><span style="color: #800000;">"</span>&gt;编辑&lt;/a&gt;
+                            &lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/permission_add1/{{ v.super_id }}</span><span style="color: #800000;">"</span>&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&gt;&gt;分配权限&lt;/a&gt;
+                        &lt;/td&gt;<span style="color: #000000;">
+                    {</span>% endif %<span style="color: #000000;">}
+
+                    </span>&lt;/tr&gt;<span style="color: #000000;">
+                {</span>% endfor %<span style="color: #000000;">}
+                
+
+
+                </span>&lt;/tbody&gt;
+            &lt;/table&gt;
+        &lt;div style=<span style="color: #800000;">"</span><span style="color: #800000;">float: right;</span><span style="color: #800000;">"</span>&gt;
+            &lt;nav aria-label=<span style="color: #800000;">"</span><span style="color: #800000;">Page navigation</span><span style="color: #800000;">"</span>&gt;
+                    &lt;ul <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">pagination</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+                        {</span>% <span style="color: #0000ff;">if</span> article_obj.has_previous %<span style="color: #000000;">}
+                            </span>&lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">previous</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                    href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/super_list/?page={{ article_obj.previous_page_number }}</span><span style="color: #800000;">"</span>&gt;上一页&lt;/a&gt;
+                            &lt;/li&gt;<span style="color: #000000;">
+                        {</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+                            </span>&lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">previous disabled</span><span style="color: #800000;">"</span>&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">#</span><span style="color: #800000;">"</span>&gt;上一页&lt;/a&gt;&lt;/li&gt;<span style="color: #000000;">
+                        {</span>% endif %<span style="color: #000000;">}
+
+
+
+
+
+                        {</span>% <span style="color: #0000ff;">for</span> num <span style="color: #0000ff;">in</span> pageRange %<span style="color: #000000;">}
+                            </span>&lt;li {% <span style="color: #0000ff;">if</span> num == currentPage %}<span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;"> active</span><span style="color: #800000;">"</span>{% endif %}&gt;&lt;<span style="color: #000000;">a
+                                    href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">?page={{ num }}</span><span style="color: #800000;">"</span>&gt;{{ num }}&lt;/a&gt;&lt;/li&gt;<span style="color: #000000;">
+                        {</span>% endfor %<span style="color: #000000;">}
+
+
+
+
+
+                        {</span>% <span style="color: #0000ff;">if</span> article_obj.has_next %<span style="color: #000000;">}
+                            </span>&lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">next</span><span style="color: #800000;">"</span>&gt;&lt;<span style="color: #000000;">a
+                                    href</span>=<span style="color: #800000;">"</span><span style="color: #800000;">/back/article/super_list/?page={{ article_obj.next_page_number }}</span><span style="color: #800000;">"</span>&gt;下一页&lt;/a&gt;
+                            &lt;/li&gt;<span style="color: #000000;">
+                        {</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+                            </span>&lt;li <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">next disabled</span><span style="color: #800000;">"</span>&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">#</span><span style="color: #800000;">"</span>&gt;下一页&lt;/a&gt;&lt;/li&gt;<span style="color: #000000;">
+                        {</span>% endif %<span style="color: #000000;">}
+
+                    </span>&lt;/ul&gt;
+                &lt;/nav&gt;
+        &lt;/div&gt;</pre>
+</div>
+<p>前端js</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script&gt;<span style="color: #000000;">
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">        删除管理员#}</span>
+        $(<span style="color: #800000;">'</span><span style="color: #800000;">.del</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+            _this</span>=<span style="color: #000000;">this
+            layer.confirm(</span><span style="color: #800000;">'</span><span style="color: #800000;">删除后不可恢复，确定删除吗？</span><span style="color: #800000;">'</span><span style="color: #000000;">,{
+                btn:[</span><span style="color: #800000;">'</span><span style="color: #800000;">确定</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">取消</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+            },function(){
+                id</span>=$(_this).data(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">);
+                $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/super_delete/</span><span style="color: #800000;">'</span>,{<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span>:id,<span style="color: #800000;">'</span><span style="color: #800000;">csrfmiddlewaretoken</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">{{ csrf_token }}</span><span style="color: #800000;">'</span><span style="color: #000000;">},function (data) {
+                    </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>]==<span style="color: #000000;">0){
+                        layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">]);
+                        $(_this).parent().parent().remove()
+                    }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+                        layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                    }
+                },</span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            },function () {
+
+            });
+
+        });
+
+
+    </span>&lt;/script&gt;</pre>
+</div>
+<p>路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 给管理员重新分配角色（权限）</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/permission_add1/(\d+)/</span><span style="color: #800000;">'</span>, article.permission_add1,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/permission_add1/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 编辑管理员信息</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_back/(\d+)/</span><span style="color: #800000;">'</span>, article.editor_back,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_back/</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 删除管理员</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/super_delete/</span><span style="color: #800000;">'</span>, article.super_delete,name=<span style="color: #800000;">'</span><span style="color: #800000;">article/super_delete/</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 删除管理员</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> super_delete(request):
+    super_name</span>=request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    res</span>={<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>:None,<span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">:None}
+    id</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+    super_del</span>=Superuser.objects.filter(super_id=<span style="color: #000000;">id).delete()
+    </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> super_del:
+        res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>]=<span style="color: #000000;">0
+        res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>]=<span style="color: #800000;">'</span><span style="color: #800000;">删除成功</span><span style="color: #800000;">'</span>
+    <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 1<span style="color: #000000;">
+        res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">删除失败</span><span style="color: #800000;">'</span>
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 修改管理员信息</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> editor_back(request,id):
+    super_name </span>= request.session.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+    super_obj</span>=Superuser.objects.filter(super_id=<span style="color: #000000;">id).first()
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+
+        super_name </span>= Superuser.objects.filter(super_id=<span style="color: #000000;">id).first().super_name
+        new_super_name </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        new_super_pwd </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> new_super_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 4, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未填写帐号</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> new_super_pwd:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 5, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">未填写密码</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        old_super_name </span>= Superuser.objects.filter(super_name=<span style="color: #000000;">new_super_name)
+        </span><span style="color: #0000ff;">if</span> old_super_name <span style="color: #0000ff;">and</span> new_super_name !=<span style="color: #000000;"> super_name:
+            res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">帐号已存在</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            super_obj </span>= Superuser.objects.filter(super_id=id).update(super_name=<span style="color: #000000;">new_super_name,
+                                                                     super_pwd</span>=<span style="color: #000000;">make_password(new_super_pwd))
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> super_obj:
+                res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 2, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">修改失败</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> return HttpResponse(json.dumps(res),locals())</span>
+    <span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/editor_back.html</span><span style="color: #800000;">'</span><span style="color: #000000;">,locals())
+    
+    
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 分配权限</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> permission_add1(request,id):
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id)
+    super_obj</span>=Superuser.objects.filter(super_id=<span style="color: #000000;">id).first()
+    role_obj</span>=<span style="color: #000000;">Role.objects.all()
+    role_obj_new</span>=Superuser.objects.filter(super_id=id).first().role.all().values(<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    role_list</span>=<span style="color: #000000;">[]
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> role_obj_new:
+        </span><span style="color: #0000ff;">print</span>(i[<span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+        role_list.append(str(i[</span><span style="color: #800000;">'</span><span style="color: #800000;">id</span><span style="color: #800000;">'</span><span style="color: #000000;">]))
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(role_list)
+    </span><span style="color: #0000ff;">if</span> request.method==<span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+        check</span>=request.POST.getlist(<span style="color: #800000;">'</span><span style="color: #800000;">check[]</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        super_obj.role.clear()
+        </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> check:
+            super_obj.role.add(i)
+
+        res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: 0, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">成功</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/permission_add1.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>#添加管理员功能</p>
+<p>前端html</p>
+<div class="cnblogs_code">
+<pre><code>&lt;form method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> onsubmit=<span style="color: #800000;">"</span><span style="color: #800000;">return false</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+        {</span>% csrf_token %<span style="color: #000000;">}
+        </span>&lt;table <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">tablelist</span><span style="color: #800000;">"</span>&gt;
+            &lt;thead&gt;
+            &lt;tr&gt;
+            &lt;th&gt;超级管理员名称&lt;i <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">sort</span><span style="color: #800000;">"</span>&gt;&lt;img src=<span style="color: #800000;">"</span><span style="color: #800000;">/static/back/images/px.gif</span><span style="color: #800000;">"</span> /&gt;&lt;/i&gt;&lt;/th&gt;
+            &lt;th&gt;密码&lt;/th&gt;
+            &lt;th&gt;设置权限&lt;/th&gt;
+            &lt;th&gt;操作&lt;/th&gt;
+            &lt;/tr&gt;
+            &lt;tr&gt;
+                &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入管理员名称</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">super_name</span><span style="color: #800000;">"</span>&gt;&lt;/th&gt;
+                &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">password</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">输入密码</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">super_pwd</span><span style="color: #800000;">"</span>&gt;&lt;/th&gt;
+                &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;{% <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span> role_obj %<span style="color: #000000;">}
+
+                                </span>&amp;nbsp;&amp;nbsp;&amp;nbsp; {% <span style="color: #0000ff;">if</span> v.id == 4 %<span style="color: #000000;">}
+                                    </span>&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">checkbox</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">check[]</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                                            {</span>% <span style="color: #0000ff;">if</span>  v.id|safe <span style="color: #0000ff;">in</span> role_list %} checked=<span style="color: #800000;">"</span><span style="color: #800000;">true'</span><span style="color: #800000;">"</span>  {% endif %} onclick=<span style="color: #800000;">"</span><span style="color: #800000;">layer.msg('普通用户不可设为超级管理员'); return false</span><span style="color: #800000;">"</span>&gt;
+                                    &lt;label <span style="color: #0000ff;">for</span>=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span>&gt;{{ v.name }}&lt;/label&gt;<span style="color: #000000;">
+                                {</span>% <span style="color: #0000ff;">else</span> %<span style="color: #000000;">}
+                                </span>&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">checkbox</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">check[]</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span><span style="color: #000000;">
+                                        {</span>% <span style="color: #0000ff;">if</span>  v.id|safe <span style="color: #0000ff;">in</span> role_list %} checked=<span style="color: #800000;">"</span><span style="color: #800000;">true'</span><span style="color: #800000;">"</span>  {% endif %}&gt;
+                                &lt;label <span style="color: #0000ff;">for</span>=<span style="color: #800000;">"</span><span style="color: #800000;">{{ v.id }}</span><span style="color: #800000;">"</span>&gt;{{ v.name }}&lt;/label&gt;<span style="color: #000000;">
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">                                &lt;div&gt;{% for v2 in v.children %}&lt;input type="checkbox" id="{{ v2.id }}" value="{{ v2.id }}" name="check[]"  {% if  v2.id|safe in permission_current  %} checked="true'"  {% endif %}&gt;&lt;label for="{{ v2.id }}"&gt;{{ v2 }}&lt;/label&gt;&amp;nbsp; &amp;nbsp; &amp;nbsp; {% endfor %}&lt;/div&gt;#}</span>
+                {% endif %<span style="color: #000000;">}
+                {</span>% endfor %}&lt;/th&gt;
+
+                &lt;th style=<span style="color: #800000;">"</span><span style="color: #800000;">border: 1px #9C9C9C solid;</span><span style="color: #800000;">"</span>&gt;&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">提交</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">onsubmit</span><span style="color: #800000;">"</span>&gt;&lt;/th&gt;
+            &lt;/tr&gt;
+            &lt;/thead&gt;
+
+
+
+        &lt;/table&gt;
+    &lt;/form&gt;</pre>
+</div>
+<p>前端js</p>
+<div class="cnblogs_code">
+<pre><code>&lt;script&gt;<span style="color: #000000;">
+        $(document).ready(function () {
+            $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+                $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/back/article/super_add/</span><span style="color: #800000;">'</span>,$(<span style="color: #800000;">'</span><span style="color: #800000;">form</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(),function (data) {
+                    </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>]==<span style="color: #000000;">0){
+                        layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">]);
+                        location.href</span>=<span style="color: #800000;">'</span><span style="color: #800000;">/back/article/super_list/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                    } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                        layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                    }
+                },</span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            })
+        })
+    </span>&lt;/script&gt;</pre>
+</div>
+<p>路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 添加管理员功能</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">article/super_add/</span><span style="color: #800000;">'</span>, article.super_add, name=<span style="color: #800000;">'</span><span style="color: #800000;">article/super_add/</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 新增管理员</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> super_add(request):
+    role_obj </span>=<span style="color: #000000;"> Role.objects.all()
+    </span><span style="color: #0000ff;">if</span> request.method == <span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        res</span>={<span style="color: #800000;">"</span><span style="color: #800000;">status</span><span style="color: #800000;">"</span>:None,<span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">:None}
+        super_name</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        super_back_pwd</span>=request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        super_pwd</span>=make_password(request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">super_pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+
+        </span><span style="color: #0000ff;">if</span> super_name <span style="color: #0000ff;">and</span><span style="color: #000000;"> super_back_pwd:
+            super_old_obj</span>=Superuser.objects.filter(super_name=<span style="color: #000000;">super_name)
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> super_old_obj:
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 3<span style="color: #000000;">
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">管理员名称已存在</span><span style="color: #800000;">'</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+            super_obj </span>= Superuser.objects.create(super_name=super_name, super_pwd=<span style="color: #000000;">super_pwd)
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> super_obj:
+                check </span>= request.POST.getlist(<span style="color: #800000;">'</span><span style="color: #800000;">check[]</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+                super_obj.role.clear()
+                </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> check:
+                    super_obj.role.add(i)
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> 0
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">增加成功</span><span style="color: #800000;">'</span>
+            <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 1<span style="color: #000000;">
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">添加失败</span><span style="color: #800000;">'</span>
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 2<span style="color: #000000;">
+            res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">请填写完整信息</span><span style="color: #800000;">'</span>
+        <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">article/super_add.html</span><span style="color: #800000;">'</span>,locals())</pre>
+</div>
+<p>页面的一些效果</p>
+<p><img src="./images/django项目后台权限管理功能。0.png" alt="" /></p>
+<p><img src="./images/django项目后台权限管理功能。1.png" alt="" /></p>
+<p><img src="./images/django项目后台权限管理功能。2.png" alt="" /></p>
+<p>给其中的管理员设置权限后，登录结果</p>
+<p><img src="./images/django项目后台权限管理功能。3.png" alt="" /></p>
+<p>done。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

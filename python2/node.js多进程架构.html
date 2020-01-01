@@ -1,0 +1,170 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修node.js多进程架构' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>node.js多进程架构</center></div><div class='banquan'>原文出处:本文由博客园博主kingsonCai提供。<br/>
+原文连接:https://www.cnblogs.com/kingson-blog/p/11997078.html</div><br>
+    <p>node.js是单进程应用，要充分利用多核cpu的性能，就需要用到多进程架构。</p>
+<p>作为web服务器，不能多个进程创建不同的socket文件描述符去accept网络请求， 有经验的同学知道，如果端口被占用了，再跑一个监听该端口的服务就会报EADDRINUSE异常。那么问题来了，多进程架构如何去解决这个问题？</p>
+<p>&nbsp;</p>
+<p>我们把多进程架构设计成典型的master-workers架构， 一个master, 多个worker。</p>
+<p>&nbsp;</p>
+<p>master-workers架构如下图所示：</p>
+<p><img src="./images/node.js多进程架构0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>我们可以在master进程代理accept请求然后分配给worker处理。但客户端进程连接到master进程，master进程连接到worker进程需要用掉两个文件描述符，会浪费掉一倍数量的文件描述符。</p>
+<p>所以交由worker来accept请求会是更好的方案。</p>
+<p>&nbsp;</p>
+<p>master先创建一个server监听端口，然后通过进程间通信，把socket文件描述符传递给所有的worker进程， worker进程用传递过来的socket文件描述符封装成server（感官上好像是把一个server对象发送给另一个进程，其实是把相应的句柄封装后，通过JSON.stringify()序列化再发送， 接收端进程还原成相应的句柄。）</p>
+<p>&nbsp;</p>
+<p>然后，还有一个问题，假如其中一个worker进程异常退出了怎么办， 这个时候，worker进程应该要通知到master进程，然后master进程重新fork一个worker进程。</p>
+<p>&nbsp;</p>
+<p>先上master的代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> "use strict"
+<span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> const fork = require('child_process'<span style="color: #000000;">).fork;
+</span><span style="color: #008080;"> 4</span> const cpus = require('os'<span style="color: #000000;">).cpus();
+</span><span style="color: #008080;"> 5</span> let server = require('net').createServer((socket)=&gt;<span style="color: #000000;">{
+</span><span style="color: #008080;"> 6</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> &lsquo;connection&rsquo; 监听器</span>
+<span style="color: #008080;"> 7</span>     socket.end('Handled by master \n'<span style="color: #000000;">);
+</span><span style="color: #008080;"> 8</span>     console.error('Handled by master \n');   <span style="color: #008000;">//</span><span style="color: #008000;">不应该在master accept请求</span>
+<span style="color: #008080;"> 9</span> <span style="color: #000000;">});
+</span><span style="color: #008080;">10</span> 
+<span style="color: #008080;">11</span> 
+<span style="color: #008080;">12</span> server.listen(8001<span style="color: #000000;">);
+</span><span style="color: #008080;">13</span> 
+<span style="color: #008080;">14</span> let workers =<span style="color: #000000;"> {};
+</span><span style="color: #008080;">15</span> 
+<span style="color: #008080;">16</span> <span style="color: #0000ff;">function</span><span style="color: #000000;"> createWorker(ser) {
+</span><span style="color: #008080;">17</span>     let worker = fork('./worker.js'<span style="color: #000000;">);
+</span><span style="color: #008080;">18</span> 
+<span style="color: #008080;">19</span>     worker.on('message', <span style="color: #0000ff;">function</span><span style="color: #000000;">(msg, handle) {
+</span><span style="color: #008080;">20</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 收到子进程通知需要创建新的worker(子进程退出前通知父进程)</span>
+<span style="color: #008080;">21</span>         <span style="color: #0000ff;">if</span>(msg ==='new_worker'<span style="color: #000000;">) {
+</span><span style="color: #008080;">22</span>             let ser =<span style="color: #000000;"> handle;
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">            createWorker(ser);
+</span><span style="color: #008080;">24</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 关掉</span>
+<span style="color: #008080;">25</span> <span style="color: #000000;">            ser.close();
+</span><span style="color: #008080;">26</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">27</span> <span style="color: #000000;">    })
+</span><span style="color: #008080;">28</span> 
+<span style="color: #008080;">29</span> 
+<span style="color: #008080;">30</span>     worker.on('exit', <span style="color: #0000ff;">function</span><span style="color: #000000;">(code, signal){
+</span><span style="color: #008080;">31</span>         <span style="color: #0000ff;">delete</span><span style="color: #000000;"> workers[worker.pid];
+</span><span style="color: #008080;">32</span> <span style="color: #000000;">    });
+</span><span style="color: #008080;">33</span> 
+<span style="color: #008080;">34</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 句柄转发 </span>
+<span style="color: #008080;">35</span>     let result = worker.send('server', ser, (err)=&gt; {err&amp;&amp;<span style="color: #000000;">console.error(err)});
+</span><span style="color: #008080;">36</span>     console.info('send server to child result:'<span style="color: #000000;">, result);
+</span><span style="color: #008080;">37</span>     workers[worker.pid] =<span style="color: #000000;"> worker;
+</span><span style="color: #008080;">38</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">39</span> 
+<span style="color: #008080;">40</span> <span style="color: #0000ff;">for</span>(let i=0; i&lt;cpus.length; i++<span style="color: #000000;">) {
+</span><span style="color: #008080;">41</span> <span style="color: #000000;">    createWorker(server);
+</span><span style="color: #008080;">42</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">43</span> 
+<span style="color: #008080;">44</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 关掉，不再accept端口请求</span>
+<span style="color: #008080;">45</span> <span style="color: #000000;">server.close();
+</span><span style="color: #008080;">46</span> 
+<span style="color: #008080;">47</span> <span style="color: #008000;">/*</span>
+<span style="color: #008080;">48</span> <span style="color: #008000;">code &lt;number&gt; The exit code if the child exited on its own.
+</span><span style="color: #008080;">49</span> <span style="color: #008000;">signal &lt;string&gt; The signal by which the child process was terminated.
+</span><span style="color: #008080;">50</span>  <span style="color: #008000;">*/</span>
+<span style="color: #008080;">51</span> process.on('exit', <span style="color: #0000ff;">function</span><span style="color: #000000;">(code, signal) {
+</span><span style="color: #008080;">52</span> <span style="color: #000000;">    console.log(`master exit, code:${code}, signal:${signal}`);
+</span><span style="color: #008080;">53</span>     <span style="color: #0000ff;">for</span>(let pid <span style="color: #0000ff;">in</span><span style="color: #000000;"> workers) {
+</span><span style="color: #008080;">54</span> <span style="color: #000000;">        workers[pid].kill();
+</span><span style="color: #008080;">55</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">56</span> <span style="color: #000000;">})
+</span><span style="color: #008080;">57</span> 
+<span style="color: #008080;">58</span> process.on('uncaughtException', <span style="color: #0000ff;">function</span><span style="color: #000000;">(error) {
+</span><span style="color: #008080;">59</span>     console.error('master | uncaughtException, error:'<span style="color: #000000;">, error);
+</span><span style="color: #008080;">60</span>     process.exit(1<span style="color: #000000;">);
+</span><span style="color: #008080;">61</span> <span style="color: #000000;">})
+</span><span style="color: #008080;">62</span> 
+<span style="color: #008080;">63</span> <span style="color: #008000;">//</span><span style="color: #008000;">一些常用的退出信号的处理:</span>
+<span style="color: #008080;">64</span> <span style="color: #008000;">//</span><span style="color: #008000;"> kill pid 默认是SIGTERM信号</span>
+<span style="color: #008080;">65</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 控制台 ctrl-c 是SIGINT信号</span>
+<span style="color: #008080;">66</span> const killSignalList = ['SIGTERM', 'SIGINT'<span style="color: #000000;">];
+</span><span style="color: #008080;">67</span> killSignalList.forEach((SIGNAL)=&gt;<span style="color: #000000;">{
+</span><span style="color: #008080;">68</span>     process.on(SIGNAL, <span style="color: #0000ff;">function</span><span style="color: #000000;">(){
+</span><span style="color: #008080;">69</span> <span style="color: #000000;">        console.log(`${SIGNAL} signal`);
+</span><span style="color: #008080;">70</span>         process.exit(1<span style="color: #000000;">);
+</span><span style="color: #008080;">71</span> <span style="color: #000000;">    })  
+</span><span style="color: #008080;">72</span> })</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>master进程根据cpu核数fork相应数量的worker进程， fork成功后马上把server句柄发送给worker进程， fork所有worker进程后， 就把server关掉，不再接收请求。 master进程退出前会调用worker的kill()方法杀掉所有worker进程。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>worker代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> const http = require('http'<span style="color: #000000;">);
+</span><span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> const server = http.createServer(<span style="color: #0000ff;">function</span><span style="color: #000000;">(req, res) {
+</span><span style="color: #008080;"> 5</span>      <span style="color: #008000;">//</span><span style="color: #008000;"> &lsquo;request&rsquo; 监听器</span>
+<span style="color: #008080;"> 6</span>     res.end('handled by worker \n'<span style="color: #000000;">);
+</span><span style="color: #008080;"> 7</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> throw new Error('error');</span>
+<span style="color: #008080;"> 8</span> <span style="color: #000000;">})
+</span><span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #000000;">let worker;
+</span><span style="color: #008080;">11</span> process.on('message', <span style="color: #0000ff;">function</span><span style="color: #000000;">(msg, handle){
+</span><span style="color: #008080;">12</span>     <span style="color: #0000ff;">if</span>(msg === 'server'<span style="color: #000000;">) {
+</span><span style="color: #008080;">13</span>         worker =<span style="color: #000000;"> handle;
+</span><span style="color: #008080;">14</span>         worker.on('connection', <span style="color: #0000ff;">function</span><span style="color: #000000;">(socket){
+</span><span style="color: #008080;">15</span>             server.emit('connection'<span style="color: #000000;">, socket);
+</span><span style="color: #008080;">16</span> <span style="color: #000000;">        })
+</span><span style="color: #008080;">17</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">18</span> 
+<span style="color: #008080;">19</span> <span style="color: #000000;">})
+</span><span style="color: #008080;">20</span> 
+<span style="color: #008080;">21</span> 
+<span style="color: #008080;">22</span> process.on('uncaughtException', <span style="color: #0000ff;">function</span><span style="color: #000000;">(err) {
+</span><span style="color: #008080;">23</span>     console.error('uncaughtException err:', err.message, ', worker进程将重启'<span style="color: #000000;">);
+</span><span style="color: #008080;">24</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 通知master创建新的worker</span>
+<span style="color: #008080;">25</span>     process.send('new_worker'<span style="color: #000000;">, worker);
+</span><span style="color: #008080;">26</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 停止接收新的连接</span>
+<span style="color: #008080;">27</span>     worker.close(<span style="color: #0000ff;">function</span><span style="color: #000000;">() {
+</span><span style="color: #008080;">28</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 所有已有连接断开后，退出进程</span>
+<span style="color: #008080;">29</span>         process.exit(1<span style="color: #000000;">);
+</span><span style="color: #008080;">30</span> <span style="color: #000000;">    });
+</span><span style="color: #008080;">31</span> });</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;worker进程有个细节处理的地方： 异常退出前，先通知master进程创建新的worker, 然后等待所有已有连接断开后再退出进程。</p>
+<p>&nbsp;</p>
+<p>关于进程间的句柄发送功能，&nbsp;有兴趣的同学可以再去了解一下， 子进程对象send(message,[sendHandle])方法可以发送的句柄类型有：</p>
+<ul>
+<li>net.Socket,&nbsp; TCP套接字。</li>
+<li>net.Server,&nbsp; TCP服务器，任意建立在TCP服务上的应用层服务都可以享受到它带来的好处。</li>
+<li>net.Native, C++层面的TCP套接字或IPC通道。</li>
+<li>dgram.Socket,&nbsp; UDP套接字。</li>
+<li>dgram.Native， C++层面的UDP套接字</li>
+</ul>
+<p>&nbsp;</p>
+<p>多个worker进程监听同一个套接字，会导致惊群现象， 有请求过来时cpu会唤醒所有的worker进程， 最终只有一个进程accept到请求， 其它进程accept请求失败，这种情况会产生一些不必要的开销。 如何避免惊群现象，我另外写一篇文章具体说一下。</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

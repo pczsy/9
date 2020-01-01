@@ -1,0 +1,287 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修关于spring boot项目配置文件的一些想法' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>关于spring boot项目配置文件的一些想法</center></div><div class='banquan'>原文出处:本文由博客园博主皮肤黝黑的小白提供。<br/>
+原文连接:https://www.cnblogs.com/xcgShare/p/12059469.html</div><br>
+    <h2>一、springboot项目中有两种配置文件</h2>
+<p>springboot项目中有两种配置文件 bootstrap 和 application</p>
+<p>bootstrap是应用程序的父上下文，由父Spring ApplicationContext加载。所以加载顺序优先于application。</p>
+<p>bootstrap 里面的属性不能被覆盖。</p>
+<h3>应用场景</h3>
+<ul>
+<li>bootstrap</li>
+</ul>
+<ol>
+<li>使用 Spring Cloud Config&nbsp;配置中心时，这时需要在bootstrap&nbsp;配置文件中添加连接到配置中心的配置属性，来加载外部配置中心的配置信息</li>
+<li>一些固定的不能被覆盖的属性</li>
+<li>一些加密/解密的场景</li>
+</ol>
+<ul>
+<li>application</li>
+</ul>
+<ol>
+<li>主要用于 Spring Boot&nbsp;项目的自动化配置</li>
+</ol>
+<h2>二、配置文件的使用</h2>
+<h3>1、配置文件的书写小技巧</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">spring:
+  application:
+    name: @artifactId@
+  cloud:
+    nacos:
+      discovery:
+        server</span>-addr: nacoshost:8848<span style="color: #000000;">
+      config:
+        server</span>-addr: ${spring.cloud.nacos.discovery.server-<span style="color: #000000;">addr}
+        file</span>-<span style="color: #000000;">extension: yml
+        shared</span>-dataids: application-${spring.profiles.active}.${spring.cloud.nacos.config.file-<span style="color: #000000;">extension}
+  autoconfigure:
+    exclude: org.springframework.cloud.gateway.config.GatewayAutoConfiguration,org.springframework.cloud.gateway.config.GatewayClassPathWarningAutoConfiguration
+  profiles:
+    active: @profiles.active@</span></pre>
+</div>
+<p>这段是配置文件内容：<span style="color: #000000;">@artifactId@ 可以定位到pom 文件中的 <span style="color: #e8bf6a;">&lt;artifactId&gt;pipe-server<span style="color: #e8bf6a;">&lt;/artifactId&gt;</span></span></span></p>
+<p><span style="color: #e8bf6a;"><span style="color: #e8bf6a;">　　　　　　　　　　<span style="color: #000000;">@profiles.active@ 可以定位到pom文件中的&nbsp;<span style="color: #e8bf6a;">&lt;profiles.active&gt;test<span style="color: #e8bf6a;">&lt;/profiles.active&gt;</span></span></span></span></span></p>
+<pre><code><span style="color: #cc7832;">server-addr: ${<span style="color: #cc7832;">spring.cloud.nacos.discovery.server-addr}<br />这种写法 ${}定位的值就是本yml文件：<span style="color: #000000;">server-addr: nacoshost:8848 这个地方<br /></span></span></span></pre>
+<h3>2、外部配置文件的引用以及多配置文件切换</h3>
+<p>　　把外部链接地址放在bootstrap 文件里面 然后去读取文件 外部文件或者在服务器上，或者在git 通过nacos、spring cloud config、apollo 等等去找到外部文件然后读取。</p>
+<h4>1.多配置文件</h4>
+<p>　　profile是Spring对不同环境提供不同配置功能的支持，可以通过激活不同的环境版本，实现快速切换环境；在主配置文件编写的时候，文件名可以是 application-{profile}.properties/yml ， 用来指定多个环境版本；</p>
+<p>　　例如：application-test.properties 代表测试环境配置&nbsp; &nbsp;&nbsp;application-dev.properties 代表开发环境配置，但是Springboot并不会直接启动这些配置文件，它默认使用application.properties主配置文件；</p>
+<p>　　我们需要通过一个配置来选择需要激活的环境：在bootstrap中使用：spring.profiles.active=dev</p>
+<h3>3、读取配置文件内容</h3>
+<p>写个yml文件：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">anything:
+  isok: </span><span style="color: #0000ff;">true</span><span style="color: #000000;">
+  sout: im.peizhi.wenjian</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+@ConfigurationProperties作用：
+将配置文件中配置的每一个属性的值，映射到这个组件中；
+告诉SpringBoot将本类中的所有属性和配置文件中相关的配置进行绑定
+参数 prefix = &ldquo;person&rdquo; : 将配置文件中的person下面的所有属性一一对应
+
+只有这个组件是容器中的组件，才能使用容器提供的@ConfigurationProperties功能
+</span><span style="color: #008000;">*/</span><span style="color: #000000;">
+@Component </span><span style="color: #008000;">//</span><span style="color: #008000;">注册bean</span>
+@ConfigurationProperties(prefix = "anything"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Anything{
+　　private Boolean isok;<br />　　private String <span style="color: #000000;">sout</span> ;
+}</span></pre>
+</div>
+<p>除了@ConfigurationProperties以外还可以使用@Value进行读取：</p>
+<div class="cnblogs_code">
+<pre><code>@Component <span style="color: #008000;">//</span><span style="color: #008000;">注册bean</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Person {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">直接使用@value</span>
+   @Value("${<span style="color: #000000;">anything</span>.<span style="color: #000000;">isok</span>}") <span style="color: #008000;">//</span><span style="color: #008000;">从配置文件中取值</span>  <br /><span style="color: #000000;">　　<span style="color: #0000ff;">private </span>Boolean isok;</span></pre>
+</div>
+<p>@ConfigurationProperties是支持松散绑定的 松散绑定：比如我的yml中写的last-name，这个和lastName是一样的， - 后面跟着的字母默认是大写的。这就是松散绑定 ，@Value 不支持</p>
+<p>@Value的其他使用方法：应该可以猜的看懂吧 不赘述了</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@Component(</span>"role2"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Role2 {
+</span><span style="color: #008000;">//</span><span style="color: #008000;">赋值long型</span>
+@Value("#{2}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Long id;
+</span><span style="color: #008000;">//</span><span style="color: #008000;">字符串赋值</span>
+@Value("#{'role_name_2'}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String roleName;
+</span><span style="color: #008000;">//</span><span style="color: #008000;">字符串赋值</span>
+@Value("#{'note_2'}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String note;
+}<br />
+@Component(</span>"elBean"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> ElBean {
+</span><span style="color: #008000;">//</span><span style="color: #008000;">通过beanName获取bean，然后注入</span>
+@Value("#{role2}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Role2 role2;
+</span><span style="color: #008000;">//</span><span style="color: #008000;">获取bean的属性id</span>
+@Value("#{role2.id}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Long id;
+</span><span style="color: #008000;">//</span><span style="color: #008000;">调用bean的getNote方法，获取角色名称
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> @Value("#{role.getNote().toString()}")</span>
+@Value("#{role2.getNote()?.toString()}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String note;
+@Value(</span>"#{T(Math).PI}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">double</span><span style="color: #000000;"> pi;
+@Value(</span>"#{T(Math).random()}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">double</span><span style="color: #000000;"> random;
+@Value(</span>"#{role.id+1}"<span style="color: #000000;">)
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> num;
+}</span></pre>
+</div>
+<p><strong>@PropertySource ：</strong>加载指定的配置文件；</p>
+<div class="cnblogs_code">
+<pre><code>@PropertySource(value = "classpath:bootstrap.yml"<span style="color: #000000;">)
+@Component </span><span style="color: #008000;">//</span><span style="color: #008000;">注册bean</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Anything{
+    @Value(</span>"${<span style="color: #000000;">anything.<span style="color: #000000;">isok</span></span>}"<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String name;
+}</span></pre>
+</div>
+<h2>三、自动自动配置的原理</h2>
+<p>1.SpringBoot启动的时候加载主配置类，开启自动配置功能@EnableAutoConfig</p>
+<p>2.@EnableAutoConfig作用：</p>
+<ul>
+<li>利用EnableAutoConfigurationImportSelector给容器中导入一些组件，导入了哪些组件呢？</li>
+<li>可以查看这个类selectImports()方法的内容，他返回了一个&nbsp;&nbsp;autoConfigurationEntry , 来自&nbsp;&nbsp;<span class="cnblogs_code"><span style="color: #0000ff;">this.getAutoConfigurationEntry(autoConfigurationMetadata, annotationMetadata);&nbsp;这个方法。我们继续跟踪；</span></span></li>
+<li>这个方法中有一个值 ：&nbsp;<span class="cnblogs_code">List&lt;String&gt; configurations = <span style="color: #0000ff;">this.getCandidateConfigurations(annotationMetadata, attributes);&nbsp;叫做获取候选的配置 ， 我们点击去继续跟踪；</span></span></li>
+<li>
+<div class="cnblogs_code">
+<div id="mCSB_28" class="mCustomScrollBox mCS-minimal-dark mCSB_vertical_horizontal mCSB_outside" style="max-height: none;">
+<div id="mCSB_28_container" class="mCSB_container mCS_y_hidden mCS_no_scrollbar_y" style="position: relative; top: 0px; left: 0px; width: 1392px;" dir="ltr"><span style="color: #0000ff;">protected List&lt;String&gt;<span style="color: #000000;"> getCandidateConfigurations(AnnotationMetadata metadata, AnnotationAttributes attributes) { List&lt;String&gt; configurations = SpringFactoriesLoader.loadFactoryNames(<span style="color: #0000ff;">this.getSpringFactoriesLoaderFactoryClass(), <span style="color: #0000ff;">this<span style="color: #000000;">.getBeanClassLoader()); Assert.notEmpty(configurations, "No auto configuration classes found in META-INF/spring.factories. If you are using a custom packaging, make sure that file is correct."<span style="color: #000000;">); <span style="color: #0000ff;">return<span style="color: #000000;"> configurations; }</span></span></span></span></span></span></span></span></div>
+</div>
+<div class="cnblogs_code_toolbar">&nbsp;</div>
+</div>
+<p>&nbsp;这里里面有一个&nbsp;SpringFactoriesLoader.loadFactoryNames() ，我们继续进去看 , 它又调用了&nbsp;&nbsp;<span class="cnblogs_code">loadSpringFactories&nbsp;方法；继续跟踪。发现它去获得了一个资源文件："META-INF/spring.factories"</span></p>
+</li>
+<li>
+<div class="cnblogs_code">
+<div id="mCSB_29" class="mCustomScrollBox mCS-minimal-dark mCSB_vertical_horizontal mCSB_outside" style="max-height: none;">
+<div id="mCSB_29_container" class="mCSB_container mCS_y_hidden mCS_no_scrollbar_y" style="position: relative; top: 0px; left: 0px; width: 1296px;" dir="ltr">Enumeration&lt;URL&gt; urls = classLoader != <span style="color: #0000ff;">null ? classLoader.getResources("META-INF/spring.factories") : ClassLoader.getSystemResources("META-INF/spring.factories");</span></div>
+</div>
+<div class="cnblogs_code_toolbar">&nbsp;</div>
+</div>
+<p>&nbsp;继续阅读源码 ， 它将读取到的资源封装在url中，然后遍历url ， 将这些url文件封装在Properties文件中；最后返回封装好的结果；他的那个ClassLoader参数，我们追踪回去，看到他就是&nbsp;EnableAutoConfiguration ；<a class="lightbox" href="./images/关于spring boot项目配置文件的一些想法0.png"><img src="./images/关于spring boot项目配置文件的一些想法0.png" alt="" /></a></p>
+</li>
+<li>
+<p>说明了这个逻辑就是&nbsp;从properties中获取到EnableAutoConfiguration.class类（类名）对应的值，然后把他们添加在容器中&nbsp;</p>
+</li>
+<li>总结一句话就是：<strong><span class="md-plain">将类路径下 META-INF/spring.factories 里面配置的所有EnableAutoConfiguration的值加入到了容器中；每一个 xxxAutoConfiguration类都是容器中的一个组件，最后都加入到容器中；用他们来做自动配置；</span></strong></li>
+</ul>
+<p><span class="md-plain">3.每一个自动配置类可以进行自动配置功能；</span></p>
+<p>4.<span class="md-plain">我们<span class="md-plain md-expand">以<strong><span class="md-plain">HttpEncodingAutoConfiguration（Http编码自动配置）</span></strong><span class="md-plain">为例解释自动配置原理；</span></span></span></p>
+<p><span class="md-plain"><span class="md-plain md-expand"><span class="md-plain">所有在配置文件中能配置的属性都是在xxxxProperties类中封装者&lsquo;；配置文件能配置什么就可以参照某个功能对应的这个属性类</span></span></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">@ConfigurationProperties( prefix </span>= "spring.http" <span style="color: #000000;">) </span><span style="color: #008000;">//</span><span style="color: #008000;">从配置文件中获取指定的值和bean的属性进行绑定 在一次工作中我的书写是这样的（prefix = "tlyh.restUrl"）报错格式不规范 应该改为：tlyh.rest-url</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> HttpProperties {
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> logRequestDetails;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> HttpProperties.Encoding encoding = <span style="color: #0000ff;">new</span><span style="color: #000000;"> HttpProperties.Encoding();
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> HttpProperties() {
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> isLogRequestDetails() {
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">.logRequestDetails;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setLogRequestDetails(<span style="color: #0000ff;">boolean</span><span style="color: #000000;"> logRequestDetails) {
+        </span><span style="color: #0000ff;">this</span>.logRequestDetails =<span style="color: #000000;"> logRequestDetails;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> HttpProperties.Encoding getEncoding() {
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">this</span><span style="color: #000000;">.encoding;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Encoding {
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> Charset DEFAULT_CHARSET;
+        </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Charset charset;
+        </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Boolean force;
+        </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Boolean forceRequest;
+        </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> Boolean forceResponse;
+        </span><span style="color: #0000ff;">private</span> Map&lt;Locale, Charset&gt;<span style="color: #000000;"> mapping;
+    }
+}</span></pre>
+</div>
+<p><span class="md-plain">5. 下面是自己写的<span class="md-plain"><span class="md-plain md-expand"><strong><span class="md-plain">HttpEncodingAutoConfiguration</span></strong></span></span>组件</span></p>
+<div class="cnblogs_code">
+<pre><code>@Configuration <span style="color: #008000;">//<span style="color: #008000;">表示这是一个配置类，以前编写的配置文件一样，也可以给容器中添加组件
+<span style="color: #008000;">//<span style="color: #008000;">启动指定类的ConfigurationProperties功能；
+<span style="color: #008000;">//<span style="color: #008000;">进入这个HttpProperties查看，将配置文件中对应的值和HttpProperties绑定起来；
+<span style="color: #008000;">//<span style="color: #008000;">并把HttpProperties加入到ioc容器中
+@EnableConfigurationProperties({HttpProperties.<span style="color: #0000ff;">class<span style="color: #000000;">}) 
+
+<span style="color: #008000;">//<span style="color: #008000;">Spring底层@Conditional注解
+<span style="color: #008000;">//<span style="color: #008000;">根据不同的条件判断，如果满足指定的条件，整个配置类里面的配置就会生效；
+<span style="color: #008000;">//<span style="color: #008000;">这里的意思就是判断当前应用是否是web应用，如果是，当前配置类生效
+<span style="color: #000000;">@ConditionalOnWebApplication(
+    type =<span style="color: #000000;"> Type.SERVLET
+)
+
+<span style="color: #008000;">//<span style="color: #008000;">判断当前项目有没有这个类CharacterEncodingFilter；SpringMVC中进行乱码解决的过滤器；
+@ConditionalOnClass({CharacterEncodingFilter.<span style="color: #0000ff;">class<span style="color: #000000;">})
+
+<span style="color: #008000;">//<span style="color: #008000;">判断配置文件中是否存在某个配置：spring.http.encoding.enabled；
+<span style="color: #008000;">//<span style="color: #008000;">如果不存在，判断也是成立的
+<span style="color: #008000;">//<span style="color: #008000;">即使我们配置文件中不配置pring.http.encoding.enabled=true，也是默认生效的；
+<span style="color: #000000;">@ConditionalOnProperty(
+    prefix = "spring.http.encoding"<span style="color: #000000;">,
+    value = {"enabled"<span style="color: #000000;">},
+    matchIfMissing = <span style="color: #0000ff;">true<span style="color: #000000;">
+)
+
+<span style="color: #0000ff;">public <span style="color: #0000ff;">class<span style="color: #000000;"> HttpEncodingAutoConfiguration {
+
+    <span style="color: #008000;">//<span style="color: #008000;">他已经和SpringBoot的配置文件映射了
+    <span style="color: #0000ff;">private <span style="color: #0000ff;">final<span style="color: #000000;"> Encoding properties;
+
+    <span style="color: #008000;">//<span style="color: #008000;">只有一个有参构造器的情况下，参数的值就会从容器中拿
+    <span style="color: #0000ff;">public<span style="color: #000000;"> HttpEncodingAutoConfiguration(HttpProperties properties) {
+        <span style="color: #0000ff;">this.properties =<span style="color: #000000;"> properties.getEncoding();
+    }
+
+    <span style="color: #008000;">//<span style="color: #008000;">给容器中添加一个组件，这个组件的某些值需要从properties中获取
+<span style="color: #000000;">    @Bean
+    @ConditionalOnMissingBean <span style="color: #008000;">//<span style="color: #008000;">判断容器没有这个组件？
+    <span style="color: #0000ff;">public<span style="color: #000000;"> CharacterEncodingFilter characterEncodingFilter() {
+        CharacterEncodingFilter filter = <span style="color: #0000ff;">new<span style="color: #000000;"> OrderedCharacterEncodingFilter();
+        filter.setEncoding(<span style="color: #0000ff;">this<span style="color: #000000;">.properties.getCharset().name());
+        filter.setForceRequestEncoding(<span style="color: #0000ff;">this<span style="color: #000000;">.properties.shouldForce(org.springframework.boot.autoconfigure.http.HttpProperties.Encoding.Type.REQUEST));
+        filter.setForceResponseEncoding(<span style="color: #0000ff;">this<span style="color: #000000;">.properties.shouldForce(org.springframework.boot.autoconfigure.http.HttpProperties.Encoding.Type.RESPONSE));
+        <span style="color: #0000ff;">return<span style="color: #000000;"> filter;
+    }
+}    </span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></span></pre>
+</div>
+<p><strong>一句话总结 ：&nbsp;根据当前不同的条件判断，决定这个配置类是否生效！</strong></p>
+<p>&nbsp;一但这个配置类生效；这个配置类就会给容器中添加各种组件；这些组件的属性是从对应的properties类中获取的，这些类里面的每一个属性又是和配置文件绑定的；</p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p><strong>这就是自动装配的原理！</strong></p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p class="md-end-block md-p md-focus"><span class="md-expand"><strong>精髓：</strong></span></p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p class="md-end-block md-p"><span class="md-tab"> <strong>1）、SpringBoot启动会加载大量的自动配置类</strong></span></p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p class="md-end-block md-p"><span class="md-tab"> <strong>2）、我们看我们需要的功能有没有在SpringBoot默认写好的自动配置类当中；</strong></span></p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p class="md-end-block md-p"><span class="md-tab"> <strong>3）、我们再来看这个自动配置类中到底配置了哪些组件；（只要我们要用的组件存在在其中，我们就不需要再手动配置了）</strong></span></p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p class="md-end-block md-p"><span class="md-tab"> <strong>4）、给容器中自动配置类添加组件的时候，会从properties类中获取某些属性。我们只需要在配置文件中指定这些属性的值即可；</strong></span></p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p class="md-end-block md-p"><strong><span class="md-plain">xxxxAutoConfigurartion：自动配置类；</span></strong><span class="md-plain">给容器中添加组件</span></p>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"></pre>
+<p class="md-end-block md-p"><strong><span class="md-plain md-expand">xxxxProperties:封装配置文件中相关属性；</span></strong></p>
+<h3 class="md-end-block md-p"><strong><span class="md-plain md-expand">@Conditional</span></strong></h3>
+<p>了解完自动装配的原理后，我们来关注一个细节问题 ，<strong><span class="md-plain">自动配置类必须在一定的条件下才能生效；</span></strong></p>
+<p class="md-end-block md-heading md-focus"><strong><span class="md-plain md-expand">@Conditional派生注解（Spring注解版原生的@Conditional作用）</span></strong></p>
+<p>作用：必须是@Conditional指定的条件成立，才给容器中添加组件，配置配里面的所有内容才生效；</p>
+<p><a class="lightbox" href="./images/关于spring boot项目配置文件的一些想法1.png"><img src="./images/关于spring boot项目配置文件的一些想法1.png" alt="" /></a></p>
+<p class="md-end-block md-p md-focus"><strong>那么多的自动配置类，必须在一定的条件下才能生效；也就是说，我们加载了这么多的配置类，但不是所有的都生效了。</strong></p>
+<p class="md-end-block md-p"><span class="md-plain">我们怎么知道哪些自动配置类生效；<strong><span class="md-plain">我们可以通过启用 debug=true属性；来让控制台打印自动配置报告，这样我们就可以很方便的知道哪些自动配置类生效；</span></strong></span></p>
+<div id="mCSB_33" class="mCustomScrollBox mCS-minimal-dark mCSB_vertical_horizontal mCSB_outside" style="max-height: none;">
+<div id="mCSB_33_container" class="mCSB_container mCS_y_hidden mCS_no_scrollbar_y mCS_x_hidden mCS_no_scrollbar_x" style="position: relative; top: 0px; left: 0px; width: 100%;" dir="ltr"><span style="color: #000000;">#开启springboot的调试类 debug=<span style="color: #0000ff;">true</span></span></div>
+</div>
+<pre class="mCustomScrollbar _mCS_14 mCS-autoHide"><span style="color: #008000;">&nbsp;</span></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

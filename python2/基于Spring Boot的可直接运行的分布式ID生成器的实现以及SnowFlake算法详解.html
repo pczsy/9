@@ -1,0 +1,286 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修基于Spring Boot的可直接运行的分布式ID生成器的实现以及SnowFlake算法详解' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>基于Spring Boot的可直接运行的分布式ID生成器的实现以及SnowFlake算法详解</center></div><div class='banquan'>原文出处:本文由博客园博主csonezp提供。<br/>
+原文连接:https://www.cnblogs.com/csonezp/p/12088432.html</div><br>
+    <h1>背景</h1>
+<p>最近对snowflake比较感兴趣，就看了一些分布式唯一ID生成器（发号器）的开源项目的源码，例如百度的<a href="https://github.com/baidu/uid-generator" target="_blank">uid-generator</a>，美团的<a href="https://github.com/Meituan-Dianping/Leaf" target="_blank">leaf</a>。大致看了一遍后感觉uid-generator代码写的要更好一些，十分的精炼，短小精悍。</p>
+<p>正好手头有个任务要搞个发号器，百度的这个源码是不能直接运行起来提供服务的，为了练练手，就把百度的uid-generator迁移到spring boot上重写了一遍。</p>
+<p>代码基本一模一样，就做了一些工程化的东西，让uid-generator能以服务的形式跑起来，通过http接口对外提供服务。</p>
+<p>可运行的代码地址：<a href="https://github.com/csonezp/spring-boot-uid-generator" target="_blank">点这里</a></p>
+<h1>SnowFlake数据结构</h1>
+<p>&nbsp;</p>
+<p>这里借用一下uid-generator的图：</p>
+<p><img src="./images/基于Spring Boot的可直接运行的分布式ID生成器的实现以及SnowFlake算法详解0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>这一个结构就是一个snowflake算法里的id，共计64位，就是一个long。</p>
+<ul>
+<li>sign是一个恒为0的值，是为了保证算出的id恒为正数。</li>
+</ul>
+<p>&nbsp;</p>
+<ul>
+<li>delta seconds (28 bits)</li>
+</ul>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; 当前时间，相对于时间基点"2016-05-20"的增量值，单位：秒，最多可支持约8.7年。时间基点是自己配置的。28位即最大表示2^28的数值的秒数，换算一下就是8.7年左右。</p>
+<p>&nbsp;</p>
+<ul>
+<li>worker id (22 bits)</li>
+</ul>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; 机器id，最多可支持约420w次机器启动。内置实现为在启动时由数据库分配。420w = 2^22</p>
+<p>&nbsp;</p>
+<ul>
+<li>sequence (13 bits)</li>
+</ul>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;每秒下的并发序列，13 bits可支持每秒8192个并发，即2^13个并发</p>
+<p>&nbsp;</p>
+<p>这些位数都是可以改变的，对于很多公司来说，28位 delta seconds带来的8.7年的最大支持时间是可预期的不够用的，而22bit的worker id和13bit的sequence则是远远超出可预期的业务场景的，那么就可以自由的根据自己的需求，对这三个参数进行调整。</p>
+<p>例如，{"workerBits":20,"timeBits":31,"seqBits":12}这样的配置可以68年，100W次重启，单机每秒4096个并发的情况，个人感觉还是比较合适的。</p>
+<p>&nbsp;</p>
+<p>snowflake的实现有很多种方式，不过思想上都是一样的。</p>
+<p>&nbsp;</p>
+<h1>SnowFlake发号实现</h1>
+<p>在了解SnowFlake的数据结构后，就可以来看看具体是如何生成ID的了。</p>
+<p>其实这个过程，就是往delta seconds，sequence，worker id三个结构里填充数据的过程。</p>
+<p>整体类图如下：</p>
+<p><img src="./images/基于Spring Boot的可直接运行的分布式ID生成器的实现以及SnowFlake算法详解1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>SnowFlakeGenerator就是基于SnowFlake算法的UidGenerator的实现类，SnowFlake的实现就是在这个类里；</p>
+<p>BitsAllocator就是对SnowFlake 的ID进行位操作的共聚类；</p>
+<p>DatabaseWorkerIdAssigner就是一个基于DB自增的worker id 分配器的实现。</p>
+<p>&nbsp;</p>
+<h2>BitsAllocator</h2>
+<p>这个类是进行一些位操作的工具类，给每一个id 的delta seconds，sequence，worker id赋值就是通过这个类来实现的。这个类有以下成员变量：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Total 64 bits
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> TOTAL_BITS = 1 &lt;&lt; 6<span style="color: #000000;">;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Bits for [sign-&gt; second-&gt; workId-&gt; sequence]
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span> signBits = 1<span style="color: #000000;">;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> timestampBits;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> workerIdBits;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> sequenceBits;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Max value for workId &amp; sequence
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">long</span><span style="color: #000000;"> maxDeltaSeconds;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">long</span><span style="color: #000000;"> maxWorkerId;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">long</span><span style="color: #000000;"> maxSequence;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Shift for timestamp &amp; workerId
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #008000;">/**</span><span style="color: #008000;">
+     * timestamp需要位移多少位
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> timestampShift;
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * workerId需要位移多少位
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> workerIdShift;</pre>
+</div>
+<p>&nbsp;</p>
+<p>其他字段都好说，看名称和注释都能明白。最下面俩shift，可能现在看着有些摸不着头脑，不过看后面的赋值过程就知道什么叫&ldquo;shift&rdquo;了</p>
+<p>构造器：</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Constructor with timestampBits, workerIdBits, sequenceBits&lt;br&gt;
+     * The highest bit used for sign, so &lt;code&gt;63&lt;/code&gt; bits for timestampBits, workerIdBits, sequenceBits
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> BitsAllocator(<span style="color: #0000ff;">int</span> timestampBits, <span style="color: #0000ff;">int</span> workerIdBits, <span style="color: #0000ff;">int</span><span style="color: #000000;"> sequenceBits) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> make sure allocated 64 bits</span>
+        <span style="color: #0000ff;">int</span> allocateTotalBits = signBits + timestampBits + workerIdBits +<span style="color: #000000;"> sequenceBits;
+        Assert.isTrue(allocateTotalBits </span>== TOTAL_BITS, "allocate not enough 64 bits"<span style="color: #000000;">);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> initialize bits</span>
+        <span style="color: #0000ff;">this</span>.timestampBits =<span style="color: #000000;"> timestampBits;
+        </span><span style="color: #0000ff;">this</span>.workerIdBits =<span style="color: #000000;"> workerIdBits;
+        </span><span style="color: #0000ff;">this</span>.sequenceBits =<span style="color: #000000;"> sequenceBits;
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> initialize max value
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">先将-1左移timestampBits位，得到-10000...（timestampBits-1个零)
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">然后取反，得到1111（timestampBits-1）个1
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">等价于2的timestampBits次方-1</span>
+        <span style="color: #0000ff;">this</span>.maxDeltaSeconds = ~(-1L &lt;&lt;<span style="color: #000000;"> timestampBits);
+        </span><span style="color: #0000ff;">this</span>.maxWorkerId = ~(-1L &lt;&lt;<span style="color: #000000;"> workerIdBits);
+        </span><span style="color: #0000ff;">this</span>.maxSequence = ~(-1L &lt;&lt;<span style="color: #000000;"> sequenceBits);
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> initialize shift</span>
+        <span style="color: #0000ff;">this</span>.timestampShift = workerIdBits +<span style="color: #000000;"> sequenceBits;
+        </span><span style="color: #0000ff;">this</span>.workerIdShift =<span style="color: #000000;"> sequenceBits;
+    }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>也很简单，重点就在 &ldquo;~(-1L &lt;&lt; timestampBits) &rdquo;这样一坨操作，可能理解起来会有些困难。这是一连串的位操作，这里进行一下分解：</p>
+<ul>
+<li>-1 左移&nbsp;timestampBits 位，也就是的到了-（2^timestampBits) 。实际的二进制看起来是10000......10000...（最前面的1是最高位，表示负数；第二个1后面有timestampBits-1个零)</li>
+<li>对-（2^timestampBits)进行取反操作，的到了2的timestampBits次方-1。实际的二进制看起来就是1111（timestampBits-1个1）</li>
+</ul>
+<p>这一通操作其实也就相当于2的timestampBits次方-1，也就是timestampBits位二进制最大能表示的数字，不过是用位运算来做的。如果不懂二进制的位移和取反，可以百度&ldquo;位操作&rdquo;补充一下基础，这里就不展开了。</p>
+<p>&nbsp;</p>
+<p>分配操作：</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Allocate bits for UID according to delta seconds &amp; workerId &amp; sequence&lt;br&gt;
+     * &lt;b&gt;Note that: &lt;/b&gt;The highest bit will always be 0 for sign
+     *
+     * 这里就是把不同的字段放到相应的位上
+     * id的总体结构是：
+     * sign (fixed 1bit) -&gt; deltaSecond -&gt; workerId -&gt; sequence(within the same second)
+     * deltaSecond 左移（workerIdBits + sequenceBits）位，workerId左移sequenceBits位，此时就完成了字节的分配
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> deltaSeconds
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> workerId
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> sequence
+     * </span><span style="color: #808080;">@return</span>
+     <span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">long</span> allocate(<span style="color: #0000ff;">long</span> deltaSeconds, <span style="color: #0000ff;">long</span> workerId, <span style="color: #0000ff;">long</span><span style="color: #000000;"> sequence) {
+        </span><span style="color: #0000ff;">return</span> (deltaSeconds &lt;&lt; timestampShift) | (workerId &lt;&lt; workerIdShift) |<span style="color: #000000;"> sequence;
+    }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>这里就是对delta seconds，sequence，worker id三个结构进行赋值的地方了，核心代码之一。可以再看一下最上面的图，sequence是在最右侧（最低位），所以sequence不用做位移，直接就是在对的位置；</p>
+<p>而workerId，需要左移workerIdShift才能到正确的位置。workerIdShift看上面的构造器，就是sequenceBits，就是sequence的位数；</p>
+<p>deltaSeconds 左移timestampShift位，也就是workerIdBits + sequenceBits；</p>
+<p>然后对这三个位移后的值进行&ldquo;或&rdquo;操作，就把正确的值赋到正确的位数上了。</p>
+<p>&nbsp;</p>
+<h2>DatabaseWorkerIdAssigner</h2>
+<p>SnowFlake中，deltaSeconds依赖时间戳，可以通过系统获取；sequence可以通过自增来控制；这俩字段都是项目可以自给自足的，而WorkerId则必须还有一个策略来提供。</p>
+<p>这个策略要保证每次服务启动的时候拿到的WorkerId都能不重复，不然就有可能集群不同的机器拿到不同的workerid，会发重复的号了；</p>
+<p>而服务启动又是个相对低频的行为，也不影响发号性能，所以可以用DB自增ID来实现。</p>
+<p>DatabaseWorkerIdAssigner就是依赖DB自增ID实现的workerId分配器。</p>
+<p>代码就不贴了，就是个简单的save然后取到DB的自增ID。</p>
+<p>&nbsp;</p>
+<h2>SnowFlakeGenerator</h2>
+<p>这里就是控制发号逻辑的地方了。</p>
+<p>先看看成员变量和初始化部分：</p>
+<div class="cnblogs_code">
+<pre><code>@Value("${snowflake.timeBits}"<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">int</span> timeBits = 28<span style="color: #000000;">;
+
+    @Value(</span>"${snowflake.workerBits}"<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">int</span> workerBits = 22<span style="color: #000000;">;
+
+    @Value(</span>"${snowflake.seqBits}"<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">int</span> seqBits = 13<span style="color: #000000;">;
+
+    @Value(</span>"${snowflake.epochStr}"<span style="color: #000000;">)
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;"> Customer epoch, unit as second. For example 2016-05-20 (ms: 1463673600000)</span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">protected</span> String epochStr = "2016-05-20"<span style="color: #000000;">;
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">long</span> epochSeconds = TimeUnit.MILLISECONDS.toSeconds(1463673600000L<span style="color: #000000;">);
+
+    @Autowired
+    @Qualifier(value </span>= "dbWorkerIdAssigner"<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">protected</span><span style="color: #000000;"> WorkerIdAssigner workerIdAssigner;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;"> Stable fields after spring bean initializing </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">protected</span><span style="color: #000000;"> BitsAllocator bitsAllocator;
+
+
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">long</span><span style="color: #000000;"> workerId;
+
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;"> Volatile fields caused by nextId() </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">long</span> sequence = 0L<span style="color: #000000;">;
+    </span><span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">long</span> lastSecond = -1L<span style="color: #000000;">;
+
+
+    @PostConstruct
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> afterPropertiesSet() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> Exception {
+        bitsAllocator </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> BitsAllocator(timeBits,workerBits,seqBits);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> initialize worker id</span>
+        workerId =<span style="color: #000000;"> workerIdAssigner.assignWorkerId();
+
+        </span><span style="color: #0000ff;">if</span>(workerId &gt;<span style="color: #000000;"> bitsAllocator.getMaxWorkerId()){
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> RuntimeException("Worker id " + workerId + " exceeds the max " +<span style="color: #000000;"> bitsAllocator.getMaxWorkerId());
+        }
+
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (StringUtils.isNotBlank(epochStr)) {
+            </span><span style="color: #0000ff;">this</span>.epochSeconds =<span style="color: #000000;"> TimeUnit.MILLISECONDS.toSeconds(DateUtils.parseByDayPattern(epochStr).getTime());
+        }
+
+        log.info(</span>"Initialized bits(1, {}, {}, {}) for workerID:{}"<span style="color: #000000;">, timeBits, workerBits, seqBits, workerId);
+    }</span></pre>
+</div>
+<p>@Value注入的都是配置文件里读取的值。</p>
+<p>afterPropertiesSet里，将配置文件读取到的值传递给BitsAllocator，够造出一个对应的BitsAllocator；</p>
+<p>然后生成一个workerId（插入一条DB记录），初始化过程就完成了。</p>
+<p>&nbsp;</p>
+<p>再看核心发号控制逻辑：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * Get UID
+     *
+     * </span><span style="color: #808080;">@return</span><span style="color: #008000;"> UID
+     * </span><span style="color: #808080;">@throws</span><span style="color: #008000;"> UidGenerateException in the case: Clock moved backwards; Exceeds the max timestamp
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">protected</span> <span style="color: #0000ff;">synchronized</span> <span style="color: #0000ff;">long</span><span style="color: #000000;"> nextId() {
+        </span><span style="color: #0000ff;">long</span> currentSecond =<span style="color: #000000;"> getCurrentSecond();
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> Clock moved backwards, refuse to generate uid
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">todo 时钟回拨问题待解决</span>
+        <span style="color: #0000ff;">if</span> (currentSecond &lt;<span style="color: #000000;"> lastSecond) {
+            </span><span style="color: #0000ff;">long</span> refusedSeconds = lastSecond -<span style="color: #000000;"> currentSecond;
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> UidGenerateException("Clock moved backwards. Refusing for %d seconds"<span style="color: #000000;">, refusedSeconds);
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> At the same second, increase sequence
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">同一秒内的，seq加一</span>
+        <span style="color: #0000ff;">if</span> (currentSecond ==<span style="color: #000000;"> lastSecond) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">seq 加一，如果大于MaxSequence，就变成0
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果大于MaxSequence 就是seq能取到的最大值，二进制（seqBits -1）位全是1</span>
+            sequence = (sequence + 1) &amp;<span style="color: #000000;"> bitsAllocator.getMaxSequence();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> Exceed the max sequence, we wait the next second to generate uid
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">号发完了，等到下一秒</span>
+            <span style="color: #0000ff;">if</span> (sequence == 0<span style="color: #000000;">) {
+                currentSecond </span>=<span style="color: #000000;"> getNextSecond(lastSecond);
+            }
+
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> At the different second, sequence restart from zero</span>
+        } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">新的一秒，重新开始发号</span>
+            sequence = 0L<span style="color: #000000;">;
+        }
+        lastSecond </span>=<span style="color: #000000;"> currentSecond;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> Allocate bits for UID</span>
+        <span style="color: #0000ff;">return</span> bitsAllocator.allocate(currentSecond -<span style="color: #000000;"> epochSeconds, workerId, sequence);
+    }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>注意这是个<span style="color: #ff6600;"><em><strong>synchronized</strong></em></span>方法，这是关键。</p>
+<p>getCurrentSecond就是获取当前以秒为单位的时间戳；</p>
+<h3>sequence计算逻辑</h3>
+<p>如果currentSecond和lastSecond一样，那说明本次发号请求不是本秒的第一次，只要将sequence直接+1即可；如果+1后大于了MaxSequence（这里会用&amp; bitsAllocator.getMaxSequence()设置为0），那说明本秒的sequence已经用完了，此时请求已经超出了本秒系统的最大吞吐量，这里需要调用getNextSecond(详见github)，来等待到下一秒；</p>
+<p>如果currentSecond和lastSecond不一样，说名本次请求是全新的一秒，这时候sequence设置为0即可。</p>
+<p>&nbsp;</p>
+<h3>deltaSecond计算逻辑</h3>
+<p>就是currentSecond - epochSeconds，当前时间减去初始时间的秒数。</p>
+<p>&nbsp;</p>
+<p>此时，workerId，deltaSecond，sequence都已经确定了具体的值，然后调用bitsAllocator.allocate方法，就可以生成一个全新的ID了，至此发号完成。</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

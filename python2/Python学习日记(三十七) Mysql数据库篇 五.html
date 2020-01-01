@@ -1,0 +1,193 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python学习日记(三十七) Mysql数据库篇 五' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python学习日记(三十七) Mysql数据库篇 五</center></div><div class='banquan'>原文出处:本文由博客园博主Fantac提供。<br/>
+原文连接:https://www.cnblogs.com/Fantac/p/11672330.html</div><br>
+    <p><span style="font-family: 宋体; font-size: 18pt; color: #ffffff; background-color: #ff0000;"><strong>pymsql的使用</strong></span></p>
+<p><span style="font-family: 'Microsoft YaHei';"><strong><span style="font-size: 18px;">初识pymysql模块</span></strong></span></p>
+<p><span style="font-family: 宋体; font-size: 18px;">先在数据库中创建一个用户信息表,里面包含用户的ID、用户名、密码</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">create</span> <span style="color: #0000ff;">table</span><span style="color: #000000;"> userinfo(
+    uid </span><span style="color: #0000ff;">int</span> <span style="color: #808080;">not</span> <span style="color: #0000ff;">null</span> auto_increment <span style="color: #0000ff;">primary</span> <span style="color: #0000ff;">key</span><span style="color: #000000;">,
+    username </span><span style="color: #0000ff;">varchar</span>(<span style="color: #800000; font-weight: bold;">32</span><span style="color: #000000;">),
+    pwd </span><span style="color: #0000ff;">varchar</span>(<span style="color: #800000; font-weight: bold;">32</span><span style="color: #000000;">)
+)engine </span><span style="color: #808080;">=</span> innodb <span style="color: #0000ff;">default</span> charset<span style="color: #808080;">=</span>utf8;</pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">增加一个用户的信息:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">insert</span> <span style="color: #0000ff;">into</span> userinfo(username,pwd) <span style="color: #0000ff;">values</span>(<span style="color: #ff0000;">'</span><span style="color: #ff0000;">jxson</span><span style="color: #ff0000;">'</span>,<span style="color: #ff0000;">'</span><span style="color: #ff0000;">a123</span><span style="color: #ff0000;">'</span>);</pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">用pymysql模块从数据库拿到用户信息模拟登陆效果:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+user </span>= input(<span style="color: #800000;">'</span><span style="color: #800000;">username:</span><span style="color: #800000;">'</span>)                                                               <span style="color: #008000;">#</span><span style="color: #008000;">输入用户的名字</span>
+pwd = input(<span style="color: #800000;">'</span><span style="color: #800000;">password:</span><span style="color: #800000;">'</span>)                                                                <span style="color: #008000;">#</span><span style="color: #008000;">输入用户的密码</span>
+conn = pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;">连接数据库</span>
+cursor = conn.cursor()                                                                  <span style="color: #008000;">#</span><span style="color: #008000;">cursor是一个游标 去帮我们获取数据</span>
+sql_search = <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo where username='%s' and pwd='%s'</span><span style="color: #800000;">"</span> %(user,pwd,)     <span style="color: #008000;">#</span><span style="color: #008000;">SQL语句</span>
+cursor.execute(sql_search)                                                              <span style="color: #008000;">#</span><span style="color: #008000;">执行SQL语句</span>
+get_one = cursor.fetchone()                                                             <span style="color: #008000;">#</span><span style="color: #008000;">拿一组数据</span>
+cursor.close()                                                                          <span style="color: #008000;">#</span><span style="color: #008000;">关闭游标</span>
+conn.close()                                                                            <span style="color: #008000;">#</span><span style="color: #008000;">关闭连接</span>
+<span style="color: #0000ff;">if</span> get_one:                                                                             <span style="color: #008000;">#</span><span style="color: #008000;">判断是否有拿到数据</span>
+    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">登陆成功!</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(get_one)                                      
+</span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">登陆失败!</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">执行结果:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">username:jxson
+password:a123
+登陆成功!
+(</span>1, <span style="color: #800000;">'</span><span style="color: #800000;">jxson</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 18px;"><strong>防止SQL注入的改进方法</strong></span></p>
+<p><span style="font-family: 宋体; font-size: 18px;">1.</span></p>
+<div class="cnblogs_code">
+<pre><code>sql_search = <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo where username=%s and pwd=%s</span><span style="color: #800000;">"</span>                     
+cursor.execute(sql_search,user,pwd)  </pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">2.列表的表示方式</span></p>
+<div class="cnblogs_code">
+<pre><code>sql_search = <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo where username=%s and pwd=%s</span><span style="color: #800000;">"</span>                      
+cursor.execute(sql_search,[user,pwd])</pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">3.字典的表示方式</span></p>
+<div class="cnblogs_code">
+<pre><code>sql_search = <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo where username=%(u)s and pwd=%(p)s</span><span style="color: #800000;">"</span><span style="color: #000000;">                      
+cursor.execute(sql_search,{</span><span style="color: #800000;">'</span><span style="color: #800000;">u</span><span style="color: #800000;">'</span> : user,<span style="color: #800000;">'</span><span style="color: #800000;">p</span><span style="color: #800000;">'</span> : pwd})</pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 18px;"><strong>&nbsp;增、删、改、查</strong></span></p>
+<p><strong><span style="font-family: 宋体; font-size: 18px;">增、删、改:</span></strong></p>
+<p><span style="font-family: 宋体; font-size: 18px;">增、删、改都需要commit(),以增为举例</span></p>
+<p><span style="font-family: 宋体; font-size: 18px;">增加单个</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+conn </span>= pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cursor </span>=<span style="color: #000000;"> conn.cursor()
+sql_insert </span>= <span style="color: #800000;">"</span><span style="color: #800000;">insert into userinfo(username,pwd) values('abc','666')</span><span style="color: #800000;">"</span><span style="color: #000000;">
+cursor.execute(sql_insert)
+conn.commit()
+cursor.close()
+conn.close()</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">增加多个:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+conn </span>= pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cursor </span>=<span style="color: #000000;"> conn.cursor()
+sql_insert </span>= <span style="color: #800000;">"</span><span style="color: #800000;">insert into userinfo(username,pwd) values(%s,%s)</span><span style="color: #800000;">"</span><span style="color: #000000;">
+cursor.executemany(sql_insert,[(</span><span style="color: #800000;">'</span><span style="color: #800000;">hylisang</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>),(<span style="color: #800000;">'</span><span style="color: #800000;">HSI15</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">47a8</span><span style="color: #800000;">'</span>),(<span style="color: #800000;">'</span><span style="color: #800000;">asw2</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">5667</span><span style="color: #800000;">'</span><span style="color: #000000;">)])
+conn.commit()
+cursor.close()
+conn.close()</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">output:</span></p>
+<p><span style="font-family: 宋体; font-size: 18px;"><img src="./images/Python学习日记(三十七) Mysql数据库篇 五0.png" alt="" /></span></p>
+<p><strong><span style="font-family: 宋体; font-size: 18px;">查:</span></strong></p>
+<p><strong><span style="font-family: 宋体; font-size: 18px;">1.fetchone()</span></strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+conn </span>= pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cursor </span>=<span style="color: #000000;"> conn.cursor()
+sql </span>= <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo</span><span style="color: #800000;">"</span><span style="color: #000000;">
+cursor.execute(sql)
+result1 </span>=<span style="color: #000000;"> cursor.fetchone()
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(result1)
+result2 </span>=<span style="color: #000000;"> cursor.fetchone()
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(result2)
+cursor.close()
+conn.close()</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">执行结果:</span></p>
+<div class="cnblogs_code">
+<pre><code>(1, <span style="color: #800000;">'</span><span style="color: #800000;">jxson</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+(</span>6, <span style="color: #800000;">'</span><span style="color: #800000;">abc</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">666</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p><strong><span style="font-family: 宋体; font-size: 18px;">2.fetchmany(n),一次取n条数据</span></strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+conn </span>= pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cursor </span>=<span style="color: #000000;"> conn.cursor()
+sql </span>= <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo</span><span style="color: #800000;">"</span><span style="color: #000000;">
+cursor.execute(sql)
+result1 </span>= cursor.fetchmany(3<span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(result1)                  
+cursor.close()
+conn.close()</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">执行结果:</span></p>
+<div class="cnblogs_code">
+<pre><code>((1, <span style="color: #800000;">'</span><span style="color: #800000;">jxson</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>), (6, <span style="color: #800000;">'</span><span style="color: #800000;">abc</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">666</span><span style="color: #800000;">'</span>), (7, <span style="color: #800000;">'</span><span style="color: #800000;">hylisang</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>))</pre>
+</div>
+<p><strong><span style="font-family: 宋体; font-size: 18px;">3.fetchall(),一次取全部SQL语句查到的数据</span></strong></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+conn </span>= pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cursor </span>=<span style="color: #000000;"> conn.cursor()
+sql </span>= <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo</span><span style="color: #800000;">"</span><span style="color: #000000;">
+cursor.execute(sql)
+result1 </span>=<span style="color: #000000;"> cursor.fetchall()
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(result1)
+cursor.close()
+conn.close()</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">执行结果:</span></p>
+<div class="cnblogs_code">
+<pre><code>((1, <span style="color: #800000;">'</span><span style="color: #800000;">jxson</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>), (6, <span style="color: #800000;">'</span><span style="color: #800000;">abc</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">666</span><span style="color: #800000;">'</span>), (7, <span style="color: #800000;">'</span><span style="color: #800000;">hylisang</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>), (8, <span style="color: #800000;">'</span><span style="color: #800000;">HSI15</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">47a8</span><span style="color: #800000;">'</span>), (9, <span style="color: #800000;">'</span><span style="color: #800000;">asw2</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">5667</span><span style="color: #800000;">'</span>))</pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">把结果转化为字典的格式:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+conn </span>= pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cursor </span>= conn.cursor(cursor=<span style="color: #000000;">pymysql.cursors.DictCursor)
+sql </span>= <span style="color: #800000;">"</span><span style="color: #800000;">select * from userinfo</span><span style="color: #800000;">"</span><span style="color: #000000;">
+cursor.execute(sql)
+result1 </span>=<span style="color: #000000;"> cursor.fetchall()
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(result1)
+cursor.close()
+conn.close()</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;">执行结果:</span></p>
+<div class="cnblogs_code">
+<pre><code>[{<span style="color: #800000;">'</span><span style="color: #800000;">uid</span><span style="color: #800000;">'</span>: 1, <span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">jxson</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>}, {<span style="color: #800000;">'</span><span style="color: #800000;">uid</span><span style="color: #800000;">'</span>: 6, <span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">abc</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">666</span><span style="color: #800000;">'</span>}, {<span style="color: #800000;">'</span><span style="color: #800000;">uid</span><span style="color: #800000;">'</span>: 7, <span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">hylisang</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">a123</span><span style="color: #800000;">'</span>},<br /> {<span style="color: #800000;">'</span><span style="color: #800000;">uid</span><span style="color: #800000;">'</span>: 8, <span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">HSI15</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">47a8</span><span style="color: #800000;">'</span>}, {<span style="color: #800000;">'</span><span style="color: #800000;">uid</span><span style="color: #800000;">'</span>: 9, <span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">asw2</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">5667</span><span style="color: #800000;">'</span>}]</pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18px;"><strong>4.控制游标来获取数据</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>cursor.scroll(1,mode=<span style="color: #800000;">'</span><span style="color: #800000;">relative</span><span style="color: #800000;">'</span>)    　　　　　　　　　　　　　　　　　　　　　　　　　　　　<span style="color: #008000;">#根据当前位置</span><span style="color: #008000;">相对位移</span>
+cursor.scroll(2,mode=<span style="color: #800000;">'</span><span style="color: #800000;">absolute</span><span style="color: #800000;">'</span>)    　　　　　　　　　　　　　　　　　　　　　　　　　　　　<span style="color: #008000;">#</span><span style="color: #008000;">绝对位置移动</span></pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei';"><strong><span style="font-size: 18px;">查看新插入数据的自增ID</span></strong></span></p>
+<p><span style="font-family: 宋体; font-size: 18px;">如果添加多笔数据再去查询,那查到的ID是最后一条</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymysql
+conn </span>= pymysql.connect(host =<span style="color: #800000;">'</span><span style="color: #800000;">localhost</span><span style="color: #800000;">'</span>,user = <span style="color: #800000;">'</span><span style="color: #800000;">root</span><span style="color: #800000;">'</span>,password = <span style="color: #800000;">''</span>,database = <span style="color: #800000;">'</span><span style="color: #800000;">db1</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+cursor </span>= conn.cursor(cursor=<span style="color: #000000;">pymysql.cursors.DictCursor)
+sql_insert </span>= <span style="color: #800000;">"</span><span style="color: #800000;">insert into userinfo(username,pwd) values('abc','666')</span><span style="color: #800000;">"</span><span style="color: #000000;">
+cursor.execute(sql_insert)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(cursor.lastrowid)
+conn.commit()
+cursor.close()
+conn.close()</span></pre>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

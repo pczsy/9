@@ -1,0 +1,175 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python-day10(正式学习)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python-day10(正式学习)</center></div><div class='banquan'>原文出处:本文由博客园博主wind叶提供。<br/>
+原文连接:https://www.cnblogs.com/leaf-wind/p/11316574.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#字符编码">字符编码</a><ul>
+        <li><a href="#计算机基础">计算机基础</a></li>
+        <li><a href="#文本编辑器存取文件的原理">文本编辑器存取文件的原理</a></li>
+        <li><a href="#python解释器执行py文件的原理">python解释器执行py文件的原理</a></li>
+        <li><a href="#python解释器与文本编辑的异同">python解释器与文本编辑的异同</a></li>
+        <li><a href="#字符编码介绍">字符编码介绍</a></li>
+        <li><a href="#字符编码的分类">字符编码的分类</a></li>
+        <li><a href="#乱码分析">乱码分析</a></li>
+        <li><a href="#总结">总结</a></li>
+        </ul></li>
+        <li><a href="#文件操作">文件操作</a><ul>
+        <li><a href="#三种基本操作">三种基本操作</a><ul>
+        <li><a href="#文件打开之r模式只能读不能写">文件打开之r模式，只能读不能写</a></li>
+        <li><a href="#文件打开之w模式只能写不能读">文件打开之w模式，只能写不能读</a></li>
+        <li><a href="#文件打开之a模式只能追加">文件打开之a模式，只能追加</a></li>
+        <li><a href="#文件打开二进制b模式一般用于存取音频和图片">文件打开二进制，b模式一般用于存取音频和图片</a></li>
+        </ul></li>
+        <li><a href="#with管理文件操作上下文">with管理文件操作上下文</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="字符编码">字符编码</h1>
+<h2 id="计算机基础">计算机基础</h2>
+<p>应用程序任何操作硬件的请求都需要向操作系统发起系统调用，然后由操作系统去操作硬件</p>
+<h2 id="文本编辑器存取文件的原理">文本编辑器存取文件的原理</h2>
+<ol>
+<li>打开编辑器就打开启动了一个进程，是在内存中的，所以，用编辑器编写的内容也都是存放在内存中的，断电后数据丢失</li>
+<li>想要永久保存，需要点击保存按钮：编辑器吧内存的数据刷到了硬盘上</li>
+<li>在我们编写一个py文件（没有执行），跟编写其他文件没什么区别，都只是在编写一堆字符而已</li>
+</ol>
+<h2 id="python解释器执行py文件的原理">python解释器执行py文件的原理</h2>
+<ul>
+<li>第一阶段：Python解释器启动，此时就相当于启动了一个文本编辑器</li>
+<li>第二阶段：Python解释器相当于文本编辑器，去打开test.py文件，从硬盘上将test.py的文件内容读入到内存中(小复习：pyhon的解释性，决定了解释器只关心文件内容，不关心文件后缀名)。</li>
+<li>第三阶段：Python解释器解释执行刚刚加载到内存中test.py的代码( ps：在该阶段，即真正执行代码时，才会识别Python的语法，执行文件内代码，当执行到name=&quot;egon&quot;时,会开辟内存空间存放字符串&quot;egon&quot;)。</li>
+</ul>
+<h2 id="python解释器与文本编辑的异同">python解释器与文本编辑的异同</h2>
+<ul>
+<li>相同点：Python解释器是解释执行文件内容的，因而Python解释器具备读py文件的功能，这一点与文本编辑器一样。</li>
+<li>不同点：文本编辑器将文件内容读入内存后，是为了显示或者编辑，根本不去理会Python的语法，而Python解释器将文件内容读入内存后，可不是为了给你瞅一眼Python代码写的啥，而是为了执行Python代码、会识别Python语法。</li>
+</ul>
+<h2 id="字符编码介绍">字符编码介绍</h2>
+<p>计算机想要读懂人类的字符就要通过字符编码，因为计算机只认识0和1。字符编码的的编码过程就是<strong>字符-&gt;翻译过程-&gt;数字</strong></p>
+<h2 id="字符编码的分类">字符编码的分类</h2>
+<p>utf-8(未来趋势)</p>
+<p>gbk(中国)</p>
+<p>unicode(万能识别)</p>
+<p>shift_jis(日本)</p>
+<p>euc-kr(韩国)</p>
+<p>ascii(美国)</p>
+<h2 id="乱码分析">乱码分析</h2>
+<p>首先明确概念</p>
+<ul>
+<li>文件从内存刷到硬盘的操作简称存文件</li>
+<li>文件从硬盘读到内存的操作简称读文件</li>
+</ul>
+<p>乱码的两种情况：</p>
+<ul>
+<li>乱码一：存文件时就已经乱码</li>
+</ul>
+<p>存文件时，由于文件内有各个国家的文字，我们单以shiftjis去存，<br />
+本质上其他国家的文字由于在shiftjis中没有找到对应关系而导致存储失败。但当我们硬要存的时候，编辑并不会报错（难道你的编码错误，编辑器这个软件就跟着崩溃了吗？？？），但毫无疑问，不能存而硬存，肯定是乱存了，即存文件阶段就已经发生乱码，而当我们用shiftjis打开文件时，日文可以正常显示，而中文则乱码了。</p>
+<ul>
+<li>乱码二：存文件时不乱码而读文件时乱码</li>
+</ul>
+<p>存文件时用utf-8编码，保证兼容万国，不会乱码，而读文件时选择了错误的解码方式，比如gbk，则在读阶段发生乱码，读阶段发生乱码是可以解决的，选对正确的解码方式就ok了。</p>
+<h2 id="总结">总结</h2>
+<ol>
+<li>保证不乱码的核心法则就是，字符按照什么标准而编码的，就要按照什么标准解码，此处的标准指的就是字符编码。</li>
+<li>在内存中写的所有字符，一视同仁，都是Unicode编码，比如我们打开编辑器，输入一个“你”，我们并不能说“你”就是一个汉字，此时它仅仅只是一个符号，该符号可能很多国家都在使用，根据我们使用的输入法不同这个字的样式可能也不太一样。只有在我们往硬盘保存或者基于网络传输时，才能确定”你“到底是一个汉字，还是一个日本字，这就是Unicode转换成其他编码格式的过程了。简而言之，就是内存中固定使用的就是Uncidoe编码，我们唯一能改变的就是存储到硬盘时使用的编码。</li>
+</ol>
+<h1 id="文件操作">文件操作</h1>
+<h2 id="三种基本操作">三种基本操作</h2>
+<h3 id="文件打开之r模式只能读不能写">文件打开之r模式，只能读不能写</h3>
+<pre><code><code># rt: read by text
+# windows的操作系统默认编码为gbk，因此需要使用utf8编码
+f = open(&#39;32.txt&#39;, mode=&#39;rt&#39;, encoding=&#39;utf8&#39;)
+data = f.read()
+print(data)
+print(f&quot;type(data): {type(data)}&quot;)
+f.close()  #文件读完后指针会跑到文件末端，再次读取的将会是空格</code></pre>
+<pre><code><code>aaa
+bbb
+ccc
+nick最帅吗
+type(data): &lt;class &#39;str&#39;&gt;</code></pre>
+<p>readline()和readlines()</p>
+<pre><code><code># f.readline()/f.readlines()
+f = open(&#39;32.txt&#39;, mode=&#39;rt&#39;, encoding=&#39;utf8&#39;)
+print(f&quot;f.readable(): {f.readable()}&quot;)  # 判断文件是否可读
+data1 = f.readline()
+data2 = f.readlines()
+print(f&quot;data1: {data1}&quot;)
+print(f&quot;data2: {data2}&quot;)
+f.close()</code></pre>
+<pre><code><code>f.readable(): True
+data1: aaa
+
+data2: [&#39;bbb\n&#39;, &#39;ccc\n&#39;, &#39;nick最帅吗&#39;]</code></pre>
+<h3 id="文件打开之w模式只能写不能读">文件打开之w模式，只能写不能读</h3>
+<pre><code><code># wt
+f = open(&#39;34w.txt&#39;, mode=&#39;wt&#39;, encoding=&#39;utf8&#39;)
+print(f&quot;f.readable(): {f.readable()}&quot;)
+f.write(&#39;nick 真帅呀\n&#39;)  # &#39;\n&#39;是换行符
+f.write(&#39;nick,nick, you drop, I drop.&#39;)
+f.write(&#39;nick 帅的我五体投地&#39;)
+f.flush()  # 立刻将文件内容从内存刷到硬盘，该模式会先清空文件内的所有内容再写入
+f.close()</code></pre>
+<pre><code><code>f.readable(): False</code></pre>
+<h3 id="文件打开之a模式只能追加">文件打开之a模式，只能追加</h3>
+<pre><code><code># at
+f = open(&#39;34a.txt&#39;, mode=&#39;at&#39;, encoding=&#39;utf8&#39;)
+print(f&quot;f.readable(): {f.readable()}&quot;)
+f.write(&#39;nick 真帅呀\n&#39;)  # &#39;\n&#39;是换行符
+f.write(&#39;nick,nick, you drop, I drop.&#39;)
+f.write(&#39;nick 帅的我五体投地&#39;)
+f.close()</code></pre>
+<pre><code><code>f.readable(): False</code></pre>
+<h3 id="文件打开二进制b模式一般用于存取音频和图片">文件打开二进制，b模式一般用于存取音频和图片</h3>
+<pre><code><code>try:
+    import requests
+
+    response = requests.get(
+        &#39;http://www.chenyoude.com/Python从入门到放弃/文件的三种打开模式-mv.jpg?x-oss-process=style/watermark&#39;)
+    data = response.content
+
+    f = open(&#39;mv.jpg?x-oss-process=style/watermark&#39;, &#39;wb&#39;)
+    f.write(data)
+    print(&#39;done...&#39;)
+    f.close()
+except Exception as e:
+    print(e, &#39;报错了，那就算了吧，以后爬虫处会详细介绍&#39;)</code></pre>
+<pre><code><code>done...</code></pre>
+<pre><code><code>f = open(&#39;34w.txt&#39;, &#39;wb&#39;)
+f.write(&#39;nick 好帅啊&#39;.encode(&#39;utf8&#39;))
+f.close()</code></pre>
+<h2 id="with管理文件操作上下文">with管理文件操作上下文</h2>
+<p>之前我们使用open()方法操作文件，但是open打开文件后我们还需要手动释放文件对操作系统的占用。但是其实我们可以更方便的打开文件，即Python提供的上下文管理工具——with open()。</p>
+<pre><code><code>with open(&#39;32.txt&#39;, &#39;rt&#39;, encoding=&#39;utf8&#39;) as f:
+    print(f.read())</code></pre>
+<p>sdf</p>
+<p>with open()方法不仅提供自动释放操作系统占用的方法，并且with open可以使用逗号分隔，一次性打开多个文件，实现文件的快速拷贝。</p>
+<pre><code><code>with open(&#39;32.txt&#39;, &#39;rb&#39;) as fr, \
+        open(&#39;35r.txt&#39;, &#39;wb&#39;) as fw:
+    f.write(f.read())</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

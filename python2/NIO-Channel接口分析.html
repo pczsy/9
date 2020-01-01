@@ -1,0 +1,296 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修NIO-Channel接口分析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>NIO-Channel接口分析</center></div><div class='banquan'>原文出处:本文由博客园博主杰哥很忙提供。<br/>
+原文连接:https://www.cnblogs.com/Jack-Blog/p/12040082.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#nio-channel接口分析">NIO-Channel接口分析</a><ul>
+        <li><a href="#目录">目录</a></li>
+        <li><a href="#前言">前言</a></li>
+        <li><a href="#接口">接口</a><ul>
+        <li><a href="#sctp协议">SCTP协议</a></li>
+        <li><a href="#udp协议">UDP协议</a></li>
+        <li><a href="#tcp协议">TCP协议</a></li>
+        <li><a href="#文件">文件</a></li>
+        </ul></li>
+        <li><a href="#总结">总结</a></li>
+        <li><a href="#相关文献">相关文献</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<hr />
+<hr />
+<h1 id="nio-channel接口分析">NIO-Channel接口分析</h1>
+<h2 id="目录">目录</h2>
+<p><a href="https://www.cnblogs.com/Jack-Blog/p/11991240.html">NIO-概览</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/11996309.html">NIO-Buffer</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12015516.html">NIO-Channel</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12040082.html">NIO-Channel接口分析</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12061595.html">NIO-SocketChannel源码分析</a><br />
+<a href="https://www.cnblogs.com/Jack-Blog/p/12078767.html">NIO-FileChannel源码分析</a></p>
+<h2 id="前言">前言</h2>
+<p>本来是想学习Netty的，但是Netty是一个NIO框架，因此在学习netty之前，还是先梳理一下NIO的知识。通过剖析<a href="http://jdk.java.net/">源码</a>理解NIO的设计原理。</p>
+<blockquote>
+<p>本系列文章针对的是JDK1.8.0.161的源码。</p>
+</blockquote>
+<p><a href="https://www.cnblogs.com/Jack-Blog/p/12015516.html">上一篇</a>介绍了Channel的基本使用，下面对Channel的接口进行分析。</p>
+<h2 id="接口">接口</h2>
+<h3 id="sctp协议">SCTP协议</h3>
+<p>SCTP(Stream Control Transmission Protocol)是一种传输协议，在TCP/IP协议栈中所处的位置和TCP、UDP类似，兼有TCP/UDP两者特征。</p>
+<blockquote>
+<p>对于SCTP协议这里不详细描述，想了解的同学可以看下<a href="https://blog.csdn.net/wuxing26jiayou/article/details/79743683">这篇文章</a><br />
+SCTP协议平时用的不多，这里不做具体讨论。</p>
+</blockquote>
+<h3 id="udp协议">UDP协议</h3>
+<p>NIO使用DatagrmChannel实现了UDP协议的网络通讯。</p>
+<p><img src="./images/NIO-Channel接口分析0.png" alt="20191207210432.png" /></p>
+<p>下面我们对各个接口进行分析。</p>
+<p><code>AutoCloseable</code>和<code>Closeable</code>分别是自动关闭和主动关闭接口。当资源(如句柄或文件等)需要释放时，则需要调用close方法释放资源。</p>
+<pre><code><code>public interface AutoCloseable {
+    void close() throws Exception;
+}
+
+public interface Closeable extends AutoCloseable {
+    void close() throws IOException;
+}</code></pre>
+<p><code>Channel</code>是通道接口，针对于I/O相关的操作，需要打开和关闭操作。</p>
+<pre><code><code>public interface Channel extends Closeable {
+    boolean isOpen();
+
+    void close() throws IOException;
+}</code></pre>
+<p><code>InterruptibleChannel</code>是支持异步关闭和中断的通道接口。为了支持Thead的interrupt模型，当线程中断时，可以执行中断处理对象的回调，从而关闭释放Channel。</p>
+<pre><code><code>public interface InterruptibleChannel extends Channel {
+    void close() throws IOException;
+}</code></pre>
+<blockquote>
+<p>关于InterruptibleChannel可中断I/O详细解析可以看一下<a href="http://imushan.com/2018/08/01/java/language/JDK%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-InterruptibleChannel%E4%B8%8E%E5%8F%AF%E4%B8%AD%E6%96%ADIO/">《JDK源码阅读-InterruptibleChannel与可中断IO》</a></p>
+</blockquote>
+<p><code>Interruptible</code>是线程中断接口，即上面提的Thead的interrupt模型。当线程中断时，则会调用中断操作。</p>
+<pre><code><code>public abstract interface Interruptible {
+    public abstract void interrupt(java.lang.Thread t);
+}
+public class Thread implements Runnable {
+    ...
+    public void interrupt() {
+        if (this != Thread.currentThread())
+            checkAccess();
+
+        synchronized (blockerLock) {
+            Interruptible b = blocker;
+            if (b != null) {
+                interrupt0();           // Just to set the interrupt flag
+                b.interrupt(this);
+                return;
+            }
+        }
+        interrupt0();
+    }
+    ...
+}</code></pre>
+<p><code>AbstractInterruptibleChannel</code>实现了<code>Channel</code>和<code>InterruptibleChannel</code>接口。</p>
+<p><img src="./images/NIO-Channel接口分析1.png" alt="20191208013708.png" /></p>
+<ul>
+<li><code>closeLock</code>是关闭时的锁</li>
+<li><code>open</code>表示channle是否打开</li>
+<li><code>interuptor</code>为<code>Interruptible</code>中断回调</li>
+<li><code>interrupted</code>为I/O执行时的线程<br />
+</li>
+</ul>
+<pre><code><code>public abstract class AbstractInterruptibleChannel implements Channel, InterruptibleChannel {
+    ...
+    public final void close() throws IOException {
+        synchronized(this.closeLock) {
+            if (this.open) {
+                this.open = false;
+                this.implCloseChannel();
+            }
+        }
+    }
+    //具体的Channel实现关闭
+    protected abstract void implCloseChannel() throws IOException;
+
+    protected final void begin() {
+        if (this.interruptor == null) {
+            this.interruptor = new Interruptible() {
+                //线程中断时，则会调用该接口关闭Channel
+                public void interrupt(Thread target) {
+                    synchronized(AbstractInterruptibleChannel.this.closeLock) {
+                        if (AbstractInterruptibleChannel.this.open) {
+                            AbstractInterruptibleChannel.this.open = false;
+                            AbstractInterruptibleChannel.this.interrupted = target;
+
+                            try {
+                                AbstractInterruptibleChannel.this.implCloseChannel();
+                            } catch (IOException x) {
+                            }
+
+                        }
+                    }
+                }
+            };
+        }
+        //将线程的blockOn设置为当前interruptor，从而使得线程关闭时能关闭channel
+        blockedOn(this.interruptor);
+        Thread me = Thread.currentThread();
+        if (me.isInterrupted()) {
+            this.interruptor.interrupt(me);
+        }
+
+    }
+
+    protected final void end(boolean completed)
+        throws AsynchronousCloseException
+    {
+        //I/O结束，清除线程blocker
+        blockedOn(null);
+        Thread interrupted = this.interrupted;
+        if (interrupted != null &amp;&amp; interrupted == Thread.currentThread()) {
+            interrupted = null;
+            throw new ClosedByInterruptException();
+        }
+        if (!completed &amp;&amp; !open)
+            throw new AsynchronousCloseException();
+    }
+
+    static void blockedOn(Interruptible intr) {
+        SharedSecrets.getJavaLangAccess().blockedOn(Thread.currentThread(), intr);
+    }
+}
+</code></pre>
+<p><code>AbstractInterruptibleChannel</code>添加了<code>begin</code>和<code>end</code>方法。 在I/O操作开始时会调用<code>begin</code>,在<code>I/O</code>操作结束时会调用<code>end</code>。在begin方法内将中断操作加入到当前线程中。最终会调用到线程的blockOn方法，它会将该中断接口注入到线程中，使得线程中断时可以调用到Channel并释放相关资源。</p>
+<pre><code><code>public void blockedOn(Thread t, Interruptible b) {
+    t.blockedOn(b);
+}</code></pre>
+<p><code>SelectableChannel</code>接口声明了Channel是可以被选择的，在Windows平台通过<code>WindowsSelectorImpl</code>实现，Linux通过<code>EPollSelectorImpl</code>实现。此外还有<code>KQueue</code>等实现，关于<code>Selector</code>具体细节在《NIO-Selector》一文中会介绍。</p>
+<p><code>AbstractSelectableChannel</code>实现了<code>SelectableChannel</code>接口。</p>
+<p><code>NetworkChannel</code>适用于网络传输的接口。</p>
+<pre><code><code>public interface NetworkChannel extends Channel {
+    //绑定地址
+    NetworkChannel bind(SocketAddress var1) throws IOException;
+
+    //获取本地地址
+    SocketAddress getLocalAddress() throws IOException;
+
+    //设置socket选项
+    &lt;T&gt; NetworkChannel setOption(SocketOption&lt;T&gt; var1, T var2) throws IOException;
+    //获取socket选项
+    &lt;T&gt; T getOption(SocketOption&lt;T&gt; var1) throws IOException;
+    //当前通道支持的socket选项
+    Set&lt;SocketOption&lt;?&gt;&gt; supportedOptions();
+}
+</code></pre>
+<p><code>MulticastChannel</code>是支持<a href="https://blog.csdn.net/qq_37653144/article/details/81588484">组播</a>接口。</p>
+<pre><code><code>public interface MulticastChannel extends NetworkChannel {
+    void close() throws IOException;
+
+    MembershipKey join(InetAddress group, NetworkInterface interf) throws IOException;
+
+    MembershipKey join(InetAddress group, NetworkInterface interf, InetAddress source) throws IOException;
+}</code></pre>
+<p><code>SelChImpl</code>接口用于将底层的I/O就绪状态更新为就绪事件。</p>
+<pre><code><code>public interface SelChImpl extends Channel {
+
+    FileDescriptor getFD();
+    int getFDVal();
+    //更新就绪事件
+    public boolean translateAndUpdateReadyOps(int ops, SelectionKeyImpl sk);
+    //设置就绪事件
+    public boolean translateAndSetReadyOps(int ops, SelectionKeyImpl sk);
+    //将底层的轮询操作转换为事件
+    void translateAndSetInterestOps(int ops, SelectionKeyImpl sk);
+    //返回channle支持的操作，比如读操作、写操作等
+    int validOps();
+    void kill() throws IOException;
+}</code></pre>
+<p>由于UDP支持读写数据，因此还实现了<code>ReadableByteChannel</code>和<code>WritableByteChannel</code>接口</p>
+<pre><code><code>public interface ReadableByteChannel extends Channel {
+    int read(ByteBuffer dst) throws IOException;
+}   
+
+public interface WritableByteChannel extends Channel {
+    int write(ByteBuffer src) throws IOException;
+}</code></pre>
+<p><code>ByteChannel</code>是支持读写的通道。</p>
+<pre><code><code>public interface ByteChannel extends ReadableByteChannel, WritableByteChannel {
+}</code></pre>
+<p><code>ScatteringByteChannel</code>则支持根据传入偏移量读,支持根据传入偏移量写<code>GatheringByteChannel</code></p>
+<pre><code><code>public interface ScatteringByteChannel extends ReadableByteChannel {
+    long read(ByteBuffer[] dsts, int offset, int length) throws IOException;
+    long read(ByteBuffer[] dsts) throws IOException;}
+
+public interface GatheringByteChannel extends WritableByteChannel {
+    long write(ByteBuffer[] srcs, int offset, int length) throws IOException;
+    long write(ByteBuffer[] srcs) throws IOException;
+}
+</code></pre>
+<h3 id="tcp协议">TCP协议</h3>
+<h4 id="客户端">客户端</h4>
+<p><img src="./images/NIO-Channel接口分析2.png" alt="20191209111550.png" /></p>
+<p>TCP协议除了不支持组播，其他和UDP是一样的,不再重复介绍。</p>
+<h4 id="服务端">服务端</h4>
+<p><img src="./images/NIO-Channel接口分析3.png" alt="20191209112800.png" /></p>
+<p>服务端无需数据读写，仅需要接收连接，数据读写是SocketChannel干的事。因此没有<code>ReadableByteChannel</code>、<code>WriteableByteChannel</code>等读写接口</p>
+<h3 id="文件">文件</h3>
+<p><img src="./images/NIO-Channel接口分析4.png" alt="20191209112005.png" /></p>
+<p>文件比网络协议少了<code>NetworkChannel</code>、<code>SelChImpl</code>和<code>SelectableChannel</code>。<code>SelChImpl</code>和<code>SelectableChannel</code>主要是用于支持选择器的，由于网络传输大多数连接时空闲的，而且数据何时会到来并不知晓，同时需要支持高并发来连接，因此支持多路复用技术可以显著的提高性能，而磁盘读写则没有该需求，因此无需选择器。</p>
+<p><code>SeekableByteChannel</code>可以通过修改position支持从指定位置读写数据。</p>
+<pre><code><code>public interface SeekableByteChannel extends ByteChannel {
+    int read(ByteBuffer dst) throws IOException;
+
+    int write(ByteBuffer src) throws IOException;
+    
+    long position() throws IOException;
+    //设置偏移量
+    SeekableByteChannel position(long newPosition) throws IOException;
+
+    long size() throws IOException;
+    //截取指定大小
+    SeekableByteChannel truncate(long size) throws IOException;
+}</code></pre>
+<h2 id="总结">总结</h2>
+<p>由于文章篇幅比较长，因此还是将接口分析和实现分析分开。本篇文章对Channel的接口进行说明，<a href="">下一篇</a>将对具体的实现进行分析。</p>
+<h2 id="相关文献">相关文献</h2>
+<ol>
+<li><a href="https://blog.csdn.net/wuxing26jiayou/article/details/79743683">SCTP协议详解</a></li>
+<li><a href="https://www.cnblogs.com/imstudy/p/11108085.html">史上最强Java NIO入门：担心从入门到放弃的，请读这篇！</a></li>
+<li><a href="https://ifeve.com/java-nio-all/">Java NIO系列教程</a></li>
+<li><a href="https://cloud.tencent.com/developer/ask/28242">为什么SCTP没有被大量使用/知道</a></li>
+<li><a href="http://imushan.com/2018/08/01/java/language/JDK%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB-InterruptibleChannel%E4%B8%8E%E5%8F%AF%E4%B8%AD%E6%96%ADIO/">JDK源码阅读-InterruptibleChannel与可中断IO</a></li>
+<li><a href="https://blog.csdn.net/qq_37653144/article/details/81588484">广播和组播</a></li>
+<li><a href="https://www.jianshu.com/p/3fe79e24f8a1">关于AccessController.doPrivileged</a></li>
+<li><a href="https://www.cnblogs.com/a526583280/p/10871795.html">ServiceLoader源码分析</a></li>
+<li><a href="https://blog.csdn.net/qq_21125183/article/details/81144278">基于Java的RDMA高性能通信库（六）：SDP - Java Socket Direct Protocol</a></li>
+</ol>
+<hr />
+<blockquote>
+<p><img src="./images/NIO-Channel接口分析5.png" alt="20191127212134.png" /><br />
+微信扫一扫二维码关注订阅号杰哥技术分享<br />
+出处：<a href="https://www.cnblogs.com/Jack-Blog/p/12040082.html" class="uri">https://www.cnblogs.com/Jack-Blog/p/12040082.html</a><br />
+作者：杰哥很忙<br />
+本文使用「CC BY 4.0」创作共享协议。欢迎转载，请在明显位置给出出处及链接。</p>
+</blockquote>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

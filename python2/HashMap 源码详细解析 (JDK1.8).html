@@ -1,0 +1,1178 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修HashMap 源码详细解析 (JDK1.8)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>HashMap 源码详细解析 (JDK1.8)</center></div><div class='banquan'>原文出处:本文由博客园博主huansky提供。<br/>
+原文连接:https://www.cnblogs.com/huansky/p/12038872.html</div><br>
+    <div>
+<h1 style="background-color: #33cccc;">概要</h1>
+<p>HashMap 最早出现在 JDK 1.2 中，底层基于散列算法实现。HashMap 允许 null 键和 null 值，在计算哈键的哈希值时，null 键哈希值为 0。HashMap 并不保证键值对的顺序，这意味着在进行某些操作后，键值对的顺序可能会发生变化。另外，需要注意的是，HashMap 是非线程安全类，在多线程环境下可能会存在问题。</p>
+<p>HashMap 底层是基于散列算法实现，散列算法分为散列再探测和拉链式。HashMap 则使用了拉链式的散列算法，并在 JDK 1.8 中引入了红黑树优化过长的链表。数据结构示意图如下：</p>
+<p><img src="./images/HashMap 源码详细解析 (JDK1.8)0.png" alt="" width="661" height="311" /></p>
+<p>对于拉链式的散列算法，其数据结构是由数组和链表（或树形结构）组成。在进行增删查等操作时，首先要定位到元素的所在桶的位置，之后再从链表中定位该元素。比如我们要查询上图结构中是否包含元素&nbsp;<code>35</code>，步骤如下：</p>
+<ol>
+<li>
+<p><span style="color: #000080;">定位元素<code>35</code>所处桶的位置，<code>index = 35 % 16 = 3</code></span></p>
+</li>
+<li>
+<p><span style="color: #000080;">在<code>3</code>号桶所指向的链表中继续查找，发现35在链表中。</span></p>
+</li>
+</ol>
+<p>上面就是 HashMap 底层数据结构的原理，HashMap 基本操作就是对拉链式散列算法基本操作的一层包装。不同的地方在于 JDK 1.8 中引入了红黑树，底层数据结构由<code>数组+链表</code>变为了<code>数组+链表+红黑树</code>，不过本质并未变。</p>
+<table>
+<thead>
+<tr><th>JDK版本</th><th>实现方式</th><th>节点数&gt;=8</th><th>节点数&lt;=6</th></tr>
+</thead>
+<tbody>
+<tr>
+<td>1.8以前</td>
+<td>数组+单向链表</td>
+<td>数组+单向链表</td>
+<td>数组+单向链表</td>
+</tr>
+<tr>
+<td>1.8以后</td>
+<td>数组+单向链表+红黑树</td>
+<td>数组+红黑树</td>
+<td>数组+单向链表<br /><br /></td>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</tr>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</tbody>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</table>
+<h1 style="background-color: #33cccc;">源码分析</h1>
+<p>下面开始分析 HashMap 源码实现。</p>
+<h2 style="background-color: #33ccff;">1. Node 节点对象</h2>
+<p>在分析具体代码前，先看 Node 节点对象，这是 HashMap 里面的一个内部类，也是 HashMap 的数据存储对象。具体源码如下：</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">class</span> Node&lt;K,V&gt; <span style="color: #0000ff;">implements</span> Map.Entry&lt;K,V&gt;<span style="color: #000000;"> {
+　　　　　</span><span style="color: #008000;">//</span><span style="color: #008000;"> hash 值</span>
+        <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> hash;
+        </span><span style="color: #0000ff;">final</span><span style="color: #000000;"> K key;
+        V value;
+　　　　　</span><span style="color: #008000;">//</span><span style="color: #008000;"> 指向下一个节点</span>
+        Node&lt;K,V&gt;<span style="color: #000000;"> next;
+
+        Node(</span><span style="color: #0000ff;">int</span> hash, K key, V value, Node&lt;K,V&gt;<span style="color: #000000;"> next) {
+            </span><span style="color: #0000ff;">this</span>.hash =<span style="color: #000000;"> hash;
+            </span><span style="color: #0000ff;">this</span>.key =<span style="color: #000000;"> key;
+            </span><span style="color: #0000ff;">this</span>.value =<span style="color: #000000;"> value;
+            </span><span style="color: #0000ff;">this</span>.next =<span style="color: #000000;"> next;
+        }
+
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span> K getKey()        { <span style="color: #0000ff;">return</span><span style="color: #000000;"> key; }
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span> V getValue()      { <span style="color: #0000ff;">return</span><span style="color: #000000;"> value; }
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span> String toString() { <span style="color: #0000ff;">return</span> key + "=" +<span style="color: #000000;"> value; }
+　　　　 </span><span style="color: #008000;">//</span><span style="color: #008000;"> 返回：key的hashCode值和value的hashCode值进行异或运算结果</span>
+        <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> hashCode() {
+            </span><span style="color: #0000ff;">return</span> Objects.hashCode(key) ^<span style="color: #000000;"> Objects.hashCode(value);
+        }
+
+        </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span><span style="color: #000000;"> V setValue(V newValue) {
+            V oldValue </span>=<span style="color: #000000;"> value;
+            value </span>=<span style="color: #000000;"> newValue;
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> oldValue;
+        }
+
+　　　　 </span><span style="color: #008000;">//</span><span style="color: #008000;"> 判断相等的依据是，要么是同一个 Node 对象，要么是Map.Entry的一个实例，并且键键、值值都相等就返回True</span>
+　　　　 <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> equals(Object o) {
+            </span><span style="color: #0000ff;">if</span> (o == <span style="color: #0000ff;">this</span><span style="color: #000000;">)
+                </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+            </span><span style="color: #0000ff;">if</span> (o <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> Map.Entry) {
+                Map.Entry</span>&lt;?,?&gt; e = (Map.Entry&lt;?,?&gt;<span style="color: #000000;">)o;
+                </span><span style="color: #0000ff;">if</span> (Objects.equals(key, e.getKey()) &amp;&amp;<span style="color: #000000;">
+                    Objects.equals(value, e.getValue()))
+                    </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+            }
+            </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+    }</span></pre>
+</div>
+<p>该类继承自&nbsp;Map.Entry&lt;K, V&gt;，每一个&nbsp;Entry 就是一个键值对。该类还定一个 next 节点，用于指向下一个节点，也是单链的构成基础。</p>
+<h2 style="background-color: #33ccff;">2. HashMap 继承关系</h2>
+<p>下面将直接进入源码分析，首先来看 HashMap 的继承关系：</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> HashMap&lt;K,V&gt; <span style="color: #0000ff;">extends</span> AbstractMap&lt;K,V&gt;
+         <span style="color: #0000ff;">implements</span> Map&lt;K,V&gt;, Cloneable, Serializable {</pre>
+</div>
+<p>继承自&nbsp;AbstractMap，同时也实现了&nbsp;Map, Cloneable, Serializable 三个接口。也说明了 HashMap 是可序列化，可克隆的的。Map 接口则是定义了一些常用的增删改查的方法，这样只要是实现该接口的都有相同的方法，方便大家记忆和使用。</p>
+<h3 style="background-color: #33ffff;"><strong>2.1 Cloneable 接口</strong></h3>
+<p>Java 中一个类要实现 clone 功能 必须实现 Cloneable 接口，否则在调用 clone() 时会报 CloneNotSupportedException 异常，也就是说， Cloneable 接口只是个合法调用 clone() 的标识（marker-interface）：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">　　//</span><span style="color: #008000;"> Object   </span>
+　　<span style="color: #0000ff;">protected</span> Object clone() <span style="color: #0000ff;">throws</span><span style="color: #000000;"> CloneNotSupportedException {
+        </span><span style="color: #0000ff;">if</span> (!(<span style="color: #0000ff;">this</span> <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> Cloneable)) {
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> CloneNotSupportedException("Class " + getClass().getName() +
+                                                 " doesn't implement Cloneable"<span style="color: #000000;">);
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> internalClone();
+    }</span></pre>
+</div>
+<p>Object 类的&nbsp;internalClone() 方法是一个 native 方法，native 方法的效率一般来说都是远高于 Java 中的非 native 方法。这也解释了为什么要用 Object 中 clone() 方法而不是先 new 一个对象，然后把原始对象中的信息赋到新对象中，虽然这也实现了 clone 功能，但效率较低。</p>
+<p>Object 类中的 clone() 方法还是一个 protected 属性的方法。为了让其它类能调用这个 clone() 方法，重载之后要把 clone() 方法的属性设置为public。</p>
+</div>
+<h2 style="background-color: #33ccff;">3. 变量定义</h2>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">// </span><span style="color: #008000;">这两个是限定值 当节点数大于 8 时会转为红黑树存储</span>
+    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> TREEIFY_THRESHOLD = 8<span style="color: #000000;">;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">当节点数小于6 时会转为单向链表存储</span>
+    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> UNTREEIFY_THRESHOLD = 6<span style="color: #000000;">;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">红黑树最小长度为 64</span>
+    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> MIN_TREEIFY_CAPACITY = 64<span style="color: #000000;">;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">HashMap容量初始大小</span>
+    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> DEFAULT_INITIAL_CAPACITY = 1 &lt;&lt; 4; <span style="color: #008000;">//</span><span style="color: #008000;"> aka 16
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">HashMap容量极限</span>
+    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> MAXIMUM_CAPACITY = 1 &lt;&lt; 30<span style="color: #000000;">;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">负载因子默认大小</span>
+    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">float</span> DEFAULT_LOAD_FACTOR = 0.75f<span style="color: #000000;">;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">Node是 Map.Entry接口的实现类
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">在此存储数据的 Node 数组容量是2次幂
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">每一个 Node 本质都是一个单向链表</span>
+    <span style="color: #0000ff;">transient</span> Node&lt;K,V&gt;<span style="color: #000000;">[] table;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">HashMap 大小,它代表 HashMap 保存的键值对的多少</span>
+    <span style="color: #0000ff;">transient</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> size;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">HashMap 被改变的次数</span>
+    <span style="color: #0000ff;">transient</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> modCount;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">下一次HashMap扩容的大小</span>
+    <span style="color: #0000ff;">int</span><span style="color: #000000;"> threshold;
+    </span><span style="color: #008000;">// </span><span style="color: #008000;">存储负载因子的常量</span>
+    <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">float</span> loadFactor;</pre>
+</div>
+<p>上面定义了当中会用到的一些变量，熟悉了就好了。</p>
+<h3 style="background-color: #33ffff;">3.1&nbsp;transient</h3>
+<p><span style="font-family: 宋体; font-size: 14px;">在这里细心的小伙伴会发现桶数组 table 被申明为 transient。transient 表示易变的意思，在 Java 中，被该关键字修饰的变量不会被默认的序列化机制序列化。</span></p>
+<p><span style="font-family: 宋体; font-size: 14px;">考虑一个问题：桶数组 table 是 HashMap 底层重要的数据结构，不序列化的话，别人还怎么还原呢？</span></p>
+<p><span style="font-family: 宋体; font-size: 14px;">HashMap 并没有使用默认的序列化机制，而是通过实现&nbsp;<code>readObject/writeObject&nbsp;</code>两个方法自定义了序列化的内容。HashMap 中存储的内容是<code>键值对，</code>只要把键值对序列化了，就可以根据键值对数据重建 HashMap。</span></p>
+<p><span style="font-family: 宋体; font-size: 14px;">也有的人可能会想，序列化 table 不是可以一步到位，后面直接还原不就行了吗？但序列化 table 存在着两个问题：</span></p>
+<ol>
+<li><span style="color: #000080; font-family: 宋体; font-size: 14px;">table 多数情况下是无法被存满的，序列化未使用的部分，浪费空间</span></li>
+<li><span style="color: #000080; font-family: 宋体; font-size: 14px;">同一个键值对在不同 JVM 下，所处的桶位置可能是不同的，在不同的 JVM 下反序列化 table 可能会发生错误。</span></li>
+</ol>
+<p><span style="font-family: 宋体; font-size: 14px;">以上两个问题中，第一个问题比较好理解，第二个问题解释一下。HashMap 的&nbsp;<code>get/put/remove&nbsp;</code>等方法第一步就是根据 hash 找到键所在的桶位置，但如果键没有覆写 hashCode 方法，计算 hash 时最终调用 Object 中的 hashCode 方法。但 Object 中的 hashCode 方法是 native 型的，不同的 JVM 下，可能会有不同的实现，产生的 hash 可能也是不一样的。也就是说同一个键在不同平台下可能会产生不同的 hash，此时再对在同一个 table 继续操作，就会出现问题。</span></p>
+<h3 style="background-color: #33ffff;"><strong><span style="font-family: 宋体; font-size: 14px;">3.2 loadFactor 负载因子</span></strong></h3>
+<div>
+<p>loadFactor 指的是负载因子 HashMap 能够承受住自身负载（大小或容量）的因子，loadFactor 的默认值为 0.75 认情况下，数组大小为 16，那么当 HashMap 中元素个数超过 16*0.75=12 的时候，就把数组的大小扩展为 2*16=32，即扩大一倍，然后重新计算每个元素在数组中的位置，而这是一个非常消耗性能的操作，所以如果我们已经预知 HashMap 中元素的个数，那么预设元素的个数能够有效的提高 HashMap 的性能</p>
+<p>负载因子越大表示散列表的装填程度越高，反之愈小。对于使用链表法的散列表来说，查找一个元素的平均时间是 O(1+a)，因此如果负载因子越大，对空间的利用更充分，然而后果是查找效率的降低；如果负载因子太小，那么散列表的数据将过于稀疏，对空间造成严重浪费</p>
+</div>
+<h2 style="background-color: #33ccff;">4. 构造函数</h2>
+<div>HashMap 中主要有四个构造函数，具体如下：</div>
+<div>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;"> 1 默认的构造函数</span>
+    <span style="color: #0000ff;">public</span><span style="color: #000000;"> HashMap() {
+        </span><span style="color: #0000ff;">this</span>.loadFactor = DEFAULT_LOAD_FACTOR; <span style="color: #008000;">//</span><span style="color: #008000;"> all other fields defaulted</span>
+<span style="color: #000000;">    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2 传入一个Map集合,将Map集合中元素Map.Entry全部添加进HashMap实例中</span>
+    <span style="color: #0000ff;">public</span> HashMap(Map&lt;? <span style="color: #0000ff;">extends</span> K, ? <span style="color: #0000ff;">extends</span> V&gt;<span style="color: #000000;"> m) {
+        </span><span style="color: #0000ff;">this</span>.loadFactor =<span style="color: #000000;"> DEFAULT_LOAD_FACTOR;
+        putMapEntries(m, </span><span style="color: #0000ff;">false</span><span style="color: #000000;">);
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3 指定容量大小</span>
+    <span style="color: #0000ff;">public</span> HashMap(<span style="color: #0000ff;">int</span><span style="color: #000000;"> initialCapacity) {
+        </span><span style="color: #0000ff;">this</span><span style="color: #000000;">(initialCapacity, DEFAULT_LOAD_FACTOR);
+    }
+
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 4 指定容量大小和负载因子大小</span>
+    <span style="color: #0000ff;">public</span> HashMap(<span style="color: #0000ff;">int</span> initialCapacity, <span style="color: #0000ff;">float</span><span style="color: #000000;"> loadFactor) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">指定的容量大小不可以小于0,否则将抛出IllegalArgumentException异常</span>
+        <span style="color: #0000ff;">if</span> (initialCapacity &lt; 0<span style="color: #000000;">)
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalArgumentException("Illegal initial capacity: " +<span style="color: #000000;">
+                                               initialCapacity);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 判定指定的容量大小是否大于HashMap的容量极限</span>
+        <span style="color: #0000ff;">if</span> (initialCapacity &gt;<span style="color: #000000;"> MAXIMUM_CAPACITY)
+            initialCapacity </span>=<span style="color: #000000;"> MAXIMUM_CAPACITY;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 指定的负载因子不可以小于0或为Null，若判定成立则抛出IllegalArgumentException异常</span>
+        <span style="color: #0000ff;">if</span> (loadFactor &lt;= 0 ||<span style="color: #000000;"> Float.isNaN(loadFactor))
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalArgumentException("Illegal load factor: " +<span style="color: #000000;">
+                     loadFactor);
+
+        </span><span style="color: #0000ff;">this</span>.loadFactor =<span style="color: #000000;"> loadFactor;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 设置&ldquo;HashMap阈值&rdquo;，当HashMap中存储数据的数量达到threshold时，就需要将HashMap的容量加倍。</span>
+        <span style="color: #0000ff;">this</span>.threshold =<span style="color: #000000;"> tableSizeFor(initialCapacity);
+    }<br /></span></pre>
+</div>
+<p>可以根据具体场景和需求，使用不同的构造函数。一般对于第1个构造函数，大家用的比较多。不过从构造函数可以看出来的一点是，负载因子&nbsp;loadFactor 是一个非常重要的参数，默认值是&nbsp;DEFAULT_LOAD_FACTOR = 0.75f 。当负载因子确定后，会根据负载因子的值给 HashMap 计算一个阈值&nbsp;threshold ；一旦超过阈值就会调用 resize () 方法扩容。</p>
+<h2 style="background-color: #33ccff;">5. tableSizeFor 计算阈值</h2>
+<p>先看看阈值的计算方法，<strong style="background-color: #ffffff; font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px;"><span style="color: #ff0000;">需要指出的一点是：HashMap 要求容量必须是 2 的</span></strong><span style="color: #ff0000;"><strong>幂 </strong></span><span style="background-color: #ffffff; font-family: 'PingFang SC', 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 14px;">。阈值具体计算方式如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> tableSizeFor(<span style="color: #0000ff;">int</span><span style="color: #000000;"> cap) {
+        </span><span style="color: #0000ff;">int</span> n = cap - 1<span style="color: #000000;">;
+        n </span>|= n &gt;&gt;&gt; 1<span style="color: #000000;">;
+        n </span>|= n &gt;&gt;&gt; 2<span style="color: #000000;">;
+        n </span>|= n &gt;&gt;&gt; 4<span style="color: #000000;">;
+        n </span>|= n &gt;&gt;&gt; 8<span style="color: #000000;">;
+        n </span>|= n &gt;&gt;&gt; 16<span style="color: #000000;">;
+        </span><span style="color: #0000ff;">return</span> (n &lt; 0) ? 1 : (n &gt;= MAXIMUM_CAPACITY) ? MAXIMUM_CAPACITY : n + 1<span style="color: #000000;">;
+    }</span></pre>
+</div>
+<p><code>tableSizeFor()</code>的主要功能是返回一个比给定整数大且最接近的 2 的幂次方整数。如给定 10，返回 2 的 4 次方 16.</p>
+</div>
+<div>
+<h4><strong>下面分析这个算法：&nbsp;</strong></h4>
+<p>首先，<strong>要注意的是这个操作是无符号右移后，再或上原来的值。</strong></p>
+<p>为什么要对 cap 做减 1 操作：int n = cap - 1 ？这是为了防止，cap 已经是 2 的幂。如果 cap 已经是 2 的幂， 又没有执行这个减 1 操作，则执行完后面的几条无符号右移操作之后，返回的 capacity 将是这个 cap 的 2 倍。如果不懂，要看完后面的几个无符号右移之后再回来看看。&nbsp;</p>
+<p>下面看看这几个无符号右移操作：&nbsp;</p>
+<p>如果 n 这时为 0 了（经过了 cap-1 之后），则经过后面的几次无符号右移依然是 0，最后返回的 capacity 是 1（最后有个 n+1 的操作）。&nbsp;</p>
+<p>这里只讨论 n 不等于 0 的情况。&nbsp;</p>
+<p><strong>第一次右移</strong></p>
+<div class="cnblogs_code">
+<pre><code>n |= n &gt;&gt;&gt; 1;</pre>
+</div>
+<p>由于 n 不等于 0，则 n 的二进制表示中总会有一bit为 1，这时考虑最高位的 1。通过无符号右移 1 位，则将最高位的 1 右移了 1 位，再做或操作，使得 n 的二进制表示中与最高位的 1 紧邻的右边一位也为 1，如 000011xxxxxx。&nbsp;</p>
+<p><strong>第二次右移</strong></p>
+<div class="cnblogs_code">
+<pre><code>n |= n &gt;&gt;&gt; 2;</pre>
+</div>
+<p>注意，这个 n 已经经过了 n |= n &gt;&gt;&gt; 1;&nbsp;操作。假设此时 n 为 000011xxxxxx ，则 n 无符号右移两位，会将最高位两个连续的 1 右移两位，然后再与原来的 n 做或操作，这样 n 的二进制表示的高位中会有 4 个连续的 1。如 00001111xxxxxx 。&nbsp;</p>
+<p><strong>第三次右移</strong></p>
+<div class="cnblogs_code">
+<pre><code>n |= n &gt;&gt;&gt; 4;</pre>
+</div>
+<p>这次把已经有的高位中的连续的 4 个 1，右移 4 位，再做或操作，这样 n 的二进制表示的高位中会有8个连续的 1。如 00001111 1111xxxxxx 。&nbsp;</p>
+<p><strong>以此类推&nbsp;</strong></p>
+<p>注意，容量最大也就是 32bit 的正数，因此最后 n |= n &gt;&gt;&gt; 16;&nbsp;，最多也就 32 个 1，但是这时已经大于了 MAXIMUM_CAPACITY&nbsp;，所以取值到 MAXIMUM_CAPACITY&nbsp;。&nbsp;<br />举一个例子说明下吧。&nbsp;</p>
+<p><img src="./images/HashMap 源码详细解析 (JDK1.8)1.png" alt="" width="523" height="591" /></p>
+<p>注意，得到的这个 capacity 赋值给了 threshold，因此 threshold 就是所说的容量。当 HashMap 的 size 到达 threshold 这个阈值时会扩容。&nbsp;</p>
+<p>但是，请注意，在构造方法中，并没有对 table 这个成员变量进行初始化，table 的初始化被推迟到了 put 方法中，在 put 方法中会对 threshold 重新计算。</p>
+<p>上述这段计算逻辑引自 ：<a href="https://blog.csdn.net/huzhigenlaohu/article/details/51802457" target="_blank">&nbsp;HashMap方法hash()、tableSizeFor()</a></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<h2 style="background-color: #33ccff;">6. put 添加元素</h2>
+<h3 style="background-color: #33ffff;">6.1 putMapEntries 添加 map 对象</h3>
+<p>该方法是在构造函数中直接传入一个 map 对象，下面看具体实现代码：</p>
+<div class="cnblogs_code">
+<pre><code>  <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">void</span> putMapEntries(Map&lt;? <span style="color: #0000ff;">extends</span> K, ? <span style="color: #0000ff;">extends</span> V&gt; m, <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> evict) {
+        </span><span style="color: #0000ff;">int</span> s =<span style="color: #000000;"> m.size();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">当 m 中有元素时，则需将map中元素放入本HashMap实例。</span>
+        <span style="color: #0000ff;">if</span> (s &gt; 0<span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 判断table是否已经初始化，如果未初始化，则先初始化一些变量。（table初始化是在put时）</span>
+            <span style="color: #0000ff;">if</span> (table == <span style="color: #0000ff;">null</span>) { <span style="color: #008000;">//</span><span style="color: #008000;"> pre-size
+                </span><span style="color: #008000;">//</span><span style="color: #008000;"> 根据待插入的map 的 size 计算要创建的　HashMap 的容量。</span>
+                <span style="color: #0000ff;">float</span> ft = ((<span style="color: #0000ff;">float</span>)s / loadFactor) + 1.0F<span style="color: #000000;">;
+                </span><span style="color: #0000ff;">int</span> t = ((ft &lt; (<span style="color: #0000ff;">float</span>)MAXIMUM_CAPACITY) ?<span style="color: #000000;">
+                         (</span><span style="color: #0000ff;">int</span><span style="color: #000000;">)ft : MAXIMUM_CAPACITY);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;"> 把要创建的　HashMap 的容量存在　threshold　中</span>
+                <span style="color: #0000ff;">if</span> (t &gt;<span style="color: #000000;"> threshold)
+                    threshold </span>=<span style="color: #000000;"> tableSizeFor(t);
+            }
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 如果table初始化过，因为别的函数也会调用它，所以有可能HashMap已经被初始化过了。
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 判断待插入的　map 的 size,若　size 大于　threshold，则先进行　resize()，进行扩容</span>
+            <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (s &gt;<span style="color: #000000;"> threshold)
+                resize();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">然后就开始遍历 带插入的 map ，将每一个 &lt;Key ,Value&gt; 插入到本HashMap实例。</span>
+            <span style="color: #0000ff;">for</span> (Map.Entry&lt;? <span style="color: #0000ff;">extends</span> K, ? <span style="color: #0000ff;">extends</span> V&gt;<span style="color: #000000;"> e : m.entrySet()) {
+                K key </span>=<span style="color: #000000;"> e.getKey();
+                V value </span>=<span style="color: #000000;"> e.getValue();
+                </span><span style="color: #008000;">//</span><span style="color: #008000;"> put(K,V)也是调用　putVal　函数进行元素的插入</span>
+                putVal(hash(key), key, value, <span style="color: #0000ff;">false</span><span style="color: #000000;">, evict);
+            }
+        }
+    }    </span></pre>
+</div>
+<p>主要是在判断一些初始化工作是否已经做了，包括容量，table，确保都可以使用后，再将数据添加到 Map 中。在这里用到了遍历，这里也简单说下。可以发现这里 table 为 null 也没有开始赋值，只是计算了阈值。会在 putVal 中初始化。</p>
+<h3 id="item-3-3" style="background-color: #33ffff;">6.2 遍历</h3>
+<p>和查找查找一样，遍历操作也是大家使用频率比较高的一个操作。对于遍历 HashMap，我们一般都会用下面的方式：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">for</span><span style="color: #000000;">(Object key : map.keySet()) {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> do something</span>
+<span style="color: #000000;">}
+
+</span><span style="color: #0000ff;">for</span><span style="color: #000000;">(HashMap.Entry entry : map.entrySet()) {
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> do something</span>
+<span style="color: #000000;">}
+
+Set keys </span>=<span style="color: #000000;"> map.keySet();
+Iterator ite </span>=<span style="color: #000000;"> keys.iterator();
+</span><span style="color: #0000ff;">while</span><span style="color: #000000;"> (ite.hasNext()) {
+    Object key </span>=<span style="color: #000000;"> ite.next();
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> do something</span>
+}</pre>
+</div>
+<p>要么是通过获得 keyset 来遍历，或者就是拿到&nbsp;entrySet，最后也可以使用迭代器。具体遍历流程可以参看下图：</p>
+<p><img src="./images/HashMap 源码详细解析 (JDK1.8)2.png" alt="" /></p>
+<p>遍历上图的最终结果是&nbsp;<code>19 -&gt; 3 -&gt; 35 -&gt; 7 -&gt; 11 -&gt; 43 -&gt; 59。</code>HashIterator 在初始化时，会先遍历桶数组，找到包含链表节点引用的桶，对应图中就是 3 号桶。随后由 nextNode 方法遍历该桶所指向的链表。遍历完 3 号桶后，nextNode 方法继续寻找下一个不为空的桶，对应图中的 7 号桶。之后流程和上面类似，直至遍历完最后一个桶。</p>
+<h3 style="background-color: #33ffff;">6.3 put 添加元素</h3>
+<p>下面将分析如何添加一个新的元素：</p>
+<div class="cnblogs_code">
+<pre><code> <span style="color: #0000ff;">public</span><span style="color: #000000;"> V put(K key, V value) {
+        </span><span style="color: #0000ff;">return</span> putVal(hash(key), key, value, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">true</span><span style="color: #000000;">);
+    }
+ </span><span style="color: #008000;">//</span><span style="color: #008000;">HashMap.put的具体实现</span>
+ <span style="color: #0000ff;">final</span> V putVal(<span style="color: #0000ff;">int</span> hash, K key, V value, <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> onlyIfAbsent,
+                   </span><span style="color: #0000ff;">boolean</span><span style="color: #000000;"> evict) {
+        Node</span>&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; <span style="color: #0000ff;">int</span><span style="color: #000000;"> n, i;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">判定table不为空并且table长度不可为0,否则将从resize函数中获取</span>
+        <span style="color: #0000ff;">if</span> ((tab = table) == <span style="color: #0000ff;">null</span> || (n = tab.length) == 0<span style="color: #000000;">)
+            n </span>= (tab =<span style="color: #000000;"> resize()).length;
+         </span><span style="color: #008000;">//</span><span style="color: #008000;">这样写法有点绕,其实这里就是通过索引获取table数组中的一个元素看是否为Nul</span>
+        <span style="color: #0000ff;">if</span> ((p = tab[i = (n - 1) &amp; hash]) == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">若判断成立,则New一个Node出来赋给table中指定索引下的这个元素</span>
+            tab[i] = newNode(hash, key, value, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+        </span><span style="color: #0000ff;">else</span> {  <span style="color: #008000;">//</span><span style="color: #008000;">若判断不成立</span>
+            Node&lt;K,V&gt;<span style="color: #000000;"> e; K k;
+             </span><span style="color: #008000;">//</span><span style="color: #008000;">对这个元素进行Hash和key值匹配,相等则取出该节点</span>
+            <span style="color: #0000ff;">if</span> (p.hash == hash &amp;&amp;<span style="color: #000000;">
+                ((k </span>= p.key) == key || (key != <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> key.equals(k))))
+                e </span>=<span style="color: #000000;"> p;
+            </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (p <span style="color: #0000ff;">instanceof</span> TreeNode) <span style="color: #008000;">//</span><span style="color: #008000;">如果数组中德这个元素P是TreeNode类型
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">判定成功则在红黑树中查找符合的条件的节点并返回此节点</span>
+                e = ((TreeNode&lt;K,V&gt;)p).putTreeVal(<span style="color: #0000ff;">this</span><span style="color: #000000;">, tab, hash, key, value);
+            </span><span style="color: #0000ff;">else</span> { <span style="color: #008000;">//</span><span style="color: #008000;">若以上条件均判断失败，则执行以下代码
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">向Node单向链表中添加数据</span>
+                <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> binCount = 0; ; ++<span style="color: #000000;">binCount) {
+                    </span><span style="color: #0000ff;">if</span> ((e = p.next) == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                        p.next </span>= newNode(hash, key, value, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+                         </span><span style="color: #008000;">//</span><span style="color: #008000;">若节点数大于等于8</span>
+                        <span style="color: #0000ff;">if</span> (binCount &gt;= TREEIFY_THRESHOLD - 1) <span style="color: #008000;">//</span><span style="color: #008000;"> -1 for 1st
+                            </span><span style="color: #008000;">//</span><span style="color: #008000;">转换为红黑树</span>
+<span style="color: #000000;">                            treeifyBin(tab, hash);
+                        </span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+                    }
+                    </span><span style="color: #0000ff;">if</span> (e.hash == hash &amp;&amp;<span style="color: #000000;">
+                        ((k </span>= e.key) == key || (key != <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> key.equals(k))))
+                        </span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+                    p </span>= e; <span style="color: #008000;">//</span><span style="color: #008000;">p记录下一个节点</span>
+<span style="color: #000000;">                }
+            }
+            </span><span style="color: #0000ff;">if</span> (e != <span style="color: #0000ff;">null</span>) { <span style="color: #008000;">//</span><span style="color: #008000;"> existing mapping for key</span>
+                V oldValue =<span style="color: #000000;"> e.value;
+                </span><span style="color: #0000ff;">if</span> (!onlyIfAbsent || oldValue == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                    e.value </span>=<span style="color: #000000;"> value;
+                afterNodeAccess(e);
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> oldValue;
+            }
+        }
+        </span>++<span style="color: #000000;">modCount;
+        </span><span style="color: #0000ff;">if</span> (++size &gt; threshold) <span style="color: #008000;">//</span><span style="color: #008000;">判断是否需要扩容</span>
+<span style="color: #000000;">            resize();
+        afterNodeInsertion(evict);
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<p>通过以上的源码，我们可以看出。在添加新节点时，通过 hash 确定其位置。</p>
+<blockquote>
+<ul>
+<li>
+<p><span style="color: #000080;">1.首先获取 Node 数组 table 对象和长度，若 table 为 null 或长度为 0，则调用 resize() 扩容方法获取 table 最新对象，并通过此对象获取长度大小</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">2.判定数组中指定索引下的节点是否为 Null，若为 Null 则 new 出一个单向链表赋给 table 中索引下的这个节点</span></p>
+</li>
+</ul>
+<ul>
+<li><span style="color: #000080;">3.若判定不为 Null，我们的判断再做分支</span></li>
+</ul>
+<p><span style="color: #000080;">&nbsp; &nbsp; &nbsp; &nbsp;　　&nbsp;&nbsp;3.1 首先对 hash 和key进行匹配,若判定成功直接赋予 e</span></p>
+<p><span style="color: #000080;">　　　　&nbsp; &nbsp;3.2 若匹配判定失败，则进行类型匹配是否为 TreeNode 若判定成功则在红黑树中查找符合条件的节点并将其回传赋给 e</span></p>
+<p class="_mce_tagged_br"><span style="color: #000080;">　　　　　3.3 若以上判定全部失败则进行最后操作，向单向链表中添加数据若单向链表的长度大于等于 8，则将其转为红黑树保存，记录下一个节点，对 e 进行判定若成功则返回旧值</span></p>
+<ul>
+<li>
+<p><span style="color: #000080;">4.最后判定数组大小需不需要扩容</span></p>
+</li>
+</ul>
+</blockquote>
+<p>查找过程是首先得确定它的索引：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;"> index = (n - 1) &amp; hash</span>
+first = tab[(n - 1) &amp; hash]</pre>
+</div>
+<p>这里通过&nbsp;<code>(n - 1)&amp; hash&nbsp;</code>即可算出桶的在桶数组中的位置，可能有的朋友不太明白这里为什么这么做，这里简单解释一下。HashMap 中桶数组的大小 length 总是 2 的幂，此时，<code>(n - 1) &amp; hash</code>&nbsp;等价于对 length 取余。但取余的计算效率没有位运算高，所以&nbsp;<code>(n - 1) &amp; hash&nbsp;</code>也是一个小的优化。举个例子说明一下吧，假设 hash = 185，n = 16。计算过程示意图如下：</p>
+<p>上面的计算并不复杂，这里就不多说了。这里的 hash 值是 key.hashCode() 得到的。但是在 HashMap 这里，通过位运算重新计算了 hash 值的值。为什么要重新计算？</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> hash(Object key) {
+        </span><span style="color: #0000ff;">int</span><span style="color: #000000;"> h;
+        </span><span style="color: #0000ff;">return</span> (key == <span style="color: #0000ff;">null</span>) ? 0 : (h = key.hashCode()) ^ (h &gt;&gt;&gt; 16<span style="color: #000000;">);
+    }</span></pre>
+</div>
+<div class="_2Uzcx_">
+<p>主要是因为<span style="color: #ff0000;"><strong> n (HashMap 的容量)</strong> </span>值比较小，hash 只参与了低位运算，高位运算没有用上。这就增大了 hash 值的碰撞概率。而通过这种位运算的计算方式，使得高位运算参与其中，减小了 hash 的碰撞概率，使 hash 值尽可能散开。如何理解呢？把前面举的例子&nbsp;&nbsp;hash = 185，n = 16，按照 HashMap 的计算方法咱们再来走一遍。</p>
+<p>图中的 hash 是由键的 hashCode 产生。计算余数时，由于 n 比较小，hash 只有低 4 位参与了计算，高位的计算可以认为是无效的。这样导致了计算结果只与低位信息有关，高位数据没发挥作用。为了处理这个缺陷，我们可以上图中的 hash 高 4 位数据与低 4 位数据进行异或运算，即&nbsp;<code>hash ^ (hash &gt;&gt;&gt; 4)</code>。通过这种方式，让高位数据与低位数据进行异或，以此加大低位信息的随机性，变相的让高位数据参与到计算中。此时的计算过程如下：</p>
+<p><span class="img-wrap"><a href="http://www.coolblog.xyz/" rel="nofollow noreferrer"><img title="" src="./images/HashMap 源码详细解析 (JDK1.8)3.png" alt="" /></a></span>经过这次计算以后，发现最后的结果已经不一样了，hash 的高位值对结果产生了影响。这里为了举例子，使用了 8 位数据做讲解。在 Java 中，hashCode 方法产生的 hash 是 int 类型，32 位宽。前 16 位为高位，后16位为低位，所以要右移 16 位。</p>
+<h2 style="background-color: #33ccff;">7. resize() 扩容</h2>
+</div>
+<p>在 Java 中，数组的长度是固定的，这意味着数组只能存储固定量的数据。但在开发的过程中，很多时候我们无法知道该建多大的数组合适。建小了不够用，建大了用不完，造成浪费。如果我们能实现一种变长的数组，并按需分配空间就好了。好在，我们不用自己实现变长数组，Java 集合框架已经实现了变长的数据结构。比如 ArrayList 和 HashMap。对于这类基于数组的变长数据结构，扩容是一个非常重要的操作。</p>
+<p>首先&nbsp;<code>resize()</code>&nbsp;,先看一下哪些函数调用了&nbsp;<code>resize()</code>，从而在整体上有个概念：</p>
+<p><img src="./images/HashMap 源码详细解析 (JDK1.8)4.png" alt="" /></p>
+<div class="image-package">
+<div class="image-container">接下来上源码：</div>
+</div>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">final</span> Node&lt;K,V&gt;<span style="color: #000000;">[] resize() {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 保存当前table</span>
+        Node&lt;K,V&gt;[] oldTab =<span style="color: #000000;"> table;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 保存当前table的容量</span>
+        <span style="color: #0000ff;">int</span> oldCap = (oldTab == <span style="color: #0000ff;">null</span>) ? 0<span style="color: #000000;"> : oldTab.length;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 保存当前阈值</span>
+        <span style="color: #0000ff;">int</span> oldThr =<span style="color: #000000;"> threshold;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 初始化新的table容量和阈值 </span>
+        <span style="color: #0000ff;">int</span> newCap, newThr = 0<span style="color: #000000;">;
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;">
+        1. resize（）函数在size　&gt; threshold时被调用。oldCap大于 0 代表原来的 table 表非空，
+           oldCap 为原表的大小，oldThr（threshold） 为 oldCap &times; load_factor
+        </span><span style="color: #008000;">*/</span>
+        <span style="color: #0000ff;">if</span> (oldCap &gt; 0<span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 若旧table容量已超过最大容量，更新阈值为Integer.MAX_VALUE（最大整形值），这样以后就不会自动扩容了。</span>
+            <span style="color: #0000ff;">if</span> (oldCap &gt;=<span style="color: #000000;"> MAXIMUM_CAPACITY) {<br /><span style="color: #008000;">　　　　　　　　　 // 也就是说阈值和容量最大值是不相等的，最终还是得看阈值的界限
+</span>                threshold </span>=<span style="color: #000000;"> Integer.MAX_VALUE;
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> oldTab;
+            }
+             </span><span style="color: #008000;">//</span><span style="color: #008000;"> 容量翻倍，使用左移，效率更高</span>
+            <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> ((<strong><span style="color: #ff0000;">newCap = oldCap &lt;&lt; 1</span></strong>) &lt; MAXIMUM_CAPACITY &amp;&amp;<span style="color: #000000;">
+                     oldCap </span>&gt;=<span style="color: #000000;"> DEFAULT_INITIAL_CAPACITY)
+                </span><span style="color: #008000;">//</span><span style="color: #008000;"> 阈值翻倍</span>
+                <strong><span style="color: #ff0000;">newThr = oldThr &lt;&lt; 1;</span></strong> <span style="color: #008000;">//</span><span style="color: #008000;"> double threshold</span>
+<span style="color: #000000;">        }
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;">
+        2. resize（）函数在table为空被调用。oldCap 小于等于 0 且 oldThr 大于0，代表用户创建了一个 HashMap，但是使用的构造函数为      
+           HashMap(int initialCapacity, float loadFactor) 或 HashMap(int initialCapacity)
+           或 HashMap(Map&lt;? extends K, ? extends V&gt; m)，导致 oldTab 为 null，oldCap 为0， oldThr 为用户指定的 HashMap的初始容量。
+    　　</span><span style="color: #008000;">*/</span>
+        <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (oldThr &gt; 0) <span style="color: #008000;">//</span><span style="color: #008000;"> initial capacity was placed in threshold
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">当table没初始化时，threshold持有初始容量。还记得threshold = tableSizeFor(t)么;</span>
+            newCap =<span style="color: #000000;"> oldThr;
+        </span><span style="color: #008000;">/*</span><span style="color: #008000;">
+        3. resize（）函数在table为空被调用。oldCap 小于等于 0 且 oldThr 等于0，用户调用 HashMap()构造函数创建的　HashMap，所有值均采用默认值，oldTab（Table）表为空，oldCap为0，oldThr等于0，
+        </span><span style="color: #008000;">*/</span>
+        <span style="color: #0000ff;">else</span> {               <span style="color: #008000;">//</span><span style="color: #008000;"> zero initial threshold signifies using defaults</span>
+            newCap =<span style="color: #000000;"> DEFAULT_INITIAL_CAPACITY;
+            newThr </span>= (<span style="color: #0000ff;">int</span>)(DEFAULT_LOAD_FACTOR *<span style="color: #000000;"> DEFAULT_INITIAL_CAPACITY);
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 新阈值为0</span>
+        <span style="color: #0000ff;">if</span> (newThr == 0<span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">float</span> ft = (<span style="color: #0000ff;">float</span>)newCap *<span style="color: #000000;"> loadFactor;
+            newThr </span>= (newCap &lt; MAXIMUM_CAPACITY &amp;&amp; ft &lt; (<span style="color: #0000ff;">float</span>)MAXIMUM_CAPACITY ?<span style="color: #000000;">
+                      (</span><span style="color: #0000ff;">int</span><span style="color: #000000;">)ft : Integer.MAX_VALUE);
+        }
+        threshold </span>=<span style="color: #000000;"> newThr;
+        @SuppressWarnings({</span>"rawtypes","unchecked"<span style="color: #000000;">})
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 初始化table</span>
+        Node&lt;K,V&gt;[] newTab = (Node&lt;K,V&gt;[]<strong><span style="color: #ff0000;">)new</span></strong><span style="color: #000000;"><strong><span style="color: #ff0000;"> Node[newCap]</span></strong>;
+        table </span>=<span style="color: #000000;"> newTab;
+        </span><span style="color: #0000ff;">if</span> (oldTab != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 把 oldTab 中的节点　reHash 到　newTab 中去</span>
+            <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> j = 0; j &lt; oldCap; ++<span style="color: #000000;">j) {
+                Node</span>&lt;K,V&gt;<span style="color: #000000;"> e;
+                </span><span style="color: #0000ff;">if</span> ((e = oldTab[j]) != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                    oldTab[j] </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 若节点是单个节点，直接在 newTab　中进行重定位</span>
+                    <span style="color: #0000ff;">if</span> (e.next == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                        newTab[e.hash </span>&amp; (newCap - 1)] =<span style="color: #000000;"> e;
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 若节点是　TreeNode 节点，要进行 红黑树的 rehash　操作</span>
+                    <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (e <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> TreeNode)
+                        ((TreeNode</span>&lt;K,V&gt;)e).split(<span style="color: #0000ff;">this</span><span style="color: #000000;">, newTab, j, oldCap);
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 若是链表，进行链表的 rehash　操作</span>
+                    <span style="color: #0000ff;">else</span> { <span style="color: #008000;">//</span><span style="color: #008000;"> preserve order</span>
+                        Node&lt;K,V&gt; loHead = <span style="color: #0000ff;">null</span>, loTail = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+                        Node</span>&lt;K,V&gt; hiHead = <span style="color: #0000ff;">null</span>, hiTail = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+                        Node</span>&lt;K,V&gt;<span style="color: #000000;"> next;
+                        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 将同一桶中的元素根据(e.hash &amp; oldCap)是否为0进行分割（代码后有图解，可以回过头再来看），分成两个不同的链表，完成rehash</span>
+                        <span style="color: #0000ff;">do</span><span style="color: #000000;"> {
+                            next </span>=<span style="color: #000000;"> e.next;
+                            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 根据算法　e.hash &amp; oldCap 判断节点位置rehash　后是否发生改变
+                            </span><span style="color: #008000;">//</span><span style="color: #008000;">最高位==0，这是索引不变的链表。</span>
+                            <span style="color: #0000ff;">if</span> ((e.hash &amp; oldCap) == 0<span style="color: #000000;">) { 
+                                </span><span style="color: #0000ff;">if</span> (loTail == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                                    loHead </span>=<span style="color: #000000;"> e;
+                                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                                    loTail.next </span>=<span style="color: #000000;"> e;
+                                loTail </span>=<span style="color: #000000;"> e;
+                            }
+                            </span><span style="color: #008000;">//</span><span style="color: #008000;">最高位==1 （这是索引发生改变的链表）</span>
+                            <span style="color: #0000ff;">else</span><span style="color: #000000;"> {  
+                                </span><span style="color: #0000ff;">if</span> (hiTail == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                                    hiHead </span>=<span style="color: #000000;"> e;
+                                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                                    hiTail.next </span>=<span style="color: #000000;"> e;
+                                hiTail </span>=<span style="color: #000000;"> e;
+                            }
+                        } </span><span style="color: #0000ff;">while</span> ((e = next) != <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+                        </span><span style="color: #0000ff;">if</span> (loTail != <span style="color: #0000ff;">null</span>) {  <span style="color: #008000;">//</span><span style="color: #008000;"> 原bucket位置的尾指针不为空(即还有node)  </span>
+                            loTail.next = <span style="color: #0000ff;">null</span>; <span style="color: #008000;">//</span><span style="color: #008000;"> 链表最后得有个null</span>
+                            newTab[j] = loHead; <span style="color: #008000;">//</span><span style="color: #008000;"> 链表头指针放在新桶的相同下标(j)处</span>
+<span style="color: #000000;">                        }
+                        </span><span style="color: #0000ff;">if</span> (hiTail != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                            hiTail.next </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+                            </span><span style="color: #008000;">//</span><span style="color: #008000;"> rehash　后节点新的位置一定为原来基础上加上　oldCap，具体解释看下图</span>
+                            newTab[j + oldCap] =<span style="color: #000000;"> hiHead;
+                        }
+                    }
+                }
+            }
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> newTab;
+    }
+}</span></pre>
+</div>
+<div>
+<div>
+<p>使用的是 2 次幂的扩展(指长度扩为原来 2 倍)，所以，元素的位置要么是在原位置，要么是在原位置再移动 oldCap 距离。这句话有些拗口，简单来说的话，也可以这么理解：</p>
+<hr />
+<p><span style="font-family: 宋体;"><code>　　首先，前面说了：(n - 1)&amp; hash&nbsp;可算出桶的在桶数组中的位置，并且&nbsp;<code>(n - 1) &amp; hash</code>&nbsp;等价于对 length 取余。此处 <strong><span style="color: #ff0000;">n =&nbsp;length</span></strong>;</code></span></p>
+<p style="margin-left: 30px;"><span style="font-family: 宋体;"><code></code><code>根据上述描述，对于 hash 值存就算如公式：<strong><span style="color: #ff0000;">hash </span></strong></code><code><strong><span style="color: #ff0000;">= a*n + b</span></strong>；a 是因子，该公式中 b 是余数。</code></span></p>
+<p style="margin-left: 30px;"><span style="font-family: 宋体;"><code>扩容后容量为m:<span style="color: #ff0000;">&nbsp;</span><span style="color: #ff0000;"><strong>m = 2n</strong></span>; </code></span></p>
+<p style="margin-left: 60px;"><span style="font-family: 宋体;"><code>如果 a&gt;0，且是奇数，那么表达式变为：<strong><span style="color: #ff0000;"><code>hash&nbsp;</code></span></strong><code><strong><span style="color: #ff0000;">= (a-1)/2*m+b+n;</span></strong> 再做一个变换就是：<strong><span style="color: #ff0000;"><code>hash&nbsp;</code></span></strong><code><strong><span style="color: #ff0000;">= a1*m+b1;</span></strong> 其中余数<strong> <span style="color: #ff0000;">b1 = b+n</span></strong>；表示索引位置移动了 n 距离。</code></code></code></span></p>
+<p style="margin-left: 60px;"><span style="font-family: 宋体;">如果&nbsp; a&gt;0，且是偶数，那么表达式变为：<strong><span style="color: #ff0000;"><code>hash&nbsp;</code></span></strong><code><strong><span style="color: #ff0000;">= a/2*m+b+n;</span></strong> 再做一个变换就是：<span style="color: #ff0000;"><strong><code>hash&nbsp;</code></strong></span><code><span style="color: #ff0000;"><strong>= a2*m+b2;</strong></span> 其中余数 <strong><span style="color: #ff0000;">b2 = b</span></strong>;位置没有变动。</code></code></span></p>
+<p style="margin-left: 60px;"><span style="font-family: 宋体;">如果&nbsp; a=0，那么位置也不变。</span></p>
+<div class="image-caption"><hr />
+<p class="_mce_tagged_br">下面采用图例再来解释一遍。n 为 table 的长度，图（a）表示扩容前的 key1 和 key2 两种 key 确定索引位置的示例，图（b）表示扩容后 key1 和 key2 两种 key 确定索引位置的示例，其中 hash1 是 key1 对应的哈希与高位运算结果。</p>
+</div>
+<div class="image-package">
+<div class="image-container">
+<div class="image-container-fill">&nbsp;</div>
+<div class="image-view" data-width="1632" data-height="446"><img src="//upload-images.jianshu.io/upload_images/5679451-a8f2e1917e6c188a.png?imageMogr2/auto-orient/strip|imageView2/2/w/1200/format/webp" alt="" width="809" height="221" data-original-src="//upload-images.jianshu.io/upload_images/5679451-a8f2e1917e6c188a.png" data-original-width="1632" data-original-height="446" data-original-format="image/png" data-original-filesize="74978" data-image-index="3" /></div>
+<div class="image-view" data-width="1632" data-height="446">元素在重新计算 hash 之后，因为 n 变为 2 倍，那么 n-1 的 mask 范围在高位多 1bit (红色)，因此新的 index 就会发生这样的变化：</div>
+</div>
+</div>
+</div>
+<div>
+<p><img src="//upload-images.jianshu.io/upload_images/5679451-b2d09c67373f217a.png?imageMogr2/auto-orient/strip|imageView2/2/w/1064/format/webp" alt="" width="574" height="109" data-original-src="//upload-images.jianshu.io/upload_images/5679451-b2d09c67373f217a.png" data-original-width="1064" data-original-height="202" data-original-format="image/png" data-original-filesize="48613" data-image-index="4" /></p>
+<div class="image-package">
+<div class="image-caption">因此，我们在扩充 HashMap 的时候，只需要看看原来的 hash 值新增的那个 bit 是 1 还是 0 就好了，是 0 的话索引没变，是 1 的话索引变成 <strong><span style="color: #ff0000;">原索引+oldCap</span></strong>，可以看看下图为 16 扩充为 32 的 resize 示意图 ：&nbsp;</div>
+<div class="image-caption"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/HashMap 源码详细解析 (JDK1.8)7.png" alt="" width="576" height="332" /></div>
+<p class="image-caption">扩容后，需要进行键值对节点重新映射的过程。在 JDK 1.8 中，重新映射节点需要考虑节点类型。对于树形节点，需先拆分红黑树再映射。对于链表类型节点，则需先对链表进行分组，然后再映射。需要的注意的是，分组后，组内节点相对位置保持不变。关于红黑树拆分的逻辑将会放在下一小节说明，先来看看链表是怎样进行分组映射的。</p>
+</div>
+<div class="image-package">
+<div class="image-caption">
+<p><strong>什么时候扩容：</strong>通过 HashMap 源码可以看到是在 put 操作时，即向容器中添加元素时，判断当前容器中元素的个数是否达到阈值（当前数组长度乘以加载因子的值）的时候，就要自动扩容了。此外，HashMap 准备树形化但又发现数组太短，也会发生扩容。</p>
+</div>
+</div>
+<p><strong>扩容(resize)：</strong>其实就是重新计算容量；而这个扩容是计算出所需容器的大小之后重新定义一个新的容器，将原来容器中的元素放入其中。</p>
+</div>
+</div>
+<div>
+<h2 style="background-color: #33ccff;">8. 链表树化、红黑树链化与拆分</h2>
+<p>下面这部分内容摘自&nbsp;&nbsp;<a class="text-body" href="https://segmentfault.com/a/1190000012926722">HashMap 源码详细分析(JDK1.8)</a>&nbsp;因为，觉得他这部分写得很好，所以就直接摘过来了。</p>
+<p>JDK 1.8 对 HashMap 实现进行了改进。最大的改进莫过于在引入了红黑树处理频繁的碰撞，代码复杂度也随之上升。比如，以前只需实现一套针对链表操作的方法即可。而引入红黑树后，需要另外实现红黑树相关的操作。红黑树是一种自平衡的二叉查找树，本身就比较复杂。本篇文章中并不打算对红黑树展开介绍，本文仅会介绍链表树化需要注意的地方。至于红黑树详细的介绍，如果大家有兴趣，可以参考他的另一篇文章 -&nbsp;<a href="http://www.coolblog.xyz/2018/01/11/%E7%BA%A2%E9%BB%91%E6%A0%91%E8%AF%A6%E7%BB%86%E5%88%86%E6%9E%90/" rel="nofollow noreferrer">红黑树详细分析</a>。</p>
+<p>在展开说明之前，先把树化的相关代码贴出来，如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> TREEIFY_THRESHOLD = 8<span style="color: #000000;">;
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 当桶数组容量小于该值时，优先进行扩容，而不是树化
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> MIN_TREEIFY_CAPACITY = 64<span style="color: #000000;">;
+
+</span><span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">class</span> TreeNode&lt;K,V&gt; <span style="color: #0000ff;">extends</span> LinkedHashMap.Entry&lt;K,V&gt;<span style="color: #000000;"> {
+    TreeNode</span>&lt;K,V&gt; parent;  <span style="color: #008000;">//</span><span style="color: #008000;"> red-black tree links</span>
+    TreeNode&lt;K,V&gt;<span style="color: #000000;"> left;
+    TreeNode</span>&lt;K,V&gt;<span style="color: #000000;"> right;
+    TreeNode</span>&lt;K,V&gt; prev;    <span style="color: #008000;">//</span><span style="color: #008000;"> needed to unlink next upon deletion</span>
+    <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> red;
+    TreeNode(</span><span style="color: #0000ff;">int</span> hash, K key, V val, Node&lt;K,V&gt;<span style="color: #000000;"> next) {
+        </span><span style="color: #0000ff;">super</span><span style="color: #000000;">(hash, key, val, next);
+    }
+}
+
+</span><span style="color: #008000;">/**</span><span style="color: #008000;">
+ * 将普通节点链表转换成树形节点链表
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">final</span> <span style="color: #0000ff;">void</span> treeifyBin(Node&lt;K,V&gt;[] tab, <span style="color: #0000ff;">int</span><span style="color: #000000;"> hash) {
+    </span><span style="color: #0000ff;">int</span> n, index; Node&lt;K,V&gt;<span style="color: #000000;"> e;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 桶数组容量小于 MIN_TREEIFY_CAPACITY，优先进行扩容而不是树化</span>
+    <span style="color: #0000ff;">if</span> (tab == <span style="color: #0000ff;">null</span> || (n = tab.length) &lt;<span style="color: #000000;"> MIN_TREEIFY_CAPACITY)
+        resize();
+    </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> ((e = tab[index = (n - 1) &amp; hash]) != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> hd 为头节点（head），tl 为尾节点（tail）</span>
+        TreeNode&lt;K,V&gt; hd = <span style="color: #0000ff;">null</span>, tl = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">do</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 将普通节点替换成树形节点</span>
+            TreeNode&lt;K,V&gt; p = replacementTreeNode(e, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+            </span><span style="color: #0000ff;">if</span> (tl == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                hd </span>=<span style="color: #000000;"> p;
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                p.prev </span>=<span style="color: #000000;"> tl;
+                tl.next </span>=<span style="color: #000000;"> p;
+            }
+            tl </span>=<span style="color: #000000;"> p;
+        } </span><span style="color: #0000ff;">while</span> ((e = e.next) != <span style="color: #0000ff;">null</span>);  <span style="color: #008000;">//</span><span style="color: #008000;"> 将普通链表转成由树形节点链表</span>
+        <span style="color: #0000ff;">if</span> ((tab[index] = hd) != <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 将树形链表转换成红黑树</span>
+<span style="color: #000000;">            hd.treeify(tab);
+    }
+}
+
+TreeNode</span>&lt;K,V&gt; replacementTreeNode(Node&lt;K,V&gt; p, Node&lt;K,V&gt;<span style="color: #000000;"> next) {
+    </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span> TreeNode&lt;&gt;<span style="color: #000000;">(p.hash, p.key, p.value, next);
+}</span></pre>
+</div>
+<p>在扩容过程中，树化要满足两个条件：</p>
+<ol>
+<li>
+<p><span style="color: #000080;">链表长度大于等于 TREEIFY_THRESHOLD</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">桶数组容量大于等于 MIN_TREEIFY_CAPACITY</span></p>
+</li>
+</ol>
+<p>第一个条件比较好理解，这里就不说了。这里来说说加入第二个条件的原因，个人觉得原因如下：</p>
+<p>当桶数组容量比较小时，键值对节点 hash 的碰撞率可能会比较高，进而导致链表长度较长。这个时候应该优先扩容，而不是立马树化。毕竟高碰撞率是因为桶数组容量较小引起的，这个是主因。容量小时，优先扩容可以避免一些列的不必要的树化过程。同时，桶容量较小时，扩容会比较频繁，扩容时需要拆分红黑树并重新映射。所以在桶容量比较小的情况下，将长链表转成红黑树是一件吃力不讨好的事。</p>
+<p>回到上面的源码中，我们继续看一下 treeifyBin 方法。该方法主要的作用是将普通链表转成为由 TreeNode 型节点组成的链表，并在最后调用 treeify 是将该链表转为红黑树。TreeNode 继承自 Node 类，所以 TreeNode 仍然包含 next 引用，原链表的节点顺序最终通过 next 引用被保存下来。我们假设树化前，链表结构如下：</p>
+<p><a href="http://www.coolblog.xyz/" rel="nofollow noreferrer"><span class="img-wrap"><img title="" src="./images/HashMap 源码详细解析 (JDK1.8)8.png" alt="" /></span></a></p>
+<p>HashMap 在设计之初，并没有考虑到以后会引入红黑树进行优化。所以并没有像 TreeMap 那样，要求键类实现 comparable 接口或提供相应的比较器。但由于树化过程需要比较两个键对象的大小，在键类没有实现 comparable 接口的情况下，怎么比较键与键之间的大小了就成了一个棘手的问题。为了解决这个问题，HashMap 是做了三步处理，确保可以比较出两个键的大小，如下：</p>
+<ol>
+<li>
+<p><span style="color: #000080;">比较键与键之间 hash 的大小，如果 hash 相同，继续往下比较</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">检测键类是否实现了 Comparable 接口，如果实现调用 compareTo 方法进行比较</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">如果仍未比较出大小，就需要进行仲裁了，仲裁方法为 tieBreakOrder（大家自己看源码吧）</span></p>
+</li>
+</ol>
+<p>tie break 是网球术语，可以理解为加时赛的意思，起这个名字还是挺有意思的。</p>
+<p>通过上面三次比较，最终就可以比较出孰大孰小。比较出大小后就可以构造红黑树了，最终构造出的红黑树如下：</p>
+<p><a href="http://www.coolblog.xyz/" rel="nofollow noreferrer"><span class="img-wrap"><img title="" src="./images/HashMap 源码详细解析 (JDK1.8)9.png" alt="" /></span></a></p>
+<p>橙色的箭头表示 TreeNode 的 next 引用。由于空间有限，prev 引用未画出。可以看出，链表转成红黑树后，原链表的顺序仍然会被引用仍被保留了（红黑树的根节点会被移动到链表的第一位），我们仍然可以按遍历链表的方式去遍历上面的红黑树。这样的结构为后面红黑树的切分以及红黑树转成链表做好了铺垫，我们继续往下分析。</p>
+<h3 style="background-color: #33ffff;"><code class="java">8.1 split&nbsp;</code>红黑树拆分</h3>
+<p>扩容后，普通节点需要重新映射，红黑树节点也不例外。按照一般的思路，我们可以先把红黑树转成链表，之后再重新映射链表即可。这种处理方式是大家比较容易想到的，但这样做会损失一定的效率。不同于上面的处理方式，HashMap 实现的思路则是上好佳（上好佳请把广告费打给我）。如上节所说，在将普通链表转成红黑树时，HashMap 通过两个额外的引用 next 和 prev 保留了原链表的节点顺序。这样再对红黑树进行重新映射时，完全可以按照映射链表的方式进行。这样就避免了将红黑树转成链表后再进行映射，无形中提高了效率。</p>
+<p>以上就是红黑树拆分的逻辑，下面看一下具体实现吧：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;"> 红黑树转链表阈值</span>
+<span style="color: #0000ff;">static</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> UNTREEIFY_THRESHOLD = 6<span style="color: #000000;">;
+
+</span><span style="color: #0000ff;">final</span> <span style="color: #0000ff;">void</span> split(HashMap&lt;K,V&gt; map, Node&lt;K,V&gt;[] tab, <span style="color: #0000ff;">int</span> index, <span style="color: #0000ff;">int</span><span style="color: #000000;"> bit) {
+    TreeNode</span>&lt;K,V&gt; b = <span style="color: #0000ff;">this</span><span style="color: #000000;">;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> Relink into lo and hi lists, preserving order</span>
+    TreeNode&lt;K,V&gt; loHead = <span style="color: #0000ff;">null</span>, loTail = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    TreeNode</span>&lt;K,V&gt; hiHead = <span style="color: #0000ff;">null</span>, hiTail = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    </span><span style="color: #0000ff;">int</span> lc = 0, hc = 0<span style="color: #000000;">;
+    </span><span style="color: #008000;">/*</span><span style="color: #008000;"> 
+     * 红黑树节点仍然保留了 next 引用，故仍可以按链表方式遍历红黑树。
+     * 下面的循环是对红黑树节点进行分组，与上面类似
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">for</span> (TreeNode&lt;K,V&gt; e = b, next; e != <span style="color: #0000ff;">null</span>; e =<span style="color: #000000;"> next) {
+        next </span>= (TreeNode&lt;K,V&gt;<span style="color: #000000;">)e.next;
+        e.next </span>= <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+        </span><span style="color: #0000ff;">if</span> ((e.hash &amp; bit) == 0<span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">if</span> ((e.prev = loTail) == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                loHead </span>=<span style="color: #000000;"> e;
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                loTail.next </span>=<span style="color: #000000;"> e;
+            loTail </span>=<span style="color: #000000;"> e;
+            </span>++<span style="color: #000000;">lc;
+        }
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #0000ff;">if</span> ((e.prev = hiTail) == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                hiHead </span>=<span style="color: #000000;"> e;
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                hiTail.next </span>=<span style="color: #000000;"> e;
+            hiTail </span>=<span style="color: #000000;"> e;
+            </span>++<span style="color: #000000;">hc;
+        }
+    }
+
+    </span><span style="color: #0000ff;">if</span> (loHead != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 如果 loHead 不为空，且链表长度小于等于 6，则将红黑树转成链表</span>
+        <span style="color: #0000ff;">if</span> (lc &lt;=<span style="color: #000000;"> UNTREEIFY_THRESHOLD)
+            tab[index] </span>=<span style="color: #000000;"> loHead.untreeify(map);
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            tab[index] </span>=<span style="color: #000000;"> loHead;
+            </span><span style="color: #008000;">/*</span><span style="color: #008000;"> 
+             * hiHead == null 时，表明扩容后，
+             * 所有节点仍在原位置，树结构不变，无需重新树化
+             </span><span style="color: #008000;">*/</span>
+            <span style="color: #0000ff;">if</span> (hiHead != <span style="color: #0000ff;">null</span><span style="color: #000000;">) 
+                loHead.treeify(tab);
+        }
+    }
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 与上面类似</span>
+    <span style="color: #0000ff;">if</span> (hiHead != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+        </span><span style="color: #0000ff;">if</span> (hc &lt;=<span style="color: #000000;"> UNTREEIFY_THRESHOLD)
+            tab[index </span>+ bit] =<span style="color: #000000;"> hiHead.untreeify(map);
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            tab[index </span>+ bit] =<span style="color: #000000;"> hiHead;
+            </span><span style="color: #0000ff;">if</span> (loHead != <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+                hiHead.treeify(tab);
+        }
+    }
+}</span></pre>
+</div>
+<p>&nbsp;从源码上可以看得出，重新映射红黑树的逻辑和重新映射链表的逻辑基本一致。不同的地方在于，重新映射后，会将红黑树拆分成两条由 TreeNode 组成的链表。如果链表长度小于 UNTREEIFY_THRESHOLD，则将链表转换成普通链表。否则根据条件重新将 TreeNode 链表树化。举个例子说明一下，假设扩容后，重新映射上图的红黑树，映射结果如下：</p>
+<p><a href="http://www.coolblog.xyz/" rel="nofollow noreferrer"><span class="img-wrap"><img title="" src="./images/HashMap 源码详细解析 (JDK1.8)10.png" alt="" /></span></a></p>
+<h3 style="background-color: #33ffff;">&nbsp;8.2&nbsp;<code class="java">untreeify&nbsp;</code>红黑树链化</h3>
+<p>前面说过，红黑树中仍然保留了原链表节点顺序。有了这个前提，再将红黑树转成链表就简单多了，仅需将 TreeNode 链表转成 Node 类型的链表即可。相关代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">final</span> Node&lt;K,V&gt; untreeify(HashMap&lt;K,V&gt;<span style="color: #000000;"> map) {
+    Node</span>&lt;K,V&gt; hd = <span style="color: #0000ff;">null</span>, tl = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;"> 遍历 TreeNode 链表，并用 Node 替换</span>
+    <span style="color: #0000ff;">for</span> (Node&lt;K,V&gt; q = <span style="color: #0000ff;">this</span>; q != <span style="color: #0000ff;">null</span>; q =<span style="color: #000000;"> q.next) {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 替换节点类型</span>
+        Node&lt;K,V&gt; p = map.replacementNode(q, <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+        </span><span style="color: #0000ff;">if</span> (tl == <span style="color: #0000ff;">null</span><span style="color: #000000;">)
+            hd </span>=<span style="color: #000000;"> p;
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+            tl.next </span>=<span style="color: #000000;"> p;
+        tl </span>=<span style="color: #000000;"> p;
+    }
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> hd;
+}
+
+Node</span>&lt;K,V&gt; replacementNode(Node&lt;K,V&gt; p, Node&lt;K,V&gt;<span style="color: #000000;"> next) {
+    </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">new</span> Node&lt;&gt;<span style="color: #000000;">(p.hash, p.key, p.value, next);
+}</span></pre>
+</div>
+<p>上面的代码并不复杂，不难理解，这里就不多说了。</p>
+</div>
+<div>
+<h2 style="background-color: #33ccff;">9. get 添加元素</h2>
+<div class="cnblogs_code">
+<pre><code>  <span style="color: #008000;">//</span><span style="color: #008000;">这里直接调用getNode函数实现方法</span>
+  <span style="color: #0000ff;">public</span><span style="color: #000000;"> V get(Object key) {
+        Node</span>&lt;K,V&gt;<span style="color: #000000;"> e;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">经过hash函数运算 获取key的hash值</span>
+        <span style="color: #0000ff;">return</span> (e = getNode(hash(key), key)) == <span style="color: #0000ff;">null</span> ? <span style="color: #0000ff;">null</span><span style="color: #000000;"> : e.value;
+    }
+   
+   </span><span style="color: #0000ff;">final</span> Node&lt;K,V&gt; getNode(<span style="color: #0000ff;">int</span><span style="color: #000000;"> hash, Object key) {
+        Node</span>&lt;K,V&gt;[] tab; Node&lt;K,V&gt; first, e; <span style="color: #0000ff;">int</span><span style="color: #000000;"> n; K k;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">判定三个条件 table不为Null &amp; table的长度大于0 &amp; table指定的索引值不为Null</span>
+        <span style="color: #0000ff;">if</span> ((tab = table) != <span style="color: #0000ff;">null</span> &amp;&amp; (n = tab.length) &gt; 0 &amp;&amp;<span style="color: #000000;">
+            (first </span>= tab[(n - 1) &amp; hash]) != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">判定 匹配hash值 &amp; 匹配key值 成功则返回 该值</span>
+            <span style="color: #0000ff;">if</span> (first.hash == hash &amp;&amp;<span style="color: #000000;"> 
+                ((k </span>= first.key) == key || (key != <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> key.equals(k))))
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> first;
+             </span><span style="color: #008000;">//</span><span style="color: #008000;">若 first节点的下一个节点不为Null</span>
+            <span style="color: #0000ff;">if</span> ((e = first.next) != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                </span><span style="color: #0000ff;">if</span> (first <span style="color: #0000ff;">instanceof</span> TreeNode) <span style="color: #008000;">//</span><span style="color: #008000;">若first的类型为TreeNode 红黑树
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">通过红黑树查找匹配值 并返回</span>
+                    <span style="color: #0000ff;">return</span> ((TreeNode&lt;K,V&gt;<span style="color: #000000;">)first).getTreeNode(hash, key); 
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">若上面判定不成功 则认为下一个节点为单向链表,通过循环匹配值</span>
+                <span style="color: #0000ff;">do</span><span style="color: #000000;"> {
+                    </span><span style="color: #0000ff;">if</span> (e.hash == hash &amp;&amp;<span style="color: #000000;">
+                        ((k </span>= e.key) == key || (key != <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> key.equals(k))))
+                       </span><span style="color: #008000;">//</span><span style="color: #008000;">匹配成功后返回该值</span>
+                        <span style="color: #0000ff;">return</span><span style="color: #000000;"> e;
+                } </span><span style="color: #0000ff;">while</span> ((e = e.next) != <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+            }
+        }
+        </span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<div>
+<p>梳理以下 get 函数的执行过程</p>
+<blockquote><ol>
+<li>
+<p><span style="color: #000080;">判定三个条件 table 不为 Null &amp; table 的长度大于 0 &amp; table 指定的索引值不为 Null，否则直接返回 null，这也是可以存储 null&nbsp;</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">判定匹配 hash 值 &amp; 匹配 key 值，成功则返回该值，这里用了 == 和 equals 两种方式，对于 int，string，同一个实例对象等可以适用。</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">若 first 节点的下一个节点不为 Null</span></p>
+<ol>
+<li>
+<p><span style="color: #000080;">若下一个节点类型为 TreeNode 红黑树，通过红黑树查找匹配值，并返回查询值</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">否则就是单链表，还是通过匹配 hash 值 &amp; 匹配 key 值来获取数据。<br /></span></p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</ol></blockquote>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</div>
+<h2 style="background-color: #33ccff;">10. remove&nbsp;删除元素</h2>
+<p>当你看到了 get 获取元素的细节，在来看删除原理，其实大同小异。</p>
+<p>HashMap 的删除操作并不复杂，仅需三个步骤即可完成。第一步是定位桶位置，第二步遍历链表并找到键值相等的节点，第三步删除节点。相关源码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span><span style="color: #000000;"> V remove(Object key) {
+    Node</span>&lt;K,V&gt;<span style="color: #000000;"> e;
+    </span><span style="color: #0000ff;">return</span> (e = removeNode(hash(key), key, <span style="color: #0000ff;">null</span>, <span style="color: #0000ff;">false</span>, <span style="color: #0000ff;">true</span>)) == <span style="color: #0000ff;">null</span> ?
+        <span style="color: #0000ff;">null</span><span style="color: #000000;"> : e.value;
+}
+
+</span><span style="color: #0000ff;">final</span> Node&lt;K,V&gt; removeNode(<span style="color: #0000ff;">int</span><span style="color: #000000;"> hash, Object key, Object value,
+                           </span><span style="color: #0000ff;">boolean</span> matchValue, <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> movable) {
+    Node</span>&lt;K,V&gt;[] tab; Node&lt;K,V&gt; p; <span style="color: #0000ff;">int</span><span style="color: #000000;"> n, index;
+    </span><span style="color: #0000ff;">if</span> ((tab = table) != <span style="color: #0000ff;">null</span> &amp;&amp; (n = tab.length) &gt; 0 &amp;&amp;
+        <span style="color: #008000;">//</span><span style="color: #008000;"> 1. 定位桶位置</span>
+        (p = tab[index = (n - 1) &amp; hash]) != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+        Node</span>&lt;K,V&gt; node = <span style="color: #0000ff;">null</span><span style="color: #000000;">, e; K k; V v;
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 如果键的值与链表第一个节点相等，则将 node 指向该节点</span>
+        <span style="color: #0000ff;">if</span> (p.hash == hash &amp;&amp;<span style="color: #000000;">
+            ((k </span>= p.key) == key || (key != <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> key.equals(k))))
+            node </span>=<span style="color: #000000;"> p;
+        </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> ((e = p.next) != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {  
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> 如果是 TreeNode 类型，调用红黑树的查找逻辑定位待删除节点</span>
+            <span style="color: #0000ff;">if</span> (p <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> TreeNode)
+                node </span>= ((TreeNode&lt;K,V&gt;<span style="color: #000000;">)p).getTreeNode(hash, key);
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;"> 2. 遍历链表，找到待删除节点</span>
+                <span style="color: #0000ff;">do</span><span style="color: #000000;"> {
+                    </span><span style="color: #0000ff;">if</span> (e.hash == hash &amp;&amp;<span style="color: #000000;">
+                        ((k </span>= e.key) == key ||<span style="color: #000000;">
+                         (key </span>!= <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> key.equals(k)))) {
+                        node </span>=<span style="color: #000000;"> e;
+                        </span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+                    }
+                    p </span>=<span style="color: #000000;"> e;
+                } </span><span style="color: #0000ff;">while</span> ((e = e.next) != <span style="color: #0000ff;">null</span><span style="color: #000000;">);
+            }
+        }
+        
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> 3. 到这里，已经找到了，删除节点，并修复链表或红黑树</span>
+        <span style="color: #0000ff;">if</span> (node != <span style="color: #0000ff;">null</span> &amp;&amp; (!matchValue || (v = node.value) == value ||<span style="color: #000000;">
+                             (value </span>!= <span style="color: #0000ff;">null</span> &amp;&amp;<span style="color: #000000;"> value.equals(v)))) {
+            </span><span style="color: #0000ff;">if</span> (node <span style="color: #0000ff;">instanceof</span><span style="color: #000000;"> TreeNode)
+                ((TreeNode</span>&lt;K,V&gt;)node).removeTreeNode(<span style="color: #0000ff;">this</span><span style="color: #000000;">, tab, movable);
+            </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (node ==<span style="color: #000000;"> p)
+                tab[index] </span>=<span style="color: #000000;"> node.next;
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+                p.next </span>=<span style="color: #000000;"> node.next;
+            </span>++<span style="color: #000000;">modCount;
+            </span>--<span style="color: #000000;">size;
+            afterNodeRemoval(node);
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> node;
+        }
+    }<br /><span style="color: #008000;">　　 // 找不到，或者没有数据，返回 null
+    </span></span><span style="color: #0000ff;">return</span> <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+}</span></pre>
+</div>
+<p>删除操作本身并不复杂，有了前面的基础，理解起来也就不难了，这里就不多说了。</p>
+</div>
+<div>
+<h2 id="item-3-6" style="background-color: #33ccff;">11. 其他</h2>
+<div>
+<div>
+<h3 style="background-color: #33ffff;">11.1 HashMap 和 HashTable 的区别</h3>
+<p>HashMap和Hashtable都实现了Map接口，但决定用哪一个之前先要弄清楚它们之间的分别。主要的区别有：线程安全性，同步(synchronization)，以及速度。</p>
+<ol>
+<li>
+<p><span style="color: #000080;">HashMap 几乎可以等价于 Hashtable，除了 HashMap 是非 synchronized 的，并可以接受 null -&gt; null 键值对，而 Hashtable 则不行)。</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">Hashtable 是线程安全的，多个线程可以共享一个Hashtable；。Java 5提供了ConcurrentHashMap，它是 HashTable 的替代，比 HashTable 的扩展性更好。</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">由于 Hashtable 是线程安全的，在单线程环境下它比 HashMap 要慢。在单一线程下，使用 HashMap 性能要好过 Hashtable。</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">HashMap 不能保证随着时间的推移 Map 中的元素次序是不变的。</span></p>
+</li>
+<li><span style="color: #000080;">HashMap 的迭代器 (Iterator) 是 fail-fast 迭代器，而 Hashtable 的 enumerator 迭代器不是 fail-fast 的。所以当有其它线程改变了 HashMap 的结构（增加或者移除元素），将会抛出 ConcurrentModificationException，但迭代器本身的 remove() 方法移除元素则不会抛出 ConcurrentModificationException 异常。但这并不是一个一定发生的行为，要看 JVM。这条同样也是 Enumeration 和 Iterator 的区别。</span></li>
+</ol></div>
+</div>
+</div>
+<div>
+<div>
+<h3 style="background-color: #33ffff;">11.2 JDK 1.7 和 1.8 的 HashMap 的不同点</h3>
+（1）JDK1.7 用的是头插法，而 JDK1.8 及之后使用的都是尾插法，那么为什么要这样做呢？因为 JDK1.7 是用单链表进行的纵向延伸，当采用头插法就是能够提高插入的效率，但是也会容易出现逆序且环形链表死循环问题。但是在 JDK1.8 之后是因为加入了红黑树使用尾插法，能够避免出现逆序且链表死循环的问题。</div>
+<div>
+<p>（2）扩容后数据存储位置的计算方式也不一样：</p>
+<ol>
+<li>
+<p><span style="color: #000080;">在 JDK1.7 的时候是直接用 hash 值和需要扩容的二进制数进行 &amp;（这里就是为什么扩容的时候为啥一定必须是 2 的多少次幂的原因所在，因为如果只有 2 的 n 次幂的情况时最后一位二进制数才一定是 1，这样能最大程度减少 hash 碰撞）（hash 值 &amp; length-1） 。</span></p>
+</li>
+<li>
+<p><span style="color: #000080;">而在 JDK1.8 的时候直接用了 JDK1.7 的时候计算的规律，也就是扩容前的原始位置+扩容的大小值 = JDK1.8 的计算方式，而不再是 JDK1.7 的那种异或的方法。但是这种方式就相当于只需要判断 hash 值的新增参与运算的位是 0 还是 1 就直接迅速计算出了扩容后的储存方式。</span></p>
+</li>
+</ol>
+<p>（3）JDK1.7 的时候使用的是数组+ 单链表的数据结构。但是在 JDK1.8 及之后时，使用的是数组+链表+红黑树的数据结构（当链表的深度达到 8 的时候，也就是默认阈值，就会自动扩容把链表转成红黑树的数据结构来把时间复杂度从 O(N) 变成 O(logN) 提高了效率）。</p>
+</div>
+<div>
+<h3 style="background-color: #33ffff;">11.3 当两个对象的 hashcode 相同会发生什么？获取元素的时候，如何区分？</h3>
+<p>hashcode 相同，说明两个对象 HashMap 数组的同一位置上，接着 HashMap 会遍历链表中的每个元素，通过 key 的 equals 方法来判断是否为同一个 key，如果是同一个key，则新的 value 会覆盖旧的 value，并且返回旧的 value。如果不是同一个 key，则存储在该位置上的链表的链尾。</p>
+<p><span style="font-size: 14px;">获取元素的时候遍历 HashMap 链表中的每个元素，并对每个 key 进行 hash 计算，只有 hash 和 key 都相等，才返回对应的值对象。</span></p>
+</div>
+</div>
+<div>&nbsp;</div>
+<div>&nbsp;</div>
+<div>参考文章;</div>
+<div>
+<h3 class="_1RuRku"><a href="https://www.jianshu.com/p/003256ce41ce" target="_blank">数据结构解析-HashMap</a></h3>
+<h3 class="title-article"><a href="https://blog.csdn.net/weixin_39759846/article/details/86654136#%E5%9B%9B%E6%99%AE%E9%80%9A%E6%96%B9%E6%B3%95" target="_blank">HashMap源码分析</a></h3>
+<h3 class="h2 mb-3"><a class="text-body" href="https://segmentfault.com/a/1190000012926722">HashMap 源码详细分析(JDK1.8)</a></h3>
+<h3 class="_1RuRku"><a href="https://www.jianshu.com/p/ee0de4c99f87" target="_blank">一文读懂HashMap</a></h3>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

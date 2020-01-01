@@ -1,0 +1,100 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python快速导出sql语句（mssql）的查询结果到Excel，解决SSMS无法加载大字段的问题' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python快速导出sql语句（mssql）的查询结果到Excel，解决SSMS无法加载大字段的问题</center></div><div class='banquan'>原文出处:本文由博客园博主MSSQL123提供。<br/>
+原文连接:https://www.cnblogs.com/wy123/p/11593751.html</div><br>
+    <p>&nbsp;</p>
+<p>遇到一个尴尬的问题，SSMS的GridView对于大字段的（varchar(max)，text之类的），支持不太友好的，<br />超过8000个长度之外的字符，SSMS的表格是显示不出来的（当然也就看不到了），也是无法直接导出来的（超过8000个之外的字符的）<br />这种问题在别人遇到来求助的时候，是不可忍受的，于是快速用Python写了一个导出数据到Excel的功能，<br />最主要的是可以导出大字段的内容，且方便简洁，人畜无害，绿色环保，不太喜欢SSMS那种下一步下一步&hellip;&hellip;的操作。那些在SSMS中无法显示出来的字段，这下可以显出原形了。<br /><br /></p>
+<p>1，必选参数是服务器地址和sql语句，如果sql语句没有带库名的话，那么必须传入数据库的名字，否则默认是master库，因此sql尽量带库名吧<br />2，导出路径是C:\Windows\Temp\，导出完成后自动打开，方便查看，另存<br />3，根据sql语句，导出完成的查询结果，第一行是字段名，其余是查询结果<br />4，依赖于xlsxwriter这个包<br />5，没有太严格的参数校验以及数据库账号密码支持，有需要的自己改造</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> os
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> pymssql
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> xlsxwriter
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> argparse
+
+</span><span style="color: #0000ff;">def</span> get_data_from_db(host=<span style="color: #800000;">'</span><span style="color: #800000;">127.0.0.1</span><span style="color: #800000;">'</span>,server=<span style="color: #800000;">'</span><span style="color: #800000;">mssql</span><span style="color: #800000;">'</span>,port=1433,database=<span style="color: #800000;">'</span><span style="color: #800000;">master</span><span style="color: #800000;">'</span>,sql_stament=<span style="color: #800000;">''</span><span style="color: #000000;">):
+    conn </span>= pymssql.connect(host=host, server=server,port=port, database=database,as_dict=True, autocommit=<span style="color: #000000;">True)
+    cursor </span>=<span style="color: #000000;"> conn.cursor()
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 简单的判断，别尼玛执行了truncate啥的</span>
+    <span style="color: #0000ff;">if</span> len(sql_statment)&lt;6 <span style="color: #0000ff;">or</span> <span style="color: #0000ff;">not</span> (re.match(r<span style="color: #800000;">'</span><span style="color: #800000;">^select</span><span style="color: #800000;">'</span><span style="color: #000000;">,sql_statment.lstrip())):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">sql statment is error,exit&hellip;&hellip;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        exit(</span>1<span style="color: #000000;">)
+    </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+        cursor.execute(sql_stament)
+        result </span>=<span style="color: #000000;"> cursor.fetchall()
+    </span><span style="color: #0000ff;">except</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">raise</span>
+    <span style="color: #0000ff;">finally</span><span style="color: #000000;">:
+        cursor.close()
+        conn.close()
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> result
+
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> export_to_excel(result):
+    current_time </span>= time.strftime(<span style="color: #800000;">"</span><span style="color: #800000;">%Y%m%d%H%M%S</span><span style="color: #800000;">"</span><span style="color: #000000;">, time.localtime())
+    workbook </span>= xlsxwriter.Workbook(<span style="color: #800000;">'</span><span style="color: #800000;">C:\\Windows\\Temp\\</span><span style="color: #800000;">'</span>+current_time+<span style="color: #800000;">'</span><span style="color: #800000;">_temp.xlsx</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    worksheet </span>= workbook.add_worksheet(<span style="color: #800000;">"</span><span style="color: #800000;">sheet1</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> head row</span>
+    col =<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">for</span> key <span style="color: #0000ff;">in</span><span style="color: #000000;"> result[0].keys():
+        worksheet.write(0, col, key)
+        col </span>= col+1
+    <span style="color: #008000;">#</span><span style="color: #008000;"> data row</span>
+    row = 1<span style="color: #000000;">
+    col </span>=<span style="color: #000000;"> 0
+    </span><span style="color: #0000ff;">for</span> dict <span style="color: #0000ff;">in</span><span style="color: #000000;"> result:
+        </span><span style="color: #0000ff;">for</span> key <span style="color: #0000ff;">in</span><span style="color: #000000;"> dict:
+            worksheet.write(row, col, str(dict[key]))
+            col </span>= col + 1<span style="color: #000000;">
+        col </span>=<span style="color: #000000;"> 0
+        row </span>+= 1<span style="color: #000000;">
+    workbook.close()
+    os.startfile(</span><span style="color: #800000;">'</span><span style="color: #800000;">C:\\Windows\\Temp\\</span><span style="color: #800000;">'</span>+current_time+<span style="color: #800000;">'</span><span style="color: #800000;">_temp.xlsx</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    parser </span>=<span style="color: #000000;"> argparse.ArgumentParser()
+    parser.add_argument(</span><span style="color: #800000;">"</span><span style="color: #800000;">--host</span><span style="color: #800000;">"</span>,required=True, type=str,help=<span style="color: #800000;">"</span><span style="color: #800000;">host name or ip</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    parser.add_argument(</span><span style="color: #800000;">"</span><span style="color: #800000;">--db</span><span style="color: #800000;">"</span>,required=False, type=str,help=<span style="color: #800000;">"</span><span style="color: #800000;">database name</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    parser.add_argument(</span><span style="color: #800000;">"</span><span style="color: #800000;">--sql</span><span style="color: #800000;">"</span>, required=True, type=str, help=<span style="color: #800000;">"</span><span style="color: #800000;">sql statment</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    args </span>=<span style="color: #000000;"> parser.parse_args()
+    host </span>=<span style="color: #000000;"> args.host
+    database </span>=<span style="color: #000000;"> args.db
+    </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> database:
+        database</span>=<span style="color: #800000;">'</span><span style="color: #800000;">master</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    sql_statment </span>=<span style="color: #000000;"> args.sql
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">executing sql&hellip;&hellip;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    result </span>= get_data_from_db(host = host,database = database,sql_stament =<span style="color: #000000;">sql_statment)
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">exporting data&hellip;&hellip;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    export_to_excel(result)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> example</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> python export_data_to_excel.py --host "127.0.0.1" --sql "select * from tempdb.dbo.Test"</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>在10W级别以下，速度还是可以的，这是个demo</p>
+<p><img src="./images/python快速导出sql语句（mssql）的查询结果到Excel，解决SSMS无法加载大字段的问题0.png" alt="" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

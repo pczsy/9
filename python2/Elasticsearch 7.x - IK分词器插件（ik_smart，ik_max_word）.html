@@ -1,0 +1,110 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Elasticsearch 7.x - IK分词器插件（ik_smart，ik_max_word）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Elasticsearch 7.x - IK分词器插件（ik_smart，ik_max_word）</center></div><div class='banquan'>原文出处:本文由博客园博主Python及时行乐提供。<br/>
+原文连接:https://www.cnblogs.com/ilovepython/p/11650139.html</div><br>
+    <h1>一、安装IK分词器</h1>
+<p>Elasticsearch也需要安装IK分析器以实现对中文更好的分词支持。</p>
+<p>去Github下载最新版elasticsearch-ik</p>
+<p>https://github.com/medcl/elasticsearch-analysis-ik/releases</p>
+<p><img src="./images/Elasticsearch 7.x - IK分词器插件（ik_smart，ik_max_word）0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>将ik文件夹放在elasticsearch/plugins目录下，重启elasticsearch。</p>
+<p>Console控制台输出：</p>
+<p>[2019-09-04T08:50:23,395][INFO ][o.e.p.PluginsService ] [THINKPAD-T460P]&nbsp;loaded plugin [analysis-ik]</p>
+<h1>二、测试分词效果</h1>
+<p>IK分词器有两种分词模式：ik_max_word和ik_smart模式。</p>
+<p>1、ik_max_word</p>
+<p>会将文本做最细粒度的拆分，比如会将&ldquo;中华人民共和国人民大会堂&rdquo;拆分为&ldquo;中华人民共和国、中华人民、中华、华人、人民共和国、人民、共和国、大会堂、大会、会堂等词语。</p>
+<p>2、ik_smart</p>
+<p>会做最粗粒度的拆分，比如会将&ldquo;中华人民共和国人民大会堂&rdquo;拆分为中华人民共和国、人民大会堂。</p>
+<p>测试两种分词模式的效果。分词查询要用GET、POST请求，需要把请求参数写在body中，且需要JSON格式。</p>
+<p>发送：post localhost:9200/_analyze</p>
+<p>（1）测试ik_max_word</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">POST _analyze
+
+{
+
+</span><span style="color: #800000;">"</span><span style="color: #800000;">analyzer</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">ik_max_word</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+
+</span><span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">中华人民共和国人民大会堂</span><span style="color: #800000;">"</span><span style="color: #000000;">
+
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;<img src="./images/Elasticsearch 7.x - IK分词器插件（ik_smart，ik_max_word）1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;（2）测试ik_smart</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">POST _analyze
+
+{
+
+</span><span style="color: #800000;">"</span><span style="color: #800000;">analyzer</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">ik_smart</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+
+</span><span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span>: <span style="color: #800000;">"</span><span style="color: #800000;">中华人民共和国人民大会堂</span><span style="color: #800000;">"</span><span style="color: #000000;">
+
+}</span></pre>
+</div>
+<p><img src="./images/Elasticsearch 7.x - IK分词器插件（ik_smart，ik_max_word）2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>网上关于两种分词器使用的最佳实践是：索引时用ik_max_word，在搜索时用ik_smart。</p>
+<p>即：索引时最大化的将文章内容分词，搜索时更精确的搜索到想要的结果。</p>
+<p>不过，需要注意的是：ik_smart 分词结果并不是 ik_max_word的子集。这样，在使用ik_max_word 建索引，用ik_smart 搜索时，有可能结果匹配不上，所以这是两种不同类型的分词结果，建议还是不要混用。</p>
+<p>下面测试【5号电池】，在两种分词模式下的输出结果。</p>
+<p><img src="./images/Elasticsearch 7.x - IK分词器插件（ik_smart，ik_max_word）3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;<img src="./images/Elasticsearch 7.x - IK分词器插件（ik_smart，ik_max_word）4.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h1>三、扩展词典</h1>
+<p>在elasticsearch/plugins/ik/config下新建my.dic文件，在my.dic中写入想要分词识别的文字；修改IKAnalyzer.cfg.xml文件，在&lt;entry key="ext_dict"&gt;中指定my.dic。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">properties</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">comment</span><span style="color: #0000ff;">&gt;</span>IK Analyzer 扩展配置<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">comment</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;">用户可以在这里配置自己的扩展字典 </span><span style="color: #008000;">--&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">entry </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="ext_dict"</span><span style="color: #0000ff;">&gt;</span>my.dic<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">entry</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;">用户可以在这里配置自己的扩展停止词字典</span><span style="color: #008000;">--&gt;</span>
+
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">entry </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="ext_stopwords"</span><span style="color: #0000ff;">&gt;&lt;/</span><span style="color: #800000;">entry</span><span style="color: #0000ff;">&gt;</span>
+
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;">用户可以在这里配置远程扩展字典 </span><span style="color: #008000;">--&gt;</span>
+
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> &lt;entry key="remote_ext_dict"&gt;words_location&lt;/entry&gt; </span><span style="color: #008000;">--&gt;</span>
+
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;">用户可以在这里配置远程扩展停止词字典</span><span style="color: #008000;">--&gt;</span>
+
+<span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> &lt;entry key="remote_ext_stopwords"&gt;words_location&lt;/entry&gt; </span><span style="color: #008000;">--&gt;</span>
+
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">properties</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>重启elasticsearch即可看到分词效果。</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

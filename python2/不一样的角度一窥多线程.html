@@ -1,0 +1,169 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修不一样的角度一窥多线程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>不一样的角度一窥多线程</center></div><div class='banquan'>原文出处:本文由博客园博主码农阿宇提供。<br/>
+原文连接:https://www.cnblogs.com/CoderAyu/p/12014480.html</div><br>
+    <h1 id="不一样的角度一窥多线程">不一样的角度一窥多线程</h1>
+<p>最近在性能调试时,发现了一个有趣的现象,我把代码简化后如下.</p>
+<pre><code><code>    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine(&quot;Start...&quot;);
+            DoSomething();
+            Console.WriteLine(&quot;Ending...&quot;);
+            Console.ReadLine();
+        }
+
+        static void DoSomething()
+        {
+            var sum=&quot;&quot;;
+            for (int i = 2; i &lt; int.MaxValue; i++)
+            {
+                sum += &quot;s&quot;;
+            }
+            Console.WriteLine(sum.Length);
+        }
+    }</code></pre>
+<p>可以看到,非常简单的一段代码,当我用Windows的性能监测工具来监测每个处理器的使用率时,发现了一个有趣的现象.</p>
+<p><img src="./images/不一样的角度一窥多线程0.png" /></p>
+<p>我电脑是四核的I7处理器,执行以上代码后,却只有处理器2一直处理一个比较高的占用率,而其他的三个则处于一个&quot;摸鱼混日子&quot;的状态,处理器1则更过分,你是睡着了吗?</p>
+<p><img src="./images/不一样的角度一窥多线程1.png" /></p>
+<p>同一台电脑上的处理器,难道大家不是有福同享,有难同当的吗? 为什么其他几个处理器就忍心看着处理器2水深火热呢?</p>
+<p>然后,我就和这个问题死磕上了,恶补了一些操作系统与多线程的知识,现在把一写知识点串起来,分享给大家.</p>
+<h2 id="分级保护域">分级保护域</h2>
+<p>电脑操作系统提供不同的资源访问级别。在计算机体系结构中，Rings是由两个或更多的特权态组成。在一些硬件或者微代码级别上提供不同特权态模式的CPU架构上，保护环通常都是硬件强制的。Rings是从最高特权级（通常被叫作0级）到最低特权级（通常对应最大的数字）排列的。在大多数操作系统中，Ring 0拥有最高特权，并且可以和最多的硬件直接交互（比如CPU，内存）。在Windows中, User Space,也就是我们自己安装的那些应用程序处理Ring 3,而系统内核就在Ring 0.</p>
+<p><img src="./images/不一样的角度一窥多线程2.png" /></p>
+<p>对于这个问题,举个例子,大家就好理解了.<br />
+钱不是万能的,但没钱是万万不能的,所以钱是一个家庭的重中之重,家里老婆呢为了这个家的长治久安,掌握家里的财政大权,把家里的小金库守得死死的,但这就意味着我没钱花了吗?当然不是,和老婆大人用正当理由申请不就完事了?😂<br />
+申请通过之后,老婆大人是允许我直接伸手去家里小金库拿钱吗? 那当然不是,如果我一抓一大把就危险了,所以还得经过她的手从小金库拿钱给我.<br />
+这个现象,我觉得也是一种分级保护域,所以呢,也一直对老婆大人的这种万恶行径表示理解.</p>
+<p><img src="./images/不一样的角度一窥多线程3.png" /></p>
+<p>操作系统也是这样,CPU,内存这些硬件是电脑安全的根本,所以不能给第三方软件操作权限,想操作硬件,就通过由Ring 0中内核(Kernel)暴露的严格Api进行.</p>
+<h2 id="用户级线程与内核级线程">用户级线程与内核级线程</h2>
+<p>线程主要有以下两种实现方式-</p>
+<ul>
+<li>用户级线程 -用户托管线程。</li>
+<li>内核级线程 -作用在内核（操作系统核心）上的操作系统管理的线程。</li>
+</ul>
+<p><img src="./images/不一样的角度一窥多线程4.png" /></p>
+<p>在上图中,User Space就可以理解为我上个章节中的Ring 3,而Kernel Space就是Ring 0, 在Ring 0中,是可以直接操作CPU,内存等硬件的,而Ring 3不行.</p>
+<p>以下是用户级线程与内核级线程的对比.</p>
+<table>
+<thead>
+<tr class="header">
+<th>用户级线程</th>
+<th>内核级线程</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>用户线程由用户实现。</td>
+<td>内核线程由OS实现。</td>
+</tr>
+<tr class="even">
+<td>操作系统无法识别用户级线程。</td>
+<td>内核线程被操作系统识别。</td>
+</tr>
+<tr class="odd">
+<td>用户线程的实现很容易。</td>
+<td>内核线程的实现很复杂。</td>
+</tr>
+<tr class="even">
+<td>上下文切换时间更少。</td>
+<td>上下文切换时间更长。</td>
+</tr>
+<tr class="odd">
+<td>上下文切换不需要硬件支持。</td>
+<td>需要硬件支持。</td>
+</tr>
+<tr class="even">
+<td>如果一个用户级别的线程执行阻止操作，则整个过程将被阻止。</td>
+<td>如果一个内核线程执行阻止操作，则另一线程可以继续执行。</td>
+</tr>
+<tr class="odd">
+<td>无法直接发挥多核处理器的优势</td>
+<td>可以享受多处理起带来的好处</td>
+</tr>
+</tbody>
+</table>
+<p>其中,非常重要的一点,用户级线程无法直接发挥多核处理器的优势,难道我们编写出来的代码只能在一个处理器上运行了吗?这就要讲讲用户级线程模型.</p>
+<h2 id="用户级线程模型">用户级线程模型</h2>
+<p>通常，内核级线程可以使用三个模型之一来执行用户级线程。</p>
+<ul>
+<li>Many-to-one<br />
+</li>
+<li>One-to-one<br />
+</li>
+<li>Many-to-many</li>
+</ul>
+<p>所有模型都将用户级线程映射到内核级线程,一个内核线程就像一个处理器,它是系统编排任务的基本单位。</p>
+<h2 id="many-to-one">Many-to-one</h2>
+<p>多对一模型将许多用户级线程映射到一个内核级线程。线程管理是通过线程库在用户空间中完成的。当线程进行阻塞的系统调用时，整个过程将被阻塞。一次只能有一个线程访问内核，因此多个线程无法在多处理器上并行运行。<br />
+如果用户级线程库是以操作系统不支持的方式实现的，则内核线程将使用多对一关系模型。<br />
+<img src="./images/不一样的角度一窥多线程5.png" /><br />
+内核对用户级线程不可见,在它眼里只有内核线程,而在内核线程的眼里,一个进程无非就是一个偶尔被被它翻牌的黑盒子,进程负责用户线程的调度与执行.</p>
+<h2 id="one-to-one">One-to-one</h2>
+<p>在这种模型下用户级线程与内核级线程之间存在一对一的关系。该模型比多对一模型并发性好,当一个线程进行阻塞系统调用时，它还允许另一个线程运行,所以它支持多个线程以在处理器上并行执行。<br />
+该模型的缺点是创建用户线程需要相应的内核线程,而创建内核线程开销是很大的.<br />
+<img src="./images/不一样的角度一窥多线程6.png" /></p>
+<h2 id="many-to-many">Many-to-many</h2>
+<p>在多对多模型中，m个内核线程处理n个用户线程,其中m &lt; n. 该模型并发性最好,并且不用创建过多的内核线程,涉及到的线程切换同步的开销也更小.<br />
+<img src="./images/不一样的角度一窥多线程7.png" /></p>
+<h2 id="真相浮出水面">真相浮出水面</h2>
+<p>.Net的代码作为托管代码在“托管线程”上执行，而托管线程是在CLR虚拟机上执行的虚拟线程,也是属于用户级线程.</p>
+<p>正如JIT编译器将“虚拟” IL指令映射到在物理计算机上执行的本机指令一样，CLR的线程基础结构也将“虚拟”托管线程映射到操作系统提供的内核线程。</p>
+<p>说到这里,我们也差不多有了前面我说的那个现象的答案了,并非其他处理器不想与那个水深火热的处理器有难同享,而是我没有使用多线程,所以执行的程序只有一个主线程,也就是说用户线程数为1.只能是one to one 模型,所以只有一个处理器能参与工作.</p>
+<p>既然知道了里面的原理,那我们就对前文中的程序进行改造,创建四个线程来执行任务,会不会所有处理器都忙起来呢?</p>
+<pre><code><code>    class Program
+    {
+        static void Main(string[] args)
+        {
+            Console.WriteLine(&quot;Start...&quot;);
+            for (var i = 0; i &lt; 4; i++)
+            {
+                var td=new Thread(DoSomething);
+                td.Start();
+            }
+            Console.WriteLine(&quot;Ending...&quot;);
+            Console.ReadLine();
+        }
+
+        static void DoSomething()
+        {
+            var sum=&quot;&quot;;
+            for (int i = 2; i &lt; int.MaxValue; i++)
+            {
+                sum += &quot;s&quot;;
+            }
+            Console.WriteLine(sum.Length);
+        }
+    }</code></pre>
+<p>可以看到,这次大家的步伐都做到了惊人的一致,四个处理器都被调用起来,加上主线程,这里至少有五个用户线程,所以这里应该是many to many的模型了.</p>
+<p><img src="./images/不一样的角度一窥多线程8.png" /></p>
+<p>谢谢观赏!</p>
+<p>参考资料:<br />
+<a href="https://en.wikipedia.org/wiki/Protection_ring" class="uri">https://en.wikipedia.org/wiki/Protection_ring</a><br />
+<a href="https://stackoverflow.com/questions/15093510/whats-c-sharp-threading-type" class="uri">https://stackoverflow.com/questions/15093510/whats-c-sharp-threading-type</a><br />
+<a href="https://github.com/dotnet/coreclr/blob/master/Documentation/botr/threading.md#clr-threading-overview" class="uri">https://github.com/dotnet/coreclr/blob/master/Documentation/botr/threading.md#clr-threading-overview</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

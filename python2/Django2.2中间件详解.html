@@ -1,0 +1,549 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django2.2中间件详解' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django2.2中间件详解</center></div><div class='banquan'>原文出处:本文由博客园博主大江东流提供。<br/>
+原文连接:https://www.cnblogs.com/django-dev/p/11313763.html</div><br>
+    <p>中间件是 Django 用来处理请求和响应的钩子框架。它是一个轻量级的、底层级的“插件”系统，用于全局性地控制Django 的输入或输出，可以理解为内置的app或者小框架。</p>
+<p>在<code>django.core.handlers.base</code>模块中定义了如何接入中间件，这也是学习Django源码的入口之一。</p>
+<p>每个中间件组件负责实现一些特定的功能。例如，Django 包含一个中间件组件 <code>AuthenticationMiddleware</code>，它使用会话机制将用户与请求request关联起来。</p>
+<p>中间件可以放在你的工程的任何地方，并以Python路径的方式进行访问。</p>
+<p>Django 具有一些内置的中间件，并自动开启了其中的一部分，我们可以根据自己的需要进行调整。</p>
+<h2 id="一如何启用中间件">一、如何启用中间件</h2>
+<p>若要启用中间件组件，请将其添加到 Django 配置文件<code>settings.py</code>的 <code>MIDDLEWARE</code> 配置项列表中。</p>
+<p>在 <code>MIDDLEWARE</code> 中，中间件由字符串表示。这个字符串以圆点分隔，指向中间件工厂的类或函数名的完整 Python 路径。下面是使用 <code>django-admin startproject</code>命令创建工程后，默认的中间件配置：</p>
+<pre><code><code>MIDDLEWARE = [
+  &#39;django.middleware.security.SecurityMiddleware&#39;,
+  &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;,
+  &#39;django.middleware.common.CommonMiddleware&#39;,
+  &#39;django.middleware.csrf.CsrfViewMiddleware&#39;,
+  &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;,
+  &#39;django.contrib.messages.middleware.MessageMiddleware&#39;,
+  &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;,
+ ]</code></pre>
+<p>实际上在Django中可以不使用任何中间件，如果你愿意的话，<code>MIDDLEWARE</code> 配置项可以为空。但是强烈建议至少使用 <code>CommonMiddleware</code>。而笔者的建议是保持默认的配置，这有助于你提高网站的安全性。</p>
+<h2 id="二-中间件最关键的顺序问题">二、 中间件最关键的顺序问题</h2>
+<p><code>MIDDLEWARE</code> 的顺序很重要，具有先后关系，因为有些中间件会依赖其他中间件。例如： <code>AuthenticationMiddleware</code> 需要在会话中间件中存储的经过身份验证的用户信息，因此它必须在 <code>SessionMiddleware</code> 后面运行 。</p>
+<p><strong>在请求阶段，调用视图之前，Django 按照定义的顺序执行中间件 <code>MIDDLEWARE</code>，自顶向下。</strong></p>
+<p>你可以把它想象成一个<code>洋葱</code>：每个中间件类都是一个“皮层”，它包裹起了洋葱的核心--<code>实际业务视图</code>。如果请求通过了洋葱的所有<code>中间件</code>层，一直到内核的视图，那么<strong>响应将在返回的过程中以相反的顺序再通过每个中间件层，最终返回给用户</strong>。</p>
+<p><strong>如果某个层的执行过程认为当前的请求应该被拒绝，或者发生了某些错误，导致短路，直接返回了一个响应，那么剩下的中间件以及核心的视图函数都不会被执行。</strong></p>
+<h2 id="三django内置的中间件">三、Django内置的中间件</h2>
+<p>Django内置了下面这些中间件，满足了我们一般的需求：</p>
+<h3 id="cache">Cache</h3>
+<p>缓存中间件</p>
+<p>如果启用了该中间件，Django会以<code>CACHE_MIDDLEWARE_SECONDS</code> 配置的参数进行全站级别的缓存。</p>
+<h3 id="common">Common</h3>
+<p>通用中间件</p>
+<p>该中间件为我们提供了一些便利的功能：</p>
+<ul>
+<li><p>禁止<code>DISALLOWED_USER_AGENTS</code>中的用户代理访问服务器</p></li>
+<li><p>自动为URL添加斜杠后缀和<code>www</code>前缀功能。如果配置项 <code>APPEND_SLASH</code> 为<code>True</code> ，并且访问的URL 没有斜杠后缀，在URLconf中没有匹配成功，将自动添加斜杠，然后再次匹配，如果匹配成功，就跳转到对应的url。 <code>PREPEND_WWW</code> 的功能类似。</p></li>
+<li><p>为非流式响应设置<code>Content-Length</code>头部信息。</p></li>
+</ul>
+<p>作为展示的例子，这里额外贴出它的源代码，位于django.middleware.common模块中，比较简单，很容易读懂和理解：</p>
+<pre class="python"><code>class CommonMiddleware(MiddlewareMixin):
+    &quot;&quot;&quot;
+    去掉了doc
+    &quot;&quot;&quot;
+    response_redirect_class = HttpResponsePermanentRedirect
+
+    def process_request(self, request):
+        # Check for denied User-Agents
+        if &#39;HTTP_USER_AGENT&#39; in request.META:
+            for user_agent_regex in settings.DISALLOWED_USER_AGENTS:
+                if user_agent_regex.search(request.META[&#39;HTTP_USER_AGENT&#39;]):
+                    raise PermissionDenied(&#39;Forbidden user agent&#39;)
+
+        # Check for a redirect based on settings.PREPEND_WWW
+        host = request.get_host()
+        must_prepend = settings.PREPEND_WWW and host and not host.startswith(&#39;www.&#39;)
+        redirect_url = (&#39;%s://www.%s&#39; % (request.scheme, host)) if must_prepend else &#39;&#39;
+
+        # Check if a slash should be appended
+        if self.should_redirect_with_slash(request):
+            path = self.get_full_path_with_slash(request)
+        else:
+            path = request.get_full_path()
+
+        # Return a redirect if necessary
+        if redirect_url or path != request.get_full_path():
+            redirect_url += path
+            return self.response_redirect_class(redirect_url)
+
+    def should_redirect_with_slash(self, request):
+
+        if settings.APPEND_SLASH and not request.path_info.endswith(&#39;/&#39;):
+            urlconf = getattr(request, &#39;urlconf&#39;, None)
+            return (
+                not is_valid_path(request.path_info, urlconf) and
+                is_valid_path(&#39;%s/&#39; % request.path_info, urlconf)
+            )
+        return False
+
+    def get_full_path_with_slash(self, request):
+
+        new_path = request.get_full_path(force_append_slash=True)
+        if settings.DEBUG and request.method in (&#39;POST&#39;, &#39;PUT&#39;, &#39;PATCH&#39;):
+            raise RuntimeError(
+                &quot;You called this URL via %(method)s, but the URL doesn&#39;t end &quot;
+                &quot;in a slash and you have APPEND_SLASH set. Django can&#39;t &quot;
+                &quot;redirect to the slash URL while maintaining %(method)s data. &quot;
+                &quot;Change your form to point to %(url)s (note the trailing &quot;
+                &quot;slash), or set APPEND_SLASH=False in your Django settings.&quot; % {
+                    &#39;method&#39;: request.method,
+                    &#39;url&#39;: request.get_host() + new_path,
+                }
+            )
+        return new_path
+
+    def process_response(self, request, response):
+        # If the given URL is &quot;Not Found&quot;, then check if we should redirect to
+        # a path with a slash appended.
+        if response.status_code == 404:
+            if self.should_redirect_with_slash(request):
+                return self.response_redirect_class(self.get_full_path_with_slash(request))
+
+        if settings.USE_ETAGS and self.needs_etag(response):
+            warnings.warn(
+                &quot;The USE_ETAGS setting is deprecated in favor of &quot;
+                &quot;ConditionalGetMiddleware which sets the ETag regardless of &quot;
+                &quot;the setting. CommonMiddleware won&#39;t do ETag processing in &quot;
+                &quot;Django 2.1.&quot;,
+                RemovedInDjango21Warning
+            )
+            if not response.has_header(&#39;ETag&#39;):
+                set_response_etag(response)
+
+            if response.has_header(&#39;ETag&#39;):
+                return get_conditional_response(
+                    request,
+                    etag=response[&#39;ETag&#39;],
+                    response=response,
+                )
+        # Add the Content-Length header to non-streaming responses if not
+        # already set.
+        if not response.streaming and not response.has_header(&#39;Content-Length&#39;):
+            response[&#39;Content-Length&#39;] = str(len(response.content))
+
+        return response
+
+    def needs_etag(self, response):
+        &quot;&quot;&quot;Return True if an ETag header should be added to response.&quot;&quot;&quot;
+        cache_control_headers = cc_delim_re.split(response.get(&#39;Cache-Control&#39;, &#39;&#39;))
+        return all(header.lower() != &#39;no-store&#39; for header in cache_control_headers)</code></pre>
+<h3 id="gzip">GZip</h3>
+<p>内容压缩中间件</p>
+<p>用于减小响应体积，降低带宽压力，提高传输速度。</p>
+<p>该中间件必须位于其它所有需要读写响应体内容的中间件之前。</p>
+<p>如果存在下面情况之一，将不会压缩响应内容：</p>
+<ul>
+<li><p>内容少于200 bytes</p></li>
+<li><p>已经设置了 <code>Content-Encoding</code> 头部属性</p></li>
+<li><p>请求的 <code>Accept-Encoding</code> 头部属性未包含 <code>gzip</code>.</p></li>
+</ul>
+<p>可以使用 <code>gzip_page()</code>装饰器，为视图单独开启GZip压缩服务。</p>
+<h3 id="conditional-get">Conditional GET</h3>
+<p>有条件的GET访问中间件，很少使用。</p>
+<h3 id="locale">Locale</h3>
+<p>本地化中间件</p>
+<p>用于处理国际化和本地化，语言翻译。</p>
+<h3 id="message">Message</h3>
+<p>消息中间件</p>
+<p>基于cookie或者会话的消息功能，比较常用。</p>
+<h3 id="security">Security</h3>
+<p>安全中间件</p>
+<p><code>django.middleware.security.SecurityMiddleware</code>中间件为我们提供了一系列的网站安全保护功能。主要包括下列所示，可以单独开启或关闭：</p>
+<ul>
+<li><p><code>SECURE_BROWSER_XSS_FILTER</code></p></li>
+<li><p><code>SECURE_CONTENT_TYPE_NOSNIFF</code></p></li>
+<li><p><code>SECURE_HSTS_INCLUDE_SUBDOMAINS</code></p></li>
+<li><p><code>SECURE_HSTS_PRELOAD</code></p></li>
+<li><p><code>SECURE_HSTS_SECONDS</code></p></li>
+<li><p><code>SECURE_REDIRECT_EXEMPT</code></p></li>
+<li><p><code>SECURE_SSL_HOST</code></p></li>
+<li><p><code>SECURE_SSL_REDIRECT</code></p></li>
+</ul>
+<h3 id="session">Session</h3>
+<p>会话中间件，非常常用。</p>
+<h3 id="site">Site</h3>
+<p>站点框架。</p>
+<p>这是一个很有用，但又被忽视的功能。</p>
+<p>它可以让你的Django具备多站点支持的功能。</p>
+<p>通过增加一个<code>site</code>属性，区分当前request请求访问的对应站点。</p>
+<p>无需多个IP或域名，无需开启多个服务器，只需要一个site属性，就能搞定多站点服务。</p>
+<h3 id="authentication">Authentication</h3>
+<p>认证框架</p>
+<p>Django最主要的中间件之一，提供用户认证服务。</p>
+<h3 id="csrf-protection">CSRF protection</h3>
+<p>提供CSRF防御机制的中间件</p>
+<h3 id="x-frame-options"><code>X-Frame-Options</code></h3>
+<p>点击劫持防御中间件</p>
+<h2 id="四自定义中间件">四、自定义中间件</h2>
+<p>有时候，为了实现一些特定的需求，我们可能需要编写自己的中间件。</p>
+<p><strong>在编写方式上，需要注意的是，当前Django版本2.2，存在两种编写的方式。一种是Django当前官网上提供的例子，一种是老版本的方式。</strong>本质上，两种方式其实是一样的。</p>
+<p>我们先看一下传统的，也是技术文章最多，目前使用最多的方式。</p>
+<h3 id="传统的方法">传统的方法</h3>
+<h4 id="五大钩子函数">五大钩子函数</h4>
+<p>传统方式自定义中间件其实就是在编写五大钩子函数：</p>
+<ul>
+<li><p>process_request(self,request)</p></li>
+<li><p>process_response(self, request, response)</p></li>
+<li><p>process_view(self, request, view_func, view_args, view_kwargs)</p></li>
+<li><p>process_exception(self, request, exception)</p></li>
+<li><p>process_template_response(self,request,response)</p></li>
+</ul>
+<p>可以实现其中的任意一个或多个！</p>
+<table>
+<thead>
+<tr class="header">
+<th>钩子函数</th>
+<th>执行时机</th>
+<th>执行顺序</th>
+<th>返回值</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>process_request</td>
+<td>请求刚到来，执行视图之前</td>
+<td>配置列表的正序</td>
+<td>None或者HttpResponse对象</td>
+</tr>
+<tr class="even">
+<td>process_response</td>
+<td>视图执行完毕，返回响应时</td>
+<td>逆序</td>
+<td>HttpResponse对象</td>
+</tr>
+<tr class="odd">
+<td>process_view</td>
+<td>process_request之后，路由转发到视图，执行视图之前</td>
+<td>正序</td>
+<td>None或者HttpResponse对象</td>
+</tr>
+<tr class="even">
+<td>process_exception</td>
+<td>视图执行中发生异常时</td>
+<td>逆序</td>
+<td>None或者HttpResponse对象</td>
+</tr>
+<tr class="odd">
+<td>process_template_response</td>
+<td>视图刚执行完毕，process_response之前</td>
+<td>逆序</td>
+<td>实现了render方法的响应对象</td>
+</tr>
+</tbody>
+</table>
+<h5 id="process_request"><code>process_request()</code></h5>
+<p>签名：<code>process_request(request)</code></p>
+<p>最主要的钩子！</p>
+<p>只有一个参数，也就是request请求内容，和视图函数中的request是一样的。所有的中间件都是同样的request，不会发生变化。它的返回值可以是None也可以是HttpResponse对象。返回None的话，表示一切正常，继续走流程，交给下一个中间件处理。返回HttpResponse对象，则发生短路，不继续执行后面的中间件，也不执行视图函数，而将响应内容返回给浏览器。</p>
+<h5 id="process_response"><code>process_response()</code></h5>
+<p>签名：<code>process_response(request, response)</code></p>
+<p>最主要的钩子！</p>
+<p>有两个参数，request和response。request是请求内容，response是视图函数返回的HttpResponse对象。该方法的返回值必须是一个HttpResponse对象，不能是None。</p>
+<p>process_response()方法在视图函数执行完毕之后执行，并且按配置顺序的逆序执行。</p>
+<h5 id="process_view"><code>process_view()</code></h5>
+<p>签名：<code>process_view(request, view_func, view_args, view_kwargs)</code></p>
+<ul>
+<li><p><code>request</code> ： <code>HttpRequest</code> 对象。</p></li>
+<li><p><code>view_func</code> ：真正的业务逻辑视图函数（不是函数的字符串名称）。</p></li>
+<li><p><code>view_args</code> ：位置参数列表</p></li>
+<li><p><code>view_kwargs</code> ：关键字参数字典</p></li>
+</ul>
+<p>请务必牢记：<strong><code>process_view()</code> 在Django调用真正的业务视图之前被执行，并且以正序执行</strong>。当process_request()正常执行完毕后，会进入urlconf路由阶段，并查找对应的视图，在执行视图函数之前，会先执行<code>process_view()</code> 中间件钩子。</p>
+<p>这个方法必须返回<code>None</code> 或者一个 <code>HttpResponse</code> 对象。如果返回的是None，Django将继续处理当前请求，执行其它的 <code>process_view()</code> 中间件钩子，最后执行对应的视图。如果返回的是一个 <code>HttpResponse</code> 对象，Django不会调用业务视图，而是执行响应中间件，并返回结果。</p>
+<h5 id="process_exception"><code>process_exception()</code></h5>
+<p>签名：<code>process_exception(request, exception)</code></p>
+<ul>
+<li><p><code>request</code>：<code>HttpRequest</code>对象</p></li>
+<li><p><code>exception</code>：视图函数引发的具体异常对象</p></li>
+</ul>
+<p>当一个视图在执行过程中引发了异常，Django将自动调用中间件的 <code>process_exception()</code>方法。 <code>process_exception()</code> 要么返回一个 <code>None</code> ，要么返回一个 <code>HttpResponse</code> 对象。如果返回的是<code>HttpResponse</code>对象 ，模板响应和响应中间件将被调用 ，否则进行正常的异常处理流程。</p>
+<p>同样的，此时也是以逆序的方式调用每个中间件的 <code>process_exception</code>方法，以短路的机制。</p>
+<h5 id="process_template_response"><code>process_template_response()</code></h5>
+<p>签名：<code>process_template_response(request, response)</code></p>
+<p><code>request</code>：<code>HttpRequest</code> 对象</p>
+<p><code>response</code> ： <code>TemplateResponse</code> 对象</p>
+<p><code>process_template_response()</code> 方法在业务视图执行完毕后调用。</p>
+<p>正常情况下一个视图执行完毕，会渲染一个模板，作为响应返回给用户。使用这个钩子方法，你可以重新处理渲染模板的过程，添加你需要的业务逻辑。</p>
+<p>对于 <code>process_template_response()</code>方法，也是采用逆序的方式进行执行的。</p>
+<h4 id="钩子方法执行流程">钩子方法执行流程</h4>
+<p>（注：所有图片来自网络，侵删！）</p>
+<p>一个理想状态下的中间件执行过程，可能只有<code>process_request()</code>和<code>process_response()</code>方法，其流程如下：</p>
+<p><img src="./images/Django2.2中间件详解0.png" /></p>
+<p><strong>一旦任何一个中间件返回了一个HttpResponse对象，立刻进入响应流程！要注意，未被执行的中间件，其响应钩子方法也不会被执行，这是一个短路，或者说剥洋葱的过程。</strong></p>
+<p>如果有<code>process_view</code>方法的介入，那么会变成下面的样子：</p>
+<p><img src="./images/Django2.2中间件详解1.png" /></p>
+<p>总的执行流程和机制如下图所示：</p>
+<p><img src="./images/Django2.2中间件详解2.png" /></p>
+<p>仔细研究一下下面的执行流程，能够加深你对中间件的理解。</p>
+<p><img src="./images/Django2.2中间件详解3.png" /></p>
+<h4 id="实例演示">实例演示</h4>
+<p>介绍完了理论，下面通过实际的例子来演示一下。</p>
+<p>要注意，之所以被称为传统的方法，是因为这里要导入一个将来会被废弃的父类，也就是：</p>
+<blockquote>
+<p>from django.utils.deprecation import MiddlewareMixin</p>
+</blockquote>
+<p><code>deprecation</code>是废弃、贬低、折旧、反对的意思，也就是说，这个<code>MiddlewareMixin</code>类将来应该会被删除！</p>
+<p>我们看一下<code>MiddlewareMixin</code>的源码：</p>
+<pre class="python"><code>class MiddlewareMixin:
+    def __init__(self, get_response=None):
+        self.get_response = get_response
+        super().__init__()
+
+    def __call__(self, request):
+        response = None
+        if hasattr(self, &#39;process_request&#39;):
+            response = self.process_request(request)
+        if not response:
+            response = self.get_response(request)
+        if hasattr(self, &#39;process_response&#39;):
+            response = self.process_response(request, response)
+        return response</code></pre>
+<p>这个类并没有自己定义五大钩子方法，而是定义了<code>__call__</code>方法，通过hasattr的反射，寻找<code>process_request</code>等钩子函数是否存在，如果存在就执行。它的本质和后面要介绍的Django官网提供的例子，也就是新的写法是一样的！</p>
+<p>现在，假设我们有一个app叫做midware，在其中创建一个middleware.py模块，写入下面的代码：</p>
+<pre class="python"><code>from django.utils.deprecation import MiddlewareMixin
+
+
+class Md1(MiddlewareMixin):
+
+    def process_request(self,request):
+        print(&quot;Md1处理请求&quot;)
+
+    def process_response(self,request,response):
+        print(&quot;Md1返回响应&quot;)
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+
+        print(&quot;Md1在执行%s视图前&quot; %view_func.__name__)
+
+    def process_exception(self,request,exception):
+        print(&quot;Md1处理视图异常...&quot;)
+
+
+
+class Md2(MiddlewareMixin):
+
+    def process_request(self,request):
+        print(&quot;Md2处理请求&quot;)
+
+    def process_response(self,request,response):
+        print(&quot;Md2返回响应&quot;)
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+
+        print(&quot;Md2在执行%s视图前&quot; %view_func.__name__)
+
+    def process_exception(self,request,exception):
+        print(&quot;Md2处理视图异常...&quot;)</code></pre>
+<p>然后，我们就可以在setting.py中配置这两个自定义的中间件了：</p>
+<pre><code><code>MIDDLEWARE = [
+    &#39;django.middleware.security.SecurityMiddleware&#39;,
+    &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;,
+    &#39;django.middleware.common.CommonMiddleware&#39;,
+    &#39;django.middleware.csrf.CsrfViewMiddleware&#39;,
+    &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;,
+    &#39;django.contrib.messages.middleware.MessageMiddleware&#39;,
+    &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;,
+    &#39;midware.middleware.Md1&#39;,
+    &#39;midware.middleware.Md2&#39;,
+]</code></pre>
+<p>在midware/views.py中创建一个简单的视图：</p>
+<pre class="python"><code>from django.shortcuts import render, HttpResponse
+
+
+def mid_test(request):
+    print(&#39;执行视图mid_test&#39;)
+    # raise
+    return HttpResponse(&#39;200,ok&#39;)</code></pre>
+<p>其中的raise可以用来测试process_exception()钩子。</p>
+<p>编写一条urlconf，用来测试视图，比如：</p>
+<pre><code><code>from midware import views as mid_views
+
+urlpatterns = [
+    path(&#39;midtest/&#39;, mid_views.mid_test),
+]</code></pre>
+<p>重启服务器，访问<code>...../midtest/</code>，可以在控制台看到如下的信息：</p>
+<pre><code><code>Md1处理请求
+Md2处理请求
+Md1在执行mid_test视图前
+Md2在执行mid_test视图前
+执行视图mid_test
+Md2返回响应
+Md1返回响应</code></pre>
+<h3 id="django官方方法">Django官方方法</h3>
+<p>在Django的官方文档中（当前2.2），我们可以看到一种完全不同的编写方式。</p>
+<p><strong>这种编写方式省去了<code>process_request()</code>和<code>process_response()</code>方法的编写，将它们直接集成在一起了。</strong></p>
+<p><strong>这种方式是官方推荐的方式！</strong></p>
+<p>中间件本质上是一个可调用的对象（函数、方法、类），它接受一个请求（request），并返回一个响应（response）或者None，就像视图一样。其初始化参数是一个名为<code>get_response</code>的可调用对象。</p>
+<p>中间件可以被写成下面这样的函数（下面的语法，本质上是一个Python装饰器，不推荐这种写法）：</p>
+<pre class="python"><code>def simple_middleware(get_response):
+    # 配置和初始化
+
+    def middleware(request):
+        
+        # 在这里编写具体业务视图和随后的中间件被调用之前需要执行的代码
+
+        response = get_response(request)
+
+        # 在这里编写视图调用后需要执行的代码
+        
+        return response
+
+    return middleware</code></pre>
+<p>或者写成一个类（真.推荐形式），这个类的实例是可调用的，如下所示：</p>
+<pre class="python"><code>class SimpleMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+         # 配置和初始化
+
+    def __call__(self, request):
+        
+        # 在这里编写视图和后面的中间件被调用之前需要执行的代码
+        # 这里其实就是旧的process_request()方法的代码
+
+        response = self.get_response(request)
+
+        # 在这里编写视图调用后需要执行的代码
+        # 这里其实就是旧的process_response()方法的代码
+
+        return response</code></pre>
+<p>（是不是感觉和前面的<code>MiddlewareMixin</code>类很像？）</p>
+<p>Django 提供的 <code>get_response</code> 方法可能是一个实际视图（如果当前中间件是最后列出的中间件），或者是列表中的下一个中间件。我们不需要知道或关心它到底是什么，它只是代表了下一步要进行的操作。</p>
+<p>两个注意事项：</p>
+<ul>
+<li><p>Django仅使用 <code>get_response</code> 参数初始化中间件，因此不能为 <code>__init__()</code> 添加其他参数。</p></li>
+<li><p>与每次请求都会调用 <code>__call__()</code> 方法不同，当 Web 服务器启动后，<code>__init__()</code> 只被调用<em>一次</em>。</p></li>
+</ul>
+<h4 id="实例演示-1">实例演示</h4>
+<p>我们只需要把前面的Md1和Md2两个中间件类修改成下面的代码就可以了：</p>
+<pre class="python"><code>class Md1:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+
+        print(&quot;Md1处理请求&quot;)
+
+        response = self.get_response(request)
+
+        print(&quot;Md1返回响应&quot;)
+
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+
+        print(&quot;Md1在执行%s视图前&quot; %view_func.__name__)
+
+    def process_exception(self,request,exception):
+        print(&quot;Md1处理视图异常...&quot;)
+
+
+class Md2:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        print(&quot;Md2处理请求&quot;)
+
+        response = self.get_response(request)
+
+        print(&quot;Md2返回响应&quot;)
+
+        return response
+
+    def process_view(self, request, view_func, view_args, view_kwargs):
+        print(&quot;Md2在执行%s视图前&quot; % view_func.__name__)
+
+    def process_exception(self, request, exception):
+        print(&quot;Md2处理视图异常...&quot;)</code></pre>
+<p>可以看到，我们不再需要继承<code>MiddlewareMixin</code>类。</p>
+<p>实际执行结果是一样的。</p>
+<h2 id="应用实例一ip拦截">应用实例一：IP拦截</h2>
+<p>如果我们想限制某些IP对服务器的访问，可以在settings.py中添加一个BLACKLIST（全大写）列表，将被限制的IP地址写入其中。</p>
+<p>然后，我们就可以编写下面的中间件了：</p>
+<pre><code><code>from django.http import HttpResponseForbidden
+from django.conf import settings
+
+class BlackListMiddleware():
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+
+        if request.META[&#39;REMOTE_ADDR&#39;] in getattr(settings, &quot;BLACKLIST&quot;, []):
+            return HttpResponseForbidden(&#39;&lt;h1&gt;该IP地址被限制访问！&lt;/h1&gt;&#39;)
+
+        response = self.get_response(request)
+
+        return response</code></pre>
+<p>具体的中间件注册、视图、url就不再赘述了。(欢迎大家访问我的官网liujiangblog.com，更多精彩内容)</p>
+<h2 id="应用实例二debug页面">应用实例二：DEBUG页面</h2>
+<p><strong>网站上线正式运行后，我们会将DEBUG改为 False，这样更安全。但是发生服务器5xx系列错误时，管理员却不能看到错误详情，调试很不方便。有没有办法比较方便地解决这个问题呢？</strong></p>
+<ul>
+<li><p>普通访问者看到的是500错误页面</p></li>
+<li><p>管理员看到的是错误详情Debug页面</p></li>
+</ul>
+<p>利用中间件就可以做到！代码如下：</p>
+<pre><code><code>import sys
+from django.views.debug import technical_500_response
+from django.conf import settings
+
+
+class DebugMiddleware():
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+
+        response = self.get_response(request)
+
+        return response
+
+    def process_exception(self, request, exception):
+        # 如果是管理员，则返回一个特殊的响应对象，也就是Debug页面
+        # 如果是普通用户，则返回None，交给默认的流程处理
+        if request.user.is_superuser or request.META.get(&#39;REMOTE_ADDR&#39;) in settings.ADMIN_IP:
+            return technical_500_response(request, *sys.exc_info())</code></pre>
+<p>这里通过if判断，当前登录的用户是否超级管理员，或者当前用户的IP地址是否在管理员IP地址列表中。符合两者之一，即判断当前用户有权限查看Debug页面。</p>
+<p>接下来注册中间件，然后在测试视图中添加一行raise。再修改settings.py，将Debug设为False，提供<code>ALLOWED_HOSTS = [&quot;*&quot;]</code>，设置比如<code>ADMIN_IP = ['192.168.0.100']</code>，然后启动服务器<code>0.0.0.0:8000</code>，从不同的局域网IP来测试这个中间件。</p>
+<p>正常情况下，管理员应该看到类似下面的Debug页面：</p>
+<pre><code><code>RuntimeError at /midtest/
+No active exception to reraise
+Request Method: GET
+Request URL:    http://192.168.0.100:8000/midtest/
+Django Version: 2.0.7
+Exception Type: RuntimeError
+Exception Value:    
+No active exception to reraise
+.....</code></pre>
+<p>而普通用户只能看到：</p>
+<blockquote>
+<p>A server error occurred. Please contact the administrator.</p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

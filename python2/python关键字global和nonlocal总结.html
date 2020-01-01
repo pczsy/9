@@ -1,0 +1,107 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python关键字global和nonlocal总结' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python关键字global和nonlocal总结</center></div><div class='banquan'>原文出处:本文由博客园博主BRYANT_2019提供。<br/>
+原文连接:https://www.cnblogs.com/bryant24/p/11437392.html</div><br>
+    <ul>
+<li>函数中使用全局变量</li>
+</ul>
+<pre><code><code>a = 100
+b = 200
+def func():
+    
+    def sub():
+            return b
+
+    return a + b + sub()
+</code></pre>
+<pre><code><code>执行fun()后返回值为:500
+a, b使用的是全局变量的值。</code></pre>
+<ul>
+<li>函数中覆盖全局变量</li>
+</ul>
+<pre><code><code>a = 100
+b = 200
+def func():
+    a = 10
+    b = 20    
+    def sub():
+            return b
+
+    return a + b + sub()
+</code></pre>
+<pre><code><code>执行fun()后返回值为:50
+a, b使用的是局部变量的值。</code></pre>
+<ul>
+<li>函数中修改改全局变量</li>
+</ul>
+<pre><code><code>a = 100
+b = 200
+def func():
+    global a
+    b = 20
+
+    def sub():
+        nonlocal b
+        b = 10
+
+    sub()
+    return a + b</code></pre>
+<pre><code><code>执行fun()后返回值为:110
+a使用的是全局变量a=100的值, b使用的是函数func修改后b的值10。</code></pre>
+<ul>
+<li>另一个例子</li>
+</ul>
+<pre><code><code>def scope_test():
+    def do_local():
+        spam = &quot;local spam&quot;
+
+    def do_nonlocal():
+        nonlocal spam
+        spam = &quot;nonlocal spam&quot;
+
+    def do_global():
+        global spam
+        spam = &quot;global spam&quot;
+
+    spam = &quot;test spam&quot;
+    do_local()
+    print(&quot;After local assignment:&quot;, spam)
+    do_nonlocal()
+    print(&quot;After nonlocal assignment:&quot;, spam)
+    do_global()
+    print(&quot;After global assignment:&quot;, spam)
+
+scope_test()
+print(&quot;In global scope:&quot;, spam)</code></pre>
+<p>结果：<br />
+After local assignment: test spam<br />
+After nonlocal assignment: nonlocal spam<br />
+After global assignment: nonlocal spam<br />
+In global scope: global spam</p>
+<ul>
+<li>总结<br />
+函数中global关键字用于申明变量为全局变量，在模块中定义的变量默认自动为全局变量。<br />
+闭包函数中使用nonlocal关键字申明变量为外层函数的变量。</li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,682 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python — 函数基础知识(二)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python — 函数基础知识(二)</center></div><div class='banquan'>原文出处:本文由博客园博主一直努力的小羊提供。<br/>
+原文连接:https://www.cnblogs.com/yangjie0906/p/11215799.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#返回值">1 返回值</a></li>
+        <li><a href="#作用域">2 作用域</a></li>
+        <li><a href="#函数小高级">3 函数小高级</a></li>
+        <li><a href="#函数中高级">4 函数中高级</a></li>
+        </ul>
+    </div>
+</div>
+<h3 id="返回值">1 返回值</h3>
+<pre><code><code>def func(arg):
+    # ....
+    return 9 # 返回值为9 默认：return None
+
+val = func(&#39;adsfadsf&#39;)</code></pre>
+<pre><code><code># 1. 让用户输入一段字符串，计算字符串中有多少A字符的个数。有多少个就在文件a.txt中写多少个“李邵奇”。
+
+def get_char_count(data):
+    sum_counter = 0
+    for i in data:
+        if i == &#39;A&#39;:
+            sum_counter += 1
+            
+    return sum_counter
+
+def write_file(line):
+    if len(line) == 0:
+        return False  # 函数执行过程中，一旦遇到return，则停止函数的执行。
+    with open(&#39;a.txt&#39;,mode=&#39;w&#39;,encoding=&#39;utf-8&#39;) as f:
+        f.write(line)
+    return True 
+
+content = input(&#39;请输入:&#39;)
+counter = get_char_count(content)
+write_data = &quot;李邵奇&quot; * counter 
+status = write_file(write_data)
+if status:
+    print(&#39;写入成功&#39;)
+else:
+    print(&#39;写入失败&#39;)</code></pre>
+<p>函数没有返回值时，默认返回None。</p>
+<p>函数内部执行过程中遇到return就终止。</p>
+<pre><code><code>def func1():
+    return &quot;完成&quot; # 函数每次执行到此，就返回；所以下面代码永远不执行。
+    for i in range(10):
+        print(i)
+func1()               
+
+
+def func2():
+    for i in range(10):
+        print(i)
+        return &quot;完成&quot;
+    print(666)
+func2()        # 只打印0</code></pre>
+<p>return可以返回任意值</p>
+<p>特殊情况：return返回多个值时，返回的是元组，与返回值是元组时是一样的</p>
+<pre><code><code>def func():
+    return (1,2,3)
+
+v = func()
+print(v)
+
+# 特殊:返回元组
+def func():
+    return 5,8,&quot;alex&quot;
+
+v = func()
+print(v)</code></pre>
+<p>return的作用：a. 返回值 b.终止函数的执行</p>
+<p>练习题</p>
+<pre><code><code># 1. 写函数，计算一个列表中有多少个数字，打印： 列表中有%s个数字。
+#    提示：type(&#39;x&#39;) == int 判断是否是数字。
+
+# 方式一：
+def get_list_counter1(data_list):
+    count = 0
+    for item in data_list:
+        if type(item) == int:
+            count += 1
+    msg = &quot;列表中有%s个数字&quot; %(count,)
+    print(msg)
+    
+get_list_counter1([1,22,3,&#39;alex&#39;,8])
+
+# 方式二：
+def get_list_counter2(data_list):
+    count = 0
+    for item in data_list:
+        if type(item) == int:
+            count += 1
+    return count
+    
+v = get_list_counter1([1,22,3,&#39;alex&#39;,8])
+msg = &quot;列表中有%s个数字&quot; %(v,)
+print(msg)</code></pre>
+<pre><code><code># 2. 写函数，计算一个列表中偶数索引位置的数据构造成另外一个列表，并返回。
+# 方式一：
+def get_data_list1(arg):
+    v = arg[::2]
+    return v
+
+data = get_data_list1([11,22,33,44,55,66])
+
+# 方式二：
+def get_data_list2(arg):
+    v = []
+    for i in range(0,len(arg)):
+        if i % 2 == 0:
+            v.append(arg[i])
+    return v
+
+data = get_data_list2([11,22,33,44,55,66])</code></pre>
+<pre><code><code># 3. 读取文件，将文件的内容构造成指定格式的数据，并返回。
+&quot;&quot;&quot;
+a.log文件
+    alex|123|18
+    eric|uiuf|19
+    ...
+目标结构：
+a.  [&quot;alex|123|18&quot;,&quot;eric|uiuf|19&quot;] 并返回。
+b. [[&#39;alex&#39;,&#39;123&#39;,&#39;18&#39;],[&#39;eric&#39;,&#39;uiuf&#39;,&#39;19&#39;]]
+c. [
+    {&#39;name&#39;:&#39;alex&#39;,&#39;pwd&#39;:&#39;123&#39;,&#39;age&#39;:&#39;18&#39;},
+    {&#39;name&#39;:&#39;eric&#39;,&#39;pwd&#39;:&#39;uiuf&#39;,&#39;age&#39;:&#39;19&#39;},
+]
+&quot;&quot;&quot;
+
+with open(&#39;a.log.txt&#39;,mode = &#39;r&#39;,encoding = &#39;utf-8&#39;) as f:
+    data = f.read()
+    print(data)
+    def get_file(a):
+        date1 = []
+        for i in a.split(&#39;\n&#39;):
+            date1.append(i)
+        return date1
+    v1 = get_file(data)
+    print(v1)
+
+    def get_file1(b):
+        date2 = []
+        d = []
+        for i1 in b.split(&#39;\n&#39;):
+            i1 = i1.split(&#39;|&#39;)
+            d.append(i1)
+            date2 += d
+        return date2
+    v2 = get_file1(data)
+    print(v2)
+
+    def get_file2(c):
+        date3 = []
+        e = {}
+        for i2 in c.split(&#39;\n&#39;):
+            i2 = i2.split(&#39;|&#39;)
+            e[&#39;name&#39;] = i2[0]
+            e[&#39;pwd&#39;] = i2[1]
+            e[&#39;age&#39;] = i2[2]
+            date3.append(e)
+        return date3
+    v3 = get_file2(data)
+    print(v3)</code></pre>
+<ol>
+<li>数据类型中的方法到底有没有返回值：</li>
+</ol>
+<ul>
+<li><p>无返回值</p>
+<pre><code><code>v = [1,2,3,4]
+v.append(55)   # 无返回值时不用写return了</code></pre>
+<p>list : append / insert / remove / clear / extend / reverse</p>
+<p>dict : update</p>
+<p>set : add / discard / update</p></li>
+<li><p>仅有返回值</p>
+<pre><code><code>v = &#39;ddff2dd554cvc&#39;
+result = &#39;-&#39;.join(v)
+return result
+
+v = {&#39;k1&#39;:12,&#39;k2&#39;:&#39;ased&#39;}
+result = v.get(&#39;k2&#39;)
+result = v.keys()</code></pre>
+<p>str : upper / lower / replace / isdecimal / strip / split / startswith / endswith / encode / format / join</p>
+<p>list : find / index</p>
+<p>dict : keys / values / items / get</p>
+<p>set : intersection / union / difference / symmitric_difference</p></li>
+<li><p>有返回值 + 修改数据</p>
+<p>pop</p>
+<pre><code><code>v = [11,22,33,44]
+result = v.pop(22)
+</code></pre></li>
+<li><p>常用需要记住的</p>
+<p>索引、切片都有返回值</p>
+<p>str : split 返回列表</p>
+<pre><code><code>  strip     返回字符串
+
+  replace    返回字符串
+
+  join      返回字符串</code></pre>
+<p>list : append 无</p>
+<pre><code><code>   insert        无
+
+   remove     无
+
+   pop          返回要删除的数据
+
+   find          返回索引的位置
+
+   index       返回索引的位置</code></pre>
+<p>dict : keys 获取所有的键</p>
+<pre><code><code>     values     获取所有的值
+
+     items       获取所有的键值对
+
+     get     索引存在：返回值 ，不存在：返回None</code></pre></li>
+</ul>
+<h3 id="作用域">2 作用域</h3>
+<p>在python文件中：</p>
+<ul>
+<li><p>py文件：全局作用域</p></li>
+<li><p>函数：局部作用域</p>
+<pre><code><code>a = 1
+def s1():
+    x1 = 666
+    print(x1)
+    print(a)
+    print(b)
+
+b = 2
+print(a)
+s1()
+a = 88888
+def s2():
+    print(a,b)
+    s1()
+
+s2()
+</code></pre></li>
+<li><p>每个作用域中的数据只有作用域自己可以调用，如果作用域中调用的数据没有，可以调用全局作用域的</p>
+<p>全局作用域只能调用全局的</p>
+<p>在全局作用域中的函数可以互相调用（调用已经存在的），但不可以直接调用作用域中的作用域</p></li>
+</ul>
+<p>总结：</p>
+<ul>
+<li><p>1.一个函数就是一个作用域</p></li>
+<li><p>2.作用域中查找数据规则：优先在自己的作用域找数据，自己没有就去“父级”--&gt;“父级”--&gt;直到全局，全局没有就报错。 （作用域的嵌套）</p>
+<p>注意：父级作用域中的值到底是多少？</p>
+<pre><code><code>x = 10
+def func():
+    x = 9
+    print(x)
+
+func()</code></pre>
+<p>小练习</p>
+<pre><code><code># 示例一
+x = 10
+def func():
+    x = 9
+    print(x)
+    def x1():
+        x = 999
+        print(x)        
+func()
+
+# 示例二
+x = 10
+def func():
+    x = 9
+    print(x)
+    def x1():
+        x = 999
+        print(x)
+    x1()   
+func()
+
+# 示例三
+x = 10
+def func():
+    x = 9
+    print(x)
+    def x1():
+        x = 999
+        print(x)
+    print(x)
+    x1()
+func()
+
+# 示例四
+x = 10
+def func():
+    x = 8
+    print(x)
+    def x1():
+        x = 999
+        print(x)
+    x1()
+    print(x)
+func()
+
+# 示例五
+x = 10
+def func():
+    x = 8
+    print(x)
+    def x1():
+        print(x)
+    x1()
+    print(x)
+func()
+
+# 示例六
+x = 10
+def func():
+    x = 8
+    print(x)
+    def x1():
+        print(x)
+    x = 9
+    x1()
+    x = 10
+    print(x)
+func()
+
+# 示例七
+x = 10
+def func():
+    x = 8
+    print(x)
+    def x1():
+        print(x)    
+    x1()
+    x = 9
+    x1()
+    x = 10
+    print(x)
+
+func()</code></pre></li>
+<li><p>3.子作用域中只能只能找到父级中的值，默认无法重新为父级的变量进行赋值。</p>
+<ul>
+<li><p>不能进行赋值，只能对可变类型进行内部修改</p>
+<pre class="p"><code># #####################
+name = &#39;oldboy&#39;
+def func():
+    name = &#39;alex&#39; # 在自己作用域再创建一个这样的值。
+    print(name)
+func()
+print(name)
+
+
+# #####################
+name = [1,2,43]
+def func():
+    name.append(999)
+    print(name)
+func()
+print(name)</code></pre></li>
+<li><p>如果非要对全局的变量进行赋值需要加global(强制赋值)</p>
+<pre><code><code>#示例一
+name = &quot;老男孩“
+def func():
+    global name
+    name = &#39;alex&#39;
+func()
+print name
+
+# 示例二
+name = [&quot;老男孩&quot;,&#39;alex&#39;]
+def func():
+    global name
+    name = &#39;我&#39;
+func()
+print(name)
+
+# 示例三
+name = &quot;老男孩&quot;
+def func():
+    name = &#39;alex&#39;
+    def inner():
+        global name
+        name = 999
+    inner()
+    print(name)
+func()
+print(name)
+</code></pre></li>
+<li><p>对父级的变量赋值用nonlocal，先找到父级的变量再进行赋值 (强制赋值)</p>
+<pre><code><code>name = &quot;老男孩&quot;
+def func():
+    name = &#39;alex&#39;
+    def inner():
+        nonlocal name # 找到上一级的name
+        name = 999
+    inner()
+    print(name)
+func()
+print(name)</code></pre></li>
+</ul></li>
+</ul>
+<p>补充：全局变量必须全部要大写</p>
+<pre><code><code>USER_LIST = [11,22,3]
+
+def func():
+    name = &#39;asdf&#39;
+    USER_LIST.append(12)
+    USER_LIST.append(name)
+
+func()
+print(USER_LIST)</code></pre>
+<h3 id="函数小高级">3 函数小高级</h3>
+<ul>
+<li><ol>
+<li><p>函数名可以当作变量来使用</p>
+<pre><code><code>def func():
+    print(123)
+
+v1 = func  # func代表函数的地址
+
+func()
+v1（）   # v1、func的函数地址相同，执行调用的函数也相同</code></pre>
+<pre><code><code>def func():
+    print(123)
+
+func_list = [func, func, func]
+# func_list[0]()  a
+# func_list[1]()  b
+# func_list[2]()  c
+for item in func_list:   # a/b/c的简化形式
+    v = item()
+    print(v)</code></pre>
+<pre><code><code>def func():
+    print(123)
+
+def bar():
+    print(666)
+
+info = {&#39;k1&#39;: func, &#39;k2&#39;: bar}
+
+info[&#39;k1&#39;]()           # 函数也可以作为字典的值（也可以做为键，但是没有意义）
+info[&#39;k2&#39;]()</code></pre>
+<p>注意：函数是不可变的，可以做集合的元素，也可以作为字典的键 （但是做键没有太大意义）。</p>
+<pre><code><code>       集合中可以放多个重复的函数，但只执行一次。（因为集合的特性：不可重复的）</code></pre>
+<p>混淆你</p>
+<pre><code><code>def func():
+    return 123
+
+func_list1 = [func,func,func]
+func_list2 = [func(),func(),func()]
+
+print(func_list1)     # 打印的是func的函数地址
+print(func_list2)     # 打印的是func执行完返回的值
+
+info = {
+    &#39;k1&#39;:func,     # 函数的地址
+    &#39;k2&#39;:func(),   # 函数执行完返回的值
+}
+
+print(info)</code></pre></li>
+<li><p>函数也可以当作参数来进行传递</p>
+<pre><code><code>def func(arg):
+    print(arg)
+
+func(1)
+func([1,2,3,4])
+
+def show():
+    return 999
+func(show)      # 执行函数func，参数为show,show没有+（），表示show没有执行只是代表该函数的地址。</code></pre>
+<pre><code><code>def func(arg):
+    v1 = arg()
+    print(v1)
+
+def show():
+    print(666)
+
+func(show)</code></pre>
+<pre><code><code>def func(arg):
+    v1 = arg()
+    print(v1)
+
+def show():
+    print(666)
+
+result = func(show)
+print(result)</code></pre>
+<p>多个函数的调用</p>
+<pre><code><code>def func():
+    print(&#39;花费查询&#39;)
+
+def bar():
+    print(&#39;语音沟通&#39;)
+
+def base():
+    print(&#39;xxx&#39;)
+
+def show():
+    print(&#39;xxx&#39;)
+
+def test():
+    print(&#39;xxx&#39;)
+
+info = {
+    &#39;f1&#39;: func,
+    &#39;f2&#39;: bar,
+    &#39;f3&#39;:base,
+    &#39;f4&#39;:show,
+    &#39;f5&#39;:test
+}
+choice = input(&#39;请选择要选择功能：&#39;)
+function_name = info.get(choice)
+if function_name:
+    function_name()
+else:
+    print(&#39;输入错误&#39;)</code></pre></li>
+</ol></li>
+</ul>
+<p>总结：函数当作一个变量：参数传值 / 当作元素嵌套到字典、列表中</p>
+<h3 id="函数中高级">4 函数中高级</h3>
+<h4 id="函数可以做返回值">4.1 函数可以做返回值</h4>
+<pre><code><code># 示例一
+def func():
+    print(123)
+
+def bar():
+    return func
+
+v = bar()
+v()
+
+# 示例二
+name = &#39;oldboy&#39;
+def func():
+    print(name)
+    
+def bar():
+    return func
+
+v = bar()
+v()
+
+# 示例三
+def bar():
+    def inner():
+        print(123)
+    return inner
+v = bar()
+v()
+
+# 示例四
+name = &#39;oldboy&#39;
+def bar():
+    name = &#39;alex&#39;
+    def inner():
+        print(name)
+    return inner
+v = bar()
+v()
+
+# 示例五
+name = &#39;oldboy&#39;
+def bar(name):
+    def inner():
+        print(name)
+    return inner
+v1 = bar(&#39;alex&#39;) # { name=alex, inner }  # 闭包，为函数创建一块区域（内部变量供自己使用，存储的代码），为他以后执行提供数据。
+v2 = bar(&#39;eric&#39;) # { name=eric, inner }
+v1()
+v2()
+
+# 示例六
+name = &#39;alex&#39;
+def base():
+    print(name)
+
+def func():
+    name = &#39;eric&#39;
+    base()
+
+func() # {name=eric, }
+    
+# 示例七
+name = &#39;alex&#39;
+def func():
+    name = &#39;eric&#39;
+    def base():
+        print(name)
+    base()
+func()
+
+# 示例八
+name = &#39;alex&#39;
+def func():
+    name = &#39;eric&#39;
+    def base():
+        print(name)
+    return base 
+base = func()
+base()</code></pre>
+<p>注意：函数在何时被谁创建？</p>
+<pre><code><code>      函数是由谁创建的，执行函数就从哪里开始找</code></pre>
+<pre><code><code># 练习题一
+info = []
+
+def func():
+    print(item)
+    
+for item in range(10):
+    info.append(func)
+
+info[0]()
+
+# 练习题二
+info = []
+
+def func(i):
+    def inner():
+        print(i)
+    return inner
+
+for item in range(10):
+    info.append(func(item))
+
+info[0]()
+info[1]()
+info[4]()</code></pre>
+<h4 id="闭包">4.2 闭包</h4>
+<pre><code><code>def func(name):
+    def inner():
+        print(name)
+    return inner 
+
+v1 = func(&#39;alex&#39;)
+v1()
+v2 = func(&#39;eric&#39;)
+v2()</code></pre>
+<p>返回值——分析函数执行的内存。（闭包是内存其中的一种）</p>
+<pre><code><code># 并不是闭包
+def func(name)
+    def inner():
+        return 123
+    return inner
+# 是闭包需要满足两个条件：1.封装值   2.内层函数需要使用
+def func(name)
+    def inner():
+        print(name)
+        return 123
+    return inner</code></pre>
+<h4 id="高阶函数">4.3 高阶函数</h4>
+<ul>
+<li><p>把函数当作参数传递</p></li>
+<li><p>把函数当作返回值</p>
+<p>注意：对函数进行赋值</p></li>
+</ul>
+<h4 id="小总结">4.4 小总结</h4>
+<ul>
+<li>1.函数执行流程的分析（函数到底是由谁创建的？）</li>
+<li>2.闭包概念：为函数创建一块区域并为其维护自己的数据以后执行时方便调用。（应用场景：装饰器 / SQLAlchemy源码）</li>
+</ul>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

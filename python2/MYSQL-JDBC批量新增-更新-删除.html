@@ -1,0 +1,291 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修MYSQL-JDBC批量新增-更新-删除' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>MYSQL-JDBC批量新增-更新-删除</center></div><div class='banquan'>原文出处:本文由博客园博主一杯热咖啡AAA提供。<br/>
+原文连接:https://www.cnblogs.com/AdaiCoffee/p/12063731.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#概述">1 概述</a></li>
+        <li><a href="#开启mysql服务端日志">2 开启MYSQL服务端日志</a></li>
+        <li><a href="#深入mysqljdbc批量插入">3 深入MYSQL/JDBC批量插入</a><ul>
+        <li><a href="#从一个例子出发">3.1 从一个例子出发</a></li>
+        <li><a href="#jdbc的批量插入操作">3.2 JDBC的批量插入操作</a></li>
+        <li><a href="#两个常被忽略的问题">3.3 两个常被忽略的问题</a></li>
+        <li><a href="#误区">3.5 误区</a></li>
+        </ul></li>
+        <li><a href="#mysqljdbc批量更新">4 MYSQL/JDBC批量更新</a><ul>
+        <li><a href="#mysql不支持批量更新">4.1 MYSQL不支持批量更新</a></li>
+        <li><a href="#jdbc的批量更新">4.2 JDBC的批量更新</a></li>
+        <li><a href="#注意一个小问题">4.3 注意一个小问题</a></li>
+        </ul></li>
+        <li><a href="#mysqljdbc批量删除">5 MYSQL/JDBC批量删除</a></li>
+        <li><a href="#总结">6 总结</a></li>
+        </ul>
+    </div>
+</div>
+<h1 id="概述">1 概述</h1>
+<p>最近在极客时间买了几个专栏，<font color="red">MYSQL实战45讲</font>，<font color="red">SQL必知必会</font>，如果你想深入MYSQL的话，推荐你看MYSQL实战45讲，非常不错，并且一定要看留言区，留言区的质量非常高，丁奇老师太太太负责任了，我在极客时间买了不少课程，丁奇老师对大部分评论都进行了回答，这是在其他专栏中很少见的，文章的内容+留言区的问题+丁奇老师的解答都非常不错。这是目前为止我在极客时间买到的最好的课程。</p>
+<p>当然如果你想入门SQL，你可以看下SQL必知必会，该专栏比较简单，属于SQL入门课程。</p>
+<p>随着时代的变迁，我越发觉得<strong>数据</strong>变得越来越重要，无论是大数据、还是人工智能、物联网，本质上都是数据在起作用。大数据是涉及从大量数据中收集，存储，分析和获取的通用平台。人工智能和机器学习是两种更智能更有效的方式筛选数据和信息的技术。移动和物联网设备用于从客户，用户和受众收集数据。</p>
+<p>因此最近我一直在研究MYSQL和JDBC的高级用法，形成本篇博客，与大家一起分享。关于MYSQL和JDBC的简单用法和概述，大家可以参考其他博客，我就不重复造轮子了。</p>
+<p><br/></p>
+<h1 id="开启mysql服务端日志">2 开启MYSQL服务端日志</h1>
+<p>找到 my.ini 文件，我的电脑上是在 <code>C:\ProgramData\MySQL\MySQL Server 5.7</code>目录下</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除0.png" /></p>
+<p>然后重启MYSQL服务器，在my.ini同级的Data目录下，你就可以看到 该日志文件。</p>
+<p><br/></p>
+<h1 id="深入mysqljdbc批量插入">3 深入MYSQL/JDBC批量插入</h1>
+<p>在url后面一定写rewriteBatchedStatements=true，开启批处理。</p>
+<p>类似于：<code>jdbc:mysql://127.0.0.1:3306/aaa?characterEncoding=UTF8&amp;useUnicode=true&amp;rewriteBatchedStatements=true</code><br />
+<br/></p>
+<h2 id="从一个例子出发">3.1 从一个例子出发</h2>
+<p>MYSQL 插入 就两种形式</p>
+<ul>
+<li>insert into student('name') values('adai')</li>
+<li>insert into student('name') values('adai'),('hello'),('sky')</li>
+</ul>
+<p>对比一下插入效率，3000条数据，数据都是一样的。</p>
+<p>第一种：首先插入3000条数据，3000个insert，在navicat执行，耗时3.360s</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除1.png" /></p>
+<p>然后在服务端看日志，会发现mysql，是一条一条逐步insert的，总共服务端执行3000次insert</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除2.png" /></p>
+<p>第二种：插入3000条数据，一个insert，在navicat执行，耗时0.241秒</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除3.png" /></p>
+<p>然后看服务端日志，会发现mysql，是批量插入的，只有一个insert，多个values</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除4.png" /></p>
+<p>这应该非常容易理解，按照计算机理论知识，批量插入效率铁定比单条插入效率高。</p>
+<p><font color="red" size="5px">注意，如果批量插入中间出现错误，那么整个insert会失败，不会插入任何数据，及该条insert批量插入是一个事务操作，要么全部插入成功，要么全部都插入失败</font></p>
+<p><br/></p>
+<h2 id="jdbc的批量插入操作">3.2 JDBC的批量插入操作</h2>
+<p>由于SQL注入等问题，Statement已经用的很少了，JDBC我们主要讲<code>preparedStatement</code>的批量插入，核心代码如下所示：</p>
+<pre><code><code>       private static final String[] names = {&quot;刘德华&quot;, &quot;周杰伦&quot;, &quot;张三丰&quot;, &quot;诸葛亮&quot;, &quot;司马懿&quot;, &quot;呆头&quot;, &quot;张学友&quot;, &quot;爱德华&quot;, &quot;火星&quot;, &quot;太阳&quot;};
+    private static final Integer[] ages = {21, 31, 41, 51, 61, 71, 81, 91, 100, 101};
+    private static final Integer[] heights = {170, 171, 181, 182, 190, 168, 173, 175, 199, 220};
+    private static final Byte[] sexs = {0, 1};
+    private static final String[] address = {&quot;中国上海大连西路550号&quot;,
+            &quot;国北京市朝阳区大山子A东里小区23栋3单元7楼&quot;,
+            &quot;第五宇宙&quot;, &quot;第七宇宙恒星所在处&quot;, &quot;浪迹天涯&quot;, &quot;太阳背面&quot;, &quot;大海最低处&quot;, &quot;四姑凉山&quot;, &quot;秦岭&quot;, &quot;长城&quot;};
+
+    private static final Integer NUMBER = 100000;
+
+private static void prepareStatementBatch(Connection connection) throws SQLException {
+        String sql = &quot;insert into  student(`username`,`age`,`height`,`sex`,`address`,`create_time`,`update_time`) values(?,?,?,?,?,now(),null)&quot;;
+        PreparedStatement preparedStatement = connection.prepareStatement(sql);
+        long begin = System.currentTimeMillis();
+        for (int i = 0; i &lt; NUMBER; i++) {
+                String name = names[j] + i;
+                int age = ages[j] + i;
+                int height = heights[j] + i;
+                Byte sex = sexs[0];
+                String addre = address[j] + i;
+                preparedStatement.setString(1, name);
+                preparedStatement.setInt(2, age);
+                preparedStatement.setInt(3, height);
+                preparedStatement.setByte(4, sex);
+                preparedStatement.setString(5, addre);
+                preparedStatement.addBatch();
+                if ((i + 1) % 500 == 0) {
+                    preparedStatement.executeBatch();
+                    preparedStatement.clearBatch();
+                }
+        }
+        // 执行剩下的
+        preparedStatement.executeBatch();
+        long end = System.currentTimeMillis();
+        System.out.println(&quot;prepareStatementBatch 消耗时间:&quot; + (end - begin));
+    }</code></pre>
+<p>打开mysql服务器日志：我们可以看到就两条 insert语句，后面跟了很多values...，从第一个例子可以看出，这样的执行效率非常高。</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除5.png" /></p>
+<p><br/></p>
+<h2 id="两个常被忽略的问题">3.3 两个常被忽略的问题</h2>
+<p>上面的代码中出现了</p>
+<pre><code><code>if ((i + 1) % 500 == 0) {
+      preparedStatement.executeBatch();
+      preparedStatement.clearBatch();
+}</code></pre>
+<p>我个人觉得有两个原因：</p>
+<pre><code><code>1. 防止内存溢出。
+2. MYSQL有一个max_packet_allowed参数，会限制Server接受的数据包大小。有时候大的插入和更新会受 max_allowed_packet 参数限制，导致大数据写入或者更新失败。</code></pre>
+<p>但是经过我的代码实验，只会出现第一种内存溢出的情况，而不会出现第二种max_packet_allowed超出的情况。</p>
+<p>因为MYSQL驱动在底层已经对max_packet_allowed进行了处理。 debug 源码 进行跟踪</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除6.png" /></p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除7.png" /></p>
+<p>并且在调用<code>preparedStatment.executeBatch()</code>方法后，不需要手动调用<code>preparedStatement.clearBatch()</code>，因为MYSQL驱动自己会在调用<code>executeBatch()</code>方法后，执行<code>clearBatch()</code></p>
+<pre><code><code>protected long[] executeBatchInternal() throws SQLException {
+        synchronized (checkClosed().getConnectionMutex()) {
+            ... ... ...                 
+
+            } finally {
+                this.statementExecuting.set(false);
+
+                clearBatch(); // clearBatch()在 finally 语句块中
+            }
+        }</code></pre>
+<p>总结一下，这里有两个常被忽略的问题：</p>
+<ul>
+<li><p>MYSQL的<code>prepareStatement.executeBatch()</code>方法底层会自动判断max_allowed_packet大小，然后对</p>
+<p>batch里面的集合数据分批传给MYSQL服务端，因此肯定不会报</p>
+<p><code>com.mysql.jdbc.PacketTooBigException: Packet for query is too large (5372027 &gt; 4194304)</code></p>
+<p>而<code>Mybatis</code>的批量插入不会对max_allowed_packet进行判断，因此当数据量大的时候，会报这个错误</p></li>
+<li><p><code>preparedStatment.executeBatch()</code>完后，会自动调用<code>preparedStatement.clearBatch()</code>方法，无需我们手动再进行调用。<br />
+<br/></p>
+<h2 id="mybatis批量插入操作">3.4 Mybatis批量插入操作</h2></li>
+</ul>
+<p>两种方式，数组、List。效果都是一样的，这里我用List进行演示，主要用到<code>Mybatis</code>中的<code>&lt;foreach&gt;</code></p>
+<p>标签</p>
+<pre class="xml"><code>&lt;insert id=&quot;insert&quot;&gt;
+    insert into student
+    (`username`,`age`,`height`,`sex`,`address`,`create_time`,`update_time`) values
+    &lt;foreach collection=&quot;studentList&quot; item=&quot;student&quot; index=&quot;index&quot; separator=&quot;,&quot;&gt;
+       (#{student.username},#{student.age},#{student.height},#{student.sex},#{student.address},now(),null)   
+     &lt;/foreach&gt;</code></pre>
+<p>查看后台MYSQL服务器日志：</p>
+<pre><code><code>2019-10-31T14:35:50.817807Z   141 Query insert into student(`username`,`age`,`height`,`sex`,`address`,`create_time`,`update_time`) values
+            (&#39;刘德华0&#39;,21,170,0,&#39;中国上海大连西路550号0&#39;,now(),null)
+         , 
+            (&#39;周杰伦0&#39;,31,171,0,&#39;国北京市朝阳区大山子A东里小区23栋3单元7楼0&#39;,now(),null)
+         , 
+            (&#39;张三丰0&#39;,41,181,0,&#39;第五宇宙0&#39;,now(),null)
+         , 
+            (&#39;诸葛亮0&#39;,51,182,0,&#39;第七宇宙恒星所在处0&#39;,now(),null)
+         , 
+            (&#39;司马懿0&#39;,61,190,0,&#39;浪迹天涯0&#39;,now(),null)
+         , 
+            (&#39;呆头0&#39;,71,168,0,&#39;太阳背面0&#39;,now(),null)
+         , 
+            (&#39;张学友0&#39;,81,173,0,&#39;大海最低处0&#39;,now(),null)
+         , 
+            (&#39;爱德华0&#39;,91,175,0,&#39;四姑凉山0&#39;,now(),null)
+         , 
+            (&#39;火星0&#39;,100,199,0,&#39;秦岭0&#39;,now(),null)
+         , 
+            (&#39;太阳0&#39;,101,220,0,&#39;长城0&#39;,now(),null)
+            ... ... ... ... ... ...
+            ... ... ... ... ... ...
+            ... ... ... ... ... ...</code></pre>
+<p>可以看到，<code>Mybatis</code>底层就是使用一个insert，多个value的插入操作。</p>
+<p>不过要特意留意，<code>Mybatis</code>的批量插入操作，不会像JDBC的<code>preparedStatement.execute()</code>一样，会自动判断MYSQL服务器的 max_allow_packet大小，然后进行分批传输。<code>Mybatis</code>会将所有的value拼接在一起，然后将这整个insert语句传给MYSQL服务器去执行。如果这整个<code>sql</code>语句超出了 max_allow_packet，那么错误将会产生。</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除8.png" /></p>
+<p>总结：</p>
+<p>不管是MYSQL、JDBC、Mybatis批量插入，底层都是一个 insert、多个values组合。<br />
+<br/></p>
+<h2 id="误区">3.5 误区</h2>
+<p>很多人将批量插入效率很高的原因，归结于客户端跟服务端交互变少了，因为客户端一次会“攒”很多value，然后再发给服务端，这是不准确的，批量插入效率很高的原因，主要是因为 insert ... value() ...value() ...value()这个SQL特性，这个sql特性省下的时间远远超过 客户端和MYSQL服务端的交互所省下的时间。<br />
+<br/></p>
+<h1 id="mysqljdbc批量更新">4 MYSQL/JDBC批量更新</h1>
+<p><br/></p>
+<h2 id="mysql不支持批量更新">4.1 MYSQL不支持批量更新</h2>
+<p>MYSQL是不支持批量更新的</p>
+<p>注意：这里的批量更新指的是</p>
+<pre class="mysql"><code>update student set username = &quot;adai&quot; where id = 1;
+update student set age = 22 where id = 3;
+update student set address= &#39;上海&#39; where id = 6;
+update student set username = ‘daitou’ and address= &#39;上海&#39; where id = 11;
+... ... ... ... ... ...
+... ... ... ... ... ...</code></pre>
+<p>类似于上面完全不同的update语句，MYSQL服务端只用执行一次，就能全部更新。</p>
+<p>但是我们可以利用一些sql技巧，来完成批量更新。但是也有很大的局限性，例如要写很多 CASE ... WHEN。</p>
+<pre class="mysql"><code>UPDATE table SET title = (CASE
+WHEN id = 1 THEN ‘Great Expectations’
+WHEN id = 2 THEN ‘War and Peace’
+...
+END)
+WHERE id IN (1,2,...)</code></pre>
+<p>在实际开发中如果遇到大批量更新，一般做法是 事务+单条更新</p>
+<pre class="mysql"><code>START TRANSACTION;
+UPDATE ...;
+UPDATE ...;
+UPDATE ...;
+UPDATE ...;
+COMMIT;</code></pre>
+<p><br/></p>
+<h2 id="jdbc的批量更新">4.2 JDBC的批量更新</h2>
+<p>既然在MYSQL中是不支持批量更新的，那么JDBC的 <code>preparedStatement.addBatch()</code> 和 <code>preparedStatement.executeBatch()</code> 又是如何执行的呢？</p>
+<p>经过代码实验：</p>
+<p>当sql是update的时候</p>
+<pre><code><code>for (...){
+    ...
+    ...
+    preparedStatement.addBatch()    
+}
+preparedStatement.executeBatch()</code></pre>
+<pre><code><code>for(...){
+    ...
+    ...
+    preparedStatement.executeUpdate() 
+}</code></pre>
+<p>更新15000行数据：</p>
+<p>没有使用批量更新 12372</p>
+<p>使用批量更新 12227<br />
+<br/></p>
+<p>更新50000行数据：</p>
+<p>没有使用批量更新 41295</p>
+<p>使用批量更新 39754<br />
+<br/></p>
+<p>更新100000行数据：</p>
+<p>没有使用批量更新 80820</p>
+<p>使用批量更新 78839<br />
+<br/></p>
+<p>更新300000行数据:</p>
+<p>没有使用批量更新 241400</p>
+<p>使用批量更新 230104</p>
+<p><br/></p>
+<p>更新500000行数据：</p>
+<p>没有使用批量更新 410912</p>
+<p>使用批量更新 398941<br />
+<br/></p>
+<p>查看MYSQL服务器日志：发现批量更新和单独更新的日志都是一样的</p>
+<pre><code><code>update student set ..... where id = ..;
+update student set ..... where id = ..;
+update student set ..... where id = ..;
+update student set ..... where id = ..;</code></pre>
+<p>可以看出，使用批量更新，会比单独更新快一些，这主要是因为客户端和服务端交互次数变少，所省下的时间开销。这也进一步证实了在 批量插入insert的时候，主要是insert ... value() ...value() ...value()这个sql特性大大的减少了时间花费。而不是像很多其他博客说的是因为客户端和服务端的交互次数减少。</p>
+<p><br/></p>
+<h2 id="注意一个小问题">4.3 注意一个小问题</h2>
+<p>在使用批量插入/更新的时候，如果已经将批量的sql传给了MYSQL服务器，那么即使停止了客户端程序，这些sql也会被执行。</p>
+<p><img src="./images/MYSQL-JDBC批量新增-更新-删除9.png" /></p>
+<p><br/></p>
+<h1 id="mysqljdbc批量删除">5 MYSQL/JDBC批量删除</h1>
+<p>无论是MYSQL还是JDBC，批量删除和批量更新一样。</p>
+<p><br/></p>
+<h1 id="总结">6 总结</h1>
+<p>可以看出 JDBC的 <code>preparedStatment.addBatch()</code>和<code>preparedStatment.executeBatch()</code>用在批量增加insert时，能够极高的提高效率，但是用在 update 和 delete时，能够提升部分效率。但是远远没有批量插入提升的多。</p>
+<p>没有特殊情况限制，我们在insert、update、delete的时候，建议开启事务，然后执行完毕，手动commit。</p>
+<p>SQL执行最快的方式如下：</p>
+<pre><code><code>connection.setAutoCommit(false);
+for(int i = 0; i &lt; NUMBER; i++){
+    ...
+    ...
+    preparedStatement.addBatch(); //NUMBER值不能太大，否则会内存溢出。
+}
+preparedStatement.executeBatch();
+connection.commit();</code></pre>
+<div style="font-size:18px;background-color:#E5EEE7">
+    作者：<font color="#551A8B" size="5px">一杯热咖啡AAA</font>
+    <br />
+    出处：<a href="https://www.cnblogs.com/AdaiCoffee/">https://www.cnblogs.com/AdaiCoffee/</a>
+    <br />
+    本文以学习、研究和分享为主，欢迎转载。如果文中有不妥或者错误的地方还望指出，以免误人子弟。如果你有更好的想法和意见，可以留言讨论，谢谢！
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

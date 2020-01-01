@@ -1,0 +1,100 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修【搞定面试官】try中有return，finally还会执行吗？' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>【搞定面试官】try中有return，finally还会执行吗？</center></div><div class='banquan'>原文出处:本文由博客园博主店小不二提供。<br/>
+原文连接:https://www.cnblogs.com/LoveBell/p/12007181.html</div><br>
+    <p>本篇文章我们主要探讨 一下如果<code>try {}</code>语句中有<code>return</code>，这种情况下<code>finally</code>语句还会执行吗？其实JVM规范是对这种情况有特殊规定的，那我就先上代码吧！</p>
+<pre><code><code>public class FinallyTest {
+    public int method() {
+        int x = 1;
+        try{
+            ++ x;
+            return x;
+        }catch(Exception e){
+
+        }finally{
+            ++ x;
+        }
+        return x;
+    }
+
+    public static void main(String[] args) {
+        FinallyTest t = new FinallyTest();
+        int y = t.method();
+        System.out.println(y);
+    }
+}</code></pre>
+<p>对于上述代码，我们有以下几个问题，来自测一下吧：</p>
+<ol>
+<li><p>如果在 try 语句块里使用 return 语句，那么 finally 语句块还会执行吗？</p></li>
+<li><p>如果执行，那么是怎样实现既执行 return 又执行 finally 的呢？</p></li>
+<li><p>上面的程序输出是什么？为什么？</p></li>
+</ol>
+<h1 id="finally-语句块还会执行吗">finally 语句块还会执行吗</h1>
+<p>对于该问题，答案是肯定的。<a href="https://docs.oracle.com/javase/tutorial/essential/exceptions/finally.html">Java官方文档</a>上是这么描述的:</p>
+<blockquote>
+<p>The <code>finally</code> block <em>always</em> executes when the <code>try</code> block exits.`</p>
+</blockquote>
+<p>我们看到描述词用的是always，即在<strong>try执行完成之后，finally是一定会执行的</strong>。这种特性可以让程序员避免在<code>try</code>语句中使用了<code>return</code>, <code>continue</code>或者 <code>break</code>关键字而忽略了关闭相关资源的操作。把清理相关资源放到<code>finally</code>语句块中一直是最佳实践。</p>
+<p>PS: 用到finally关闭资源的时候，给大家提个醒，应该尽量避免在<code>finally</code>语句块中出现运行时错误，可以适当添加判断语句以增加程序健壮性：</p>
+<pre><code><code>finally {
+    if (out != null) { 
+        System.out.println(&quot;Closing PrintWriter&quot;);
+        out.close(); // 不要在finally语句中直接调用close()
+    } else { 
+        System.out.println(&quot;PrintWriter not open&quot;);
+    } 
+}</code></pre>
+<h1 id="try-return-finally">try { return } finally{}?</h1>
+<p>我们知道了finally语句会执行，当我们在IDE上运行该程序的时候，会发现运行结果是2。那么为什么不是3呢？</p>
+<p>我们来debug一下：</p>
+<p>我们在下图可以看到，try中x值是2，且执行了try语句块中的<code>return x</code>语句。</p>
+<p><img src="./images/【搞定面试官】try中有return，finally还会执行吗？0.png" alt="try中变量值" /></p>
+<p>之后执行了finally语句，x重新赋值为3`。</p>
+<p><img src="./images/【搞定面试官】try中有return，finally还会执行吗？1.png" alt="finally中变量值" /></p>
+<p>try中返回了x=2, finally语句又重新设置了x=3，为什么返回给主程序的结果是2呢？</p>
+<p>原来<a href="http://docs.oracle.com/javase/specs/jvms/se7/html/jvms-4.html#jvms-4.10.2.5">JVM规范</a>里面明确说明了这种情况：</p>
+<pre><code><code>If the try clause executes a return, the compiled code does the following:
+
+1. Saves the return value (if any) in a local variable.
+2. Executes a jsr to the code for the finally clause.
+3. Upon return from the finally clause, returns the value saved in the local variable.</code></pre>
+<p>大意就是如果在try中return的情况下，先把try中将要return的值先存到一个本地变量中，即本例中的x=2将会被保存下来。接下来去执行finally语句，最后返回的是存在本地变量中的值，即返回x=2.</p>
+<p><a href="Notes:还有一点要注意的，如果你在finally里也用了return语句，比如return" class="uri">Notes:还有一点要注意的，如果你在finally里也用了return语句，比如return</a> ++x。那么程序返回值会是3。因为规范规定了，当try和finally里都有return时，会忽略try的return，而使用finally的return。</p>
+<h1 id="总结">总结</h1>
+<p>今天主要介绍了当try语句中有return的时候，其与finally语句的执行情况。我们的得到的结论有：</p>
+<ol>
+<li>try中有return, 会先将值暂存，无论finally语句中对该值做什么处理，最终返回的都是try语句中的暂存值。</li>
+<li><h2 id="当try与finally语句中均有return语句会忽略try中return">当try与finally语句中均有return语句，会忽略try中return。</h2>
+<blockquote>
+<p>本文由博客一文多发平台 <a href="https://openwrite.cn?from=article_bottom">OpenWrite</a> 发布！</p>
+</blockquote></li>
+</ol>
+<blockquote>
+<p>文章首发：<a href="https://zhuanlan.zhihu.com/lovebell" class="uri">https://zhuanlan.zhihu.com/lovebell</a></p>
+</blockquote>
+<blockquote>
+<p>个人公众号：技术Go</p>
+</blockquote>
+<p><strong>您的点赞与支持是作者持续更新的最大动力！</strong></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

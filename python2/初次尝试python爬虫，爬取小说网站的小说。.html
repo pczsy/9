@@ -1,0 +1,108 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修初次尝试python爬虫，爬取小说网站的小说。' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>初次尝试python爬虫，爬取小说网站的小说。</center></div><div class='banquan'>原文出处:本文由博客园博主木木597提供。<br/>
+原文连接:https://www.cnblogs.com/mumu597/p/11355787.html</div><br>
+    <h1><span style="font-size: 14pt;">本次是小阿鹏，第一次通过python爬虫去爬一个小说网站的小说。</span></h1>
+<p><span style="font-size: 14pt;">下面直接上菜。</span></p>
+<p><span style="font-size: 14pt;">　　<span style="font-size: 18px;">1.首先我需要导入相应的包，这里我采用了第三方模块的架包，<span style="font-size: 18px;">requests</span>。</span></span><span style="font-size: 18px;">requests是python实现的简单易用的HTTP库，使用起来比urllib简洁很多，因为是第三方库，所以使用前需要cmd安装。</span></p>
+<p><span style="font-size: 18px;">　　cmd安装方式，打开cmd，输入以下命令：</span></p>
+<p><span style="font-size: 18px;">　　　　　　　　　　　　　　　　　　　　<span style="font-size: 18px;">pip install requests</span></span></p>
+<p><span style="font-size: 18px;">　　2.添加相应的包后，我们需要一个小说链接去爬下这本小说也就是一个url。下面是我当时爬的小说url：http://www.shujy.com/5200/244309/<br /></span></p>
+<p><span style="font-size: 18px;">　　3.我们现在有了小说的链接，这时候就要模拟浏览器发送http的请求：　</span></p>
+<div class="cnblogs_Highlighter">
+<pre><code><span style="font-size: 18px;">response=requests.get(url)
+response.encoding='gbk'
+</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;　　<span style="font-size: 18px;">4.我们可以尝试获取目标小说的网页源码　</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;">html=response.text</span></pre>
+</div>
+<p>　　<span style="font-size: 18px;">我们把它打印出来看下：</span></p>
+<p><span style="font-size: 18px;">　　<img src="./images/初次尝试python爬虫，爬取小说网站的小说。0.png" alt="" /></span></p>
+<p>　　<span style="font-size: 18px;">有html基础的朋友应该对这些很熟悉。通过打印我们可以看见小说的名字，作者，以及小说章节的url。这时候我们就先通过HTML网页源码获取小说的名字：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;">title=re.findall(r<span style="color: #800000;">'</span><span style="color: #800000;">&lt;meta property="og:novel:book_name" content="(.*?)"/&gt;</span><span style="color: #800000;">'</span>,html)[0]</span></pre>
+</div>
+<p><span style="font-size: 18px;">　　从上面的代码我们可以看见是通过<strong>正则表达式</strong>去匹配的，对正则表达式有疑问的同学可以自行百度下。当然不同网站的具体小说名字可能会放在不同的标签里，需要我们打开网页源码去看看下。</span></p>
+<p><span style="font-size: 18px;">　　5.这时候我们也就新建一个文本文件来保存小说内容。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;">fb=open(<span style="color: #800000;">'</span><span style="color: #800000;">%s.txt</span><span style="color: #800000;">'</span>% title,<span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span>,encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>)</span></pre>
+</div>
+<p><span style="font-size: 18px;">　　这时候我们需要获取小说的章节目录对应的url，我们还是来观察下网页的源码。我们通过火狐浏览器的f12看下网页可发现：</span></p>
+<p><span style="font-size: 18px;"><img src="./images/初次尝试python爬虫，爬取小说网站的小说。1.png" alt="" /></span></p>
+<p>　　<span style="font-size: 18px;">小说的章节目标都在标签&lt;div id='list'&gt;里我们通过下面的代码获取对应的章节名和url。用一个list来存放章节信息。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;">dl=re.findall(r<span style="color: #800000;">'</span><span style="color: #800000;">&lt;div id="list"&gt;.*?&lt;/div&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">,html,re.S)[0]
+chapter_info_list</span>=re.findall(r<span style="color: #800000;">'</span><span style="color: #800000;">&lt;a href="(.*?)"&gt;(.*?)&lt;/a&gt;</span><span style="color: #800000;">'</span>,dl)</span></pre>
+</div>
+<p>&nbsp;　　<span style="font-size: 18px;">6.这个时候我们循环每一章节，分别下载，先把章节的链接，章节名提取出来。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;"><span style="color: #0000ff;">for</span> chapter_info <span style="color: #0000ff;">in</span><span style="color: #000000;"> chapter_info_list:
+    chapter_url,chapter_title</span>=<span style="color: #000000;">chapter_info
+    chapter_url</span>=<span style="color: #800000;">"</span><span style="color: #800000;">http://www.shujy.com/5200/244309/%s </span><span style="color: #800000;">"</span> %<span style="color: #000000;"> chapter_url
+    chapter_url</span>=chapter_url.replace(<span style="color: #800000;">'</span> <span style="color: #800000;">'</span>,<span style="color: #800000;">''</span>)</span></pre>
+</div>
+<p>　　<span style="font-size: 18px;">我们可以看见对章节的链接进行的拼接，因为我们可以看见直接提取出来的链接是这样的：</span></p>
+<p><span style="font-size: 18px;"><img src="./images/初次尝试python爬虫，爬取小说网站的小说。2.png" alt="" /></span></p>
+<p>　　<span style="font-size: 18px;">所以也就需要一个拼接的操作，取得完整的章节链接。</span></p>
+<p><span style="font-size: 18px;">　　这个时候来下载小说内容：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;">chapter_response=requests.get(chapter_url,headers=<span style="color: #000000;">headers)
+    chapter_response.encoding</span>=<span style="color: #800000;">'</span><span style="color: #800000;">gbk</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    chapter_html</span>=chapter_response.text</span></pre>
+</div>
+<p><span style="font-size: 18px;">我们先是获取到小说具体章节的页面。打开具体小说章节f12查看网页的源码：</span></p>
+<p><span style="font-size: 18px;"><img src="./images/初次尝试python爬虫，爬取小说网站的小说。3.png" alt="" /></span></p>
+<p>　　<span style="font-size: 18px;">可以清楚的看见小说的具体内容是在标签&lt;div id=content&gt;里，和获取小说章节一样我们采用正则表达式来取得小说的内容。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;">chapter_content=re.findall(r<span style="color: #800000;">'</span><span style="color: #800000;">&lt;div id="content"&gt;(.*?)&lt;/div&gt;</span><span style="color: #800000;">'</span>,chapter_html,re.S)[0]</span></pre>
+</div>
+<p><span style="font-size: 18px;">我们把获取到的小说的内容打印出来看看，</span></p>
+<p><img src="./images/初次尝试python爬虫，爬取小说网站的小说。4.png" alt="" /></p>
+<p><span style="font-size: 18px;">　　我们看见一些奇怪的字符&amp;nbsp，&lt;br/&gt;等，我们在实际的小说里没有这些东西，这里就需要我们处理数据。进行一些操作，也叫做数据的清洗。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;">    chapter_content=chapter_content.replace(<span style="color: #800000;">'</span><span style="color: #800000;">&amp;nbsp;</span><span style="color: #800000;">'</span>,<span style="color: #800000;">''</span><span style="color: #000000;">)
+    chapter_content</span>=chapter_content.replace(<span style="color: #800000;">'</span><span style="color: #800000;">&lt;br /&gt;</span><span style="color: #800000;">'</span>,<span style="color: #800000;">''</span><span style="color: #000000;">)
+    chapter_content</span>=chapter_content.replace(<span style="color: #800000;">'</span><span style="color: #800000;">&amp;amp;t;</span><span style="color: #800000;">'</span>,<span style="color: #800000;">''</span>)</span></pre>
+</div>
+<p><span style="font-size: 18px;">　　清洗后的小说内容：</span></p>
+<p><span style="font-size: 18px;"><img src="./images/初次尝试python爬虫，爬取小说网站的小说。5.png" alt="" /></span></p>
+<p><span style="font-size: 18px;">　　7.现在就是最后一步把小说保存到本地。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="font-size: 18px;"><span style="color: #000000;">fb.write(chapter_title)
+    fb.write(</span><span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    fb.write(chapter_content)
+    fb.write(</span><span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span>(chapter_url,chapter_title)</span></pre>
+</div>
+<p><span style="font-size: 18px;">　　我们来看下最后的结果，我们每爬完一章打印相应的章节链接信息和返回的response信息来看是否成功爬取：</span></p>
+<p><span style="font-size: 18px;"><img src="./images/初次尝试python爬虫，爬取小说网站的小说。6.png" alt="" /></span></p>
+<p><span style="font-size: 18px;"><img src="./images/初次尝试python爬虫，爬取小说网站的小说。7.png" alt="" /></span></p>
+<p><span style="font-size: 18px;"><img src="./images/初次尝试python爬虫，爬取小说网站的小说。8.png" alt="" /></span></p>
+<p><span style="font-size: 18px;">　　当当当当，成功的爬下了这边小说。</span></p>
+<p><span style="font-size: 18px;">　　</span></p>
+<p><span style="font-size: 18px;">　　最后总结下，本次的爬虫就很简单是小阿鹏的初次尝试，中间如果有不对的地方也希望大家的指正，谢谢！</span></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

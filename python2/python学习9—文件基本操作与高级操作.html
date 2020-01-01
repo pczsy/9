@@ -1,0 +1,132 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python学习9—文件基本操作与高级操作' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python学习9—文件基本操作与高级操作</center></div><div class='banquan'>原文出处:本文由博客园博主九一居士提供。<br/>
+原文连接:https://www.cnblogs.com/yangjingxuan/p/11695491.html</div><br>
+    <h1>python学习9&mdash;文件基本操作与高级操作</h1>
+<h2>1. 文件基本操作</h2>
+<ul>
+<li>打开文件，获得文件句柄：f = open('filename',encoding='utf-8')，open会查询操作系统的编码方式，并按照该编码方式读取文件，若文件使用utf-8编码，则打开需指定编码</li>
+<li>通过句柄对文件操作：data = f.read()</li>
+<li>关闭文件：f.close()</li>
+</ul>
+<h2>2. 文件操作模式</h2>
+<ul>
+<li>r，只读模式，不可写，f = open('filename','r',encoding='utf-8')
+<ul>
+<li>f.readable()判断文件是否可读</li>
+<li>f.readline()读取文件中的一行，随着光标移动，依次读取各行</li>
+</ul>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>f = read(<span style="color: #800000;">'</span><span style="color: #800000;">xxx</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+f.read()
+
+f.readline()　　#此处读取时，光标已经到文件最后，则此处读取的值为空</span></pre>
+</div>
+<ul>
+<li style="list-style-type: none;">
+<ul>
+<li>f.readlines()读取所有行，并把每一行保存为一个字符串，所有行保存为列表</li>
+<li>open()包含参数newline，f=open('1.txt','r',newline='')，python会自动将不同平台的换行符号均转换为\n，在windows平台上，换行符为\r\n</li>
+</ul>
+</li>
+<li>w，只写模式，不可读，f = open('filename','w',encoding='utf-8')，写入文件的内容<strong>必须是字符串</strong>
+<ul>
+<li>如果文件存在，则清空文件再进行后续操作</li>
+<li>如果文件不存在，则会新建一个文件</li>
+<li>f.write('contents\n')，一行一行的将内容写入文件，从当前光标所在位置写入</li>
+<li>f.writelines(list)，将内容写到一个列表里，在将列表里的各个元素分行写入文件中</li>
+<li>f.writeable()，判断文件是否可写</li>
+</ul>
+</li>
+<li>x，只写模式，若文件不存在则创建该文件，若文件存在则<strong>报错</strong></li>
+<li>a，追加模式，f = open('filename','a',encoding='utf-8')
+<ul>
+<li>a模式本身就是写模式，只不过是采用追加的方式去写文件</li>
+</ul>
+</li>
+<li>r+，读写模式，f = open('filename','r+',encoding='utf-8')</li>
+<li>w+，x+，a+，写读模式</li>
+<li>rb，wb，xb，ab，以字节的方式读写，不能指定编码</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>fr = open(<span style="color: #800000;">'</span><span style="color: #800000;">TextFile1.txt</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">rb</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span>(fr.read().decode(<span style="color: #800000;">'</span><span style="color: #800000;">gbk</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+
+f </span>= open(<span style="color: #800000;">'</span><span style="color: #800000;">test22.py</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">wb</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+f.write(bytes(</span><span style="color: #800000;">'</span><span style="color: #800000;">asdfghjkl\n</span><span style="color: #800000;">'</span>, encoding = <span style="color: #800000;">'</span><span style="color: #800000;">utf8</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+f.write(</span><span style="color: #800000;">'</span><span style="color: #800000;">中文</span><span style="color: #800000;">'</span>.encode(<span style="color: #800000;">'</span><span style="color: #800000;">utf8</span><span style="color: #800000;">'</span>))</pre>
+</div>
+<p>注：从二进制转换为字符串显示为decode()，从字符串变为二进制存储为encode()</p>
+<p>自动关闭文件的方式：</p>
+<div class="cnblogs_code">
+<pre><code>with open(<span style="color: #800000;">'</span><span style="color: #800000;">file</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f:
+    f.write(</span><span style="color: #800000;">'</span><span style="color: #800000;">asdf</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+with open(</span><span style="color: #800000;">'</span><span style="color: #800000;">file1</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span>) as f1, open(<span style="color: #800000;">'</span><span style="color: #800000;">file2</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span><span style="color: #000000;">) as f2
+    f1.write(</span><span style="color: #800000;">'</span><span style="color: #800000;">asdf</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    f2.write(</span><span style="color: #800000;">'</span><span style="color: #800000;">ghjkl</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<h2>&nbsp;3. 文件操作方法</h2>
+<ol>
+<li>f.closed，判断文件是否关闭</li>
+<li>f.encoding，显示文件打开的编码方式</li>
+<li>f.flush()，将内存中文本刷新到文件中，更新文件内容</li>
+<li>f.name，文件名</li>
+<li>f.tell()，显示当前光标所在位置，按照<strong>字节</strong>计数</li>
+<li>f.seek(0)，将光标移动到0位置，按照<strong>字节</strong>计数</li>
+<li>f.read(4)，按照字符计数，读取4个<strong>字符</strong></li>
+<li>f.truncate(10)，截取前10个<strong>字节</strong>，写入原本的文件，覆盖源文件</li>
+</ol>
+<h2>4. 文件高级操作</h2>
+<ol>
+<li>f.seek(,0)，0表示光标位置采用绝对位置</li>
+<li>f.seek(,1)，要求文件以b模式打开，采用相对位置，累加</li>
+<li>f.seek(,2)，采用倒序，以b模式打开，从文件末尾开始移动光标</li>
+<li>循环文件的推荐方式：下面第一种方式读取所有文件内容，然后一行一行的循环；而第二种方式只是一行一行读取文件的内容</li>
+</ol>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> f.readlines():
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(i)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">推荐</span>
+<span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> f:
+    </span><span style="color: #0000ff;">print</span>(i)</pre>
+</div>
+<h2>5. 读取大文件最后一行</h2>
+<p>　　关键思想：每次增加从文件末尾读取字符串的个数，直到完全读取了最后一行，并用索引[-1]取出读取数据的最后一行。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> f:
+    offs</span>=-10
+    <span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+        f.seek(offs, </span>2<span style="color: #000000;">)
+        data</span>=<span style="color: #000000;">f.readlines()
+        </span><span style="color: #0000ff;">if</span> len(data)&gt;1<span style="color: #000000;">:
+            </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">文件的最后一行是%s</span><span style="color: #800000;">'</span> %(data[-1]. decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span><span style="color: #000000;">)))
+            </span><span style="color: #0000ff;">break</span><span style="color: #000000;">
+        offs</span>*=2</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

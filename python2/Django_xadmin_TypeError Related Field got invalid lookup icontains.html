@@ -1,0 +1,58 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django_xadmin_TypeError Related Field got invalid lookup icontains' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django_xadmin_TypeError Related Field got invalid lookup icontains</center></div><div class='banquan'>原文出处:本文由博客园博主子钦加油提供。<br/>
+原文连接:https://www.cnblogs.com/zmdComeOn/p/11439424.html</div><br>
+    <p><strong>问题：</strong></p>
+<p>　　当我在给某一张表加上外键搜索的时候，会出现&nbsp;TypeError: Related Field got invalid lookup: icontains</p>
+<p><strong>问题原因：</strong></p>
+<p>　　a 表关联 b表，也就是说a表有外键关联b表，我们只需要在 b表中admin注册时候在admin类中添加外键搜索功能，那么在创建a表数据的时候，可以通过搜索拿到结果，那么这个错误来源不是这个字段&nbsp;relfield_style 的错误，而是xadmin本身那个搜索框 search_fields的错误，因为b表中又有外键关联c表，b表admin中把外键添加到&nbsp;search_fields 搜索字段中，从而产生搜索错误，search_fields 是声明搜索框搜索哪些字段</p>
+<p><strong>那，如何解决？</strong></p>
+<p>　　只需要在每个表的admin中把过滤字段中把这个外键字段取消搜索注册，也就是说，外键字段不应该添加到&nbsp;search_fields 搜索功能中， 而&nbsp;relfield_style 字段应该写在 被关联的表的admin中</p>
+<div class="cnblogs_Highlighter">
+<pre><code># 错误的课程机构表admin， search_fields 中city字段在表中又关联 citydict表，city是CourseOrg表的外键，不应该出现在search_fields字段中
+class CourseOrgAdmin(object):
+    list_display = [&lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;category&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;address&lsquo;, &lsquo;city&lsquo;, &lsquo;add_time&lsquo;]
+    search_fields = [&lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;category&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;address&lsquo;, &lsquo;city&lsquo;]
+    list_filter = [&lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;category&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;address&lsquo;, &lsquo;city&lsquo;, &lsquo;add_time&lsquo;]
+    
+    # 让其他关联此表的外键搜索功能， 
+    relfield_style = &lsquo;fk-ajax&lsquo;
+    
+# 正确的，主要区别是把 search_fields 中外键字段去掉 Course 关联 CourseOrg， relfield_style写在CourseOrg表中，字段来自哪些写在哪
+class CourseOrgAdmin(object):
+    list_display = [&lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;category&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;address&lsquo;, &lsquo;city&lsquo;, &lsquo;add_time&lsquo;]
+    search_fields = [&lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;category&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;address&lsquo;]
+    list_filter = [&lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;category&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;address&lsquo;, &lsquo;city&lsquo;, &lsquo;add_time&lsquo;]
+    
+    # 让其他关联此表的外键搜索功能
+    relfield_style = &lsquo;fk-ajax&lsquo;
+
+
+# 假如课程表关联课程机构，一对多, course_org 是关联到CourseOrgA的字段
+# 过滤器 list_filter 和 显示列 list_display 可以添加，搜索框 search_fields 不能加入任何外键字段
+class CourseAdmin(object):
+    list_display = [&lsquo;course_org&lsquo;, &lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;detail&lsquo;, &lsquo;learn_times&lsquo;, &lsquo;degree&lsquo;, &lsquo;students&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;add_time&lsquo;]
+    search_fields = [&lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;detail&lsquo;, &lsquo;degree&lsquo;, &lsquo;students&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;click_nums&lsquo;]
+    list_filter = [&lsquo;course_org&lsquo;, &lsquo;name&lsquo;, &lsquo;desc&lsquo;, &lsquo;detail&lsquo;, &lsquo;learn_times&lsquo;, &lsquo;degree&lsquo;, &lsquo;students&lsquo;, &lsquo;fav_nums&lsquo;, &lsquo;image&lsquo;, &lsquo;click_nums&lsquo;, &lsquo;add_time&lsquo;]</pre>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

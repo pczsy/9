@@ -1,0 +1,176 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django自定义分页并保存搜索条件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django自定义分页并保存搜索条件</center></div><div class='banquan'>原文出处:本文由博客园博主与鹿逐秋提供。<br/>
+原文连接:https://www.cnblogs.com/wangyueping/p/11380793.html</div><br>
+    <h2>Django自定义分页并保存搜索条件</h2>
+<h3>1、自定义分页组件pagination.py</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> copy
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> Pagination:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span>(self, current_page_num, all_count, request, per_page_num=10, page_count=11<span style="color: #000000;">):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        封装分页相关数据
+        :param current_page_num: 当前页码数
+        :param all_count: 数据库中总数据条数
+        :param per_page_num: 每页显示的数据量
+        :param page_count: 最大显示页数
+        </span><span style="color: #800000;">"""</span>
+
+        <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            current_page </span>=<span style="color: #000000;"> int(current_page_num)
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+            current_page </span>= 1
+
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 页码数小于1时显示第一页</span>
+        <span style="color: #0000ff;">if</span> current_page &lt; 1<span style="color: #000000;">:
+            current_page </span>= 1
+
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 取总页码数</span>
+        self.all_page_count, temp =<span style="color: #000000;"> divmod(all_count, per_page_num)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> temp:
+            self.all_page_count </span>+= 1
+
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 页码数大于最大页码数时显示最后一页</span>
+        <span style="color: #0000ff;">if</span> current_page &gt;<span style="color: #000000;"> self.all_page_count:
+            current_page </span>=<span style="color: #000000;"> self.all_page_count
+
+        self.current_page </span>=<span style="color: #000000;"> current_page
+        self.per_page_num </span>=<span style="color: #000000;"> per_page_num
+        self.half_page_count </span>= int((page_count - 1) / 2<span style="color: #000000;">)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 总页码数小于最大页码数</span>
+        <span style="color: #0000ff;">if</span> self.all_page_count &lt;<span style="color: #000000;"> page_count:
+            self.start_page </span>= 1<span style="color: #000000;">
+            self.end_page </span>= self.all_page_count + 1
+        <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">if</span> self.current_page &lt;<span style="color: #000000;"> self.half_page_count:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 当页码条数据靠近最左边时</span>
+                self.start_page = 1<span style="color: #000000;">
+                self.end_page </span>= page_count + 1
+            <span style="color: #0000ff;">elif</span> self.all_page_count - self.current_page &lt;<span style="color: #000000;"> self.half_page_count:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 当页码条数据靠近最右边时</span>
+                self.start_page = self.all_page_count - page_count + 1<span style="color: #000000;">
+                self.end_page </span>= self.all_page_count + 1
+            <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 页码条正常显示在中间位置</span>
+                self.start_page = self.current_page -<span style="color: #000000;"> self.half_page_count
+                self.end_page </span>= self.current_page + self.half_page_count + 1
+
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 获取get参数: &lt;QueryDict:{key: value}&gt;</span>
+        params =<span style="color: #000000;"> request.GET
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 不进行deepcopy将无法改变其里面的值</span>
+        self.new_params =<span style="color: #000000;"> copy.deepcopy(params)
+
+    @property
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> start(self):
+        </span><span style="color: #0000ff;">return</span> (int(self.current_page - 1)) *<span style="color: #000000;"> self.per_page_num
+
+    @property
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> end(self):
+        </span><span style="color: #0000ff;">return</span> int(self.current_page) *<span style="color: #000000;"> self.per_page_num
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> show_html(self):
+        html_list </span>=<span style="color: #000000;"> []
+        </span><span style="color: #0000ff;">if</span> self.current_page == 1<span style="color: #000000;">:
+            first_page </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li class="disabled"&gt;&lt;a&gt;{0}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(<span style="color: #800000;">'</span><span style="color: #800000;">首页</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将page传入new-params中</span>
+            self.new_params[<span style="color: #800000;">'</span><span style="color: #800000;">page</span><span style="color: #800000;">'</span>] = 1
+            <span style="color: #008000;">#</span><span style="color: #008000;"> 对new_params进行urlencode格式化: 'key=value&amp;key2=value2&amp;page=1'</span>
+            first_page = <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li&gt;&lt;a href="?{0}"&gt;{1}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(self.new_params.urlencode(), <span style="color: #800000;">'</span><span style="color: #800000;">首页</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将"首页"html代码加入html_list中</span>
+<span style="color: #000000;">        html_list.append(first_page)
+
+        </span><span style="color: #0000ff;">if</span> self.current_page == 1<span style="color: #000000;">:
+            prev_page </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li class="disabled"&gt;&lt;a&gt;{0}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(<span style="color: #800000;">'</span><span style="color: #800000;">&amp;laquo;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            self.new_params[</span><span style="color: #800000;">'</span><span style="color: #800000;">page</span><span style="color: #800000;">'</span>] = self.current_page - 1<span style="color: #000000;">
+            prev_page </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li&gt;&lt;a href="?{0}"&gt;{1}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(self.new_params.urlencode(), <span style="color: #800000;">'</span><span style="color: #800000;">&amp;laquo;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将"上一页"html代码加入html_list中</span>
+<span style="color: #000000;">        html_list.append(prev_page)
+
+        </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(self.start_page, self.end_page):
+            </span><span style="color: #0000ff;">if</span> self.current_page ==<span style="color: #000000;"> i:
+                page_bar </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li class="active"&gt;&lt;a&gt;{0}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(i)
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                self.new_params[</span><span style="color: #800000;">'</span><span style="color: #800000;">page</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> i
+                page_bar </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li&gt;&lt;a href="?{0}"&gt;{1}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span><span style="color: #000000;">.format(self.new_params.urlencode(), i)
+
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将"每一页"html代码加入html_list中</span>
+<span style="color: #000000;">            html_list.append(page_bar)
+
+        </span><span style="color: #0000ff;">if</span> self.current_page ==<span style="color: #000000;"> self.all_page_count:
+            next_page </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li class="disabled"&gt;&lt;a&gt;{0}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(<span style="color: #800000;">'</span><span style="color: #800000;">&amp;raquo;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            self.new_params[</span><span style="color: #800000;">'</span><span style="color: #800000;">page</span><span style="color: #800000;">'</span>] = self.current_page + 1<span style="color: #000000;">
+            next_page </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li&gt;&lt;a href="?{0}"&gt;{1}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(self.new_params.urlencode(), <span style="color: #800000;">'</span><span style="color: #800000;">&amp;raquo;</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将"下一页"html代码加入html_list中</span>
+<span style="color: #000000;">        html_list.append(next_page)
+
+        </span><span style="color: #0000ff;">if</span> self.current_page ==<span style="color: #000000;"> self.all_page_count:
+            last_page </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li class="disabled"&gt;&lt;a&gt;{0}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(<span style="color: #800000;">'</span><span style="color: #800000;">尾页</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            self.new_params[</span><span style="color: #800000;">'</span><span style="color: #800000;">page</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> self.all_page_count
+            last_page </span>= <span style="color: #800000;">'</span><span style="color: #800000;">&lt;li&gt;&lt;a href="?{0}"&gt;{1}&lt;/a&gt;&lt;/li&gt;</span><span style="color: #800000;">'</span>.format(self.new_params.urlencode(), <span style="color: #800000;">'</span><span style="color: #800000;">尾页</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将"尾页"html代码加入到html_list中</span>
+<span style="color: #000000;">        html_list.append(last_page)
+
+        </span><span style="color: #0000ff;">return</span> <span style="color: #800000;">''</span>.join(html_list)</pre>
+</div>
+<h3>2、view视图</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> CustomerView(View):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(self, request):
+        customer_list </span>=<span style="color: #000000;"> Customer.objects.all()
+        page </span>= request.GET.get(<span style="color: #800000;">'</span><span style="color: #800000;">page</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 实例化pagination对象</span>
+        pagination = Pagination(page, customer_list.count(), request, per_page_num=1<span style="color: #000000;">)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 对数据列表进行分页</span>
+        customer_list =<span style="color: #000000;"> customer_list[pagination.start:pagination.end]
+        context </span>=<span style="color: #000000;"> {
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">customer_list</span><span style="color: #800000;">'</span><span style="color: #000000;">: customer_list,
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">page_html</span><span style="color: #800000;">'</span><span style="color: #000000;">: pagination.show_html()
+        }
+        </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">customer_list.html</span><span style="color: #800000;">'</span><span style="color: #000000;">, context)
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> post(self, request):
+        </span><span style="color: #0000ff;">pass</span></pre>
+</div>
+<h3>3、templates模板</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">nav </span><span style="color: #ff0000;">aria-label</span><span style="color: #0000ff;">="Page navigation"</span><span style="color: #ff0000;"> class</span><span style="color: #0000ff;">="pull-right"</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">ul </span><span style="color: #ff0000;">class</span><span style="color: #0000ff;">="pagination"</span><span style="color: #0000ff;">&gt;</span><span style="color: #000000;">
+        {{ page_html|safe }}
+     </span><span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">ul</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">nav</span><span style="color: #0000ff;">&gt;</span>    </pre>
+</div>
+<h3>4、页面展示</h3>
+<p><img src="./images/Django自定义分页并保存搜索条件0.png" alt="" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

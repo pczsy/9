@@ -1,0 +1,62 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修execjs使用时异常' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>execjs使用时异常</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11716296.html</div><br>
+    <h2 id="一.异常信息...gbk.....">一.异常信息(...gbk.....)</h2>
+<pre><code><code>UnicodeDecodeError: ‘gbk’ codec can’t decode byte 0xa1 in position 26: illegal multibyte sequence</code></pre>
+<h3 id="解决办法">解决办法</h3>
+<p><code>进入报错源码</code></p>
+<p><code>\lib\subprocess.py</code></p>
+<p>因为是<code>codec</code>相关报错</p>
+<p>就搜索<code>encoding</code>,为什么搜这个就是代码写多了<code>感觉</code></p>
+<p>我们会发现这样一段</p>
+<pre><code><code> def __init__(self, args, bufsize=-1, executable=None,
+                 stdin=None, stdout=None, stderr=None,
+                 preexec_fn=None, close_fds=True,
+                 shell=False, cwd=None, env=None, universal_newlines=None,
+                 startupinfo=None, creationflags=0,
+                 restore_signals=True, start_new_session=False,
+                 pass_fds=(), *, encoding=None, errors=None, text=None):
+ #encoding是空怪不得是gbk报错
+#直接修改encoding=utf8</code></pre>
+<p>解决啦~~</p>
+<h2 id="二.异常信息没有window对象">二.异常信息(没有window对象)</h2>
+<pre><code><code>execjs._exceptions.ProgramError: TypeError: __g._encrypt is not a function</code></pre>
+<h3 id="解决办法-1">解决办法</h3>
+<p>我们execjs除了<code>nodejs</code>我们还需要<code>浏览器环境</code>,我们浏览器上还需要<code>document</code>以及<code>window</code>对象所有呢我们要安装环境</p>
+<p>执行<code>npm install jsdom</code></p>
+<pre><code><code>代码.py中我们要修改内容
+#js_obj = execjs.compile(js_codex)修改成
+js_obj = execjs.compile(js_code,cwd=&#39;node_modules&#39;),
+#也就是导入我们下载完成后的node_modules的文件</code></pre>
+<p>然后呢我们在<code>Js_encryption.js</code></p>
+<p>开头添加代码</p>
+<pre class="js"><code>const jsdom = require(&quot;jsdom&quot;);
+const { JSDOM } = jsdom;
+const dom = new JSDOM(`&lt;!DOCTYPE html&gt;&lt;p&gt;Hello world&lt;/p&gt;`);
+window = dom.window;
+document = window.document;
+XMLHttpRequest = window.XMLHttpRequest;
+//固定写法别想那么多</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

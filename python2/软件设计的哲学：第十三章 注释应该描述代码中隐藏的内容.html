@@ -1,0 +1,600 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修软件设计的哲学：第十三章 注释应该描述代码中隐藏的内容' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>软件设计的哲学：第十三章 注释应该描述代码中隐藏的内容</center></div><div class='banquan'>原文出处:本文由博客园博主peida提供。<br/>
+原文连接:https://www.cnblogs.com/peida/p/12089832.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#选择约定">13.1 选择约定</a></li>
+        <li><a href="#不要重复代码">13.2 不要重复代码</a></li>
+        <li><a href="#低级注释增加了精确性">13.3 低级注释增加了精确性</a></li>
+        <li><a href="#更高层次的注释增强直觉">13.4 更高层次的注释增强直觉</a></li>
+        <li><a href="#接口文档">13.5 接口文档</a></li>
+        <li><a href="#建议什么和为什么而不是如何">13.6 建议：什么和为什么，而不是如何</a></li>
+        <li><a href="#跨模块设计决策">13.7 跨模块设计决策</a></li>
+        <li><a href="#结论">13.8 结论</a></li>
+        <li><a href="#对第13.5节问题的回答">13.9 对第13.5节问题的回答</a></li>
+        </ul>
+    </div>
+</div>
+<p>编写注释的原因是，在编写代码时，编程语言中的语句无法捕获开发人员头脑中的所有重要信息。注释记录了这些信息，以便以后的开发人员能够很容易地理解和修改代码。<strong>注释的指导原则是注释应该描述代码中不明显的内容。</strong></p>
+<p>代码中有许多不明显的地方。有时是不明显的低级细节。例如，当一对指标描述一个范围时，由指标给出的元素是在范围内还是在范围外并不明显。有时不清楚为什么需要代码，或者为什么以特定的方式实现代码。有时开发人员会遵循一些规则，比如“总是在b之前调用a”。你可以通过查看所有的代码来猜测规则，但这是痛苦的，而且容易出错;注释可以使规则变得明确和清晰。</p>
+<p><strong>注释最重要的原因之一是抽象，它包含了很多代码中不明显的信息。</strong> 抽象的思想是提供一种简单的方法来思考一些事情，但是代码是如此的详细，以至于仅仅通过阅读代码就很难看到抽象。注释可以提供更简单、更高级的视图(“调用此方法后，网络流量将被限制为每秒最大带宽字节”)。即使通过读取代码可以推断出这些信息，我们也不希望强迫模块的用户这样做:读取代码非常耗时，并且强迫用户考虑使用模块不需要的大量信息。<strong>开发人员应该能够理解模块提供的抽象，而不需要读取除其外部可见声明之外的任何代码。实现此目的的惟一方法是用注释补充声明。</strong></p>
+<p>本章讨论了在注释中需要描述哪些信息，以及如何写出好的注释。正如您将看到的，好的注释通常以与代码不同的细节级别解释事情，在某些情况下，代码更详细，而在其他情况下，代码更详细(更抽象)。</p>
+<h2 id="选择约定">13.1 选择约定</h2>
+<p>编写注释的第一步是决定注释的惯例，比如注释的内容和格式。如果您使用的语言存在文档编译工具，例如Javadoc (Java)、Doxygen (c++)或godoc (Go) ，请遵循工具的约定。这些约定都不是完美的，但是工具提供了足够的好处来弥补这一点。如果您在一个没有现有约定可遵循的环境中进行编程，请尝试从其他类似的语言或项目中采用这些约定；这将使其他开发人员更容易理解和遵守您的约定。</p>
+<p><strong>约定有两个目的。首先，它们确保一致性，这使得注释更容易阅读和理解。其次，它们有助于确保你确实写了注释。</strong>如果你不清楚你要注释什么，怎么注释，很容易最后什么都不写。</p>
+<p>大多数注释可分为以下几类：</p>
+<ul>
+<li>接口：紧接在模块声明之前的注释块，如类、数据结构、函数或方法。注释描述了模块的接口。对于类，注释描述了类提供的整体抽象。对于一个方法或函数，注释描述了它的整体行为、参数和返回值(如果有的话)、它产生的任何副作用或异常，以及调用者在调用方法之前必须满足的任何其他需求。</li>
+<li>数据结构成员：数据结构中字段声明旁边的注释，例如类的实例变量或静态变量。</li>
+<li>实现注释：方法或函数代码中的注释，描述代码内部的工作方式。</li>
+<li>跨模块注释：描述跨模块边界的依赖项的注释。</li>
+</ul>
+<p>最重要的注释是前两类。每个类都应该有一个接口注释，每个类变量都应该有一个注释，每个方法都应该有一个接口注释。有时，变量或方法的声明非常明显，以至于在注释中添加任何有用的东西(getter和setter有时属于此类)，但这种情况很少见;与其花精力去担心是否需要注释，还不如去注释所有的事情。执行意见往往是不必要的(见下文第13.6节)。跨模块注释是所有注释中最少见的，编写它们是有问题的，但是当需要它们时，它们非常重要，第13.7节更详细地讨论了它们。</p>
+<h2 id="不要重复代码">13.2 不要重复代码</h2>
+<p>不幸的是，许多注释并不是特别有用。最常见的原因是<strong>注释重复了代码：注释中的所有信息都可以很容易地从注释旁边的代码推断出来。</strong> 以下是最近一篇研究论文中的代码示例：</p>
+<pre><code><code>ptr_copy = get_copy(obj)              # Get pointer copy
+if is_unlocked(ptr_copy):                # Is obj free?
+    return obj                                    # return current obj
+if is_copy(ptr_copy):                       # Already a copy?
+    return obj                                  # return obj
+
+thread_id = get_thread_id(ptr_copy)
+if thread_id == ctx.thread_id:             # Locked by current ctx
+    return ptr_copy                          # Return copy</code></pre>
+<p>除了“Locked by”注释之外，这些注释中没有任何有用的信息，该注释提示了关于线程的一些信息，而这些信息在代码中可能并不明显。请注意，这些注释的详细程度与代码大致相同:每行代码有一个注释，用于描述该行。这样的注释很少有用。</p>
+<p>下面是更多重复代码的注释示例：</p>
+<pre><code><code>// Add a horizontal scroll bar
+hScrollBar = new JScrollBar(JScrollBar.HORIZONTAL);
+add(hScrollBar, BorderLayout.SOUTH);
+// Add a vertical scroll bar
+vScrollBar = new JScrollBar(JScrollBar.VERTICAL);
+add(vScrollBar, BorderLayout.EAST);
+// Initialize the caret-position related values
+caretX     = 0;
+caretY     = 0;
+caretMemX  = null;
+</code></pre>
+<p>这些注释都没有提供任何价值。对于前两个注释，代码已经足够清楚，实际上不需要注释;在第三种情况下，注释可能是有用的，但是当前的注释没有提供足够的细节来提供帮助。</p>
+<p>写完注释后，问自己以下问题：从未见过代码的人能否仅通过查看注释旁边的代码来编写注释？如果答案是肯定的，就像上面的例子一样，那么注释并不能使代码更容易理解。像这样的注释就是为什么有些人认为这些注释毫无价值。</p>
+<p><strong>另一个常见的错误是在注释中使用与被记录实体名称相同的单词</strong>：</p>
+<pre><code><code>/*
+ * Obtain a normalized resource name from REQ.
+ */
+
+private static String[] getNormalizedResourceNames(
+            HTTPRequest req) ...
+/*
+
+ * Downcast PARAMETER to TYPE.
+ */
+
+private static Object downCastParameter(String parameter, String type) ...
+/*
+
+ * The horizontal padding of each line in the text.
+
+ */
+  private static final int textHorizontalPadding = 4;</code></pre>
+<p>这些注释只是从方法名或变量名中提取单词，或者从参数名和类型中添加一些单词，并将它们组成一个句子。例如，第二个注释中唯一不在代码中的是单词“to”。同样，这些注释可以只通过查看声明来编写，而不需要理解变量的方法，因此，它们没有价值。</p>
+<blockquote>
+<p><strong>危险信号：注释重复代码</strong></p>
+<p>如果注释中的信息在注释旁边的代码中已经很明显，那么注释就没有帮助。这方面的一个例子是，注释使用与它所描述的事物名称相同的单词。</p>
+</blockquote>
+<p>同时，注释中还缺少一些重要的信息：例如，什么是“规范化的资源名称”，以及getNormalizedResourceNames返回的数组的元素是什么？“沮丧”是什么意思?填充的单位是什么？每行的一边是填充还是两边都是？在注释中描述这些事情会很有帮助。</p>
+<p><strong>编写好的注释的第一步是在注释中使用不同于被描述的实体名称中的单词。</strong> 为注释选择提供关于实体意义的附加信息的单词，而不是重复它的名字。例如，下面是对textHorizontalPadding的一个更好的注释：</p>
+<pre><code><code>/*
+ * The amount of blank space to leave on the left and
+ * right sides of each line of text, in pixels.
+ */
+private static final int textHorizontalPadding = 4;</code></pre>
+<p>该注释提供了声明本身不明显的附加信息，比如单位(像素)和每行两边都有填充。这篇注释没有使用“padding”这个词，而是解释了padding是什么，以防读者不熟悉这个词。</p>
+<h2 id="低级注释增加了精确性">13.3 低级注释增加了精确性</h2>
+<p>既然您已经知道了什么是不应该做的，那么让我们来讨论一下您应该在注释中添加哪些信息。注释通过提供不同详细级别的信息来补充代码。有些注释提供了比代码更低、更详细的信息;这些注释通过阐明代码的确切含义来增加精确性。其他注释提供了比代码更高、更抽象的信息;这些注释提供了直觉，比如代码背后的推理，或者一种更简单、更抽象的代码思考方式。与代码处于同一级别的注释可能重复代码。本节将更详细地讨论低级方法，下一节将讨论高级方法。</p>
+<p>在注释变量声明(如类实例变量、方法参数和返回值)时，精度是最有用的。变量声明中的名称和类型通常不是很精确。意见可以填补遗漏的细节，如：</p>
+<ul>
+<li>这个变量的单位是什么?</li>
+<li>边界条件是包含的还是排斥的?</li>
+<li>如果允许空值，它意味着什么?</li>
+<li>如果一个变量引用了一个最终必须释放或关闭的资源，那么谁来负责释放或关闭它呢?</li>
+<li>对于变量(不变量)，是否存在某些始终为真的属性，例如“此列表始终包含至少一个条目”?</li>
+</ul>
+<p>通过检查变量所使用的所有代码，可以找出其中的一些信息。然而，这样做既耗时又容易出错；声明的注释应该足够清晰和完整，使其没有必要这样做。当我说声明的注释应该描述代码中不明显的内容时，<strong>“代码”指的是注释(声明)旁边的代码，而不是“应用程序中的所有代码”</strong>。</p>
+<p>对于变量的注释最常见的问题是注释太模糊。以下是两个不够精确的注释：</p>
+<pre><code><code>/ Current offset in resp Buffer
+
+uint32_t offset;
+
+// Contains all line-widths inside the document and
+
+// number of appearances.
+
+private TreeMap&lt;Integer, Integer&gt; lineWidths;</code></pre>
+<p>在第一个例子中，不清楚“current”是什么意思。在第二个示例中，并不清楚TreeMap中的键是否为行宽，值是否为出现次数。还有，宽度是用像素还是字符来测量的?下列经修订的意见提供了更多详情：</p>
+<pre><code><code>//  Position in this buffer of the first object that hasn&#39;t
+
+//  been returned to the client.
+
+uint32_t offset;
+//  Holds statistics about line lengths of the form &lt;length, count&gt;
+
+//  where length is the number of characters in a line (including
+
+//  the newline), and count is the number of lines with
+
+//  exactly that many characters. If there are no lines with
+
+//  a particular length, then there is no entry for that length.
+
+private TreeMap&lt;Integer, Integer&gt; numLinesWithLength;</code></pre>
+<p>二个声明使用了一个更长的名称，它传递了更多的信息。它还将“宽度”改为“长度”，因为这个词更容易让人认为单位是字符而不是像素。请注意，第二个注释不仅记录了每个条目的详细信息，还记录了如果某个条目丢失了，它意味着什么。</p>
+<p>记录变量时，考虑的是名词，而不是动词。换句话说，关注变量所表示的内容，而不是它是如何操作的。考虑一下下面的注释：</p>
+<pre><code><code>/* FOLLOWER VARIABLE: indicator variable that allows the Receiver and the
+
+ * PeriodicTasks thread to communicate about whether a heartbeat has been
+
+ * received within the follower&#39;s election timeout window.
+
+ * Toggled to TRUE when a valid heartbeat is received.
+
+ * Toggled to FALSE when the election timeout window is reset.  */
+
+private boolean receivedValidHeartbeat;</code></pre>
+<p>文档描述了变量是如何被类中的几段代码修改的。如果注释描述了变量所代表的内容，而不是镜像代码结构，那么注释将更短，也更有用：</p>
+<pre><code><code>/* True means that a heartbeat has been received since the last time
+
+ * the election timer was reset. Used for communication between the
+
+ * Receiver and PeriodicTasks threads.  */
+
+private boolean receivedValidHeartbeat;</code></pre>
+<p>有了这个文档，很容易推断出变量在接收到心跳时必须设置为true，在重置选举计时器时必须设置为false。</p>
+<h2 id="更高层次的注释增强直觉">13.4 更高层次的注释增强直觉</h2>
+<p><strong>注释增加代码的第二种方式是提供直觉。这些注释是在比代码更高的级别上编写的。</strong>它们省略了细节，帮助读者理解代码的总体意图和结构。这种方法通常用于方法内部的注释和接口注释。例如，考虑以下代码：</p>
+<pre><code><code>// If there is a LOADING readRpc using the same session
+
+// as PKHash pointed to by assignPos, and the last PKHash
+
+// in that readRPC is smaller than current assigning
+
+// PKHash, then we put assigning PKHash into that readRPC.
+
+int readActiveRpcId = RPC_ID_NOT_ASSIGNED;
+
+for (int i = 0; i &lt; NUM_READ_RPC; i++) {
+      if (session == readRpc[i].session
+                 &amp;&amp; readRpc[i].status == LOADING
+
+                 &amp;&amp; readRpc[i].maxPos &lt; assignPos
+
+                 &amp;&amp; readRpc[i].numHashes &lt; MAX_PKHASHES_PERRPC) {
+
+          readActiveRpcId = i;
+
+          break;
+
+      }
+
+}</code></pre>
+<p>这个注释太低级，太详细了。一方面，它部分地重复代码:“如果有加载readRPC”只是重复了测试readRPC [i]。= =加载状态。另一方面，注释没有解释这段代码的总体目的，也没有解释它如何适合包含它的方法。因此，注释并不能帮助读者理解代码。</p>
+<p>下面是一个更好的注释：</p>
+<pre><code><code>// Try to append the current key hash onto an existing
+// RPC to the desired server that hasn&#39;t been sent yet.</code></pre>
+<p>这条注释没有包含任何细节。相反，它在更高的层次上描述代码的整体功能。有了这些高级信息，读者几乎可以解释代码中发生的所有事情：循环必须遍历所有现有的远程过程调用(rpc)；会话测试可能用于查看某个特定RPC是否指向正确的服务器；加载试验表明，rpc可以有多种状态，在某些状态下添加更多的散列是不安全的；MAX - PKHASHES_PERRPC测试表明，在一个RPC中可以发送多少个散列是有限制的。注释中唯一没有解释的是maxPos测试。此外，新的注释为读者判断代码提供了一个基础:它是否完成了向现有RPC添加键散列所需的所有工作？最初的注释并没有描述代码的总体意图，因此读者很难判断代码的行为是否正确。</p>
+<p>高级注释比低级注释更难编写，因为必须以不同的方式考虑代码。问问你自己:这段代码要做什么？你能说的最简单的解释代码中的一切的事情是什么？这段代码最重要的是什么？</p>
+<p><strong>工程师往往非常注重细节。我们喜欢细节，擅长管理大量细节；这是成为一名优秀工程师的必要条件。但是，优秀的软件设计师也可以从细节上退一步，从更高的层次来考虑系统。</strong> 这意味着确定系统的哪些方面是最重要的，并且能够忽略底层的细节，只从系统最基本的特征来考虑系统。这就是抽象的本质(找到一种简单的方法来考虑复杂的实体)，这也是编写高级注释时必须做的事情。好的高级注释表达了一个或几个提供概念框架的简单思想，例如“附加到现有RPC”。有了这个框架，就很容易看出特定的代码语句与总体目标之间的关系。</p>
+<p>下面是另一个代码示例，它有一个很好的高级注释：</p>
+<pre><code><code>if  (numProcessedPKHashes &lt; readRpc[i].numHashes) {
+
+       // Some of the key hashes couldn&#39;t be looked up in
+
+       // this request (either because they aren&#39;t stored
+
+       // on the server, the server crashed, or there
+
+       // wasn&#39;t enough space in the response message).
+
+       // Mark the unprocessed hashes so they will get
+
+       // reassigned to new RPCs.
+
+       for (size_t p = removePos; p &lt; insertPos; p++) {
+
+              if  (activeRpcId[p] == i) {
+
+                     if  (numProcessedPKHashes &gt; 0) {
+
+                           numProcessedPKHashes--;
+
+                     } else {
+
+                           if  (p &lt; assignPos)
+
+                                assignPos = p;
+
+                           activeRpcId[p] = RPC_ID_NOT_ASSIGNED;
+
+                     }
+
+              }
+
+       }
+
+}</code></pre>
+<p>这个注释做了两件事，第二句提供了代码功能的抽象描述。第一句话是不同的:它解释了(用高级术语)为什么执行代码。表单“我们如何到达这里”的注释对于帮助人们理解代码非常有用。例如，在记录方法时，描述最有可能调用该方法的条件(特别是如果该方法仅在不寻常的情况下调用)可能非常有用。</p>
+<h2 id="接口文档">13.5 接口文档</h2>
+<p><strong>注释最重要的角色之一是定义抽象。</strong> 回顾第4章，抽象是一个实体的简化视图，它保留了基本信息，但是忽略了一些可以忽略的细节。代码不适合描述抽象;它的层次太低，并且包含了在抽象中不应该出现的实现细节。描述抽象的唯一方法是使用注释。如果您希望代码呈现良好的抽象，则必须用注释记录这些抽象。</p>
+<p>记录抽象的第一步是将接口注释从实现注释中分离出来。接口注释提供了为了使用类或方法而需要知道的信息；他们定义了抽象。实现注释描述类或方法如何在内部工作以实现抽象。将这两种注释分开很重要，这样界面的用户就不会暴露于实现细节。此外，这两种形式最好是不同的。如果接口注释也必须描述实现，那么类或方法是浅层的。这意味着写注释的行为可以提供关于设计质量的线索;第15章将回到这个观点。</p>
+<p>类的接口注释提供了类提供的抽象的高级描述，例如：</p>
+<pre><code><code>/**
+
+ * This class implements a simple server-side interface to the HTTP
+
+ * protocol: by using this class, an application can receive HTTP
+
+ * requests, process them, and return responses. Each instance of
+ 
+ * this class corresponds to a particular socket used to receive
+
+ * requests. The current implementation is single-threaded and
+
+ * processes one request at a time.
+
+ */
+
+public class Http {...}</code></pre>
+<p>这个注释描述了类的整体功能，没有任何实现细节，甚至没有特定方法的细节。它还描述了类的每个实例所代表的内容。最后，注释描述了该类的局限性(它不支持来自多个线程的并发访问)，这对于正在考虑是否使用该类的开发人员可能很重要。</p>
+<p>方法的接口注释包括用于抽象的高级信息和用于精确的低级细节：</p>
+<ul>
+<li>注释通常以一两句话开头，描述调用者所感知到的方法行为，这是更高层次的抽象。</li>
+<li>注释必须描述每个参数和返回值(如果有的话)。这些注释必须非常精确，并且必须描述关于参数值的任何约束以及参数之间的依赖关系。</li>
+<li>如果该方法有任何副作用，则必须在接口注释中记录这些副作用。副作用是影响系统未来行为的任何方法的结果，但不是结果的一部分。例如，如果该方法向内部数据结构添加一个值，该值可以通过将来的方法调用来检索，这是一个副作用;写入文件系统也是一个副作用。</li>
+<li>方法的接口注释必须描述从该方法产生的任何异常。</li>
+<li>如果在调用方法之前必须满足任何先决条件，则必须对这些条件进行描述(可能必须先调用其他方法，对于二叉搜索方法，要搜索的列表必须排序)。将先决条件最小化是个好主意，但是任何保留的条件都必须记录下来。</li>
+</ul>
+<p>下面是一个方法的接口注释，该方法复制缓冲区对象中的数据：</p>
+<pre><code><code>/**
+
+ * Copy a range of bytes from a buffer to an external location.
+
+ *
+
+ * \param offset
+
+ *        Index within the buffer of the first byte to copy.
+
+ * \param length
+
+ *        Number of bytes to copy.
+
+ * \param dest
+
+ *        Where to copy the bytes: must have room for at least
+
+ *        length bytes.
+
+ *
+
+ * \return
+
+ *        The return value is the actual number of bytes copied,
+
+ *        which may be less than length if the requested range of
+
+ *        bytes extends past the end of the buffer. 0 is returned
+
+ *        if there is no overlap between the requested range and
+
+ *        the actual buffer.
+
+ */
+
+uint32_t
+
+Buffer::copy(uint32_t offset, uint32_t length, void* dest)
+
+...</code></pre>
+<p>此注释的语法(例如，\return)遵循Doxygen的惯例，Doxygen是一个从C/ c++代码中提取注释并将其编译成Web页面的程序。注释的目的是提供开发人员调用该方法所需的所有信息，包括如何处理特殊情况(请注意该方法如何遵循第10章的建议并定义与范围规范相关的错误)。开发人员不需要读取方法的主体来调用它，而且接口注释没有提供关于如何实现方法的信息，例如如何扫描内部数据结构来找到所需的数据。</p>
+<p>对于一个更扩展的示例，让我们考虑一个名为IndexLookup的类，它是分布式存储系统的一部分。存储系统持有一组表，每个表包含许多对象。此外，每个表可以有一个或多个索引;每个索引根据对象的特定字段提供对表中对象的有效访问。例如，一个索引可能用于根据对象的名称字段查找对象，另一个索引可能用于根据对象的年龄字段查找对象。使用这些索引，应用程序可以快速提取具有特定名称的所有对象，或具有给定范围内年龄的所有对象。</p>
+<p>IndexLookup类为执行索引查找提供了一个方便的接口。下面是一个如何在应用程序中使用它的例子：</p>
+<pre><code><code>query = new IndexLookup(table, index, key1, key2);
+
+while  (true) {
+
+        object = query.getNext();
+
+        if  (object == NULL) {
+
+              break;
+
+        }
+
+        ... process object ...
+
+}</code></pre>
+<p>应用程序首先构造一个IndexLookup类型的对象,提供参数，选择一个表，索引，一个范围内的索引(例如,如果指数是基于一个年龄字段，key1和key2可能指定为21和65年选择所有对象与年龄之间的值)。然后应用程序重复调用getNext方法。每次调用返回一个落在期望范围内的对象；一旦所有匹配的对象都被返回，getNext返回NULL。因为存储系统是分布式的，这个类的实现有点复杂。一个表中的对象可以分布在多个服务器上，每个索引也可以分布在不同的一组服务器上；IndexLookup类中的代码必须首先与所有相关的索引服务器通信，以收集关于范围内对象的信息，然后必须与实际存储对象的服务器通信，以便检索它们的值。</p>
+<p>现在，让我们考虑需要在这个类的接口注释中包含哪些信息。对于下面给出的每一条信息，问问自己开发人员是否需要知道这些信息才能使用这个类(我的答案在本章的最后)：</p>
+<ol>
+<li>IndexLookup类发送给保存索引和对象的服务器的消息格式。</li>
+<li>用于确定特定对象是否在期望范围内的比较函数(是否使用整数、浮点数或字符串进行比较？)</li>
+<li>用于在服务器上存储索引的数据结构。</li>
+<li>IndexLookup是否同时向不同的服务器发出多个请求。</li>
+<li>处理服务器崩溃的机制。</li>
+</ol>
+<p>这是IndexLookup类的接口注释的原始版本；这段摘录还包括了类定义中的几行，它们在注释中被引用：</p>
+<pre><code><code>*
+
+ * This class implements the client side framework for index range
+
+ * lookups. It manages a single LookupIndexKeys RPC and multiple
+
+ * IndexedRead RPCs. Client side just includes &quot;IndexLookup.h&quot; in
+
+ * its header to use IndexLookup class. Several parameters can be set
+
+ * in the config below:
+
+ * - The number of concurrent indexedRead RPCs
+
+ * - The max number of PKHashes a indexedRead RPC can hold at a time
+
+ * - The size of the active PKHashes
+
+ *
+
+ * To use IndexLookup, the client creates an object of this class by
+
+ * providing all necessary information. After construction of
+
+ * IndexLookup, client can call getNext() function to move to next
+
+ * available object. If getNext() returns NULL, it means we reached
+
+ * the last object. Client can use getKey, getKeyLength, getValue,
+
+ * and getValueLength to get object data of current object.
+
+ */
+
+ class IndexLookup {
+
+       ...
+
+   private:
+
+       /// Max number of concurrent indexedRead RPCs
+
+       static const uint8_t NUM_READ_RPC = 10;
+
+       /// Max number of PKHashes that can be sent in one
+
+       /// indexedRead RPC
+
+       static const uint32_t MAX_PKHASHES_PERRPC = 256;
+
+       /// Max number of PKHashes that activeHashes can
+
+       /// hold at once.
+
+       static const size_t MAX_NUM_PK = (1 &lt;&lt; LG_BUFFER_SIZE);
+
+ }</code></pre>
+<p>在进一步阅读之前，看看您是否能够识别这条注释的问题。以下是我发现的问题：</p>
+<ul>
+<li>第一段的大部分内容涉及实现，而不是接口。例如，用户不需要知道用于与服务器通信的特定远程过程调用的名称。第一段后半部分提到的配置参数都是私有变量，它们只与类的维护者相关，而与类的用户无关。所有这些实现信息都应该从注释中删除。</li>
+<li></li>
+<li>这条注释还包括几件显而易见的事情。例如，不需要告诉用户包含IndexLookup。h:任何编写c++代码的人都能猜到这是必要的。此外，文本“通过提供所有必要的信息”没有说什么，所以可以省略。</li>
+<li></li>
+</ul>
+<p>这个类的简短注释就足够了(更可取)：</p>
+<pre><code><code>* This class is used by client applications to make range queries
+
+ * using indexes. Each instance represents a single range query.
+
+ *
+
+ * To start a range query, a client creates an instance of this
+
+ * class. The client can then call getNext() to retrieve the objects
+
+ * in the desired range. For each object returned by getNext(), the
+
+ * caller can invoke getKey(), getKeyLength(), getValue(), and
+
+ * getValueLength() to get information about that object.
+
+ */</code></pre>
+<p>这个注释的最后一段并不是严格必需的，因为它主要是重复了各个方法注释中的信息。但是，在类文档中提供一些示例来说明它的方法如何协同工作是很有帮助的，特别是对于使用模式不明显的深度类。注意，新注释没有提到来自getNext的NULL返回值。此注释并不打算记录每个方法的每个细节;它只是提供高级信息来帮助读者理解这些方法如何协同工作，以及何时可以调用每个方法。有关详细信息，读者可以参考各个方法的接口注释。这条注释也没有提到服务器崩溃；这是因为服务器崩溃对于此类用户是不可见的(系统会自动从中恢复)。</p>
+<blockquote>
+<p>严重警告：实现文档会污染接口</p>
+<p>当接口文档(例如用于方法的文档)描述了使用所记录的内容不需要的实现细节时，就会出现此警告。</p>
+</blockquote>
+<p>现在考虑下面的代码，它显示了IndexLookup中isReady方法的第一个文档版本：</p>
+<pre><code><code>/**
+
+ * Check if the next object is RESULT_READY. This function is
+
+ * implemented in a DCFT module, each execution of isReady() tries
+
+ * to make small progress, and getNext() invokes isReady() in a
+
+ * while loop, until isReady() returns true.
+
+ *
+
+ * isReady() is implemented in a rule-based approach. We check
+
+ * different rules by following a particular order, and perform
+
+ * certain actions if some rule is satisfied.
+
+ *
+
+ * \return
+
+ *         True means the next Object is available. Otherwise, return
+ *         false.
+
+ */
+
+bool IndexLookup::isReady() { ... }</code></pre>
+<p>同样，大多数文档，例如对DCFT的引用和整个第二段，都涉及到实现，所以它不属于这里；这是接口注释中最常见的错误之一。一些实现文档是有用的，但是它应该放在方法内部，在那里它将与接口文档清晰地分离。此外，文档的第一句话含义模糊(RESULT_READY是什么意思？)，而且缺少一些重要的信息。最后，这里没有必要描述getNext的实现。下面是这条注释的更好版本：</p>
+<pre><code><code>*
+
+ * Indicates whether an indexed read has made enough progress for
+
+ * getNext to return immediately without blocking. In addition, this
+
+ * method does most of the real work for indexed reads, so it must
+
+ * be invoked (either directly, or indirectly by calling getNext) in
+
+ * order for the indexed read to make progress.
+
+ *
+
+ * \return
+
+ *         True means that the next invocation of getNext will not block
+
+ *         (at least one object is available to return, or the end of the
+
+ *         lookup has been reached); false means getNext may block.
+
+ */</code></pre>
+<p>这个版本的注释提供了关于“ready”含义的更精确的信息，并且提供了重要的信息，如果要继续进行索引检索，最终必须调用这个方法。</p>
+<h2 id="建议什么和为什么而不是如何">13.6 建议：什么和为什么，而不是如何</h2>
+<p>注释是出现在方法内部以帮助读者理解其内部工作方式的注释。大多数方法都很简短，不需要任何实现注释：只要有代码和接口注释，就很容易弄清楚方法是如何工作的。</p>
+<p><strong>注释的主要目标是帮助读者理解代码在做什么(而不是如何做)</strong>。 一旦读者知道代码要做什么，通常就很容易理解代码是如何工作的。对于简短的方法，代码只做一件事，这已经在接口注释中描述过了，所以不需要实现注释。较长的方法有几个代码块，它们作为方法整体任务的一部分，执行不同的任务。在每个主要块之前添加注释，以提供该块功能的高级(更抽象)描述。下面是一个例子:</p>
+<pre class="、"><code>// Phase 1: Scan active RPCs to see if any have completed.</code></pre>
+<p>对于循环，在循环之前有一个注释是很有帮助的，它描述了每次迭代中发生的事情：</p>
+<pre><code><code>// Each iteration of the following loop extracts one request from
+
+// the request message, increments the corresponding object, and
+
+// appends a response to the response message.</code></pre>
+<p>注意这个注释是如何在更抽象和直观的层次上描述循环的；它不涉及如何从请求消息中提取请求或如何增加对象的任何细节。循环注释只在较长或更复杂的循环中需要，在这种情况下，可能不清楚循环在做什么;许多循环都很短很简单，它们的行为已经很明显了。</p>
+<p>了描述代码在做什么之外，实现注释还有助于解释其原因。如果代码中有一些难以处理的方面，通过阅读不会很明显，那么您应该将它们记录下来。例如，如果一个bug修复需要添加一些目的不太明显的代码，那么可以添加一条注释，说明为什么需要这些代码。对于编写良好的bug报告描述问题的bug修复，注释可以参考bug跟踪数据库中的问题，而不是重复它的所有细节(“修复RAM-436，与Linux 2.4.x中的设备驱动程序崩溃有关”)。开发人员可以在bug数据库中查找更多细节(这是避免注释重复的一个例子，将在第16章中讨论)。</p>
+<p>对于较长的方法，为一些最重要的局部变量写注释是有帮助的。但是，大多数局部变量如果名称良好，则不需要文档。如果一个变量的所有用法都可以在彼此的几行代码中看到，那么无需注释就可以很容易地理解这个变量的用途。在这种情况下，可以让读者阅读代码来理解变量的含义。但是，如果变量在大范围的代码中使用，那么应该考虑添加注释来描述变量。在记录变量时，要关注变量表示什么，而不是如何在代码中操作变量。</p>
+<h2 id="跨模块设计决策">13.7 跨模块设计决策</h2>
+<p>在一个完美的世界中，每个重要的设计决策都被封装在一个类中。不幸的是，实际系统不可避免地以影响多个类的设计决策而告终。例如，网络协议的设计将同时影响发送方和接收方，这些可能在不同的地方实现。跨模块决策通常是复杂而微妙的，它们会导致许多bug，因此为它们编写良好的文档是至关重要的。</p>
+<p>跨模块文档的最大挑战是找到一个地方将其放置在开发人员自然会发现的地方。有时，放置这样的文档有一个明显的中心位置。例如，RAMCloud存储系统定义了一个状态值，该值由每个请求返回，以指示成功或失败。为新的错误条件添加状态需要修改许多不同的文件(一个文件将状态值映射到异常，另一个文件为每个状态提供人类可读的消息，等等)。幸运的是，当添加一个新的状态值时，有一个地方是开发人员必须去的，那就是状态enum的声明。我们利用了这一点，在enum中添加了注释，以确定所有其他必须修改的地方：</p>
+<pre><code><code>typedef enum Status {
+
+       STATUS_OK = 0,
+
+       STATUS_UNKNOWN_TABLET                = 1,
+
+       STATUS_WRONG_VERSION                 = 2,
+
+       ...
+
+       STATUS_INDEX_DOESNT_EXIST            = 29,
+
+       STATUS_INVALID_PARAMETER             = 30,
+
+       STATUS_MAX_VALUE                     = 30,
+
+       // Note: if you add a new status value you must make the following
+
+       // additional updates:
+
+       // (1)  Modify STATUS_MAX_VALUE to have a value equal to the
+
+       //      largest defined status value, and make sure its definition
+
+       //      is the last one in the list. STATUS_MAX_VALUE is used
+
+       //      primarily for testing.
+
+       // (2)  Add new entries in the tables &quot;messages&quot; and &quot;symbols&quot; in
+
+       //      Status.cc.
+
+       // (3)  Add a new exception class to ClientException.h
+       
+       // (4)  Add a new &quot;case&quot; to ClientException::throwException to map
+
+       //      from the status value to a status-specific ClientException
+
+       //      subclass.
+
+       // (5)  In the Java bindings, add a static class for the exception
+
+       //      to ClientException.java
+
+       // (6)  Add a case for the status of the exception to throw the
+
+       //      exception in ClientException.java
+
+       // (7)  Add the exception to the Status enum in Status.java, making
+
+       //      sure the status is in the correct position corresponding to
+
+       //      its status code.
+
+}</code></pre>
+<p>新的状态值将被添加到现有列表的末尾，因此注释也被放置在最可能看到它们的末尾。</p>
+<p>不幸的是，在许多情况下，没有一个明显的中心位置来放置跨模块文档。RAMCloud存储系统中的一个例子是处理僵尸服务器的代码，僵尸服务器是系统认为已经崩溃但实际上仍在运行的服务器。中和zombie server需要几个不同模块中的代码，这些代码都相互依赖。没有一段代码明显是放置文档的中心位置。一种可能性是在每个依赖文档的位置复制文档的部分。然而，这是令人尴尬的，并且随着系统的发展，很难使这样的文档保持最新。或者，文档可以位于需要它的位置之一，但是在这种情况下，开发人员不太可能看到文档或者知道在哪里查找它。</p>
+<p>我最近试验了一种方法，将跨模块问题记录在一个名为designNotes的中心文件中。ile被划分为有明确标记的部分，每个主要主题对应一个部分。例如，以下是该文件的摘录：</p>
+<pre><code><code>...
+
+Zombies
+
+-------
+
+A zombie is a server that is considered dead by the rest of the
+
+cluster; any data stored on the server has been recovered and will
+
+be managed by other servers. However, if a zombie is not actually
+
+dead (e.g., it was just disconnected from the other servers for a
+
+while) two forms of inconsistency can arise:
+
+* A zombie server must not serve read requests once replacement servers have taken over; otherwise it may return stale data that does not reflect writes accepted by the replacement servers.
+
+* The zombie server must not accept write requests once replacement servers have begun replaying its log during recovery; if it does, these writes may be lost (the new values may not be stored on the replacement servers and thus will not be returned by reads).
+
+RAMCloud uses two techniques to neutralize zombies. First,
+
+...</code></pre>
+<p>在任何与这些问题相关的代码中，都会有一个关于designNotes文件的简短注释：</p>
+<pre><code><code>// See &quot;Zombies&quot; in designNotes.</code></pre>
+<p>用这种方法，文档只有一个副本，开发人员在需要时很容易找到它。然而，这有一个缺点，即文档不接近任何依赖于它的代码片段，因此随着系统的发展可能很难保持最新。</p>
+<h2 id="结论">13.8 结论</h2>
+<p><strong>注释的目标是确保系统的结构和行为对读者来说是显而易见的，这样他们就可以快速地找到他们需要的信息，并有信心地对系统进行修改。</strong>有些信息可以在代码中以一种读者已经很容易理解的方式表示，但是有大量的信息不容易从代码中推断出来。注释填写此信息。</p>
+<p>当遵循注释应该描述代码中不明显的东西的规则时，“明显”是从第一次阅读您的代码的人(而不是您)的角度来看的。在写注释的时候，试着把自己放在读者的心态中，问问自己他或她需要知道的关键事情是什么。如果你的代码正在被审查，而审查者告诉你有些东西不明显，不要和他们争论;如果读者认为它不明显，那么它就不明显。与其争论，不如试着理解他们感到困惑的地方，然后看看你是否可以用更好的注释或更好的代码来澄清它。</p>
+<h2 id="对第13.5节问题的回答">13.9 对第13.5节问题的回答</h2>
+<p>为了使用IndexLookup类，开发人员是否需要了解以下每个信息片段：</p>
+<ol>
+<li>IndexLookup类发送给保存索引和对象的服务器的消息格式。这是一个实现细节，应该隐藏在类中。</li>
+<li>用于确定特定对象是否在期望范围内的比较函数(是否使用整数、浮点数或字符串进行比较?)是的：类的用户需要知道这些信息。</li>
+<li>用于在服务器上存储索引的数据结构。不:这些信息应该封装在服务器上;甚至IndexLookup的实现也不需要知道这一点。</li>
+<li>IndexLookup是否同时向不同的服务器发出多个请求。可：:如果IndexLookup使用特殊技术来提高性能，那么文档应该提供一些关于这方面的高级信息，因为用户可能关心性能。</li>
+<li>处理服务器崩溃的机制。RAMCloud从服务器崩溃中自动恢复，因此应用程序级软件看不到崩溃；因此，在IndexLookup的接口文档中不需要提到崩溃。如果崩溃反映到应用程序中，那么接口文档需要描述它们如何显示自己(而不是崩溃恢复工作的细节)。</li>
+</ol>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

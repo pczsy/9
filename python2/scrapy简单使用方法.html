@@ -1,0 +1,56 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修scrapy简单使用方法' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>scrapy简单使用方法</center></div><div class='banquan'>原文出处:本文由博客园博主WebLinuxStudy提供。<br/>
+原文连接:https://www.cnblogs.com/WebLinuxStudy/p/11599519.html</div><br>
+    <p>scrapy简单使用方法</p>
+<p>1.创建项目：<br />scrapy startproject 项目名<br />例如：<br />scrapy startproject baike</p>
+<p>windows下，cmd进入项目路径例如<br />d:\pythonCode\spiderProject&gt;scrapy startproject baidubaike<br />将创建项目名为 baidubaike</p>
+<p>2.使用命令创建一个爬虫：<br />scrapy genspider 爬虫名称 需要爬取的网址<br />scrapy genspider baike baike.baidu.com</p>
+<p>注意：爬虫名称不能和项目名相同</p>
+<p>d:\pythonCode\spiderProject\baidubaike&gt;scrapy genspider baike baike.baidu.com</p>
+<p>命令执行后将在d:\pythonCode\spiderProject\baidubaike\baidubaike\spiders\下，生成baike.py</p>
+<p>3.修改baike.py文件</p>
+<p>import scrapy<br />from baidubaike.items import BaidubaikeItem<br />from scrapy.http.response.html import HtmlResponse<br />from scrapy.selector.unified import SelectorList</p>
+<p>class BaikeSpider(scrapy.Spider):<br />&nbsp; &nbsp; &nbsp;#爬虫名称<br />&nbsp; &nbsp; &nbsp;name = 'baike'<br />&nbsp; &nbsp; &nbsp;#需要爬取的网址<br />&nbsp; &nbsp; &nbsp;allowed_domains = ['baike.baidu.com']<br />&nbsp; &nbsp; &nbsp;#起始网址<br />&nbsp; &nbsp; &nbsp;start_urls = ['https://baike.baidu.com/art/%E6%8B%8D%E5%8D%96%E8%B5%84%E8%AE%AF']</p>
+<p>&nbsp; &nbsp; &nbsp;def parse(self, response):<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;uls = response.xpath("//div[@class='list-content']/ul")<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;for ul in uls:<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;lis = ul.xpath(".//li")<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;#print(lis)<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;for li in lis:<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;title = li.xpath(".//a/text()").get()<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;time = li.xpath(".//span/text()").get()<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;item = BaidubaikeItem(title=title, time=time)<br />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;yield item</p>
+<p>4.items.py</p>
+<p>import scrapy</p>
+<p><br />class BaidubaikeItem(scrapy.Item):<br />    &nbsp; &nbsp; &nbsp; &nbsp;# define the fields for your item here like:<br />    &nbsp; &nbsp; &nbsp; &nbsp;# name = scrapy.Field()<br />    &nbsp; &nbsp; &nbsp; &nbsp;# pass<br />    &nbsp; &nbsp; &nbsp; &nbsp;title = scrapy.Field()<br />    &nbsp; &nbsp; &nbsp; &nbsp;time = scrapy.Field()</p>
+<p>&nbsp;</p>
+<p>5.修改settings.py文件<br />1)开启 DEFAULT_REQUEST_HEADERS<br />修改如下<br />DEFAULT_REQUEST_HEADERS = {<br />&nbsp; &nbsp; &nbsp;'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',<br />&nbsp; &nbsp; &nbsp;'Accept-Language': 'en',<br />&nbsp; &nbsp; &nbsp;'User-Agent': 'Mozilla/5.0 (Windows NT 6.1; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.132 Safari/537.36'<br />}</p>
+<p>2)将 ROBOTSTXT_OBEY = True 改为 ROBOTSTXT_OBEY = False<br />说明：<br />默认为True，就是要遵守robots.txt 的规则<br />将此配置项设置为 False ，拒绝遵守 Robot协议</p>
+<p>3)开启 ITEM_PIPELINES<br />ITEM_PIPELINES = {<br />&nbsp; &nbsp; &nbsp;'baidubaike.pipelines.BaidubaikePipeline': 300,<br />}<br />其中，ITEM_PIPELINES是一个字典文件，键为要打开的ItemPipeline类，值为优先级，ItemPipeline是按照优先级来调用的，值越小，优先级越高。</p>
+<p><br />6.修改pipelines.py文件<br /># -*- coding: utf-8 -*-</p>
+<p># Define your item pipelines here<br />#<br /># Don't forget to add your pipeline to the ITEM_PIPELINES setting<br /># See: https://doc.scrapy.org/en/latest/topics/item-pipeline.html</p>
+<p>#第一种方式<br />#import json<br />#<br />#class BaidubaikePipeline(object):<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def __init__(self):<br /># &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;      #pass<br /># &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;      self.fp = open('baike.json', 'w', encoding='utf-8')<br />#	<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def open_spider(self, spider):<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       print('爬虫开始了。。')<br />#<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def process_item(self, item, spider):<br /># &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;      item_json = json.dumps(dict(item), ensure_ascii=False)<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       self.fp.write(item_json+ '\n')<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       return item<br />#<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def close_spider(self, spider):<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       self.fp.close()<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       print('爬虫结束了。。')<br />#</p>
+<p>#第二种方式<br />#from scrapy.exporters import JsonItemExporter<br />#<br />#class BaidubaikePipeline(object):<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def __init__(self):<br /># &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;      #pass<br /># &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;      self.fp = open('baike.json', 'wb')<br />#&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;       self.exporter = JsonItemExporter(self.fp, ensure_ascii=False, encoding='utf-8')<br />#&nbsp; &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;self.exporter.start_exporting()<br />#<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def open_spider(self, spider):<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       print('爬虫开始了。。')<br />#<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def process_item(self, item, spider):<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       self.exporter.export_item(item)<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       return item<br />#<br /># &nbsp; &nbsp; &nbsp;&nbsp;   def close_spider(self, spider):<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       self.exporter.finish_exporting()<br />#&nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp; &nbsp;        self.fp.close()<br /># &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;       print('爬虫结束了。。')</p>
+<p>#第三种方式<br />from scrapy.exporters import JsonLinesItemExporter</p>
+<p>class BaidubaikePipeline(object):<br />&nbsp; &nbsp; &nbsp; def __init__(self):<br />        &nbsp; &nbsp; &nbsp;&nbsp; &nbsp; &nbsp;&nbsp;&nbsp;#pass<br />        &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;self.fp = open('baike.json', 'wb')<br />        &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;self.exporter = JsonLinesItemExporter(self.fp, ensure_ascii=False, encoding='utf-8')</p>
+<p>    &nbsp; &nbsp; &nbsp;&nbsp;def open_spider(self, spider):<br />        &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;print('爬虫开始了。。')</p>
+<p>    &nbsp; &nbsp; &nbsp;&nbsp;def process_item(self, item, spider):<br />        &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;self.exporter.export_item(item)<br />        &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;return item</p>
+<p>    &nbsp; &nbsp; &nbsp;&nbsp;def close_spider(self, spider):<br />        &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;self.fp.close()<br />        &nbsp; &nbsp; &nbsp;&nbsp;&nbsp; &nbsp; &nbsp;&nbsp;print('爬虫结束了。。')</p>
+<p>&nbsp;</p>
+<p>7.运行爬虫<br />scrapy crawl 爬虫名</p>
+<p>d:\pythonCode\spiderProject\baidubaike\baidubaike&gt;scrapy crawl baike</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

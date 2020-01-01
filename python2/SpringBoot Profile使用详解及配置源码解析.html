@@ -1,0 +1,231 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修SpringBoot Profile使用详解及配置源码解析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>SpringBoot Profile使用详解及配置源码解析</center></div><div class='banquan'>原文出处:本文由博客园博主程序新视界提供。<br/>
+原文连接:https://www.cnblogs.com/secbro/p/12088267.html</div><br>
+    <p>在实践的过程中我们经常会遇到不同的环境需要不同配置文件的情况，如果每换一个环境重新修改配置文件或重新打包一次会比较麻烦，Spring Boot为此提供了Profile配置来解决此问题。</p>
+<h2 id="profile的作用">Profile的作用</h2>
+<p>Profile对应中文并没有合适的翻译，它的主要作用就是让Spring Boot可以根据不同环境提供不同的配置功能支持。</p>
+<p>我们经常遇到这样的场景：有开发、测试、生产等环境，不同的环境又有不同的配置。如果每个环境在部署时都需要修改配置文件将会非常麻烦，而通过Profile则可以轻松解决改问题。</p>
+<h2 id="profile的基本使用">Profile的基本使用</h2>
+<p>比如上述环境，我们可以在Spring Boot中创建4个文件：</p>
+<ul>
+<li>applcation.properties：公共配置</li>
+<li>application-dev.properties：开发环境配置</li>
+<li>application-test.properties：测试环境配置</li>
+<li>application-prod.properties：生产环境配置</li>
+</ul>
+<p>在applcation.properties中配置公共配置，然后通过如下配置激活指定环境的配置：</p>
+<pre><code><code>spring.profiles.active = prod</code></pre>
+<p>其中“prod”对照文件名中application-prod.properties。Spring Boot在处理时会获取配置文件applcation.properties，然后通过指定的profile的值“prod”进行拼接，获得application-prod.properties文件的名称和路径。</p>
+<p>举例说明，比如在开发环境使用服务的端口为8080，而在生产环境中需要使用18080端口。那么，在application-prod.properties中配置如下：</p>
+<pre><code><code>server.port=8080</code></pre>
+<p>而在application-prod.properties中配置为：</p>
+<pre><code><code>server.port=18080</code></pre>
+<p>在使用不同环境时，可以通过在applcation.properties中配置spring.profiles.active属性值来进行指定（如上面示例），也可以通过启动命令参数进行指定：</p>
+<pre><code><code>java -jar springboot.jar --spring.profiles.active=prod</code></pre>
+<p>这样打包后的程序只需通过命令行参数就可以使用不同环境的配置文件。</p>
+<h2 id="基于yml文件类型">基于yml文件类型</h2>
+<p>如果配置文件是基于yml文件类型，还可以将所有的配置放在同一个配置文件中：</p>
+<pre><code><code>spring:
+  profiles: 
+    active: prod
+
+server: 
+  port: 18080
+  
+---
+spring: 
+  profiles: dev  
+  
+server: 
+  port: 8080  
+  
+---
+spring: 
+  profiles: test  
+  
+server: 
+  port: 8081    
+</code></pre>
+<p>上述配置以“---”进行分割，其中第一个位置的为默认的profile，比如上述配置启动时，默认使用18080端口。如果想使用指定的端口同样可以采用上述命令启动时指定。</p>
+<h2 id="源码解析">源码解析</h2>
+<p>下面带大家简单看一下在Spring Boot中针对Profile的基本处理流程（不会过度细化具体操作）。在Spring Boot启动的过程中执行其run方法时，会执行如下一段代码：</p>
+<pre><code><code>public ConfigurableApplicationContext run(String... args) {
+    // ...
+    try {
+        ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+        ConfigurableEnvironment environment = prepareEnvironment(listeners, applicationArguments);
+        // ...
+    } 
+    // ...
+}
+</code></pre>
+<p>其中prepareEnvironment方法的相关代码如下：</p>
+<pre><code><code>private ConfigurableEnvironment prepareEnvironment(SpringApplicationRunListeners listeners,
+        ApplicationArguments applicationArguments) {
+    // ...
+    listeners.environmentPrepared(environment);
+    // ...
+}</code></pre>
+<p>在prepareEnvironment方法处理业务的过程中会调用SpringApplicationRunListeners的environmentPrepared方法发布事件。该方法会遍历注册在spring.factories中SpringApplicationRunListener实现类，然后调用其environmentPrepared方法。</p>
+<p>其中spring.factories中SpringApplicationRunListener实现类注册为：</p>
+<pre><code><code># Run Listeners
+org.springframework.boot.SpringApplicationRunListener=\
+org.springframework.boot.context.event.EventPublishingRunListener</code></pre>
+<p>SpringApplicationRunListeners方法中的调用代码如下：</p>
+<pre><code><code>void environmentPrepared(ConfigurableEnvironment environment) {
+    for (SpringApplicationRunListener listener : this.listeners) {
+        listener.environmentPrepared(environment);
+    }
+}</code></pre>
+<p>其中listeners便是注册的类的集合，这里默认只有EventPublishingRunListener。它的environmentPrepared方法实现为：</p>
+<pre><code><code>@Override
+public void environmentPrepared(ConfigurableEnvironment environment) {
+    this.initialMulticaster
+            .multicastEvent(new ApplicationEnvironmentPreparedEvent(this.application, this.args, environment));
+}</code></pre>
+<p>其实就是发布了一个监听事件。该事件会被同样注册在spring.factories中的ConfigFileApplicationListener监听到：</p>
+<pre><code><code># Application Listeners
+org.springframework.context.ApplicationListener=\
+// ...
+org.springframework.boot.context.config.ConfigFileApplicationListener
+// ...</code></pre>
+<p>关于配置文件的核心处理便在ConfigFileApplicationListener中完成。在该类中我们可以看到很多熟悉的常量：</p>
+<pre><code><code>public class ConfigFileApplicationListener implements EnvironmentPostProcessor, SmartApplicationListener, Ordered {
+
+    private static final String DEFAULT_PROPERTIES = &quot;defaultProperties&quot;;
+
+    // Note the order is from least to most specific (last one wins)
+    private static final String DEFAULT_SEARCH_LOCATIONS = &quot;classpath:/,classpath:/config/,file:./,file:./config/&quot;;
+
+    private static final String DEFAULT_NAMES = &quot;application&quot;;
+    // ...
+}</code></pre>
+<p>比如Spring Boot默认寻找的配置文件的名称、默认扫描的类路径等。</p>
+<p>不仅如此，该类还实现了监听器SmartApplicationListener接口和EnvironmentPostProcessor接口也就是拥有了监听器和环境处理的功能。</p>
+<p>其onApplicationEvent方法对接收到事件进行判断，如果是ApplicationEnvironmentPreparedEvent事件则调用onApplicationEnvironmentPreparedEvent方法进行处理，代码如下：</p>
+<pre><code><code>@Override
+public void onApplicationEvent(ApplicationEvent event) {
+    if (event instanceof ApplicationEnvironmentPreparedEvent) {
+        onApplicationEnvironmentPreparedEvent((ApplicationEnvironmentPreparedEvent) event);
+    }
+    if (event instanceof ApplicationPreparedEvent) {
+        onApplicationPreparedEvent(event);
+    }
+}</code></pre>
+<p>onApplicationEnvironmentPreparedEvent会获取到对应的EnvironmentPostProcessor并调用其postProcessEnvironment方法进行处理。而loadPostProcessors方法获取的EnvironmentPostProcessor正是在spring.factories中配置的当前类。</p>
+<pre><code><code>private void onApplicationEnvironmentPreparedEvent(ApplicationEnvironmentPreparedEvent event) {
+    List&lt;EnvironmentPostProcessor&gt; postProcessors = loadPostProcessors();
+    postProcessors.add(this);
+    AnnotationAwareOrderComparator.sort(postProcessors);
+    for (EnvironmentPostProcessor postProcessor : postProcessors) {
+        postProcessor.postProcessEnvironment(event.getEnvironment(), event.getSpringApplication());
+    }
+}</code></pre>
+<p>经过一系列的调用，最终调用到该类的如下方法：</p>
+<pre><code><code>protected void addPropertySources(ConfigurableEnvironment environment, ResourceLoader resourceLoader) {
+    RandomValuePropertySource.addToEnvironment(environment);
+    new Loader(environment, resourceLoader).load();
+}</code></pre>
+<p>其中Loader类为ConfigFileApplicationListener内部类，提供了具体处理配置文件优先级、profile、加载解析等功能。</p>
+<p>比如，在Loader类的load方法中便有如下一段代码：</p>
+<pre><code><code>for (PropertySourceLoader loader : this.propertySourceLoaders) {
+    if (canLoadFileExtension(loader, location)) {
+        load(loader, location, profile, filterFactory.getDocumentFilter(profile), consumer);
+        return;
+    }
+}</code></pre>
+<p>该代码遍历PropertySourceLoader列表，并进行对应配置文件的解析，而这里的列表中的PropertySourceLoader同样配置在spring.factories中：</p>
+<pre><code><code># PropertySource Loaders
+org.springframework.boot.env.PropertySourceLoader=\
+org.springframework.boot.env.PropertiesPropertySourceLoader,\
+org.springframework.boot.env.YamlPropertySourceLoader
+</code></pre>
+<p>查看这两PropertySourceLoader的源代码，会发现SpringBoot默认支持的配置文件格式及解析方法。</p>
+<pre><code><code>public class PropertiesPropertySourceLoader implements PropertySourceLoader {
+
+    private static final String XML_FILE_EXTENSION = &quot;.xml&quot;;
+
+    @Override
+    public String[] getFileExtensions() {
+        return new String[] { &quot;properties&quot;, &quot;xml&quot; };
+    }
+
+    @Override
+    public List&lt;PropertySource&lt;?&gt;&gt; load(String name, Resource resource) throws IOException {
+        Map&lt;String, ?&gt; properties = loadProperties(resource);
+        // ...
+    }
+
+    @SuppressWarnings({ &quot;unchecked&quot;, &quot;rawtypes&quot; })
+    private Map&lt;String, ?&gt; loadProperties(Resource resource) throws IOException {
+        String filename = resource.getFilename();
+        if (filename != null &amp;&amp; filename.endsWith(XML_FILE_EXTENSION)) {
+            return (Map) PropertiesLoaderUtils.loadProperties(resource);
+        }
+        return new OriginTrackedPropertiesLoader(resource).load();
+    }
+}</code></pre>
+<p>比如PropertiesPropertySourceLoader中支持了xml和properties两种格式的配置文件，并分别提供了PropertiesLoaderUtils和OriginTrackedPropertiesLoader两个类进行相应的处理。</p>
+<p>同样的YamlPropertySourceLoader支持yml和yaml格式的配置文件，并且采用OriginTrackedYamlLoader类进行解析。</p>
+<pre><code><code>public class YamlPropertySourceLoader implements PropertySourceLoader {
+
+    @Override
+    public String[] getFileExtensions() {
+        return new String[] { &quot;yml&quot;, &quot;yaml&quot; };
+    }
+
+    @Override
+    public List&lt;PropertySource&lt;?&gt;&gt; load(String name, Resource resource) throws IOException {
+        // ...
+        List&lt;Map&lt;String, Object&gt;&gt; loaded = new OriginTrackedYamlLoader(resource).load();
+        // ...
+    }
+}</code></pre>
+<p>当然，在ConfigFileApplicationListener类中还实现了上面提到的如何拼接默认配置文件和profile的实现，相关代码如下：</p>
+<pre><code><code>private void loadForFileExtension(PropertySourceLoader loader, String prefix, String fileExtension,
+        Profile profile, DocumentFilterFactory filterFactory, DocumentConsumer consumer) {
+    // ...
+    if (profile != null) {
+        String profileSpecificFile = prefix + &quot;-&quot; + profile + fileExtension;
+        load(loader, profileSpecificFile, profile, defaultFilter, consumer);
+        load(loader, profileSpecificFile, profile, profileFilter, consumer);
+        // Try profile specific sections in files we&#39;ve already processed
+        for (Profile processedProfile : this.processedProfiles) {
+            if (processedProfile != null) {
+                String previouslyLoaded = prefix + &quot;-&quot; + processedProfile + fileExtension;
+                load(loader, previouslyLoaded, profile, profileFilter, consumer);
+            }
+        }
+    }
+    // ...
+}</code></pre>
+<p>ConfigFileApplicationListener类中还实现了其他更多的功能，大家感兴趣的话可以debug进行阅读。</p>
+<p>原文链接：《<a href="https://www.choupangxia.com/2019/12/23/springboot-profile/">SpringBoot Profile使用详解及配置源码解析</a>》</p>
+<h2 id="spring技术视频">Spring技术视频</h2>
+<p>CSDN学院：<a href="https://edu.csdn.net/course/detail/20369">《Spring Boot 视频教程全家桶》</a></p>
+<h2 id="section"><br></h2>
+<center><b>程序新视界</b>：精彩和成长都不容错过</center>
+<p><img src="./images/SpringBoot Profile使用详解及配置源码解析0.png" alt="程序新视界-微信公众号" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

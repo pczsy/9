@@ -1,0 +1,139 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修snaic和tornado的简单性能测试' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>snaic和tornado的简单性能测试</center></div><div class='banquan'>原文出处:本文由博客园博主Mike_Zhang提供。<br/>
+原文连接:https://www.cnblogs.com/MikeZhang/p/snaic_vs_tornado_20191102.html</div><br>
+    <p>操作系统 ： CentOS7.3.1611_x64</p>
+<p>Python 版本 : 3.6.8</p>
+<p>tornado版本：6.0.2</p>
+<p>snaic版本：19.9.0</p>
+<p>CPU ： Intel(R) Core(TM) i5-2320 CPU @ 3.00GHz 4核</p>
+<p>之前一直使用tornado作为http相关python程序的框架，最近查资料发现新出的snaic性能很高，这里在同样硬件条件下使用ab进行简单的压测。</p>
+<h2><a id="user-content-准备工作" class="anchor" href="https://github.com/mike-zhang/mikeBlogEssays/blob/master/2019/20191102_snaic%E5%92%8Ctornado%E7%9A%84%E7%AE%80%E5%8D%95%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95.rst#%E5%87%86%E5%A4%87%E5%B7%A5%E4%BD%9C"></a>准备工作</h2>
+<p>安装apache ab工具：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">yum</span> -y <span style="color: #0000ff;">install</span> httpd-tools</pre>
+</div>
+<p>压测命令：</p>
+<div class="cnblogs_code">
+<pre><code>ab -c <span style="color: #800080;">30</span> -n <span style="color: #800080;">100000</span> http:<span style="color: #008000;">//</span><span style="color: #008000;">127.0.0.1:9093/</span></pre>
+</div>
+<p>参数说明：</p>
+<p>-c ：模拟并发数</p>
+<p>-n : 总请求数</p>
+<h2>对比测试</h2>
+<p>使用tornado实现的简单http服务器代码：</p>
+<p><a href="https://github.com/mike-zhang/pyExamples/blob/master/httpRelate/httpServer/tornadoTest1.py">https://github.com/mike-zhang/pyExamples/blob/master/httpRelate/httpServer/tornadoTest1.py</a></p>
+<p>使用snaic实现的简单http服务器代码：</p>
+<p><a href="https://github.com/mike-zhang/pyExamples/blob/master/httpRelate/httpServer/snaicTest1.py">https://github.com/mike-zhang/pyExamples/blob/master/httpRelate/httpServer/snaicTest1.py</a></p>
+<p>tornado测试结果：</p>
+<div class="cnblogs_code">
+<pre><code>Server Software:        TornadoServer/<span style="color: #800080;">6.0</span>.<span style="color: #800080;">2</span><span style="color: #000000;">
+Server Hostname:        </span><span style="color: #800080;">127.0</span>.<span style="color: #800080;">0.1</span><span style="color: #000000;">
+Server Port:            </span><span style="color: #800080;">9093</span><span style="color: #000000;">
+
+Document Path:          </span>/<span style="color: #000000;">
+Document Length:        </span><span style="color: #800080;">12</span><span style="color: #000000;"> bytes
+
+Concurrency Level:      </span><span style="color: #800080;">30</span><span style="color: #000000;">
+Time taken </span><span style="color: #0000ff;">for</span> tests:   <span style="color: #800080;">82.282</span><span style="color: #000000;"> seconds
+Complete requests:      </span><span style="color: #800080;">100000</span><span style="color: #000000;">
+Failed requests:        </span><span style="color: #800080;">0</span><span style="color: #000000;">
+Write errors:           </span><span style="color: #800080;">0</span><span style="color: #000000;">
+Total transferred:      </span><span style="color: #800080;">20700000</span><span style="color: #000000;"> bytes
+HTML transferred:       </span><span style="color: #800080;">1200000</span><span style="color: #000000;"> bytes
+Requests per second:    </span><span style="color: #800080;">1215.33</span> [#/<span style="color: #000000;">sec] (mean)
+Time per request:       </span><span style="color: #800080;">24.685</span><span style="color: #000000;"> [ms] (mean)
+Time per request:       </span><span style="color: #800080;">0.823</span><span style="color: #000000;"> [ms] (mean, across all concurrent requests)
+Transfer rate:          </span><span style="color: #800080;">245.68</span> [Kbytes/<span style="color: #000000;">sec] received
+
+Connection Times (ms)
+                          min  mean[</span>+/-<span style="color: #000000;">sd] median   max
+Connect:        </span><span style="color: #800080;">0</span>    <span style="color: #800080;">0</span>   <span style="color: #800080;">0.2</span>      <span style="color: #800080;">0</span>       <span style="color: #800080;">8</span><span style="color: #000000;">
+Processing:     </span><span style="color: #800080;">1</span>   <span style="color: #800080;">25</span>  <span style="color: #800080;">10.3</span>     <span style="color: #800080;">25</span>      <span style="color: #800080;">74</span><span style="color: #000000;">
+Waiting:        </span><span style="color: #800080;">1</span>   <span style="color: #800080;">24</span>  <span style="color: #800080;">10.3</span>     <span style="color: #800080;">25</span>      <span style="color: #800080;">74</span><span style="color: #000000;">
+Total:          </span><span style="color: #800080;">1</span>   <span style="color: #800080;">25</span>  <span style="color: #800080;">10.3</span>     <span style="color: #800080;">25</span>      <span style="color: #800080;">74</span><span style="color: #000000;">
+
+Percentage of the requests served within a certain </span><span style="color: #0000ff;">time</span><span style="color: #000000;"> (ms)
+  </span><span style="color: #800080;">50</span>%     <span style="color: #800080;">25</span>
+  <span style="color: #800080;">66</span>%     <span style="color: #800080;">30</span>
+  <span style="color: #800080;">75</span>%     <span style="color: #800080;">33</span>
+  <span style="color: #800080;">80</span>%     <span style="color: #800080;">34</span>
+  <span style="color: #800080;">90</span>%     <span style="color: #800080;">37</span>
+  <span style="color: #800080;">95</span>%     <span style="color: #800080;">39</span>
+  <span style="color: #800080;">98</span>%     <span style="color: #800080;">41</span>
+  <span style="color: #800080;">99</span>%     <span style="color: #800080;">42</span>
+ <span style="color: #800080;">100</span>%     <span style="color: #800080;">74</span> (longest request)</pre>
+</div>
+<p>snaic测试结果：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">Server Software:
+Server Hostname:        </span><span style="color: #800080;">127.0</span>.<span style="color: #800080;">0.1</span><span style="color: #000000;">
+Server Port:            </span><span style="color: #800080;">9093</span><span style="color: #000000;">
+
+Document Path:          </span>/<span style="color: #000000;">
+Document Length:        </span><span style="color: #800080;">12</span><span style="color: #000000;"> bytes
+
+Concurrency Level:      </span><span style="color: #800080;">30</span><span style="color: #000000;">
+Time taken </span><span style="color: #0000ff;">for</span> tests:   <span style="color: #800080;">20.164</span><span style="color: #000000;"> seconds
+Complete requests:      </span><span style="color: #800080;">100000</span><span style="color: #000000;">
+Failed requests:        </span><span style="color: #800080;">0</span><span style="color: #000000;">
+Write errors:           </span><span style="color: #800080;">0</span><span style="color: #000000;">
+Total transferred:      </span><span style="color: #800080;">11100000</span><span style="color: #000000;"> bytes
+HTML transferred:       </span><span style="color: #800080;">1200000</span><span style="color: #000000;"> bytes
+Requests per second:    </span><span style="color: #800080;">4959.29</span> [#/<span style="color: #000000;">sec] (mean)
+Time per request:       </span><span style="color: #800080;">6.049</span><span style="color: #000000;"> [ms] (mean)
+Time per request:       </span><span style="color: #800080;">0.202</span><span style="color: #000000;"> [ms] (mean, across all concurrent requests)
+Transfer rate:          </span><span style="color: #800080;">537.58</span> [Kbytes/<span style="color: #000000;">sec] received
+
+Connection Times (ms)
+                          min  mean[</span>+/-<span style="color: #000000;">sd] median   max
+Connect:        </span><span style="color: #800080;">0</span>    <span style="color: #800080;">2</span>   <span style="color: #800080;">0.5</span>      <span style="color: #800080;">2</span>      <span style="color: #800080;">11</span><span style="color: #000000;">
+Processing:     </span><span style="color: #800080;">1</span>    <span style="color: #800080;">4</span>   <span style="color: #800080;">1.5</span>      <span style="color: #800080;">4</span>      <span style="color: #800080;">38</span><span style="color: #000000;">
+Waiting:        </span><span style="color: #800080;">0</span>    <span style="color: #800080;">4</span>   <span style="color: #800080;">1.4</span>      <span style="color: #800080;">3</span>      <span style="color: #800080;">37</span><span style="color: #000000;">
+Total:          </span><span style="color: #800080;">1</span>    <span style="color: #800080;">6</span>   <span style="color: #800080;">1.5</span>      <span style="color: #800080;">6</span>      <span style="color: #800080;">41</span><span style="color: #000000;">
+
+Percentage of the requests served within a certain </span><span style="color: #0000ff;">time</span><span style="color: #000000;"> (ms)
+  </span><span style="color: #800080;">50</span>%      <span style="color: #800080;">6</span>
+  <span style="color: #800080;">66</span>%      <span style="color: #800080;">6</span>
+  <span style="color: #800080;">75</span>%      <span style="color: #800080;">7</span>
+  <span style="color: #800080;">80</span>%      <span style="color: #800080;">7</span>
+  <span style="color: #800080;">90</span>%      <span style="color: #800080;">7</span>
+  <span style="color: #800080;">95</span>%      <span style="color: #800080;">8</span>
+  <span style="color: #800080;">98</span>%      <span style="color: #800080;">9</span>
+  <span style="color: #800080;">99</span>%     <span style="color: #800080;">10</span>
+ <span style="color: #800080;">100</span>%     <span style="color: #800080;">41</span> (longest request)</pre>
+</div>
+<p>从测试结果可以看到，开启两个进程情况下：</p>
+<p><em>tornado的cps是 1215.33 ，平均响应时间是 24.685 ms</em></p>
+<p><em>snaic的cps是 4959.29 ，平均响应时间是 6.049 ms</em></p>
+<p>修改并发数后的测试数据如下：</p>
+<p><img src="./images/snaic和tornado的简单性能测试0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;测试结果对比如下：</p>
+<p><img src="./images/snaic和tornado的简单性能测试1.png" alt="" /><img src="./images/snaic和tornado的简单性能测试2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>从测试数据来看，snaic的cps比tornado高，平均响应时间方面，snaic也比tornado短。</p>
+<p>本文github地址：</p>
+<p><a href="https://github.com/mike-zhang/mikeBlogEssays/blob/master/2019/20191102_snaic%E5%92%8Ctornado%E7%9A%84%E7%AE%80%E5%8D%95%E6%80%A7%E8%83%BD%E6%B5%8B%E8%AF%95.rst" target="_blank">https://github.com/mike-zhang/mikeBlogEssays/blob/master/2019<span class="separator">/20191102_snaic和tornado的简单性能测试.rst<span class="final-path"><br /></span></span></a></p>
+<p>欢迎补充</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

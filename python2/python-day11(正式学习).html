@@ -1,0 +1,304 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python-day11(正式学习)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python-day11(正式学习)</center></div><div class='banquan'>原文出处:本文由博客园博主wind叶提供。<br/>
+原文连接:https://www.cnblogs.com/leaf-wind/p/11321505.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#文件高级应用">文件高级应用</a><ul>
+        <li><a href="#多重操作">多重操作</a><ul>
+        <li><a href="#rt可读可写文件名为a">r+t：可读，可写（文件名为a）</a></li>
+        <li><a href="#wt可写可读">w+t：可写可读</a></li>
+        <li><a href="#at可追加可读">a+t：可追加可读</a></li>
+        </ul></li>
+        <li><a href="#文件内指针移动及一些操作">文件内指针移动及一些操作</a><ul>
+        <li><a href="#指针移动seekoffsetwhence">指针移动seek(offset,whence)</a></li>
+        <li><a href="#寻找指针位置tell">寻找指针位置tell()</a></li>
+        <li><a href="#读取部分字符readn">读取部分字符read(n)</a></li>
+        <li><a href="#截断文件内容truncaten">截断文件内容truncate(n)</a></li>
+        </ul></li>
+        <li><a href="#文件的修改">文件的修改</a><ul>
+        <li><a href="#方式一">方式一</a></li>
+        <li><a href="#方式二">方式二</a></li>
+        </ul></li>
+        </ul></li>
+        <li><a href="#函数">函数</a><ul>
+        <li><a href="#什么是函数">什么是函数</a></li>
+        <li><a href="#为什么要用函数">为什么要用函数</a></li>
+        <li><a href="#如何用函数">如何用函数</a></li>
+        <li><a href="#定义函数的三种形式">定义函数的三种形式</a><ul>
+        <li><a href="#无参函数">无参函数</a></li>
+        <li><a href="#有参函数">有参函数</a></li>
+        <li><a href="#空函数">空函数</a></li>
+        </ul></li>
+        <li><a href="#函数的返回值">函数的返回值</a><ul>
+        <li><a href="#什么是返回值">什么是返回值</a></li>
+        <li><a href="#为什么要有返回值">为什么要有返回值</a></li>
+        </ul></li>
+        <li><a href="#函数的调用">函数的调用</a><ul>
+        <li><a href="#什么是函数调用">什么是函数调用</a></li>
+        <li><a href="#为什么调用函数">为什么调用函数</a></li>
+        <li><a href="#函数调用的三种形式">函数调用的三种形式</a></li>
+        </ul></li>
+        <li><a href="#形参和实参">形参和实参</a><ul>
+        <li><a href="#形参">形参</a></li>
+        <li><a href="#实参">实参</a></li>
+        <li><a href="#位置形参">位置形参</a></li>
+        <li><a href="#位置实参">位置实参</a></li>
+        <li><a href="#关键字实参">关键字实参</a></li>
+        <li><a href="#默认形参">默认形参</a></li>
+        </ul></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="文件高级应用">文件高级应用</h1>
+<h2 id="多重操作">多重操作</h2>
+<h3 id="rt可读可写文件名为a">r+t：可读，可写（文件名为a）</h3>
+<pre><code><code>with open(&#39;a&#39;,&#39;r+&#39;,encoding=&#39;utf-8&#39;)as f:
+    data=f.read()
+    print(data)
+    data=data.replace(&#39;d&#39;,&#39;m&#39;)
+    print(data)
+    f.truncate(0)  #截断文件内原内容
+    f.write(data)  #对文件内容的一个修改，注意如果指针在文本内容前面，添加时新内容会覆盖原内容，而不是插入新内容</code></pre>
+<pre><code><code>                                                           asdasdasd
+                                                           asmasmasm</code></pre>
+<h3 id="wt可写可读">w+t：可写可读</h3>
+<pre><code><code>with open(&#39;a&#39;,&#39;w+&#39;,encoding=&#39;utf-8&#39;)as f:  #但凡w/w+操作都会在此时先清空原内容
+    f.write(&#39;ww&#39;)
+    data=f.read()
+    print(data)  #写入时指针在最后，所以读不到任何内容</code></pre>
+<h3 id="at可追加可读">a+t：可追加可读</h3>
+<pre><code><code>with open(&#39;a&#39;,&#39;a+&#39;,encoding=&#39;utf-8&#39;)as f:
+    f.write(&#39;Nihao&#39;)
+    data=f.read()
+    print(data)  #该模式下指针始终在文件末端，想要读内容必须先移动指针</code></pre>
+<h2 id="文件内指针移动及一些操作">文件内指针移动及一些操作</h2>
+<h3 id="指针移动seekoffsetwhence">指针移动seek(offset,whence)</h3>
+<p>offset代表文件指针的偏移量，单位是字节</p>
+<pre><code><code># seek()
+with open(&#39;36r.txt&#39;, &#39;rt&#39;, encoding=&#39;utf-8&#39;) as fr:
+    print(f&quot;fr.seek(4, 0): {fr.seek(3, 0)}&quot;)  # 0相当于文件头开始；1相当于当前文件所在位置；2相当于文件末尾
+    # fr.seek(0,2)  # 切换到文件末尾</code></pre>
+<pre><code><code>fr.seek(4, 0): 3</code></pre>
+<h3 id="寻找指针位置tell">寻找指针位置tell()</h3>
+<pre><code><code># tell()
+with open(&#39;36r.txt&#39;, &#39;rt&#39;, encoding=&#39;utf-8&#39;) as fr:
+    fr.seek(4, 0)
+    print(f&quot;fr.tell(): {fr.tell()}&quot;)</code></pre>
+<pre><code><code>fr.tell(): 4</code></pre>
+<h3 id="读取部分字符readn">读取部分字符read(n)</h3>
+<p>只有在模式下的read(n)，n代表的是字符个数，除此之外，其他但凡涉及文件指针的都是字节个数</p>
+<pre><code><code># read()
+with open(&#39;36r.txt&#39;, &#39;rt&#39;, encoding=&#39;utf-8&#39;) as fr:
+    print(f&quot;fr.read(3): {fr.read(3)}&quot;)</code></pre>
+<pre><code><code>fr.read(3): sdf</code></pre>
+<h3 id="截断文件内容truncaten">截断文件内容truncate(n)</h3>
+<p>truncate(n)是截断文件，所以文件的打开方式必须可写，但是不能用w或w+等方式打开，因为那样直接清空文件了，所以truncate()要在r+或a或a+等模式下测试效果。它的参照物永远是文件头。并且truncate()不加参数，相当于清空文件。</p>
+<pre><code><code># truncate()
+with open(&#39;36r.txt&#39;, &#39;r+t&#39;, encoding=&#39;utf-8&#39;) as fr:
+    fr.truncate(3)</code></pre>
+<h2 id="文件的修改">文件的修改</h2>
+<h3 id="方式一">方式一</h3>
+<p>将硬盘存放的该文件的内容全部加载到内存，在内存中是可以修改的，修改完毕后，再由内存覆盖到硬盘（word，vim，nodpad++等编辑器）。</p>
+<pre><code><code>import os
+
+with open(&#39;37r.txt&#39;) as fr, \
+        open(&#39;37r_swap.txt&#39;, &#39;w&#39;) as fw:
+    data = fr.read()  # 全部读入内存,如果文件很大,会很卡
+    data = data.replace(&#39;tank&#39;, &#39;tankSB&#39;)  # 在内存中完成修改
+
+    fw.write(data)  # 新文件一次性写入原文件内容
+
+# 删除原文件
+os.remove(&#39;37r.txt&#39;)
+# 重命名新文件名为原文件名
+os.rename(&#39;37r_swap.txt&#39;, &#39;37r.txt&#39;)</code></pre>
+<h3 id="方式二">方式二</h3>
+<p>将硬盘存放的该文件的内容一行一行地读入内存，修改完毕就写入新文件，最后用新文件覆盖源文件。</p>
+<pre><code><code>import os
+
+with open(&#39;37r.txt&#39;) as fr,\
+        open(&#39;37r_swap.txt&#39;, &#39;w&#39;) as fw:
+    # 循环读取文件内容，逐行修改
+    for line in fr:
+        line = line.replace(&#39;jason&#39;, &#39;jasonSB&#39;)
+        # 新文件写入原文件修改后内容
+        fw.write(line)
+
+os.remove(&#39;37r.txt&#39;)
+os.rename(&#39;37r_swap.txt&#39;, &#39;37r.txt&#39;)</code></pre>
+<p><strong>总而言之，修改文件内容的思路为：以读的方式打开原文件，以写的方式打开一个新的文件，把原文件的内容进行修改，然后写入新文件，之后利用os模块的方法，把原文件删除，重命名新文件为原文件名，达到以假乱真的目的。</strong></p>
+<h1 id="函数">函数</h1>
+<h2 id="什么是函数">什么是函数</h2>
+<p>假设现在你是下水道工，如果你事先准备好你的工具箱，等你接到修理下水道的工作的时候，你直接把你的工具箱拿过去直接使用就行了，而不需要临时准备锤子啥的。</p>
+<p>在程序中，函数就是具备某一功能的工具，事先将工具准备好就是函数的定义，遇到应用场景拿来就用就是函数的调用。</p>
+<h2 id="为什么要用函数">为什么要用函数</h2>
+<p>如果不使用函数，写程序时将会遇到这三个问题：</p>
+<ol>
+<li>程序冗长</li>
+<li>程序的扩展性差</li>
+<li>程序的可读性差</li>
+</ol>
+<h2 id="如何用函数">如何用函数</h2>
+<p>先定义函数后调用</p>
+<p>定义函数</p>
+<pre><code><code>def 函数名(param1、param2……):
+    &quot;&quot;&quot;
+    函数功能的描述信息
+    :param1：描述
+    :param2：描述
+    :return：返回值
+    &quot;&quot;&quot;
+    code 1
+    code 2
+    code 3
+    ...
+
+    return 返回值</code></pre>
+<p>调用函数</p>
+<pre><code><code>函数名(param1、param2……)</code></pre>
+<h2 id="定义函数的三种形式">定义函数的三种形式</h2>
+<h3 id="无参函数">无参函数</h3>
+<p>定义函数时参数是函数体接收外部传值的一种媒介，其实就是一个变量名</p>
+<p>在函数阶段括号内没有参数，称为无参函数。需要注意的是：定义时无参，意味着调用时也无需传入参数。</p>
+<p>如果函数体代码逻辑不需要依赖外部传入的值，必须得定义成无参函数。</p>
+<pre><code><code>def func():
+    print(&#39;hello nick&#39;)
+    
+func()  # hello nick</code></pre>
+<h3 id="有参函数">有参函数</h3>
+<p>在函数定义阶段括号内有参数，称为有参函数。需要注意的是：定义时有参，意味着调用时也必须传入参数。</p>
+<p>如果函数体代码逻辑需要依赖外部传入的值，必须得定义成有参函数。</p>
+<pre><code><code>def sum_self(x, y):
+    &quot;&quot;&quot;求和&quot;&quot;&quot;
+    res = x+y
+    print(res)
+
+sum_self(1,2)  # 3</code></pre>
+<h3 id="空函数">空函数</h3>
+<p>当你只知道你需要实现某个功能，但不知道该如何用代码实现时，你可以暂时写个空函数，然后先实现其他的功能。</p>
+<pre><code><code>def func():
+    pass</code></pre>
+<h2 id="函数的返回值">函数的返回值</h2>
+<h3 id="什么是返回值">什么是返回值</h3>
+<p>函数内部代码经过一些列逻辑处理获得的结果。</p>
+<pre><code><code>def func():
+    name = &#39;nick&#39;
+    return name
+
+
+name = func()
+print(name)</code></pre>
+<pre><code><code>nick</code></pre>
+<h3 id="为什么要有返回值">为什么要有返回值</h3>
+<p>现在有一个需求，比较两个人的月薪，然后想获取月薪较大人的年薪。</p>
+<p>如果需要在程序中拿到函数的处理结果做进一步的处理，则需要函数必须要有返回值。</p>
+<p>需要注意的是：</p>
+<ul>
+<li>return是一个函数结束的标志，函数内可以有多个return，只要执行到return，函数就会执行。</li>
+<li>return的返回值可以返回任意数据类型</li>
+<li>return的返回值无个数限制，即可以使用逗号隔开返回多个值
+<ul>
+<li>0个：返回None</li>
+<li>1个：返回值是该值本身</li>
+<li>多个：返回值是元组</li>
+</ul></li>
+</ul>
+<pre><code><code># 为什么要有返回值
+def max_self(salary_x, salary_y):
+    if salary_x &gt; salary_y:
+        return salary_x
+    else:
+        return salary_y
+
+
+max_salary = max_self(20000, 30000)
+print(max_salary*12)</code></pre>
+<pre><code><code>360000</code></pre>
+<h2 id="函数的调用">函数的调用</h2>
+<h3 id="什么是函数调用">什么是函数调用</h3>
+<p>第一次将函数其实就讲了函数的调用，但是你不得不再次更新你对函数调用的印象。<code>函数名(…)</code>即调用函数，会执行函数体代码，直到碰到return或者执行完函数体内所有代码结束。</p>
+<p>函数运行完毕所有代码，如果函数体不写return，则会返回None。</p>
+<pre><code><code>def foo():
+    pass
+
+print(foo())</code></pre>
+<pre><code><code>None</code></pre>
+<h3 id="为什么调用函数">为什么调用函数</h3>
+<p>使用函数的功能</p>
+<h3 id="函数调用的三种形式">函数调用的三种形式</h3>
+<pre><code><code>def max_self(x,y):
+    if x&gt;y:
+        return x
+    else:
+        return y
+    
+# 1.
+max_self(1,2)
+# 2.
+res = max_self(1,2)*12
+# 3.
+max_self(max_self(20000,30000),40000)</code></pre>
+<h2 id="形参和实参">形参和实参</h2>
+<h3 id="形参">形参</h3>
+<p>在函数定义阶段括号内定义的参数，称之为形式参数，简称形参，本质就是变量名。</p>
+<h3 id="实参">实参</h3>
+<p>在函数调用阶段括号内传入的参数，称之为实际参数，简称实参，本质就是变量的值。</p>
+<h3 id="位置形参">位置形参</h3>
+<p>在函数定义阶段，按照从左到右的顺序依次定义的形参，称之为位置形参。</p>
+<p>特点：按照位置定义的形参，都必须被传值，多一个不行，少一个也不行。</p>
+<h3 id="位置实参">位置实参</h3>
+<p>在函数调用阶段，按照从左到右的顺序依次定义的实参，称之为位置实参。</p>
+<p>特点：按照位置为对应的形参依次传值。</p>
+<h3 id="关键字实参">关键字实参</h3>
+<p>在调用函数时，按照key=value的形式为指定的参数传值，称为关键字实参。</p>
+<p>特点：可以打破位置的限制，但仍能为指定的形参赋值。</p>
+<p>注意：</p>
+<ol>
+<li>可以混用位置实参和关键字实参，但是位置实参必须在关键字实参的左边。</li>
+<li>可以混用位置实参和关键字实参，但不能对一个形参重复赋值。</li>
+</ol>
+<pre><code><code>func(x, y=2)
+func(y=2, x)  # SyntaxError: positional argument follows keyword argument
+func(x, x=1)  # NameError: name &#39;x&#39; is not defined</code></pre>
+<h3 id="默认形参">默认形参</h3>
+<p>在定义阶段，就已经被赋值。</p>
+<p>特点：在定义阶段就已经被赋值，意味着在调用时可以不用为其赋值。</p>
+<p>注意：</p>
+<ol>
+<li>位置形参必须放在默认形参的左边。</li>
+<li>默认形参的值只在定义阶段赋值一次，也就是说默认参数的值在函数定义阶段就已经固定了。</li>
+</ol>
+<pre><code><code>m = 10
+
+
+def foo(x=m):
+    print(x)
+
+
+m = 111
+foo()  # 10</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

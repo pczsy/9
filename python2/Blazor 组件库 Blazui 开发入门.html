@@ -1,0 +1,243 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Blazor 组件库 Blazui 开发入门' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Blazor 组件库 Blazui 开发入门</center></div><div class='banquan'>原文出处:本文由博客园博主宇辰（馨辰）提供。<br/>
+原文连接:https://www.cnblogs.com/wzxinchen/p/12096092.html</div><br>
+    <p>标签： Blazor Blazui文档 Blazui</p>
+<hr />
+<h2 id="blazui-是什么">Blazui 是什么？</h2>
+<p>Blazui 发布有段时间了，但一直没有写相关的文章，现在抽时间写点。<br />
+九个月前，我想用 Blazor 开发后台管理系统，找了一圈愣是没找着好用好看免费的 Blazor UI 框架，好几次被劝退，不想找了，但又想用 Blazor，所以萌生了自己写一个 Blazor 的 UI 框架的想法，这便是 Blazui。<br />
+但我并不想自己写 CSS，抄了 Element UI 的 CSS 和 HTML 结构，程序员的美工能奈何。<br />
+没选用 Bootstrap 的是因为它本身功能弱，如果我要搞一堆它本身没有的功能的话意味着 CSS 我要自己写<br />
+没选用 Antd 是因为它没有一个很好抄的现成的框架，很好抄的意思是指 HTML 结构清晰<br />
+目前 Blazui 只有服务端渲染，客户端渲染待微软出正式版</p>
+<h2 id="开源地址">开源地址</h2>
+<p>开源地址：<br />
+https://github.com/wzxinchen/Blazui<br />
+https://gitee.com/wzxinchen/blazui<br />
+我要星星~我要Fork~<br />
+QQ交流群（新功能第一时间通知）<br />
+74522853</p>
+<h2 id="演示地址">演示地址</h2>
+<p>http://blazui.com:9000</p>
+<h2 id="安装-blazui-到-blazor-项目">安装 Blazui 到 Blazor 项目</h2>
+<h3 id="使用前提">使用前提</h3>
+<ol>
+<li>安装 .Net Core 3.1</li>
+<li>安装 VS2019，更新到最新版</li>
+</ol>
+<h3 id="安装步骤">安装步骤</h3>
+<ol>
+<li>新建 Blazor 服务器端渲染应用<br />
+<img src="./images/Blazor 组件库 Blazui 开发入门0.png" alt="image.png-49.6kB" /></li>
+<li>安装 Nuget 包 Blazui.Component</li>
+<li>修改 Pages 文件夹下的 _Host.cshtml 为以下内容</li>
+</ol>
+<pre><code><code>@page &quot;/&quot;
+@namespace Blazui.ServerRender.Pages //这里的 Blazui.ServerRender 需要变为你实际的命名空间
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-cn&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+    &lt;title&gt;Blazui, Element的blazor版本，用 .Net 写前端的 UI 框架，开箱即用&lt;/title&gt;
+    &lt;base href=&quot;~/&quot; /&gt;
+    &lt;link href=&quot;css/site.css&quot; rel=&quot;stylesheet&quot; /&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/_content/Blazui.Component/css/index.css&quot; /&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/_content/Blazui.Component/css/fix.css&quot; /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;app&gt;
+        @(await Html.RenderComponentAsync&lt;App&gt;(RenderMode.ServerPrerendered))
+    &lt;/app&gt;
+
+    &lt;script src=&quot;_content/Blazui.Component/js/dom.js&quot;&gt;&lt;/script&gt;
+    &lt;script src=&quot;_framework/blazor.server.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>其中</p>
+<blockquote>
+<ul>
+<li>index.css 文件是 Element 的样式文件</li>
+<li>dom.js 文件是 Blazui 自身需要的 js文件</li>
+<li>fix.css 文件是 Blazui 对 Element 补充的样式文件</li>
+</ul>
+</blockquote>
+<p>在 _Imports.razor 文件中<strong>添加</strong>以下代码</p>
+<pre class="csharp"><code>@using Blazui.Component.Container
+@using Blazui.Component.Button
+@using Blazui.Component.Dom
+@using Blazui.Component.Dynamic
+@using Blazui.Component.NavMenu
+@using Blazui.Component.Input
+@using Blazui.Component.Radio
+@using Blazui.Component.Select
+@using Blazui.Component.CheckBox
+@using Blazui.Component.Switch
+@using Blazui.Component.Table
+@using Blazui.Component.Popup
+@using Blazui.Component.Pagination
+@using Blazui.Component.Form
+@using Blazui.Component.Upload
+@using Blazui.Component</code></pre>
+<p>将 Startup.cs 的 ConfigureServices 方法替换为以下代码</p>
+<pre class="csharp"><code>public void ConfigureServices(IServiceCollection services)
+{
+    services.AddRazorPages();
+    services.AddServerSideBlazor();
+    services.AddBlazuiServices();
+    services.AddSingleton&lt;WeatherForecastService&gt;();
+}</code></pre>
+<p>为了使弹窗类组件生效，需要将 MainLayout.razor 的内容改为如下</p>
+<pre><code><code>@inherits LayoutComponentBase
+&lt;BPopup&gt;&lt;/BPopup&gt;
+
+&lt;div class=&quot;sidebar&quot;&gt;
+    &lt;NavMenu /&gt;
+&lt;/div&gt;
+
+&lt;div class=&quot;main&quot;&gt;
+    @Body
+&lt;/div&gt;</code></pre>
+<p>在任意一个页面输入以下代码，运行可看效果</p>
+<pre class="razor"><code>&lt;BButton Type=&quot;@ButtonType.Primary&quot;&gt;主要按钮&lt;/BButton&gt;</code></pre>
+<p><img src="./images/Blazor 组件库 Blazui 开发入门1.png" alt="image.png-21.5kB" /></p>
+<h2 id="目前部分可用组件列表">目前部分可用组件列表</h2>
+<p>个别用的少的不完善的没有加入</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">组件名</th>
+<th style="text-align: center;">调用Demo</th>
+<th>功能支持</th>
+<th></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">按钮</td>
+<td style="text-align: center;">http://blazui.com:9000/button</td>
+<td>[√] 常规支持</td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">输入框</td>
+<td style="text-align: center;">http://blazui.com:9000/input</td>
+<td>[√] 常规支持</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">单选框</td>
+<td style="text-align: center;">http://blazui.com:9000/radio</td>
+<td>[√] 常规支持 <br /> [√] 按钮单选框 <br /> [√] 单选框组 <br /> [√] 按钮单选框组 <br /> [√] 带边框的单选框</td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">复选框</td>
+<td style="text-align: center;">http://blazui.com:9000/checkbox</td>
+<td>[√] 常规支持 <br /> [√] 按钮复选框 <br /> [√] 复选框组 <br /> [√] 按钮复选框组</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">下拉框</td>
+<td style="text-align: center;">http://blazui.com:9000/select</td>
+<td>[√] 常规支持 <br /> [√] 选项可禁用</td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">切换组件</td>
+<td style="text-align: center;">http://blazui.com:9000/switch</td>
+<td>[√] 常规支持 <br /> [√] 自定义状态文本</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">菜单</td>
+<td style="text-align: center;">http://blazui.com:9000/menu</td>
+<td>[√] 常规支持 <br /> [√] 横向菜单 <br /> [√] 坚向菜单 <br /> [√] 二级菜单 <br /> [√] 自定义背景色 <br /> [×] 多级菜单</td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">标签页</td>
+<td style="text-align: center;">http://blazui.com:9000/tabs</td>
+<td>[√] 常规支持 <br /> [√] 自定义选项卡样式 <br /> [√] 自定义卡片位置 <br /> [√] 可移除新增</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">表格</td>
+<td style="text-align: center;">http://blazui.com:9000/table</td>
+<td>[√] 常规支持 <br /> [√] 自动生成列 <br /> [√] 斑马条纹 <br /> [√] 分页 <br /> [√] 自定义列内容 <br /> [√] 表头锁定 <br /> [√] 复选框列 <br /> [√] 表格边框 <br /> [√] 自适应宽度高度</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">消息</td>
+<td style="text-align: center;">http://blazui.com:9000/message</td>
+<td>[√] 常规支持 <br /> [√] 四种消息类型</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">分页</td>
+<td style="text-align: center;">http://blazui.com:9000/pagination</td>
+<td>[√] 常规支持</td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">加载中</td>
+<td style="text-align: center;">http://blazui.com:9000/loading</td>
+<td>[√] 常规支持 <br /> [√] 自定义背景颜色、图标、文字 <br /> [√] 全屏加载 <br /> [√] 部分加载</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">消息弹窗</td>
+<td style="text-align: center;">http://blazui.com:9000/messagebox</td>
+<td>[√] 常规支持 <br /> [√] Alert弹窗 <br /> [√] Confirm 弹窗 <br /> [√] 无回调</td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">对话框</td>
+<td style="text-align: center;">http://blazui.com:9000/dialog</td>
+<td>[√] 常规支持 <br /> [√] 嵌套弹窗 <br /> [√] 指定宽度 <br /> [√] 无回调</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">日期选择器</td>
+<td style="text-align: center;">http://blazui.com:9000/datepicker</td>
+<td>[√] 常规支持 <br /> [√] 指定日期格式</td>
+<td></td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Form 表单</td>
+<td style="text-align: center;">http://blazui.com:9000/form</td>
+<td>[√] 常规支持 <br /> [√] 三种对齐方式 <br /> [√] 单行表单</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">布局面板</td>
+<td style="text-align: center;">http://blazui.com:9000/layout</td>
+<td>[√] 常规支持 <br /> [√] 嵌套布局</td>
+<td></td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

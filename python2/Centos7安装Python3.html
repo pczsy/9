@@ -1,0 +1,63 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Centos7安装Python3' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Centos7安装Python3</center></div><div class='banquan'>原文出处:本文由博客园博主与鹿逐秋提供。<br/>
+原文连接:https://www.cnblogs.com/wangyueping/p/11602821.html</div><br>
+    <h1 id="一下载python源码包">一、下载Python源码包</h1>
+<p><strong>网址：<a href="https://www.python.org/downloads/release/python-362/" class="uri">https://www.python.org/downloads/release/python-362/</a></strong></p>
+<p><strong>下载地址：<a href="https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tgz" class="uri">https://www.python.org/ftp/python/3.6.2/Python-3.6.2.tgz</a></strong></p>
+<h1 id="二安装python前的库环境非常重要">二、安装python前的库环境，非常重要</h1>
+<pre><code><code>yum install gcc patch libffi-devel python-devel  zlib-devel bzip2-devel openssl-devel ncurses-devel sqlite-devel readline-devel tk-devel gdbm-devel db4-devel libpcap-devel xz-devel -y</code></pre>
+<h1 id="三configure">三、configure</h1>
+<p>这一步一般用来生成 Makefile，为下一步的编译做准备，你可以通过在 configure 后加上参数来对安装进行控制，比如代码:</p>
+<pre><code><code>./configure --prefix=/usr</code></pre>
+<p>上面的意思是将该软件安装在 /usr 下面，执行文件就会安装在 /usr/bin （而不是默认的 /usr/local/bin)，资源文件就会安装在 /usr/share（而不是默认的/usr/local/share）。</p>
+<p>同时一些软件的配置文件你可以通过指定 --sys-config= 参数进行设定。有一些软件还可以加上 --with、--enable、--without、--disable 等等参数对编译加以控制，你可以通过允许 ./configure --help 察看详细的说明帮助</p>
+<h1 id="四make">四、make</h1>
+<p>这一步就是编译，大多数的源代码包都经过这一步进行编译（当然有些perl或python编写的软件需要调用perl或python来进行编译）。</p>
+<p>如果 在 make 过程中出现 error ，你就要记下错误代码（注意不仅仅是最后一行），然后你可以向开发者提交 bugreport（一般在 INSTALL 里有提交地址），或者你的系统少了一些依赖库等，这些需要自己仔细研究错误代码。</p>
+<p>make 的作用是开始进行源代码编译，以及一些功能的提供，这些功能由他的 Makefile 设置文件提供相关的功能，比如 make install 一般表示进行安装，make uninstall 是卸载，不加参数就是默认的进行源代码编译。</p>
+<p>make 是 <a href="http://www.icultivator.com/tag/linux">Linux</a> 开发套件里面自动化编译的一个控制程序，他通过借助 Makefile 里面编写的编译规范进行自动化的调用 <a href="http://www.icultivator.com/tag/gcc">gcc</a> 、ld 以及运行某些需要的程序进行编译的程序。一般情况下，他所使用的 Makefile 控制代码，由 configure 这个设置脚本根据给定的参数和系统环境生成。</p>
+<h1 id="五make-install">五、make install</h1>
+<p>这条命令来进行安装（当然有些软件需要先运行 make check 或 make test来进行一些测试），这一步一般需要你有 root 权限（因为要向系统写入文件）</p>
+<pre><code><code>wget https://www.python.org/ftp/python/3.6.7/Python-3.6.7.tar.xz
+xz -d Python-3.6.7.tar.xz
+tar -xf Python-3.6.7.tar</code></pre>
+<pre><code><code>#yum install gcc -y
+./configure --prefix=/opt/python
+make &amp;&amp; make install
+---------------------
+用python查看默认安装路径
+&gt;&gt;&gt; import sys
+&gt;&gt;&gt; sys.path
+[&#39;&#39;, &#39;/usr/local/lib/python36.zip&#39;, &#39;/usr/local/lib/python3.6&#39;, 
+&#39;/usr/local/lib/python3.6/lib-dynload&#39;, &#39;/usr/local/lib/python3.6/site-packages&#39;]
+--------------------
+python3.4默认没添加path
+在/etc/profile最后一行添加
+export PATH=$PATH:/opt/python/bin
+然后
+source /etc/profile
+
+#python快捷path就被改了，yum用的python2，麻烦</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

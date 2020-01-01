@@ -1,0 +1,142 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Flume理论研究与实验' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Flume理论研究与实验</center></div><div class='banquan'>原文出处:本文由博客园博主wing1995提供。<br/>
+原文连接:https://www.cnblogs.com/wing1995/p/12053245.html</div><br>
+    <p><strong style="font-family: 宋体; font-size: 18px;">一、理论研究</strong></p>
+<p><span style="font-size: 18px; font-family: 宋体;"><strong>　1.1 总览　　</strong></span></p>
+<p><span style="font-size: 18px; font-family: 宋体;"><strong>　　</strong><span style="font-size: 16px;">Flume是一个分布式的可靠的日志收集系统，主要是用于从各种数据源收集、聚合并移动大批量的日志数据到存储系统；它本身具有许多故障转移和恢复机制，具有强大的容错能力；它使用下面这样一个简单的可扩展的数据流模型来进行在线分析。</span></span></p>
+<p><span style="font-size: 18px; font-family: 宋体;"><span style="font-size: 16px;">&nbsp;</span></span></p>
+<p><span style="font-size: 18px; font-family: 宋体;"><span style="font-size: 16px;"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Flume理论研究与实验0.png" alt="" /></span></span></p>
+<p><strong>　<span style="font-family: 宋体; font-size: 18px;">1.2 核心概念</span></strong></p>
+<p><span style="font-family: 宋体;"><span style="font-size: 16px;">&nbsp; &nbsp;<strong>Event：</strong></span><span style="font-size: 16px;">一个FLume事件是贯通整个Agent的基本的数据单元。Event从Source流到Channel再到Sink组件，主要是通过Event接口实现。一个Event包含一个字节数组（body）和一些可选的字符串表示的属性（headers）。</span></span></p>
+<p><strong><span style="font-family: 宋体; font-size: 16px;">&nbsp; &nbsp;Agent：</span></strong><span style="font-family: 宋体; font-size: 16px;">一个Agent就是一个独立的JVM进程。整个进程可以简单的描述为：Source从外部数据源消费特殊格式的Events，然后将这些事件存储到Channel中，Channel作为缓冲区会保存事件直到事件被Sink消费为止，当Sink消费到Channel中的事件，再将其从Channel中移除并将事件存放到外部的数据仓库比如hdfs或者下一个数据量的Source中。</span></p>
+<p><strong><span style="font-family: 宋体; font-size: 16px;">&nbsp;<span style="font-size: 18px;">1.3 可靠性</span></span></strong></p>
+<p><span style="font-family: 宋体; font-size: 16px;">　　<strong>单跳可靠性：</strong>存储在Channel中的事件只有当它被存储在下一个Agent的Channel或者终端仓库中才会被Sink移除，这是Flume提供的一种end-to-end的数据流可靠性传输机制。</span></p>
+<p><span style="font-family: 宋体; font-size: 16px;">　　</span><span style="font-family: 宋体; font-size: 16px;"><strong>多跳可靠性：</strong>Flume通过使用这样一种事务的方法来保证Events的可靠性传输，主要是由Channel提供的事务里，封装了Source和Sink对Event进行有效的存储和恢复。上一个Agent中的Sink和当前Agent的Source将开启它们的事务方法来保证数据安全的存储在当前Agent的Channel中，这是一种point-to-point的可靠性传输机制。</span></p>
+<p><span style="font-size: 18px;"><strong><span style="font-family: 宋体;">　1.4 可恢复性</span></strong></span></p>
+<p><span style="font-size: 18px;"><strong><span style="font-family: 宋体;">　　</span></strong><span style="font-family: 宋体; font-size: 16px;">缓存在Channel中的事件将会管理数据的恢复。Flume支持持久化的File Channel，当Channel类型为File Channel时数据将持久化到本地文件系统，当然也有Memory Channel会简单的将数据存储在内存队列中，Momery Channel速度很快但是一旦Agent挂了，数据将不可恢复。</span><span style="font-family: 宋体; font-size: 16px;"><br /></span></span></p>
+<p><span style="font-size: 18px; font-family: 宋体;"><strong>二、实验</strong></span></p>
+<p><span style="font-size: 18px; font-family: 宋体;"><strong>　2.1 环境准备</strong></span></p>
+<ol>
+<li><span style="font-size: 16px; font-family: 宋体;">centos、JDK1.8、maven3;</span></li>
+<li><span style="font-size: 16px; font-family: 宋体;">从git下载源码后实验mvn编译或者直接cdh界面安装flume；</span></li>
+<li><span style="font-size: 16px; font-family: 宋体;">足够的日志空间和内存以及数据写入权限；</span></li>
+<li><span style="font-size: 16px; font-family: 宋体;">配置好flume的环境变量后，命令行输入flume-ng version查看版本验证安装是否成功。</span></li>
+
+
+
+</ol>
+<p><span style="font-size: 16px; font-family: 宋体;">　<span style="font-size: 18px;"><strong>2.2 实验案例</strong></span></span></p>
+<p><span style="font-size: 16px; font-family: 宋体;"><span style="font-size: 18px;"><strong>　　</strong><span style="font-size: 16px;">flume的根目录下的conf文件夹中的flume-conf.properties.template文件时一个配置文件的模板，该文件对Agent进行了详细的配置。一个或多个Agent的配置可以写在一个配置文件中，配置主要包括Agent中的每一个source、sink和Channel的属性以及这些组件是如何连在一起并组成数据流模型的。在Flume的实验中，我们主要通过配置文件来建立Flume模型，并通过</span></span></span><span style="font-family: 宋体;"><span style="font-size: 18px;">bin/</span></span><span style="font-size: 16px; font-family: 宋体;">flume-ng来启动Flume的Agent。flume-ng命令需要指定agent的名称以及配置路径和配置文件名称，更多参数配置可以通过输入flume-ng help来了解。</span></p>
+<p><span style="font-size: 16px; font-family: 宋体;">　<strong>实验一、</strong>本地tcp端口发送消息到flume，然后日志输出结果<br /></span></p>
+<p><span style="font-size: 16px; font-family: 宋体;">　　首先，编写配置文件</span></p>
+<div class="cnblogs_code">
+<pre><code># example.conf: A single-<span style="color: #000000;">node Flume configuration
+
+# Name the components on this agent
+a1.sources </span>=<span style="color: #000000;"> r1
+a1.sinks </span>=<span style="color: #000000;"> k1
+a1.channels </span>=<span style="color: #000000;"> c1
+
+# Describe</span>/<span style="color: #000000;">configure the source
+a1.sources.r1.type </span>=<span style="color: #000000;"> netcat
+a1.sources.r1.bind </span>=<span style="color: #000000;"> localhost
+a1.sources.r1.port </span>= <span style="color: #800080;">44444</span><span style="color: #000000;">
+
+# Describe the sink
+a1.sinks.k1.type </span>=<span style="color: #000000;"> logger
+
+# Use a channel </span><span style="color: #0000ff;">which</span> buffers events <span style="color: #0000ff;">in</span><span style="color: #000000;"> memory
+a1.channels.c1.type </span>=<span style="color: #000000;"> memory
+a1.channels.c1.capacity </span>= <span style="color: #800080;">1000</span><span style="color: #000000;">
+a1.channels.c1.transactionCapacity </span>= <span style="color: #800080;">100</span><span style="color: #000000;">
+
+# Bind the source and sink to the channel
+a1.sources.r1.channels </span>=<span style="color: #000000;"> c1
+a1.sinks.k1.channel </span>= c1</pre>
+</div>
+<p>　　<span style="font-size: 16px; font-family: 宋体;">以上配置定义了一个叫a1的单节点agent，a1拥有一个从端口44444监听数据的source，一个将数据缓存到内存的channel以及将日志数据输出到日志窗口的sink组件。当然一个配置文件中可以包含多个agent的配置，因此在启动flume-ng的时候需要指定agent的名称。启动命令类似于下面这种：</span></p>
+<div class="cnblogs_code">
+<pre><code>$ bin/flume-ng agent --conf conf --conf-<span style="color: #0000ff;">file</span> example.conf --name a1 -Dflume.root.logger=INFO,console</pre>
+</div>
+<p>　　<span style="font-family: 宋体; font-size: 16px;">以上命令中，在参数conf中指定配置文件的路径比如flume目录下的配置文件夹conf，该路径下包含flume-env.sh和log4j.propertites（该文件中默认配置了日志输出原始数据以及配置数据</span><span style="font-size: 16px;">：</span><span style="font-family: 宋体; font-size: 16px;">-Dorg.apache.flume.log.printconfig=true -Dorg.apache.flume.log.rawdata=true</span><span style="font-family: 宋体; font-size: 16px;">），这样agent可以在指定的环境下运行并且以日志格式将数据输出到界面。</span></p>
+<p><span style="font-family: 宋体; font-size: 16px;">　　然后，可以在通过netcat命令往本地端口44444写数据，并在flume的终端的日志信息中找到包含的事件。</span></p>
+<p><span style="font-size: 16px; font-family: 宋体;">　<strong>实验二、</strong>oracle增量数据写入flume，结果写入到hdfs</span></p>
+<p><span style="font-size: 16px; font-family: 宋体;">　　前期准备：从<a href="https://github.com/keedio/flume-ng-sql-source">https://github.com/keedio/flume-ng-sql-source</a>获取源码使用命令</span><span style="font-size: 16px; font-family: 宋体;"><code>mvn package</code></span><span style="font-size: 16px; font-family: 宋体;">编译flume对接sql的源码成jar包并将jar包放在flume主目录下的lib文件夹中，注意以下说明中的版本对应。</span></p>
+<p><span style="font-size: 16px; font-family: 宋体;"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Flume理论研究与实验1.png" alt="" width="767" height="189" /></span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px; font-family: 宋体;">　　配置编写：</span></p>
+<div class="cnblogs_code">
+<p># example.conf: A single-node Flume configuration</p>
+<p># Name the components on this a2<br />a2.sources = r2<br />a2.sinks = k2<br />a2.channels = c2</p>
+<p># For each one of the sources, the type is defined<br />a2.sources.r2.type = org.keedio.flume.source.SQLSoure<br />a2.sources.r2.hibernate.connection.url = jdbc:oracle:thin:@ip:port/sid<br />a2.sources.r2.hibernate.connection.user = username<br />a2.sources.r2.hibernate.connection.password = passwd<br />a2.sources.r2.hibernate.connection.autocommit = true<br />a2.sources.r2.hibernate.dialect = org.hibernate.dialect.Oracle10gDialect<br />a2.sources.r2.hibernate.connection.driver_class = oracle.jdbc.driver.OracleDriver</p>
+<p># Query delay, each configured milisecond the query will be sent<br />a2.sources.r2.run.query.delay=10000</p>
+<p># Status file is used to save last readed row<br />a2.sources.r2.status.file.path = /var/log/flume<br />a2.sources.r2.status.file.name = r2.status</p>
+<p># Custom query<br />a2.sources.r2.start.from = 197001010<br />a2.sources.r2.custom.query = SELECT emplid,effdt from sys.test where emplid&gt;'$@$'</p>
+<p># Standard Query&nbsp;</p>
+<p># a2.sources.r2.table = sys.test</p>
+<p># a2.sources.r2.columns.to.select = emplid,effdt</p>
+<p>a2.sources.r2.batch.size = 1000<br />a2.sources.r2.max.rows = 1000<br />a2.sources.r2.hibernate.connection.provider_class = org.hibernate.connection.C3P0ConnectionProvider<br />a2.sources.r2.hibernate.c3p0.min_size = 1<br />a2.sources.r2.hibernate.c3p0.max_size = 10</p>
+<p>#sink's type must be defined<br />a2.sinks.k2.type = hdfs<br />a2.sinks.k2.hdfs.path = /flume/oracle<br />a2.sinks.k2.hdfs.fileType = DataStream<br />a2.sinks.k2.hdfs.writeFormat = Text<br />a2.sinks.k2.hdfs.rollSize = 1024000000<br />a2.sinks.k2.hdfs.rollInterval = 0<br />a2.sinks.k2.hdfs.rollCount = 0</p>
+<p># The channel can be defined as follows.<br />a2.channels.c2.type = memory<br />a2.channels.c2.capacity = 10000<br />a2.channels.c2.transactionCapacity = 1000</p>
+<p># connected source and sink with channel <br />a2.sources.r2.channels = c2<br />a2.sinks.k2.channel = c2</p>
+</div>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px; font-family: 宋体;">　　注意事项：start.from配置的是查询的增量字段对应的起始数据（增量字段默认为查询语句的第一个列名称），如果使用custom.query的查询语句不在where语句中使用'$@$'对增量字段进行过滤，将会导致数据会重复写入，每隔run.querry.delay的时间间隔将会运行一次会执行一次查询语句，并将数据读入到channel中，然后更新status文件中的lastIndex即'$@$'，该索引作为下一次执行查询时的开始字段的索引起始位置，大于改索引的所有记录将会输入到channel，建议直接使用standard Query来给通过columns.to.select配置列，以及table指定查询的表，这两个配置项配置了将会在后台执行SELECT &lt;columns.to.select&gt; FROM &lt;table&gt;，并且从初始化的数据开始自动执行增量查询。</span></p>
+<p><span style="font-size: 16px; font-family: 宋体;">　<strong>实验三、</strong>avro发送文件到flume,结果写入到rocket mq</span></p>
+<p><span style="font-size: 16px; font-family: 宋体;">　　准备：源码见<a href="https://gitee.com/mxb/rocketmq-flume">https://gitee.com/mxb/rocketmq-flume</a>，将rocketmq相关的包和该源码编译的包全部打包在一起放进lib文件夹下，具体包如下图：</span></p>
+<p><span style="font-size: 16px; font-family: 宋体;"><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/Flume理论研究与实验2.png" alt="" width="855" height="182" /></span></p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px; font-family: 宋体;">　　配置：</span></p>
+<div class="cnblogs_code">
+<pre><code>agent1.sources=<span style="color: #000000;">source1
+agent1.channels</span>=<span style="color: #000000;">channel1
+agent1.sinks</span>=<span style="color: #000000;">sink1
+
+agent1.sources.source1.type</span>=<span style="color: #000000;">avro
+agent1.sources.source1.bind</span>=<span style="color: #800080;">0.0</span>.<span style="color: #800080;">0.0</span><span style="color: #000000;">
+agent1.sources.source1.port</span>=<span style="color: #800080;">15151</span><span style="color: #000000;">
+agent1.sources.source1.channels</span>=<span style="color: #000000;">channel1
+
+agent1.sinks.sink1.type</span>=<span style="color: #000000;">com.handu.flume.sink.rocketmq.RocketMQSink
+agent1.sinks.sink1.namesrvAddr</span>=rocketmq_namesrv:<span style="color: #800080;">9876</span><span style="color: #000000;">
+agent1.sinks.sink1.producerGroup</span>=<span style="color: #000000;">MyProducerGroup_1
+agent1.sinks.sink1.topic</span>=<span style="color: #000000;">FromFlume
+agent1.sinks.sink1.tag</span>=<span style="color: #000000;">Tag1
+agent1.sinks.sink1.channel</span>=<span style="color: #000000;">channel1
+
+agent1.channels.channel1.type</span>=<span style="color: #000000;">memory
+agent1.channels.channel1.capacity</span>=<span style="color: #800080;">100</span><span style="color: #000000;">
+agent1.channels.channel1.transactionCapacity</span>=<span style="color: #800080;">100</span><span style="color: #000000;">
+agent1.channels.channel1.keep</span>-alive=<span style="color: #800080;">3</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px; font-family: 宋体;"><span style="font-size: 16px; font-family: 宋体;">　　avro发消息：</span></span></p>
+<div class="cnblogs_code">
+<pre><code>$FLUME_HOME/bin/flume-ng avro-client -H localhost -p <span style="color: #800080;">15151</span> -F $FLUME_HOME/README</pre>
+</div>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px; font-family: 宋体;"><span style="font-size: 16px; font-family: 宋体;"><span style="font-size: 16px; font-family: 宋体;">　　编写一个mq的consumer的进程接收消息,输出对应TOPIC下的的消息body中将会包含README的内容。</span></span></span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

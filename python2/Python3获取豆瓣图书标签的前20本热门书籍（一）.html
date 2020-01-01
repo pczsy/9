@@ -1,0 +1,159 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python3获取豆瓣图书标签的前20本热门书籍（一）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python3获取豆瓣图书标签的前20本热门书籍（一）</center></div><div class='banquan'>原文出处:本文由博客园博主SexyPhoenix提供。<br/>
+原文连接:https://www.cnblogs.com/SexyPhoenix/p/11770112.html</div><br>
+    <h4 id="介绍">介绍</h4>
+<hr />
+<p>第一篇主要获取豆瓣的大分类、大分类下的具体分类以及具体分类下的前20本热门书籍，第二篇对获取的数据进行分析。</p>
+<h4 id="准备">准备</h4>
+<p>Python3.6、requests、BeautifulSoup4</p>
+<h4 id="演示">演示</h4>
+<p><img src="./images/Python3获取豆瓣图书标签的前20本热门书籍（一）0.png" alt="douban" /></p>
+<h4 id="代码">代码</h4>
+<pre><code><code># -*- coding: utf-8 -*-
+# @Author: Sexy Phoenix
+# @Last Modified by:   Sexy Phoenix
+import requests
+from bs4 import BeautifulSoup, SoupStrainer
+
+#内容解析类
+class Parse:
+ 
+    #解析分类
+    def parse_tags(self, content):
+
+        only_div_tags = SoupStrainer(&#39;div&#39;, &#39;article&#39;)
+        soup = BeautifulSoup(content, &#39;lxml&#39;, parse_only=only_div_tags)
+
+        category = {}
+        sub_category = {}
+
+        # 解析大分类
+        tag_title_wrapper = soup.find_all(&#39;a&#39;, &#39;tag-title-wrapper&#39;)
+
+        for index,tag in enumerate(tag_title_wrapper):
+            category[index] = tag.get(&#39;name&#39;)
+
+        # 解析大分类下的具体分类
+        tagCol = soup.find_all(&#39;table&#39;, &quot;tagCol&quot;)
+        for i,tag in enumerate(soup.find_all(&#39;table&#39;, &quot;tagCol&quot;)):
+            a = tag.find_all(&#39;a&#39;)
+            sub_category[i] = []
+            for t in a:
+                sub_category[i].append(t.string)
+
+        return category, sub_category
+    
+    #解析具体分类前20分书籍
+    def parse_detail_tag(self, content):
+
+        detail_conent = []
+        only_ul_tags = SoupStrainer(&#39;ul&#39;, &#39;subject-list&#39;)
+        soup = BeautifulSoup(content, &#39;lxml&#39;, parse_only=only_ul_tags)
+
+        for li in soup.find_all(&#39;li&#39;, &#39;subject-item&#39;):
+
+            info = li.find(&#39;div&#39;, &#39;info&#39;)
+            title = info.h2.a.get(&#39;title&#39;)
+            star = info.find(&#39;span&#39;, &#39;rating_nums&#39;)
+            extra_info = info.h2.next_sibling.next_sibling.string.split(&#39;/&#39;)
+            author = extra_info[0].strip()
+            price = extra_info[-1].strip()
+            appraise = star.string
+            appraise_num = star.next_sibling.next_sibling.string.strip()
+
+            detail_conent.append({
+                &#39;title&#39;: title,
+                &#39;price&#39;: price,
+                &#39;author&#39;: author,
+                &#39;appraise&#39;:appraise,
+                &#39;appraise_num&#39;: appraise_num
+            })
+
+        return detail_conent
+
+#内容获取类
+class Spider:
+
+    def __init__(self):
+
+        self.url = &#39;https://book.douban.com/tag/?view=type&amp;icn=index-sorttags-all&#39;
+        self.tag_url = &#39;https://book.douban.com/tag/&#39;
+        self.headers = {
+            &#39;User-Agent&#39; : &#39;Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/76.0.3809.100 Safari/537.36&#39;
+        }
+        self.parse = Parse()
+    
+    #获取分类HTML内容
+    def get_all_tag(self):
+
+        data = requests.get(self.url, headers=self.headers)
+        if(data.status_code == requests.codes.ok):
+            return self.parse.parse_tags(data.text)
+        else:
+            print(&#39;[ERROR]: GET Category Error&#39;)
+
+    #获取书籍HTML内容
+    def get_detail_tag(self, tag_name):
+        data = requests.get(self.tag_url + tag_name, self.headers)
+        if(data.status_code == requests.codes.ok):
+            return self.parse.parse_detail_tag(data.text)
+        else:
+            print(&#39;[ERROR]: GET Sub Category Error&#39;)
+
+    #显示
+    def show(self):
+
+        category, sub_category = self.get_all_tag()
+        print(&#39;豆瓣大分类：&#39;)
+        for index,value in category.items():
+            i = index + 1
+            print(&quot;{0}、{1}&quot;.format(i, value))
+        try:
+            key = int(input(&#39;请输入您选择的大分类：&#39;)) - 1
+            sub_cate = sub_category[key]
+            for index in range(len(sub_cate)):
+                i = index + 1
+                print(&quot;{0}、{1}&quot;.format(i, sub_cate[index]))
+            try:
+                sub_key  = int(input(&#39;请输入您选择的具体分类：&#39;)) - 1
+                tag_name = sub_cate[sub_key]
+                detail_content = self.get_detail_tag(tag_name)
+
+                for book in detail_content:
+                    print(&#39;\n&#39;)
+                    print(book[&#39;title&#39;])
+                    print(&quot;作者：{0}, 价格：{1}, 评分：{2}{3}&quot;.format(book[&#39;author&#39;],book[&#39;price&#39;], book[&#39;appraise&#39;], book[&#39;appraise_num&#39;]))
+                    print(&#39;=&#39;*50)
+
+            except:
+                print(&#39;[ERROR]: 具体分类选择错误&#39;)
+        except:
+            print(&#39;[ERROR]: 大分类选择错误&#39;)
+
+#入口
+if __name__ == &#39;__main__&#39;:
+    spider = Spider()
+    spider.show()</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

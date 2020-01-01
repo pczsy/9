@@ -1,0 +1,268 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python爬虫：现学现用xpath爬取豆瓣音乐' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python爬虫：现学现用xpath爬取豆瓣音乐</center></div><div class='banquan'>原文出处:本文由博客园博主嗨学编程提供。<br/>
+原文连接:https://www.cnblogs.com/Pythonmiss/p/11213238.html</div><br>
+    <p data-mpa-powered-by="yiban.io">爬虫的抓取方式有好几种，<strong>正则表达式，Lxml(xpath)与BeautifulSoup,</strong>我在网上查了一下资料，了解到三者之间的使用难度与性能</p>
+<p>三种爬虫方式的对比。</p>
+<p><img src="./images/Python爬虫：现学现用xpath爬取豆瓣音乐0.png" alt="" /></p>
+<p>这样一比较我我选择了Lxml(xpath)的方式了，虽然有三种方式，但肯定是要选择最好的方式来爬虫，这个道理大家都懂，另外有兴趣的朋友也可以去了解另外两种爬虫方式！</p>
+<p>好了现在来讲讲xpath</p>
+<p>由于Xpath属于lxml模块，所以首先需要安装lxml库，老办法直接在file--&gt;setting---project interpreter 一键添加lxml库。</p>
+<h4>xpath简单用法</h4>
+<blockquote>
+<p>from lxml import etree</p>
+<p>s=etree.HTML(源码) #将源码转化为能被XPath匹配的格式</p>
+<p>s.xpath(xpath表达式) #返回为一列表,</p>
+</blockquote>
+<h4>基础语法：</h4>
+<blockquote><ol class="list-paddingleft-2">
+<li>
+<p>// 双斜杠 定位根节点，会对全文进行扫描，在文档中选取所有符合条件的内容，以列表的形式返回。</p>
+</li>
+<li>
+<p>/ 单斜杠 寻找当前标签路径的下一层路径标签或者对当前路标签内容进行操作</p>
+</li>
+<li>
+<p>/text() 获取当前路径下的文本内容</p>
+</li>
+<li>
+<p>/@xxxx 提取当前路径下标签的属性值</p>
+</li>
+<li>
+<p>| 可选符 使用|可选取若干个路径 如//p | //div 即在当前路径下选取所有符合条件的p标签和div标签。</p>
+</li>
+<li>
+<p>. 点 用来选取当前节点</p>
+</li>
+<li>
+<p>.. 双点 选取当前节点的父节点</p>
+</li>
+</ol></blockquote>
+<p><strong>学以致用，方能让我们能快速掌握xpath语法功能。</strong></p>
+<p>我们这次需要爬取豆瓣音乐前250条</p>
+<p>打开豆瓣音乐：https://music.douban.com/top250</p>
+<h3>获取单条数据</h3>
+<h5>1.获取音乐标题</h5>
+<p>打开网址，按下F12，然后查找标题，右键弹出菜单栏 Copy==&gt; Copy Xpath</p>
+<p><img src="./images/Python爬虫：现学现用xpath爬取豆瓣音乐1.png" alt="" /></p>
+<p>这里我们想获取音乐标题，音乐标题的xpath是：<code>xpath://*[@id="content"]/div/div[1]/div/table[1]/tbody/tr/td[2]/div/a</code></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+html </span>= requests.get(url).text    <span style="color: #008000;">#</span><span style="color: #008000;">这里一般先打印一下html内容，看看是否有内容再继续。</span>
+s =<span style="color: #000000;"> etree.HTML(html)
+title </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tbody/tr/td[2]/div/a</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span> title</pre>
+</div>
+<p>运行代码：<br />居然是空的。！！！<br />这里需要注意一下，浏览器复制的xpath只能作参考，因为浏览器经常会在自己里面增加多余的tbody标签，我们需要手动把这个标签删除<br />删除中间的/tbody后,是这样的，<br /><code>title = s.xpath('//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a')</code><br />然后我们再运行代码。<br />得到：<br /><code>&lt;Element a at 0x53d26c8&gt;</code></p>
+<p>说明标题被获取到了。<br />因为要获取标题文本，所以xpath表达式要追加/text()<br /><code>title = s.xpath('//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/text()')#因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</code></p>
+<p>又因为这个s.xpath返回的是一个集合，且集合中只有一个元素所以我再追加一个[0]<br />新的表达式：<br /><code>title = s.xpath('//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/text()')[0]#因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text(),再追加[0]</code></p>
+<p>重新运行得到结果：<br />We Sing. We Dance. We Steal Things.<br />正是我们想要的标题。</p>
+<h5>2.获取音乐评分与评价人数</h5>
+<p>老办法，先用右键copy评分的xpath :<code>//*[@id="content"]/div/div[1]/div/table[1]/tbody/tr/td[2]/div/div/span[2]</code><br />复制评价人数的xpath:<code>//*[@id="content"]/div/div[1]/div/table[1]/tbody/tr/td[2]/div/div/span[3]/text()</code></p>
+<p>同样的我们要把tbody去掉，然后重新运行代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+html </span>=<span style="color: #000000;"> requests.get(url).text
+s </span>=<span style="color: #000000;"> etree.HTML(html)
+title </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+score = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/div/span[2]/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取文本，所以我需要这个当前路径下的文本，所以使用/text()</span>
+numbers = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/div/span[3]/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取文本，所以我需要这个当前路径下的文本，所以使用/text()</span>
+<span style="color: #0000ff;">print</span> title,score,numbers</pre>
+</div>
+<p>得到：</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp;<span>We <span>Sing. <span>We <span>Dance. <span>We <span>Steal <span>Things.<br /> &nbsp; &nbsp;9<span>.1 <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;100395人评价<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;)</span></span></span></span></span></span></span></span></p>
+<h5>3.获取音乐链接</h5>
+<p>copy标题的xpath，：<code>//*[@id="content"]/div/div[1]/div/table[1]/tbody/tr/td[2]/div/a</code></p>
+<p>想获取音乐连接href这里需要，获取这个标签属于,/@xxx可以提取当前路径标签下的属性值<br /><code>//*[@id="content"]/div/div[1]/div/table[1]/tbody/tr/td[2]/div/a/@href</code></p>
+<p>代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+html </span>=<span style="color: #000000;"> requests.get(url).text
+s </span>=<span style="color: #000000;"> etree.HTML(html)
+href </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/@href</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+title = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+score = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/div/span[2]/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取文本，所以我需要这个当前路径下的文本，所以使用/text()</span>
+numbers = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/div/span[3]/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取文本，所以我需要这个当前路径下的文本，所以使用/text()</span>
+<span style="color: #0000ff;">print</span> href,title,score,numbers</pre>
+</div>
+<p>运行代码得到：</p>
+<pre><code><code><span>https:/<span>/music.douban.com/subject<span>/2995812/ <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;We Sing. We Dance. We Steal Things.<br /> &nbsp; &nbsp; &nbsp; &nbsp;<span>9.1 <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span>100395人评价<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;)<br /></span></span></span></span></span></code></pre>
+<h5>5.获取图片地址：</h5>
+<p>找到图片，复制他的xpath地址：<code>//*[@id="content"]/div/div[1]/div/table[1]/tbody/tr/td[1]/a/img</code></p>
+<p>运行代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+html </span>=<span style="color: #000000;"> requests.get(url).text
+s </span>=<span style="color: #000000;"> etree.HTML(html)
+href </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/@href</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+title = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+score = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/div/span[2]/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取文本，所以我需要这个当前路径下的文本，所以使用/text()</span>
+numbers = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/div/span[3]/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取文本，所以我需要这个当前路径下的文本，所以使用/text()</span>
+imgpath = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[1]/a/img/@src</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取文本，所以我需要这个当前路径下的文本，所以使用/text()</span>
+<span style="color: #0000ff;">print</span> href,title,score,numbers,imgpath</pre>
+</div>
+<p>老套路：<br />得到结果:</p>
+<pre><code><code>https:<span>//music.douban.com/subject/2995812/<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;We Sing. We Dance. We Steal Things.<br /> &nbsp; &nbsp; &nbsp; &nbsp;<span>9.1 <br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;(<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<span>100395人评价<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;)<br /> &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; https:<span>//img3.doubanio.com/spic/s2967252.jpg<br /></span></span></span></span></code></pre>
+<p>但是这只是获取了一条数据，如果获取多条数据呢？</p>
+<h3>获取多条数据</h3>
+<p><img src="./images/Python爬虫：现学现用xpath爬取豆瓣音乐2.png" alt="" /></p>
+<p>我们再看第二条数据，第三条数据,第四条数据<br />得到他们的xpath:</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+
+html </span>=<span style="color: #000000;"> requests.get(url).text
+s </span>=<span style="color: #000000;"> etree.HTML(html)
+title </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[1]/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+title2 = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[2]/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+title3 = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[3]/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+title4 = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table[4]/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)[0]<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+<span style="color: #0000ff;">print</span> title,title2,title3,title4</pre>
+</div>
+<p>得到：</p>
+<pre><code><code> &nbsp; &nbsp; &nbsp; &nbsp;<span>We Sing. We Dance. We Steal Things.<br /> &nbsp; &nbsp; &nbsp; &nbsp;Viva La Vida<br /> &nbsp; &nbsp; &nbsp; &nbsp;华丽的冒险<br /> &nbsp; &nbsp; &nbsp; &nbsp;范特西<br /></span></code></pre>
+<p>对比他们的xpath，发现只有table序号不一样，我们可以就去掉序号，得到通用的xpath信息：<br />运行代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+html </span>=<span style="color: #000000;"> requests.get(url).text
+s </span>=<span style="color: #000000;"> etree.HTML(html)
+titles </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span>)<span style="color: #008000;">#</span><span style="color: #008000;">因为要获取标题，所以我需要这个当前路径下的文本，所以使用/text()</span>
+
+<span style="color: #0000ff;">for</span> title <span style="color: #0000ff;">in</span><span style="color: #000000;"> titles:
+    </span><span style="color: #0000ff;">print</span> title.strip()</pre>
+</div>
+<p>得到：</p>
+<pre><code><code>We Sing. We Dance. We Steal Things.<br />Viva La Vida<br />华丽的冒险<br />范特西<br />後。青春期的詩<br />是时候<br />Lenka<br /><span>Start <span>from Here<br />旅行的意义<br />太阳<br />Once (Soundtrack)<br /><span>Not Going Anywhere<br />American Idiot<br />OK<br />無與倫比的美麗<br />亲爱的...我还不知道<br />城市<br />O<br />Wake Me Up <span>When September Ends<br />叶惠美<br />七里香<br /><span>21<br />My Life Will...<br />寓言<br />你在烦恼什么<br /></span></span></span></span></span></code></pre>
+<p>其它的信息如：链接地址，评分，评价人数都可以用同样的办法来获取，现在我同时获取多条数据，因为每页数据是25条，所以：<br />完整代码如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+html </span>=<span style="color: #000000;"> requests.get(url).text
+s </span>=<span style="color: #000000;"> etree.HTML(html)
+hrefs </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/a/@href</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+titles </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+scores </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/div/span[2]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+numbers </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/div/span[3]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+imgs </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[1]/a/img/@src</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(25<span style="color: #000000;">):
+    </span><span style="color: #0000ff;">print</span> hrefs[i],titles[i],scores[i],numbers[i],imgs[i]</pre>
+</div>
+<p>得到：<br />一大批数据了，我就不展示了。有兴趣可以直接copy代码运行.,注意你得装上lxml与requests库.</p>
+<p><strong>我们也发现了问题每一个xpath路径特别长，能不能精简一下呢？</strong></p>
+<h5>5. 精简一下xpath路径</h5>
+<div class="cnblogs_code">
+<pre><code>hrefs = s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/a/@href</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+titles </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/a/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+scores </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/div/span[2]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+numbers </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[2]/div/div/span[3]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+imgs </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr/td[1]/a/img/@src</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>观察发现获取几个关键字段的xpath前缀都是&nbsp;<code>//*[@id="content"]/div/div[1]/div/table/tr</code>&nbsp;那我能不能把这些东西提出来呢，让后面的不同的自己去追加，另外这样写也不用管每个页面到底有多少条数据，只管查就行了。所以代码做了一下精简。</p>
+<div class="cnblogs_code">
+<pre><code>url = <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250</span><span style="color: #800000;">'</span><span style="color: #000000;">
+
+html </span>=<span style="color: #000000;"> requests.get(url).text
+s </span>=<span style="color: #000000;"> etree.HTML(html)
+trs </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;">先提取tr之前的节点集合</span>
+
+<span style="color: #0000ff;">for</span> tr <span style="color: #0000ff;">in</span> trs: <span style="color: #008000;">#</span><span style="color: #008000;">遍历tr</span>
+    href = tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/a/@href</span><span style="color: #800000;">'</span>)[0]  <span style="color: #008000;">#</span><span style="color: #008000;">注意新节点是tr下的节点</span>
+    title = tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/a/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+    score </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/div/span[2]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+    number </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/div/span[3]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+    img </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[1]/a/img/@src</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+    </span><span style="color: #0000ff;">print</span> href,title,score,number,img</pre>
+</div>
+<p>得到的结果和之前是一样的。</p>
+<p>但是，但是，这只是一个页面的数据，我现在想爬取多个页面的数据，怎么办呢？</p>
+<h3>获取个多页面数据.</h3>
+<p>观察一下翻页路径：<br />https://music.douban.com/top250?start=0<br />https://music.douban.com/top250?start=25<br />https://music.douban.com/top250?start=50</p>
+<p>有没有发现页面只是后面start参数发生了改变，且增长为每次25，并且250条数据正好是10页。<br />所以我可以遍历这个页面。<br />代码：</p>
+<pre><code><code><span>for i <span>in range(<span>10):<br />url = <span>'https://music.douban.com/top250?start={}'.format(i*<span>25)<br /><span>print url<br /></span></span></span></span></span></span></code></pre>
+<p>得到：</p>
+<pre><code><code>https:<span>//music.douban.com/top250?start=0<br />https:<span>//music.douban.com/top250?start=25<br />https:<span>//music.douban.com/top250?start=50<br />https:<span>//music.douban.com/top250?start=75<br />https:<span>//music.douban.com/top250?start=100<br />https:<span>//music.douban.com/top250?start=125<br />https:<span>//music.douban.com/top250?start=150<br />https:<span>//music.douban.com/top250?start=175<br />https:<span>//music.douban.com/top250?start=200<br />https:<span>//music.douban.com/top250?start=225<br /></span></span></span></span></span></span></span></span></span></span></code></pre>
+<p>正是自己要的结果。</p>
+<p>好了最后我们把代码拼装在一起，并注意每个方法的用途。</p>
+<h3>完整代码</h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding:utf-8</span>
+<span style="color: #0000ff;">from</span> lxml <span style="color: #0000ff;">import</span><span style="color: #000000;"> etree
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">获取页面地址</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> getUrl():
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(10<span style="color: #000000;">):
+     url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">https://music.douban.com/top250?start={}</span><span style="color: #800000;">'</span>.format(i*25<span style="color: #000000;">)
+     scrapyPage(url)
+
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">爬取每页数据</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> scrapyPage(url):
+    html </span>=<span style="color: #000000;"> requests.get(url).text
+    s </span>=<span style="color: #000000;"> etree.HTML(html)
+    trs </span>= s.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="content"]/div/div[1]/div/table/tr</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+
+    </span><span style="color: #0000ff;">for</span> tr <span style="color: #0000ff;">in</span><span style="color: #000000;"> trs:
+        href </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/a/@href</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+        title </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/a/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+        score </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/div/span[2]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+        number </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[2]/div/div/span[3]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+        img </span>= tr.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">./td[1]/a/img/@src</span><span style="color: #800000;">'</span><span style="color: #000000;">)[0]
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;"> href, title, score, number, img
+
+</span><span style="color: #0000ff;">if</span>  <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    getUrl()</span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

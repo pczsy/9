@@ -1,0 +1,227 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python日常应用汇总' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python日常应用汇总</center></div><div class='banquan'>原文出处:本文由博客园博主Surpassme提供。<br/>
+原文连接:https://www.cnblogs.com/surpassme/p/11613019.html</div><br>
+    <h3 id="判断路径中是否包含中文">判断路径中是否包含中文</h3>
+<pre><code><code>import re
+def IsContainChinese(path:str) -&gt; bool :
+    cnPatter=re.compile(u&#39;[\u4e00-\u9fa5]+&#39;)
+    match=cnPatter.search(path)
+    flag=False
+    if match:
+        flag=True
+    else:
+        flag = False
+    return flag</code></pre>
+<h3 id="将文件保存为csv格式">将文件保存为csv格式</h3>
+<p>import csv</p>
+<pre><code><code>def WriteResultToCSV(**kwags):
+    v = [ v for v in kwags.values()]
+    # v=lambda v:[ v for v in kwags.values()]
+    # print(v)
+    for item in v:
+        try:
+            header=[&quot;文件名&quot;,&quot;高度&quot;,&quot;宽度&quot;]
+            # 如果不加newline参数，则保存的csv文件会出现隔行为空的情况
+            with open(os.getcwd()+&quot;\\result.csv&quot;,&#39;w+&#39;,newline=&quot;&quot;) as fw:
+                csvWriter=csv.writer(fw)
+                csvWriter.writerow(header)
+                # print(item.items())
+                for k,v in item.items():
+                    print(f&quot;{k} {v}&quot;)
+                    csvWriter.writerow([k,str(v[0]),str(v[1])])
+        except Exception as e:
+            pass</code></pre>
+<h3 id="获取图片分辨率">获取图片分辨率</h3>
+<ul>
+<li><p>方法一：通过opencv该方法不支持路径或文件名含有中文</p>
+<blockquote>
+<p>python opencv2安装： pip install opencv-python</p>
+</blockquote></li>
+</ul>
+<pre><code><code>import cv2
+def GetResolution(path,imgList):
+    temDict={}
+    for item in imgList:
+        #  opencv 不支持中文路径
+        img=cv2.imread(path+&quot;\\&quot;+item)
+        # cv2.namedWindow(&quot;Image&quot;)
+        # cv2.imshow(&quot;Image&quot;,img)
+        # cv2.waitKey(1)
+        # cv2.destroyAllWindows()
+        imgResolution=img.shape
+        temDict[item]=imgResolution
+    return temDict</code></pre>
+<ul>
+<li>方法二：通过opencv</li>
+</ul>
+<pre><code><code>           import cv2
+           import numpy as np
+           # 使用该方法时，路径中可含有中文，其中tmp为完整的图片路径
+            img=cv2.imdecode(np.fromfile(tmp,dtype=np.uint8),cv2.IMREAD_COLOR)
+          # 获取图片高度和宽度
+          imgHeight,imgWidth=img.shape[:2]</code></pre>
+<ul>
+<li><p>方法三：通过Pillow</p>
+<blockquote>
+<p>pip install Pillow</p>
+</blockquote></li>
+</ul>
+<pre><code><code>from PIL import Image
+def GetImgSize(path):
+    &quot;&quot;&quot;
+    path:传入完整路径 
+    &quot;&quot;&quot;
+
+    img=Image.open(path)
+    imgWidth,imgHeight=img.size
+</code></pre>
+<h3 id="获取文件夹内特定的文件">获取文件夹内特定的文件</h3>
+<pre><code><code>import os
+
+def GetImgList(path):
+    imgList=[ img for img in os.listdir(path)
+              if os.path.isfile(os.path.join(path,img)) and (img.endswith(&quot;.jpg&quot;) or img.endswith(&quot;.jpge&quot;) or img.endswith(&quot;.png&quot;))
+    ]
+    return imgList
+</code></pre>
+<h3 id="将图片转换为base64编码">将图片转换为Base64编码</h3>
+<pre><code><code>import base64
+
+def ConverImgToBase64(path,imgList):
+    resultList={}
+    for img in imgList:
+        try:
+            with  open (path+&quot;\\&quot;+img,&#39;rb&#39;) as fr:
+                data=base64.b64encode(fr.read())
+                tempResult=data.decode()
+                resultList[img]=tempResult
+        except Exception as e:
+            resultList[&quot;Exception&quot;]=e
+    return resultList</code></pre>
+<h3 id="生成md5码">生成MD5码</h3>
+<pre><code><code># 生成MD5码
+def GenerateMD5Code(sku,secretKey=&#39;e10adc3949ba59abbe56e057f20f883e&#39;):
+    md5=hashlib.md5()
+    encodeStr=secretKey+sku
+    md5.update(encodeStr.encode(&#39;utf8&#39;))
+    
+    return md5.hexdigest()  </code></pre>
+<h3 id="判断文件或文件夹是否存在">判断文件或文件夹是否存在</h3>
+<pre><code><code>import os
+def IsExistFile(path):
+    try:
+        if (os.path.exists(path)):
+            os.remove(path)
+    except Exception as identifier:
+        pass</code></pre>
+<h3 id="比较文件差异">比较文件差异</h3>
+<pre><code><code>
+import os
+# 描述信息：一个文件夹内一张图片对应一个xml或者只有图片或只有xml
+
+def ListFile(path):
+    imgList=[]
+    xmlList=[]
+    extendIsXmlCount=0
+    extendIsImgCount=0
+    for file in os.listdir(path):
+        fileList=file.split(&quot;.&quot;)
+        try:
+            if fileList[-1] == &quot;xml&quot;:
+                extendIsXmlCount+=1
+                xmlList.append(fileList[0])
+            elif fileList[-1] == &quot;jpg&quot; or fileList[-1] == &quot;jpeg&quot; or fileList[-1] == &quot;png&quot;:
+                extendIsImgCount+=1
+                imgList.append(fileList[0])
+        except Exception as e:
+            print(&quot;error&quot;)
+    differenceResult=set(imgList+xmlList)
+    return imgList,xmlList,extendIsImgCount,extendIsXmlCount,differenceResult
+
+def CompareCount(xmlCount,imgCount):
+    &#39;&#39;&#39;
+    -1: xml &gt;  img
+    0 : xml == img
+    1 : xml &lt;  img
+    &#39;&#39;&#39;
+    # compareResult=-9999
+    differenceCount=-9999
+    if (xmlCount &gt; imgCount):
+        # print(f&quot;xml Count {xmlCount} is more than img Count {imgCount} ,difference is {xmlCount-imgCount}&quot;)
+        compareResult=f&quot;xml Count {xmlCount} is more than img Count {imgCount} ,difference is {xmlCount-imgCount}&quot;
+        differenceCount=xmlCount-imgCount
+    elif(xmlCount &lt; imgCount):
+        # print(f&quot;xml Count {xmlCount} is less than img Count {imgCount} ,difference is {imgCount-xmlCount}&quot;)
+        compareResult=f&quot;xml Count {xmlCount} is less than img Count {imgCount} ,difference is {imgCount-xmlCount}&quot; 
+        differenceCount=imgCount-xmlCount
+    elif (xmlCount == imgCount):
+        # print(f&quot;xml Count {xmlCount} is equal img Count {imgCount} ,difference is {imgCount-xmlCount}&quot;)
+        compareResult=f&quot;xml Count {xmlCount} is equal img Count {imgCount} ,difference is {imgCount-xmlCount}&quot;
+        differenceCount=imgCount-xmlCount
+    return compareResult,differenceCount
+
+def RemoveDuplicateItem(ListA,ListB):
+    tempSetA=set(ListA)
+    tempSetB=set(ListB)
+    if len(tempSetA) &gt;= len(tempSetB):
+       result=tempSetA-tempSetB
+    else:
+       result=tempSetB-tempSetA
+    return result
+</code></pre>
+<h3 id="读取pkl文件">读取pkl文件</h3>
+<pre><code><code>import pickle
+def ReadFile(path):
+    result=&quot;&quot;
+    try:
+       with open (path,&#39;rb&#39;) as fr:
+           result=pickle.load(fr)
+    except Exception as e:
+        result=e
+    return result</code></pre>
+<h3 id="存取为pkl文件">存取为pkl文件</h3>
+<pre><code><code>import pickle
+def WriteStrToLogFile(path,dataStr):
+    for i in range(2,5):
+        PickleToFile(path+&quot;\\&quot;+&quot;error&quot;+str(i)+&quot;.pkl&quot;,dataStr)
+
+def PickleToFile(path,fileName):
+    with open(path,&#39;wb&#39;) as fw:
+        pickle.dump(dataStr,fw)</code></pre>
+<h3 id="将时间转换为unix时间戳">将时间转换为Unix时间戳</h3>
+<pre><code><code>import time
+import datetime
+def ChangDateTimeToUnix(inputDateTime):
+    &#39;&#39;&#39;
+    将标准时间转换为Unix时间戳
+    time strptime() 函数根据指定的格式把一个时间字符串解析为时间元组
+    time.strptime(string[, format])
+    &#39;&#39;&#39;
+    timeArray = time.strptime(inputDateTime, &quot;%Y-%m-%d %H:%M:%S&quot;)
+    timeStamp = int(time.mktime(timeArray))
+    return timeStamp</code></pre>
+<p><strong>本文同步在微信订阅号上发布，如各位小伙伴们喜欢我的文章，也可以关注我的微信订阅号：woaitest，或扫描下面的二维码添加关注：</strong><br />
+<img src="//upload-images.jianshu.io/upload_images/3349421-2a0edd703123621d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="MyQRCode.jpg" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

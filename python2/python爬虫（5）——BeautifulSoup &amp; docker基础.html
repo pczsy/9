@@ -1,0 +1,89 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python爬虫（5）——BeautifulSoup &amp; docker基础' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python爬虫（5）——BeautifulSoup &amp; docker基础</center></div><div class='banquan'>原文出处:本文由博客园博主swineherd_MCQ提供。<br/>
+原文连接:https://www.cnblogs.com/mcq1999/p/11469119.html</div><br>
+    <h1 id="beautifulsoup基础实战">BeautifulSoup基础实战</h1>
+<p>安装：pip install beautifulsoup4</p>
+<p>常用指令：</p>
+<pre><code><code>from bs4 import BeautifulSoup as bs
+import urllib.request
+data=urllib.request.urlopen(&quot;https://www.cnblogs.com/mcq1999/&quot;).read().decode(&quot;utf-8&quot;,&quot;ignore&quot;)
+bs1=bs(data)
+print(bs1.prettify()) #格式化输出
+print(bs1.title) #获取标签title,bs对象.标签名
+print(bs1.title.string) #获取标签title的文字
+print(bs1.title.name) #获取标签名，如title
+print(bs1.a.attrs) #获取属性列表 键值对
+print(bs1.a[&#39;name&#39;]) #获取某个属性对应的值
+print(bs1.find_all(&#39;a&#39;)) #提取所有某个节点的内容，传参是标签名
+print(&#39;---------------------------------&#39;)
+print(bs1.find_all([&#39;a&#39;,&#39;ul&#39;]))
+k1=bs1.ul.contents #提取当前节点的所有子节点，返回一个列表
+k2=bs1.ul.children #返回一个生成器
+allulc=[i for i in k2]</code></pre>
+<h1 id="phantomjs基础实战">PhantomJS基础实战</h1>
+<p>效率不高，但可以解决很多反爬问题，本质是一个无界面的浏览器，通过命令行（或python）操纵。通常难点部分通过PhantomJS写，然后将数据交给urllib或scrapy进行后续处理。</p>
+<p>目前已PhantomJS和selenium分手，以后再学。</p>
+<h1 id="分布式爬虫之docker基础">分布式爬虫之docker基础</h1>
+<p>镜像：不可以改变内容</p>
+<p>容器：可以改变内容，相当于虚拟机，默认情况下彼此封闭</p>
+<p>优点：轻部署、省成本、部署迁移方便</p>
+<p>安装：yum -y install docker</p>
+<p>启动和关闭：</p>
+<p>systemctl start docker</p>
+<p>systemctl stop docker</p>
+<p>启动时如果出现<img src="./images/python爬虫（5）——BeautifulSoup &amp; docker基础0.png" /></p>
+<p>可以参考下面这篇博客，我的就这样成功了，其他的方法都没用</p>
+<p>https://blog.csdn.net/w1316022737/article/details/83692701</p>
+<p>最好再修改一下docker的镜像源，不然运行的很慢：</p>
+<p>https://blog.csdn.net/julien71/article/details/79760919</p>
+<p>查看已有镜像：docker images</p>
+<p>下载镜像：docker pull</p>
+<p>创建容器：docker run -tid</p>
+<p>查看容器：docker ps -a</p>
+<p><img src="./images/python爬虫（5）——BeautifulSoup &amp; docker基础1.png" /></p>
+<p>进入容器：docker attach</p>
+<p><img src="./images/python爬虫（5）——BeautifulSoup &amp; docker基础2.png" /></p>
+<p>退出容器：一般不用exit，因为会停止容器。我们用ctrl+p+q即可。</p>
+<p>在容器里的操作不会影响本机，相当于在虚拟机里再开了个虚拟机</p>
+<p>启动容器：docker start …</p>
+<p>封装容器成镜像：docker commit 2d6 mytest:v1</p>
+<p><img src="./images/python爬虫（5）——BeautifulSoup &amp; docker基础3.png" /></p>
+<p>基于镜像给容器起名字： docker run -tid --name testabc a2a （基于a2a这个镜像创建一个名为testabs的容器）</p>
+<p>docker run -tid --name h1 mytest:v1</p>
+<p>docker run -tid --name h2 --link h1 mytest:v1 （将容器h2链接到h1，即让h2和h1通信）</p>
+<p>这里我用ubuntu的镜像发现ping、yum等等命令都没有，所以改用了centos的镜像。</p>
+<p>[root@hadoop106 mcq]# docker attach fe3<br />
+[root@fe3489945006 /]# cat /etc/hosts<br />
+127.0.0.1 localhost<br />
+::1 localhost ip6-localhost ip6-loopback<br />
+fe00::0 ip6-localnet<br />
+ff00::0 ip6-mcastprefix<br />
+ff02::1 ip6-allnodes<br />
+ff02::2 ip6-allrouters<br />
+172.17.0.6 c1 4c3dab0e013c<br />
+172.17.0.7 fe3489945006<br />
+[root@fe3489945006 /]# ping 172.17.0.6</p>
+<p>将docker镜像封装为文件：docker save -o /mytest.tar c3e8</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

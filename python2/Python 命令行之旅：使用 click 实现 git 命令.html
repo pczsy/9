@@ -1,0 +1,210 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 命令行之旅：使用 click 实现 git 命令' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 命令行之旅：使用 click 实现 git 命令</center></div><div class='banquan'>原文出处:本文由博客园博主削微寒提供。<br/>
+原文连接:https://www.cnblogs.com/xueweihan/p/12050450.html</div><br>
+    <p><img src="./images/Python 命令行之旅：使用 click 实现 git 命令0.png" /><br />
+<p align="center"><br />
+作者：HelloGitHub-<strong>Prodesire</strong><br />
+</p></p>
+<blockquote>
+<p>HelloGitHub 的《讲解开源项目》系列，项目地址：<a href="https://github.com/HelloGitHub-Team/Article" class="uri">https://github.com/HelloGitHub-Team/Article</a></p>
+</blockquote>
+<h2 id="一前言">一、前言</h2>
+<p>在前面五篇介绍 <code>click</code> 的文章中，我们全面了解了 <code>click</code> 的强大能力。按照惯例，我们要像使用 <code>argparse</code> 和 <code>docopt</code> 一样使用 <code>click</code> 来实现 git 命令。</p>
+<p>本文的关注点并不在 <code>git</code> 的各种命令是如何实现的，而是怎么使用 <code>click</code> 去打造一个实用命令行程序，代码结构是怎样的。因此，和 <code>git</code> 相关的操作，将会使用 <code>gitpython</code> 库来简单实现。</p>
+<p>为了让没读过 <code>使用 xxx 实现 git 命令</code>（<code>xxx</code> 指 <code>argparse</code> 和 <code>docopt</code>） 的小伙伴也能读明白本文，我们仍会对 <code>git</code> 常用命令和 <code>gitpython</code> 做一个简单介绍。</p>
+<pre><code><code>本系列文章默认使用 Python 3 作为解释器进行讲解。
+若你仍在使用 Python 2，请注意两者之间语法和库的使用差异哦~</code></pre>
+<h2 id="二git-常用命令">二、git 常用命令</h2>
+<p>当你写好一段代码或增删一些文件后，会用如下命令查看文件状态：</p>
+<pre class="bash"><code>git status</code></pre>
+<p>确认文件状态后，会用如下命令将的一个或多个文件（夹）添加到暂存区：</p>
+<pre class="bash"><code>git add [pathspec [pathspec ...]]</code></pre>
+<p>然后使用如下命令提交信息：</p>
+<pre class="bash"><code>git commit -m &quot;your commit message&quot;</code></pre>
+<p>最后使用如下命令将提交推送到远程仓库：</p>
+<pre class="bash"><code>git push</code></pre>
+<p>我们将使用 <code>click</code> 和 <code>gitpython</code> 库来实现这 4 个子命令。</p>
+<h2 id="三关于-gitpython">三、关于 gitpython</h2>
+<p><a href="https://gitpython.readthedocs.io/en/stable/intro.html">gitpython</a> 是一个和 <code>git</code> 仓库交互的 Python 第三方库。<br />
+我们将借用它的能力来实现真正的 <code>git</code> 逻辑。</p>
+<p>安装：</p>
+<pre class="bash"><code>pip install gitpython</code></pre>
+<h2 id="四思考">四、思考</h2>
+<p>在实现前，我们不妨先思考下会用到 <code>click</code> 的哪些功能？整个程序的结构是怎样的？</p>
+<p><strong>click</strong></p>
+<p><code>git</code> 的 4 个子命令的实现其实对应于四个函数，每个函数使用 <code>click</code> 的 <code>command</code> 来装饰。<br />
+而对于 <code>git add</code> 和 <code>git commit</code>，则分别需要表示参数的 <code>click.argument</code> 和表示选项的 <code>click.option</code> 来装饰。</p>
+<p><strong>程序结构</strong></p>
+<p>程序结构上：</p>
+<ul>
+<li>实例化 <code>Git</code> 对象，供全局使用</li>
+<li>定义 <code>cli</code> 函数作为命令组，也就是整个命令程序的入口</li>
+<li>定义四个命令对应的实现函数 <code>status</code>、<code>add</code>、<code>commit</code>、<code>push</code></li>
+</ul>
+<p>则基本结构如下：</p>
+<pre class="python"><code>import os
+import click
+from git.cmd import Git
+
+git = Git(os.getcwd())
+
+
+@click.group()
+def cli():
+    &quot;&quot;&quot;
+    git 命令行
+    &quot;&quot;&quot;
+    pass
+
+
+@cli.command()
+def status():
+    &quot;&quot;&quot;
+    处理 status 命令
+    &quot;&quot;&quot;
+    pass
+
+
+@cli.command()
+@click.argument(&#39;pathspec&#39;, nargs=-1)
+def add(pathspec):
+    &quot;&quot;&quot;
+    处理 add 命令
+    &quot;&quot;&quot;
+    pass
+
+
+@cli.command()
+@click.option(&#39;-m&#39;, &#39;msg&#39;)
+def commit(msg):
+    &quot;&quot;&quot;
+    处理 -m &lt;msg&gt; 命令
+    &quot;&quot;&quot;
+    pass
+
+
+@cli.command()
+def push():
+    &quot;&quot;&quot;
+    处理 push 命令
+    &quot;&quot;&quot;
+    pass
+
+
+if __name__ == &#39;__main__&#39;:
+    cli()</code></pre>
+<p>下面我们将一步步地实现我们的 <code>git</code> 程序。</p>
+<h2 id="五实现">五、实现</h2>
+<p>假定我们在 <a href="https://github.com/HelloGitHub-Team/Article/blob/master/contents/Python/cmdline/click-git.py">click-git.py</a> 文件中实现我们的 <code>git</code> 程序。</p>
+<h3 id="status-子命令">5.1 status 子命令</h3>
+<p><code>status</code> 子命令不接受任何参数和选项，因此其实现函数只需 <code>cli.command()</code> 装饰。</p>
+<pre class="python"><code>@cli.command()
+def status():
+    &quot;&quot;&quot;
+    处理 status 命令
+    &quot;&quot;&quot;
+    cmd = [&#39;git&#39;, &#39;status&#39;]
+    output = git.execute(cmd)
+    click.echo(output)</code></pre>
+<p>不难看出，我们最后调用了真正的 <code>git status</code> 来实现，并打印了输出。</p>
+<h3 id="add-子命令">5.2 add 子命令</h3>
+<p><code>add</code> 子命令相对于 <code>status</code> 子命令，需要接受任意个 pathspec 参数，因此增加一个 <code>click.argument</code> 装饰器，并且在 <code>add</code> 函数中需要增加同名的 <code>pathspec</code> 入参。<br />
+经 <code>click</code> 处理后的 <code>pathspec</code> 其实是个元组，和列表相加前，需要先转换为列表。</p>
+<pre class="python"><code>@cli.command()
+@click.argument(&#39;pathspec&#39;, nargs=-1)
+def add(pathspec):
+    &quot;&quot;&quot;
+    处理 add 命令
+    &quot;&quot;&quot;
+    cmd = [&#39;git&#39;, &#39;add&#39;] + list(pathspec)
+    output = git.execute(cmd)
+    click.echo(output)</code></pre>
+<p>当我们执行 <code>python3 click-git.py add --help</code> 时，结果如下：</p>
+<pre><code><code>Usage: click-git.py add [OPTIONS] [PATHSPEC]...
+
+  处理 add 命令
+
+Options:
+  --help  Show this message and exit.</code></pre>
+<p>既然 <code>git add</code> 能接受任意多个 <code>pathspec</code>，那么 <code>add(pathspec)</code> 的参数其实改为复数形式更为合适，但我们又希望帮助信息中是单数形式，这就需要额外指定 <code>metavar</code>，则有：</p>
+<pre class="python"><code>@cli.command()
+@click.argument(&#39;pathspecs&#39;, nargs=-1, metavar=&#39;[PATHSPEC]...&#39;)
+def add(pathspecs):
+    &quot;&quot;&quot;
+    处理 add 命令
+    &quot;&quot;&quot;
+    cmd = [&#39;git&#39;, &#39;add&#39;] + list(pathspecs)
+    output = git.execute(cmd)
+    click.echo(output)</code></pre>
+<h3 id="commit-子命令">5.3 commit 子命令</h3>
+<p><code>add</code> 子命令相对于 <code>status</code> 子命令，需要接受 <code>-m</code> 选项，因此增加一个 <code>click.option</code> 装饰器，指定选项名称 <code>msg</code>，并且在 <code>commit</code> 函数中增加同名入参。</p>
+<pre class="python"><code>@cli.command()
+@click.option(&#39;-m&#39;, &#39;msg&#39;)
+def commit(msg):
+    &quot;&quot;&quot;
+    处理 -m &lt;msg&gt; 命令
+    &quot;&quot;&quot;
+    cmd = [&#39;git&#39;, &#39;commit&#39;, &#39;-m&#39;, msg]
+    output = git.execute(cmd)
+    click.echo(output)</code></pre>
+<h3 id="push-子命令">5.4 push 子命令</h3>
+<p><code>push</code> 子命令同 <code>status</code> 子命令一样，不接受任何参数和选项，因此其实现函数只需 <code>cli.command()</code> 装饰。</p>
+<pre class="python"><code>@cli.command()
+def push():
+    &quot;&quot;&quot;
+    处理 push 命令
+    &quot;&quot;&quot;
+    cmd = [&#39;git&#39;, &#39;push&#39;]
+    output = git.execute(cmd)
+    click.echo(output)</code></pre>
+<p>至此，我们就实现了一个简单的 <code>git</code> 命令行，使用 <code>python click-git.py status</code> 便可查询项目状态。</p>
+<p>非常方便的是，每个命令函数的 <code>docstring</code> 都将作为这个命令的帮助信息，因此，当我们执行 <code>python3 click-git.py --help</code> 会自动生成如下帮助内容：</p>
+<pre><code><code>Usage: click-git.py [OPTIONS] COMMAND [ARGS]...
+
+  git 命令行
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  add     处理 add 命令
+  commit  处理 -m &lt;msg&gt; 命令
+  push    处理 push 命令
+  status  处理 status 命令</code></pre>
+<p>想看整个源码，请戳 <a href="https://github.com/HelloGitHub-Team/Article/blob/master/contents/Python/cmdline/click-git.py">click-git.py</a> 。</p>
+<h2 id="六小结">六、小结</h2>
+<p>本文简单介绍了日常工作中常用的 <code>git</code> 命令，然后提出实现它的思路，最终一步步地使用 <code>click</code> 和 <code>gitpython</code> 实现了 <code>git</code> 程序。</p>
+<p>对比 <code>argparse</code> 和 <code>click</code> 的实现版本，你会发现使用 <code>click</code> 来实现变得特定简单：</p>
+<ul>
+<li>相较于 <code>argparse</code>，子解析器、参数类型什么的统统不需要关心</li>
+<li>相较于 <code>docopt</code>，参数解析和命令调用处理也不需要关心</li>
+</ul>
+<p>这无疑是 <code>click</code> 最大的优势了。</p>
+<p>关于 <code>click</code> 的讲解将告一段落，回顾下 <code>click</code> 的至简之道，你会爱上它。</p>
+<p>现在，你已学会了三个命令行解析库的使用了。但你以为这就够了吗？<code>click</code> 已经够简单了吧，够直接了吧？但它仍然不是最简单的。</p>
+<p>在下篇文章中，将为大家介绍一个由谷歌出品的在 Python 界很火的命令行库 —— <code>fire</code>。</p>
+<hr />
+<p><strong>『讲解开源项目系列』</strong>——让对开源项目感兴趣的人不再畏惧、让开源项目的发起者不再孤单。跟着我们的文章，你会发现编程的乐趣、使用和发现参与开源项目如此简单。欢迎留言联系我们、加入我们，让更多人爱上开源、贡献开源～</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

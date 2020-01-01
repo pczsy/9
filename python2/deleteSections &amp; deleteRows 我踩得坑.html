@@ -1,0 +1,171 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修deleteSections &amp; deleteRows 我踩得坑' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>deleteSections &amp; deleteRows 我踩得坑</center></div><div class='banquan'>原文出处:本文由博客园博主Mr_RisingSun提供。<br/>
+原文连接:https://www.cnblogs.com/zhangxiaoxu/p/12069410.html</div><br>
+    <p>&nbsp;</p>
+<p>需求背景</p>
+<hr />
+<p>&nbsp;</p>
+<p>&nbsp; &nbsp; &nbsp; 有这样一个需求，有一个用来展示商品的列表，你可以从别的数据源添加过来，能添加当然就能删除了，这时候就用到了UITableView/UICollextionView组或者cell的删除，但在测试的过程中发现这里会出现crash,然后在一个夜深人静的晚上安安静静的找了下原因，下面是我探究的结果来分享一下。</p>
+<p>&nbsp;</p>
+<p>模拟一下</p>
+<hr />
+<p>&nbsp;</p>
+<p>&nbsp; &nbsp; &nbsp;下面是一个简单的demo来模拟这个问题，大致的思路如下：<strong>（没用的代码没有粘贴出来 看关键点）</strong></p>
+<p>&nbsp; &nbsp; &nbsp; 1、创建一个tablewView &nbsp;在cell 上添加一个删除按钮 &nbsp;给cell 设置一个index的标记</p>
+<p>&nbsp; &nbsp; &nbsp; 2、点击删除 回调index 然后在数据源中按照index 找到数据 删除掉&nbsp;</p>
+<p>&nbsp; &nbsp; &nbsp; 3、执行deleteSections 或者&nbsp;deleteRows &nbsp;来看看下面的简单的代码，看能看出问题吗？</p>
+<div class="cnblogs_Highlighter">
+<pre><code>extension ViewController:UITableViewDelegate,UITableViewDataSource{
+    
+    func numberOfSections(in tableView: UITableView) -&gt; Int {
+        
+        print("我来重新获取 tableView SectionsNumber")
+        return array.count
+    }
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -&gt; Int {
+        
+        print("我来重新获取 tableView RowsNumber")
+        return 1
+    }
+    
+    func tableView(_ tableView:UITableView,cellForRowAt indexPath:IndexPath) -&gt; UITableViewCell {
+        
+        print("我来重新获取 cell")
+        let cell:TabCell = tableView.dequeueReusableCell(withIdentifier: "Identifier", for: indexPath) as! TabCell
+        let str = array[indexPath.section]
+        cell.index = indexPath
+        cell.setdata(str)
+        cell.block = {(index) in
+            
+            print(index.section)
+            ///
+            self.array.remove(at: index.section)
+            self.tabview.beginUpdates()
+            self.tabview.deleteSections(IndexSet.init(arrayLiteral: index.section), with: UITableView.RowAnimation.automatic)
+            self.tabview.endUpdates()
+        }
+        return cell
+    }
+}
+
+/// Cell 代码
+class TabCell: UITableViewCell {
+
+    var index:IndexPath?
+    var block:Block?
+    
+    @objc func deleteClick() {
+        print("点击事件之后的打印--")
+        self.block!(self.index!)
+    }
+    
+    func setdata(_ str:Int) {
+        title.text = String(str)
+    }
+}</pre>
+</div>
+<p>&nbsp;</p>
+<p>下面是删除的gif看看是否能顺利的删除完</p>
+<p>&nbsp;<img style="display: block; margin-left: auto; margin-right: auto;" src="./images/deleteSections &amp; deleteRows 我踩得坑0.png" alt="" width="280" height="424" /></p>
+<p>&nbsp; &nbsp; &nbsp; 删除到一半的时候crash了！看看crash的日志，分析一下问题：</p>
+<p>&nbsp;</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/deleteSections &amp; deleteRows 我踩得坑1.png" alt="" width="292" height="279" /></p>
+<p>&nbsp;</p>
+<p>&nbsp; &nbsp; &nbsp; 数组越界了！通过这点我们能分析出下面几个结论：</p>
+<p>&nbsp; &nbsp; &nbsp; 1 、<strong>每次删除的时候都会重新去获取它的组数和组里面cell的个数。&nbsp;</strong></p>
+<p>&nbsp; &nbsp; &nbsp; 2、<strong>不会重新走&nbsp;cellForRowAt 所以我们给cell赋的index的值不会更新，所以删除某一个cell的时候。它拿到的index还是最开始赋值给它的index,</strong><strong>上面这两点的原因造成了crash。</strong></p>
+<p><strong>&nbsp; &nbsp; &nbsp; 那分析到这一步，解决的办法也就有了，你删除完组或者cell之后重新reloaddata是能解决crash的，看看效果：</strong></p>
+<p>&nbsp;</p>
+<p><strong><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/deleteSections &amp; deleteRows 我踩得坑2.png" alt="" width="272" height="412" /></strong></p>
+<p>&nbsp; &nbsp; &nbsp; 问题到了这里你可以说解决了，但也可以说没解决。要是不介意UI效果（仔细看他们之间的区别），要是不介意性能的问题（数据量不会大）就可以这样做，但像我这种比较追求UI效果，要是把App看做一个人的话那毫无疑问UI就是它的衣服，人靠衣装嘛，那我们还有别的方式去解决的这问题吗？</p>
+<p>&nbsp; &nbsp; &nbsp; 这时候我做了这样一个尝试，既然我们的index没有发生改变，那数据源呢？我么可以在它身上去做一些改变，在做改变之前我们还有一个问题需要去认识，说白了也是应为我们的index没有及时刷新引起的。</p>
+<p>&nbsp; &nbsp; &nbsp;要是你再这样回调这个index做操作,然后删除数组元素中的某一位置的元素，保证和剩下的section个数是一样的，但是不刷新TableView ，会发生什么呢？看下面gif</p>
+<p>&nbsp;</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/deleteSections &amp; deleteRows 我踩得坑3.png" alt="" width="315" height="478" /></p>
+<p>&nbsp;</p>
+<p>&nbsp; &nbsp; &nbsp; 我们删除了 6、5、4 在回去删除 8 的时候还是crash了，这时候我们的数据是这样处理的 &nbsp; &nbsp;self.array.remove(at: 0) &nbsp; 按道理，删除一组我就总数据源删除0位置的元素，这时候剩下的section 和我们数据源的个数是对应的，发生crash的原因呢？不知道有没有人这样想，因为我们在返回组数的时候是采用了数据源的个数，它们俩之间是一一对应的，按到离似乎是不应该有问题的，但还是crash了，我们看看日志。</p>
+<p><strong>&nbsp; &nbsp; &nbsp; Terminating app due to uncaught exception 'NSInternalInconsistencyException', reason: 'attempt to delete section 7, but there are only 5 sections before the update'</strong></p>
+<p>&nbsp; &nbsp; &nbsp; 这句话的说的意思就是我们尝试删除section 7 但在这之前我们的numberSection返回的组数却是 5 ，这就产生了一个crash 原因前面说了。还是indexSection 没法对应上的问题，或者说就是indexSection越界了。</p>
+<p>&nbsp; &nbsp; &nbsp;我在网上有搜到这两者之间不匹配的问题，比如你不删除数据源，也就是没有&nbsp;&nbsp;self.array.remove(at: 0) ，你直接删除一组，当然你返回组数的时候还是返回&nbsp;&nbsp;self.array.count 这时候又会是什么问题呢？</p>
+<p>&nbsp; &nbsp; &nbsp;&nbsp;<strong>'NSInternalInconsistencyException', reason: 'Invalid update: invalid number of sections. The number of sections contained in the table view after the update (8) must be equal to the number of sections contained in the table view before the update (8), plus or minus the number of sections inserted or deleted (0 inserted, 1 deleted)</strong></p>
+<p>&nbsp; &nbsp; &nbsp; 这里你再理解一下，你删除之后按道理应该就剩7组了，但是在执行到返回组数的时候你的数据源返回的个数还是8，这里就是不匹配的问题，当然返回组个数是6也会crash,道理和我们这解释的相同，要是有同类型的错了就好好理解梳理一下，我们在做一些 <strong>update 操作的时候处理不好匹配问题也会经常遇到这个问题。</strong></p>
+<p>&nbsp;</p>
+<p>找一个方法解决&nbsp;</p>
+<hr />
+<p>&nbsp;</p>
+<p>&nbsp; &nbsp; &nbsp; 找一个办法解决这个问题，我们前面有说要是reloaddata一次就解决问题了，那我们在reloaddata最重要的操作或者目的是什么呢？那就是给我们回调回来的 index 一个不越界的正常的值，我们从这点出发，我们在不执行reloadata的情况下回调一个正常的index应该也能解决问题，那有什么办法回调一个正常的index呢？</p>
+<p>&nbsp; &nbsp; &nbsp; 其实也很简单，我们赋给cell的index我们可以在执行完删除之后自己重新组装一次！那怎么组装呢？这时候就要利用其我们传给 cell 的model了，我们传给cell 的model指向的还是我们数据源的model (swift引用类型。oc也是指针)，并没有重新赋值，这时候我们就可以在 model 里面写一个 IndexPath 进去，然后在每一次删除完之后我们自己操作在数据源中重新排列这个model中的indexPath ，在删除点击回调的时候直接回调这个model ,在选择删除的时候我们也删除从model中获取到的idnex不就解决了我们的问题了嘛！</p>
+<p>&nbsp; &nbsp; &nbsp; 上面就是解决我们这问题的思路。代码其实也很简单，简单到不值得我们在写出了。下面是我们自己项目中我执行这一段逻辑自己的代码，帮助理清上面说的思路。</p>
+<div class="cnblogs_Highlighter">
+<pre><code>    /// 删除一个选中的商品
+    /// - Parameter index: index description
+    func deleteGoods(indexModel:PPOrderGoodListModel,tableView:UITableView) {
+        
+        let index = indexModel.indexPath!
+        /// 部分退款 并且商品和凭证一对一的时候是按照组删除的 别的情况是按照row删除的
+        if self.refundType == .part &amp;&amp; needAddGoods() {
+  
+            /// 保证不会发生数组越界的情况
+            if self.refundChooseGoods.count &gt;= (index.section + 1) {
+                  
+               self.refundChooseGoods.remove(at: index.section)
+            }
+            tableView.deleteSections([index.section], with: UITableView.RowAnimation.left)
+            self.resetIndexPath(false)
+        }else{
+            
+            /// 保证不会发生数组越界的情况
+            if self.refundChooseGoods.count &gt;= (index.row + 1) {
+                
+               self.refundChooseGoods.remove(at: index.row)
+            }
+            ///print("-----------count ",self.refundChooseGoods.count)
+            ///print("-----------",index.section,"--------",index.row)
+            tableView.deleteRows(at: [index], with: UITableView.RowAnimation.left)
+            self.resetIndexPath(true)
+        }
+    }
+
+    /// 重新排列剩下的数据源的index,否则 crash
+    /// - Parameter updateRow: updateRow description
+    func resetIndexPath(_ updateRow:Bool)  {
+        
+        var index = 0
+        for model in self.refundChooseGoods {
+            
+            if updateRow {
+                model.indexPath?.row     = index
+            }else{
+                model.indexPath?.section = index
+            }
+            index += 1
+        }
+    }</pre>
+</div>
+<p>最后看看我这样做之后删除组和删除cel分别的效果：</p>
+<p>&nbsp;</p>
+<p style="text-align: left;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<img src="./images/deleteSections &amp; deleteRows 我踩得坑4.png" alt="" width="212" height="321" />&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;&nbsp;<img src="./images/deleteSections &amp; deleteRows 我踩得坑5.png" alt="" width="213" height="323" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,68 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python使用xlrd、pandas包从Excel读取数据' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python使用xlrd、pandas包从Excel读取数据</center></div><div class='banquan'>原文出处:本文由博客园博主落日峡谷提供。<br/>
+原文连接:https://www.cnblogs.com/qi-yuan-008/p/11672761.html</div><br>
+    <div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">coding=utf-8</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> pip install xlrd</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> xlrd
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> read_from_xls(filepath,index_col_list):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">filepath：读取文件路径，例如：filepath = r'D:/Python_workspace/test.xlsx'</span>
+　　<span style="color: #008000;">#</span><span style="color: #008000;">index_col_list：读取列的索引列表，例如第一、二、三、四列为：[1,2,3,4]</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 设置GBK编码</span>
+    xlrd.Book.encoding = <span style="color: #800000;">"</span><span style="color: #800000;">gbk</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    rb </span>=<span style="color: #000000;"> xlrd.open_workbook(filepath)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">print(rb)</span>
+<span style="color: #000000;">
+    sheet </span>= rb.sheet_by_index(0) <span style="color: #008000;">#</span><span style="color: #008000;">表示Excel的第一个Sheet</span>
+    nrows =<span style="color: #000000;"> sheet.nrows
+    data_tmp_x </span>= []  <span style="color: #008000;">#</span><span style="color: #008000;">例如数据为x,y,z坐标数据</span>
+    data_tmp_y =<span style="color: #000000;"> []
+    data_tmp_z </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">for</span> index_col <span style="color: #0000ff;">in</span> index_col_list: <span style="color: #008000;">#</span><span style="color: #008000;">依次选择第index_col列</span>
+        <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(nrows):
+            tt</span>=i+1   <span style="color: #008000;">#</span><span style="color: #008000;">读取第tt行，除去第一行的列名</span>
+            <span style="color: #0000ff;">if</span> tt &gt;=<span style="color: #000000;"> nrows:
+                </span><span style="color: #0000ff;">break</span>
+            <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                tmp </span>= float(sheet.cell_value(tt,index_col)) <span style="color: #008000;">#</span><span style="color: #008000;">读取第几行第几列的数据内容</span>
+                <span style="color: #0000ff;">if</span> index_col == 2<span style="color: #000000;">:
+                    data_tmp_x.append(tmp)
+                </span><span style="color: #0000ff;">elif</span> index_col == 3<span style="color: #000000;">:
+                    data_tmp_y.append(tmp)
+                </span><span style="color: #0000ff;">elif</span> index_col == 4<span style="color: #000000;">:
+                    data_tmp_z.append(tmp)
+    data_tmp </span>=<span style="color: #000000;"> np.mat([data_tmp_x,data_tmp_y,data_tmp_z])
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> data_tmp
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用pandas读取excel</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> filepath: xlsx文件路径名</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> pandas as pd
+data </span>=<span style="color: #000000;"> pd.read_excel(filepath)
+province_name </span>= data[<span style="color: #800000;">'</span><span style="color: #800000;">province</span><span style="color: #800000;">'</span>].values.tolist() <span style="color: #008000;">#</span><span style="color: #008000;"> province为列名，结果形成列表</span>
+province_people = data[<span style="color: #800000;">'</span><span style="color: #800000;">count</span><span style="color: #800000;">'</span>].values.tolist()</pre>
+</div>
+<p>&nbsp;</p>
+<pre><code><em id="__mceDel"><em id="__mceDel">## 欢迎有错误进行指正，也可交流改进</em></em></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

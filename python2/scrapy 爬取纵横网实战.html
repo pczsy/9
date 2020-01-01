@@ -1,0 +1,160 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修scrapy 爬取纵横网实战' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>scrapy 爬取纵横网实战</center></div><div class='banquan'>原文出处:本文由博客园博主风，又奈何提供。<br/>
+原文连接:https://www.cnblogs.com/CYHISTW/p/11542445.html</div><br>
+    <h1>前言</h1>
+<p>闲来无事就要练练代码，不知道最近爬取什么网站好，就拿纵横网爬取我最喜欢的雪中悍刀行练手吧</p>
+<h2>准备</h2>
+<ul>
+<li>python3</li>
+<li>scrapy</li>
+</ul>
+<h2>项目创建：</h2>
+<p>cmd命令行切换到工作目录创建scrapy项目&nbsp; 两条命令 scarpy startproject与scrapy genspider&nbsp; &nbsp;&nbsp;然后用pycharm打开项目</p>
+<div class="cnblogs_code">
+<pre><code>D:\pythonwork&gt;<span style="color: #000000;"><span style="color: #ff0000;">scrapy startproject zongheng</span>
+New Scrapy project </span><span style="color: #800000;">'</span><span style="color: #800000;">zongheng</span><span style="color: #800000;">'</span>, using template directory <span style="color: #800000;">'</span><span style="color: #800000;">c:\users\11573\appdata\local\programs\python\python36\lib\site-packages\scrapy\templates\project</span><span style="color: #800000;">'</span>, created <span style="color: #0000ff;">in</span><span style="color: #000000;">:
+    D:\pythonwork\zongheng
+
+You can start your first spider with:
+    cd zongheng
+    scrapy genspider example example.com
+
+D:\pythonwork</span>&gt;<span style="color: #000000;">cd zongheng
+
+D:\pythonwork\zongheng</span>&gt;<span style="color: #000000;">cd zongheng
+
+D:\pythonwork\zongheng\zongheng</span>&gt;<span style="color: #ff0000;">scrapy genspider xuezhong http://book.zongheng.com/chapter/189169/3431546.html</span>
+Created spider <span style="color: #800000;">'</span><span style="color: #800000;">xuezhong</span><span style="color: #800000;">'</span> using template <span style="color: #800000;">'</span><span style="color: #800000;">basic</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> module:
+  zongheng.spiders.xuezhong</span></pre>
+</div>
+<hr />
+<h2>确定内容</h2>
+<p>首先打开网页看下我们需要爬取的内容</p>
+<p><img src="./images/scrapy 爬取纵横网实战0.png" alt="" width="923" height="513" /></p>
+<p>其实小说的话结构比较简单 只有三大块&nbsp; 卷 章节 内容</p>
+<p>因此 items.py代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> Define here the models for your scraped items</span><span style="color: #008000;">
+#
+#</span><span style="color: #008000;"> See documentation in:</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> https://docs.scrapy.org/en/latest/topics/items.html</span>
+
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> scrapy
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> ZonghengItem(scrapy.Item):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> define the fields for your item here like:</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> name = scrapy.Field()</span>
+    book =<span style="color: #000000;"> scrapy.Field()
+    section </span>=<span style="color: #000000;"> scrapy.Field()
+    content </span>=<span style="color: #000000;"> scrapy.Field()
+    </span><span style="color: #0000ff;">pass</span></pre>
+</div>
+<hr />
+<h2>内容提取spider文件编写</h2>
+<p>还是我们先创建一个main.py文件方便我们测试代码</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> scrapy <span style="color: #0000ff;">import</span><span style="color: #000000;"> cmdline
+cmdline.execute(</span><span style="color: #800000;">'</span><span style="color: #800000;">scrapy crawl xuezhong</span><span style="color: #800000;">'</span>.split())</pre>
+</div>
+<p>然后我们可以在spider文件中先编写</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> scrapy
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> XuezhongSpider(scrapy.Spider):
+    name </span>= <span style="color: #800000;">'</span><span style="color: #800000;">xuezhong</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    allowed_domains </span>= [<span style="color: #800000;">'</span><span style="color: #800000;">http://book.zongheng.com/chapter/189169/3431546.html</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+    start_urls </span>= [<span style="color: #800000;">'</span><span style="color: #800000;">http://book.zongheng.com/chapter/189169/3431546.html/</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> parse(self, response):
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(response.text)
+        </span><span style="color: #0000ff;">pass</span></pre>
+</div>
+<p>运行main.py看看有没有输出</p>
+<p>发现直接整个网页的内容都可以爬取下来，说明该网页基本没有反爬机制，甚至不用我们去修改user-agent那么就直接开始吧</p>
+<p>打开网页 F12查看元素位置 并编写xpath路径 然后编写spider文件</p>
+<p>需要注意的是<span style="color: #ff0000;">我们要对小说内容进行一定量的数据清洗，因为包含某些html标签我们需要去除</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> scrapy
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> re
+</span><span style="color: #0000ff;">from</span> zongheng.items <span style="color: #0000ff;">import</span><span style="color: #000000;"> ZonghengItem
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> XuezhongSpider(scrapy.Spider):
+    name </span>= <span style="color: #800000;">'</span><span style="color: #800000;">xuezhong</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    allowed_domains </span>= [<span style="color: #800000;">'</span><span style="color: #800000;">book.zongheng.com</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+    start_urls </span>= [<span style="color: #800000;">'</span><span style="color: #800000;">http://book.zongheng.com/chapter/189169/3431546.html/</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> parse(self, response):
+        xuezhong_item </span>=<span style="color: #000000;"> ZonghengItem()
+        xuezhong_item[</span><span style="color: #800000;">'</span><span style="color: #800000;">book</span><span style="color: #800000;">'</span>] = response.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="reader_warp"]/div[2]/text()[4]</span><span style="color: #800000;">'</span>).get()[3<span style="color: #000000;">:]
+        xuezhong_item[</span><span style="color: #800000;">'</span><span style="color: #800000;">section</span><span style="color: #800000;">'</span>] = response.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="readerFt"]/div/div[2]/div[2]/text()</span><span style="color: #800000;">'</span><span style="color: #000000;">).get()
+
+        content </span>= response.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="readerFt"]/div/div[5]</span><span style="color: #800000;">'</span><span style="color: #000000;">).get()
+        </span><span style="color: #008000;">#</span><span style="color: #008000;">content内容需要处理因为会显示&lt;p&gt;&lt;/p&gt;标签和&lt;div&gt;标签</span>
+        content = re.sub(r<span style="color: #800000;">'</span><span style="color: #800000;">&lt;/p&gt;</span><span style="color: #800000;">'</span>, <span style="color: #800000;">""</span><span style="color: #000000;">, content)
+        content </span>= re.sub(r<span style="color: #800000;">'</span><span style="color: #800000;">&lt;p&gt;|&lt;div.*&gt;|&lt;/div&gt;</span><span style="color: #800000;">'</span>,<span style="color: #800000;">"</span><span style="color: #800000;">\n</span><span style="color: #800000;">"</span><span style="color: #000000;">,content )
+
+        xuezhong_item[</span><span style="color: #800000;">'</span><span style="color: #800000;">content</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> content
+        </span><span style="color: #0000ff;">yield</span><span style="color: #000000;"> xuezhong_item
+
+        nextlink </span>= response.xpath(<span style="color: #800000;">'</span><span style="color: #800000;">//*[@id="readerFt"]/div/div[7]/a[3]/@href</span><span style="color: #800000;">'</span><span style="color: #000000;">).get()
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(nextlink)
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> nextlink:
+            </span><span style="color: #0000ff;">yield</span> scrapy.Request(nextlink,callback=self.parse)</pre>
+</div>
+<p>有时候我们会发现无法进入下个链接，那可能是被allowed_domains过滤掉了 我们修改下就可以</p>
+<p>唉 突然发现了到第一卷的一百多章后就要VIP了 那我们就先只弄一百多章吧 不过也可以去其他网站爬取免费的 这次我们就先爬取一百多章吧</p>
+<hr />
+<p>&nbsp;</p>
+<h2>内容保存</h2>
+<p>接下来就是内容的保存了，这次就直接保存为本地txt文件就行了&nbsp;</p>
+<p>首先去settings.py文件里开启&nbsp;&nbsp;ITEM_PIPELINES</p>
+<p>然后编写pipelines.py文件</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+
+<span style="color: #008000;">#</span><span style="color: #008000;"> Define your item pipelines here</span><span style="color: #008000;">
+#
+#</span><span style="color: #008000;"> Don't forget to add your pipeline to the ITEM_PIPELINES setting</span><span style="color: #008000;">
+#</span><span style="color: #008000;"> See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html</span>
+
+
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> ZonghengPipeline(object):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> process_item(self, item, spider):
+        filename </span>= item[<span style="color: #800000;">'</span><span style="color: #800000;">book</span><span style="color: #800000;">'</span>]+item[<span style="color: #800000;">'</span><span style="color: #800000;">section</span><span style="color: #800000;">'</span>]+<span style="color: #800000;">'</span><span style="color: #800000;">.txt</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        with open(</span><span style="color: #800000;">"</span><span style="color: #800000;">../xuezhongtxt/</span><span style="color: #800000;">"</span>+filename,<span style="color: #800000;">'</span><span style="color: #800000;">w</span><span style="color: #800000;">'</span><span style="color: #000000;">) as txtf:
+            txtf.write(item[</span><span style="color: #800000;">'</span><span style="color: #800000;">content</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+        </span><span style="color: #0000ff;">return</span> item</pre>
+</div>
+<p>由于选址失误导致了我们只能爬取免费的一百多章节，尴尬，不过我们可以类比运用到其他网站爬取全文免费的书籍</p>
+<p>怎么样 使用scrapy爬取是不是很方便呢</p>
+<p><img src="./images/scrapy 爬取纵横网实战1.png" alt="" width="925" height="533" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

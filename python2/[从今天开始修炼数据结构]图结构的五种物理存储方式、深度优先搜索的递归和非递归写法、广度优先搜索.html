@@ -1,0 +1,864 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索</center></div><div class='banquan'>原文出处:本文由博客园博主Joey777210提供。<br/>
+原文连接:https://www.cnblogs.com/Joey777210/p/12009087.html</div><br>
+    <p>我们之前介绍了线性关系的线性表，层次关系的树形结构，下面我们来介绍结点之间关系任意的结构，图。<br />一、相关概念</p>
+<p>　　1，图是由顶点的<strong>有穷非空</strong>集合和顶点之间边的集合组成，通常表示为G(V,E)，其中，G表示一个图，V是图G中顶点的集合，E是图G中边的集合。</p>
+<p>　　2，各种图定义</p>
+<p>　　　若两顶点之间的边没有方向，则称这条边为<strong>无向边Edge</strong>，用无序偶对(v1,v2)来表示。如果图中任意两个顶点之间的边都是无向边，则称该图为<strong>无向图</strong>。</p>
+<p>　　　若从顶点v1到v2的边有方向，则称这条边为<strong>有向边，也称为弧（Arc）</strong>，表示为有序偶&lt;v1,v2&gt;，称v1为弧尾，v2为弧头。若图中任意两个顶点之间的边都是有向边，则称该图为<strong>有向图</strong>。</p>
+<p>　　<span style="color: #ff0000;"><strong>注意无向边用(),有向边用&lt;&gt;</strong></span></p>
+<p>　　图按照边或弧的多少分为<strong>稀疏图和稠密图</strong>，但划分边界比较模糊。任意两个顶点之间都存在边叫<strong>完全图</strong>，有向的叫<strong>有向完全图</strong>。若无重复边或顶点回到自身的边的叫做<strong>简单图</strong>。</p>
+<p>　　图上边或弧带<strong>权</strong>则称为<strong>网</strong>。</p>
+<p>　　3，图的顶点与边之间的关系</p>
+<p>　　图中顶点之间有<strong>邻接点</strong>Adjacent的概念，v和v&lsquo;相邻接，边(v,v')<strong>依附</strong>于顶点v和v&rsquo;，或者说边(v,v')与顶点v和v&rsquo;相关联。顶点的<strong>度</strong>Degree是与v相关联的边的数目，记作TD（v）。</p>
+<p>　　有向图中有<strong>入度</strong>ID(v)和<strong>出度</strong>OD(V)的概念.</p>
+<p>　　图中的顶点间存在路径则说明是连通的，如果路径最终回到起始点则成为<strong>环</strong>，不重复的路径称为<strong>简单路径</strong>。顶点不重复出现的回路，叫做<strong>简单回路或简单环</strong>。</p>
+<p>　　若任意两点之间都是连通的，则成为<strong>连通图</strong>，有向则是<strong>强连通图</strong>。图中有子图，若子图极大连通则称该子图为<strong>连通分量</strong>，有向的则称为<strong>强连通分量</strong>。</p>
+<p>　　<strong>无向图是连通图且n个顶点有n-1条边则叫做生成树</strong>。有向图中一顶点入度为0，其他顶点入度为1的叫做<strong>有向树</strong>，一个有向图可以分解为若干有向树构成的<strong>生成森林</strong>。</p>
+<p>二、图的抽象数据类型</p>
+<p>　　<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;三、图的存储结构</p>
+<p>　　图结构比较复杂，任意两个顶点之间都可能存在联系，因此无法以数据元素在内存中的物理位置来表示元素间的关系；而多重链表的方式又有操作的不便，因此对于图来说，它实现物理存储是个难题，下面我们来看前辈们已经提供的五种不同的存储结构</p>
+<p>　　1，邻接矩阵</p>
+<p>　　图的邻接矩阵存储方式是用两个数组来表示图。一个一维数组存储图中顶点信息，一个二维数组（称为邻接矩阵）存储图中的边或弧的信息。若无向图中存在这条边，或有向图中存在这条弧，则矩阵中的该位置置为1，否则置0.如下</p>
+<p><img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;　　邻接矩阵是如何实现图的创建的呢？ 代码如下</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+顶点的包装类
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> Vertex&lt;T&gt;<span style="color: #000000;">{
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> T data;
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Vertex(T data){
+        </span><span style="color: #0000ff;">this</span>.data =<span style="color: #000000;"> data;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> T getData() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> data;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setData(T data) {
+        </span><span style="color: #0000ff;">this</span>.data =<span style="color: #000000;"> data;
+    }
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code></pre>
+<pre><code>import java.util.ArrayDeque;<br />import java.util.LinkedList;<br />import java.util.Queue;<br /><br />import Stack.ArrayStack;<br />import Stack.LinkedStack;<br /><br />/*<br />邻接矩阵实现图的创建<br /> */<br />public class MGraph&lt;T&gt; {<br />    private boolean flag;   //若为true 则为有向图，否则为无向图<br />    private Vertex&lt;T&gt;[] vertexs;<br />    private int[][] edges;<br />    private int numVertex;          //顶点的实际数量<br />    private int maxNumVertex;       //顶点的最大数量<br />    private int INFINITY = 65535;<br /><br /><br />    public MGraph(int maxNumVertex, boolean flag){<br />        this.maxNumVertex = maxNumVertex;<br />        numVertex = 0;<br />        this.vertexs = (Vertex&lt;T&gt;[]) new Vertex[maxNumVertex];<br />        this.edges = new int[maxNumVertex][maxNumVertex];<br />        initEdges();<br /><br />        this.flag = flag;<br />    }<br /><br />    private void initEdges(){<br />        for (int i = 0; i &lt; maxNumVertex; i++) {<br />            for (int j = 0; j &lt; maxNumVertex; j++) {<br />                edges[i][j] = INFINITY;<br />            }<br />        }<br />        for (int i = 0; i &lt; maxNumVertex; i++) {<br />            edges[i][i] = 0;<br />        }<br />    }<br /><br />    public int getNumVertex(){<br />        return numVertex;<br />    }<br /><br />    public int getMaxNumVertex(){<br />        return maxNumVertex;<br />    }<br /><br />    public boolean isFull(){<br />        return numVertex == maxNumVertex;<br />    }<br /><br />    public void addVertex(T data){<br />        if(isFull()){<br />            throw new RuntimeException("图满了");<br />        }<br />        Vertex&lt;T&gt; v = new Vertex&lt;T&gt;(data);<br />        vertexs[numVertex++] = v;<br />    }<br /><br />    /**<br />     * 删除图中与data相等的顶点<br />     * @param data 要删除的顶点的data值<br />     * @return 返回删除了几个顶点<br />     */<br />    public int removeVertex(T data){<br />        int flag = 0;<br />        for (int i = 0; i &lt; numVertex; i++){<br />            if (vertexs[i].getData().equals(data)){<br />                for (int j = i; j &lt; numVertex - 1; j++){<br />                    vertexs[j] = vertexs[j + 1];<br />                }<br />                //删除矩阵的第 i 行<br />                for (int row = i; row &lt; numVertex - 1; row++){<br />                    for (int col = 0; col &lt; numVertex; col++){<br />                        edges[col][row] = edges[col][row + 1];<br />                    }<br />                }<br />                //删除矩阵的第 i 列<br />                for (int row = 0; row &lt; numVertex; row++){<br />                    for (int col = i; col &lt; numVertex - 1; col++){<br />                        edges[col][row] = edges[col + 1][row];<br />                    }<br />                }<br />                numVertex--;<br />                flag++;<br />            }<br />        }<br />        return flag;<br />    }<br /><br />    private int getIndexOfData(T data){<br />        int i = 0;<br />        while (!vertexs[i].getData().equals(data)){<br />            i++;<br />        }<br />        if (vertexs[i].getData().equals(data)) {<br />            return i;<br />        }else {<br />            throw new NullPointerException();<br />        }<br />    }<br /><br />    /**<br />     * 若为无向图，data的顺序随意；若为有向图，则添加的边是data1指向data2<br />     * @param data1 弧尾<br />     * @param data2 弧头<br />     * @param weight 权值<br />     */<br />    public void addEdge(T data1, T data2, int weight){<br />        if (flag) {<br />            int index1 = getIndexOfData(data1);<br />            int index2 = getIndexOfData(data2);<br />            edges[index1][index2] = weight;<br />        }else {<br />            int index1 = getIndexOfData(data1);<br />            int index2 = getIndexOfData(data2);<br />            edges[index1][index2] = weight;<br />            edges[index2][index1] = weight;<br />        }<br />    }<br /><br />    public void removeEdge(T data1, T data2){<br />        int index1 = getIndexOfData(data1);<br />        int index2 = getIndexOfData(data2);<br />        edges[index1][index2] = INFINITY;<br />    }<br /><br />    public void printMatrix(){<br />        for (int row = 0; row &lt; numVertex; row++){<br />            for (int col = 0; col &lt; numVertex; col++){<br />                System.out.print(edges[row][col] + "\t");<br />            }<br />            System.out.println();<br />        }<br />    }</pre>
+<pre><code><span style="color: #008000;">&nbsp;</span></pre>
+</div>
+<p>　　邻接矩阵可以解决图的物理存储，但我们也发现，对于边相对顶点来说较少的图，这种结构是存在对存储空间的极大浪费的。如何解决呢？看下面</p>
+<p>　　2，邻接表</p>
+<p>　　我们在前面提到过，顺序存储结构存在预先分配内存可能造成空间浪费的问题，于是引出了链式存储结构。我们用类似于前面树结构中孩子表示法的方式，数组与链表相结合的存储方法称为邻接表。</p>
+<p>　　处理方法：顶点用一维数组存储；每个顶点的所有邻接点构成一个线性表，用单链表存储。有向图称为顶点v的边表；无向图称为<strong>顶点v作为弧尾的出边表</strong>。</p>
+<p>　　<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索4.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;注：若是有向图，邻接表结构是类似的。由于有向图有方向，我们是以顶点为弧尾来存储边表的，这样很容易得到每个顶点的出度。但也有是为了便于确定顶点的入度，我们可以建立一个有向图的逆邻接表，即对每个顶点v1都建立一个链接为v1为弧头的表。</p>
+<p>&nbsp;　　若是带权值的网图，可以在边表结点的定义中再增加一个weight的数据域，存储权值信息即可。</p>
+<p>　　下面是邻接表存储图结构的代码实现</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> VertexL&lt;T&gt;<span style="color: #000000;"> {
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> T data;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> EdgeL firstEdge;
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> VertexL(T data)
+    {
+        </span><span style="color: #0000ff;">this</span>.data =<span style="color: #000000;"> data;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setFirstEdge(EdgeL e){
+        </span><span style="color: #0000ff;">this</span>.firstEdge =<span style="color: #000000;"> e;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> EdgeL getFirstEdge(){
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> firstEdge;
+    }
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> T getData(){
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> data;
+    }
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> EdgeL {
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span> adjvex; <span style="color: #008000;">//</span><span style="color: #008000;">存储邻接点对应的下标</span>
+    <span style="color: #0000ff;">private</span> EdgeL nextEdge;  <span style="color: #008000;">//</span><span style="color: #008000;">存储</span>
+
+    <span style="color: #0000ff;">public</span> EdgeL(<span style="color: #0000ff;">int</span><span style="color: #000000;"> adjvex){
+        </span><span style="color: #0000ff;">this</span>.adjvex =<span style="color: #000000;"> adjvex;
+    }
+
+    </span><span style="color: #0000ff;">public</span> EdgeL(<span style="color: #0000ff;">int</span><span style="color: #000000;"> adjvex, EdgeL e){
+        </span><span style="color: #0000ff;">this</span>.adjvex =<span style="color: #000000;"> adjvex;
+        </span><span style="color: #0000ff;">this</span>.nextEdge =<span style="color: #000000;"> e;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> EdgeL getNextEdge(){
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> nextEdge;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setNextEdge(EdgeL e){
+        </span><span style="color: #0000ff;">this</span>.nextEdge =<span style="color: #000000;"> e;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> getAdjvex(){
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> adjvex;
+    }
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+    无向图（无权值）的邻接表存储。
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> GraphAdjList &lt;T&gt;<span style="color: #000000;">{
+    </span><span style="color: #0000ff;">private</span> VertexL&lt;T&gt;<span style="color: #000000;">[] vertexs;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> numVertex;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> maxNumVertex;
+
+    </span><span style="color: #0000ff;">public</span> GraphAdjList(<span style="color: #0000ff;">int</span><span style="color: #000000;"> maxNumVertex){
+        </span><span style="color: #0000ff;">this</span>.maxNumVertex =<span style="color: #000000;"> maxNumVertex;
+        </span><span style="color: #0000ff;">this</span>.vertexs =(VertexL&lt;T&gt;[]) <span style="color: #0000ff;">new</span><span style="color: #000000;"> VertexL[maxNumVertex];
+        numVertex </span>= 0<span style="color: #000000;">;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> isFull(){
+        </span><span style="color: #0000ff;">return</span> numVertex ==<span style="color: #000000;"> maxNumVertex;
+    }
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> getNumVertex(){
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> numVertex;
+    }
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 添加顶点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> data
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> addVertex(T data){
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (isFull()){
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> IndexOutOfBoundsException();
+        }
+        VertexL</span>&lt;T&gt; v = <span style="color: #0000ff;">new</span> VertexL&lt;T&gt;<span style="color: #000000;">(data);
+        vertexs[numVertex</span>++] =<span style="color: #000000;"> v;
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 添加边
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> data1
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> data2
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> addEdge(T data1, T data2){
+        </span><span style="color: #0000ff;">int</span> indexOfData1 =<span style="color: #000000;"> getIndex(data1);
+        </span><span style="color: #0000ff;">int</span> indexOfData2 =<span style="color: #000000;"> getIndex(data2);
+
+        </span><span style="color: #0000ff;">if</span> (vertexs[indexOfData1].getFirstEdge() == <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            vertexs[indexOfData1].setFirstEdge(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> EdgeL(indexOfData2));
+        }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            vertexs[indexOfData1].getFirstEdge().setNextEdge(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> EdgeL(indexOfData2, vertexs[indexOfData1].getFirstEdge().getNextEdge()));
+        }
+
+        </span><span style="color: #0000ff;">if</span> (vertexs[indexOfData2].getFirstEdge() == <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            vertexs[indexOfData2].setFirstEdge(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> EdgeL(indexOfData1));
+        }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            vertexs[indexOfData2].getFirstEdge().setNextEdge(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> EdgeL(indexOfData1, vertexs[indexOfData1].getFirstEdge().getNextEdge()));
+        }
+    }
+
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> getIndex(T data){
+        </span><span style="color: #0000ff;">int</span> i = 0<span style="color: #000000;">;
+        </span><span style="color: #0000ff;">for</span> (; i &lt; numVertex; i++<span style="color: #000000;">){
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (data.equals(vertexs[i].getData())){
+                </span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+            }
+
+        }
+        </span><span style="color: #0000ff;">if</span> (!data.equals(vertexs[i].getData()) &amp;&amp; i ==<span style="color: #000000;"> numVertex){
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> NullPointerException();
+        }
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> i;
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 删除边
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> data1
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> data2
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> removeEdge(T data1, T data2){
+        </span><span style="color: #0000ff;">int</span> indexOfData1 =<span style="color: #000000;"> getIndex(data1);
+        </span><span style="color: #0000ff;">int</span> indexOfData2 =<span style="color: #000000;"> getIndex(data2);
+
+        VertexL v </span>=<span style="color: #000000;"> vertexs[indexOfData1];
+        EdgeL e </span>=<span style="color: #000000;"> v.getFirstEdge();
+        </span><span style="color: #0000ff;">if</span> (e.getAdjvex() ==<span style="color: #000000;"> indexOfData2){
+            </span><span style="color: #0000ff;">if</span> (v.getFirstEdge().getNextEdge() == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                v.setFirstEdge(</span><span style="color: #0000ff;">null</span><span style="color: #000000;">);
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                v.setFirstEdge(e.getNextEdge());
+            }
+        }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            </span><span style="color: #0000ff;">while</span> (e.getNextEdge().getAdjvex() !=<span style="color: #000000;"> indexOfData2){
+                e </span>=<span style="color: #000000;"> e.getNextEdge();
+            }
+            </span><span style="color: #0000ff;">if</span> (e.getNextEdge().getNextEdge() != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                e.setNextEdge(e.getNextEdge().getNextEdge());
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                e.setNextEdge(</span><span style="color: #0000ff;">null</span><span style="color: #000000;">);
+            }
+        }
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 删除顶点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> data
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> removeVertex(T data){
+        </span><span style="color: #0000ff;">int</span> index =<span style="color: #000000;"> getIndex(data);
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; numVertex; i++<span style="color: #000000;">){
+            </span><span style="color: #0000ff;">if</span> (i ==<span style="color: #000000;"> index){
+                </span><span style="color: #0000ff;">continue</span><span style="color: #000000;">;
+            }
+            removeEdge(vertexs[i].getData(), data);
+        }
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = index; i &lt; numVertex - 1; i++<span style="color: #000000;">){
+            vertexs[i] </span>= vertexs[i + 1<span style="color: #000000;">];
+        }
+    }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>　　3，十字链表</p>
+<p>　　对于有向图来说，邻接表只关心了出度问题，想了解入度就必须遍历整个图才能知道；反之，逆邻接表解决了入度问题，却不了解出度的情况。那么能不能把<strong>邻接表和逆邻接表结合</strong>一下呢？</p>
+<p>　　这就是下面要讲的存储方式：十字链表。</p>
+<p>　　我们既然要结合邻接表和逆邻接表，就要先把顶点域融合一下如下</p>
+<p>&nbsp;<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索5.png" alt="" />&nbsp;firstin表示入边表表头指针，指向该顶点入边表的第一个结点；&nbsp; firstout表示出边表表头指针，指向该顶点出边表的第一个结点。</p>
+<p>　　下面我们来把边表结点结构也融合一下</p>
+<p>　　<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索6.png" alt="" />其中tailvex是指弧起点在顶点表的下标 ； headvex是指弧终点在顶点表中的下标。&nbsp; &nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>　　headlink是入边表指针域，指向同一个弧头的弧；taillink是出边表指针域，指向同一个弧尾的弧。 从新的边表结点的域可以看出来，每一个边表结点既承担了作为入边表的职责，也承担了作为出边表结点的职责。</p>
+<p>　　例如下面这个例子</p>
+<p><img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索7.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;图中虚线箭头的含义就是此图的逆邻接表的表示。我们可以简单的理解为，比如第一行的边结点，就是表示从0指向3的有向弧，所以它一定是由0直接指向，并且由3虚线指向的。</p>
+<p>再如图中唯一连续指向的从V0指向边10，再指向边20，可以发现弧头为0的都在同一列，弧尾同的都在同一行；由于V0有两个入度，所以虚线连续指向两个边结点。</p>
+<p><strong>十字链表的好处是因为结合了邻接表和逆邻接表，既容易找到入度，也容易找到出度。除了结构复杂一点，它创建图算法的时间复杂度是和邻接表相同的。因此在有向图中，十字链表是非常好的数据结构。</strong></p>
+<p>代码实现如下：&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+    十字链表实现的图结构的弧定义
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> EdgeOL {
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> tail;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> head;
+
+    </span><span style="color: #0000ff;">public</span> EdgeOL(<span style="color: #0000ff;">int</span> tail, <span style="color: #0000ff;">int</span><span style="color: #000000;"> head) {
+        </span><span style="color: #0000ff;">this</span>.tail =<span style="color: #000000;"> tail;
+        </span><span style="color: #0000ff;">this</span>.head =<span style="color: #000000;"> head;
+    }
+}
+
+
+</span><span style="color: #008000;">/*</span><span style="color: #008000;">
+    十字链表实现的图结构的顶点定义
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> VertexOL&lt;T&gt;<span style="color: #000000;"> {
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> T data;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> EdgeOL firstIn;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> EdgeOL firstOut;
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> VertexOL(T data) {
+        </span><span style="color: #0000ff;">this</span>.data =<span style="color: #000000;"> data;
+    }
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+    图结构的十字链表实现
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> GraphOrthogonalList&lt;T&gt;<span style="color: #000000;"> {
+    </span><span style="color: #0000ff;">private</span> VertexOL&lt;T&gt;<span style="color: #000000;">[] vertexs;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> numVertex;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> maxNumVertex;
+
+    </span><span style="color: #0000ff;">public</span> GraphOrthogonalList(<span style="color: #0000ff;">int</span><span style="color: #000000;"> maxNumVertex){
+        </span><span style="color: #0000ff;">this</span>.maxNumVertex =<span style="color: #000000;"> maxNumVertex;
+        vertexs </span>= (VertexOL&lt;T&gt;[])<span style="color: #0000ff;">new</span><span style="color: #000000;"> VertexOL[maxNumVertex];
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> isFull(){
+        </span><span style="color: #0000ff;">return</span> numVertex ==<span style="color: #000000;"> maxNumVertex;
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 添加新顶点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> data 新顶点的数据域
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> addVertex(T data){
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (isFull()){
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">;
+        }
+        VertexOL</span>&lt;T&gt; v = <span style="color: #0000ff;">new</span> VertexOL&lt;&gt;<span style="color: #000000;">(data);
+        vertexs[numVertex</span>++] =<span style="color: #000000;"> v;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> addEdge(<span style="color: #0000ff;">int</span> tail, <span style="color: #0000ff;">int</span><span style="color: #000000;"> head){
+        EdgeOL e </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> EdgeOL(tail, head);
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">头插法，形成十字链表</span>
+<span style="color: #000000;">        e.setTailLink(vertexs[tail].getFirstOut());
+        vertexs[tail].setFirstOut(e);
+        e.setHeadLink(vertexs[head].getFirstIn());
+        vertexs[head].setFirstIn(e);
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 删除一个边结点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> tail
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> head
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> removeEdge(<span style="color: #0000ff;">int</span> tail, <span style="color: #0000ff;">int</span><span style="color: #000000;"> head){
+        removeFromTailList(tail, head);
+        removeFromHeadList(tail, head);
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 从邻接表中删除一个边结点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> tail
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> head
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> removeFromTailList(<span style="color: #0000ff;">int</span> tail, <span style="color: #0000ff;">int</span><span style="color: #000000;"> head){
+        EdgeOL e </span>=<span style="color: #000000;"> vertexs[tail].getFirstOut();
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">从tailLink中删除它</span>
+        <span style="color: #0000ff;">if</span> (e != <span style="color: #0000ff;">null</span> &amp;&amp; e.getHeadVex() ==<span style="color: #000000;"> head){
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果e是第一个但不是最后一个结点，删除它</span>
+            <span style="color: #0000ff;">if</span> (e.getTailLink() != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                vertexs[tail].setFirstOut(e.getTailLink());
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">如果e是第一个也是最后一个结点，删除它</span>
+                vertexs[tail].setFirstOut(<span style="color: #0000ff;">null</span><span style="color: #000000;">);
+            }
+        }</span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (e != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果e不是第一个结点，那么遍历链表找到要删除的边结点的上一个结点！！</span>
+            <span style="color: #0000ff;">while</span> (e.getTailLink() != <span style="color: #0000ff;">null</span> &amp;&amp; e.getTailLink().getHeadVex() !=<span style="color: #000000;"> head){
+                e </span>=<span style="color: #000000;"> e.getTailLink();
+            }
+            </span><span style="color: #0000ff;">if</span> (e.getHeadVex() !=<span style="color: #000000;"> head){
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">throw new NullPointerException();
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">这里不能抛异常，因为后面要遍历删除边，抛异常会使程序终止</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;">;
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                e.setTailLink(e.getTailLink().getTailLink());
+            }
+        }
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 从逆邻接表中删除一个边结点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> tail
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> head
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> removeFromHeadList(<span style="color: #0000ff;">int</span> tail, <span style="color: #0000ff;">int</span><span style="color: #000000;"> head){
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">从headLink中删除它</span>
+        EdgeOL e =<span style="color: #000000;"> vertexs[head].getFirstOut();
+        </span><span style="color: #0000ff;">if</span> (e != <span style="color: #0000ff;">null</span> &amp;&amp; e.getTailVex() ==<span style="color: #000000;"> tail){
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果e1是第一个但不是最后一个结点，删除它</span>
+            <span style="color: #0000ff;">if</span> (e.getHeadLink() != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                vertexs[head].setFirstIn(e.getHeadLink());
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">如果e1是第一个也是最后一个结点，删除它</span>
+                vertexs[head].setFirstIn(<span style="color: #0000ff;">null</span><span style="color: #000000;">);
+            }
+        }</span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (e != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">如果e1不是第一个结点，那么遍历链表找到要删除的边结点的上一个结点！！</span>
+
+            <span style="color: #0000ff;">while</span> (e.getHeadLink() != <span style="color: #0000ff;">null</span>
+                    &amp;&amp; e.getHeadLink().getTailVex() !=<span style="color: #000000;"> tail){
+                e </span>=<span style="color: #000000;"> e.getHeadLink();
+            }
+            </span><span style="color: #0000ff;">if</span> (e.getTailVex() !=<span style="color: #000000;"> tail){
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">throw new NullPointerException();</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;">;
+            }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                e.setHeadLink(e.getHeadLink().getHeadLink());
+            }
+        }
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 删除index角标的顶点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> index
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> removeVertex(<span style="color: #0000ff;">int</span><span style="color: #000000;"> index){
+        </span><span style="color: #0000ff;">if</span> (index &gt;=<span style="color: #000000;"> numVertex){
+            </span><span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> NullPointerException();
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">删除与该顶点有关的所有边</span>
+        <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = numVertex - 1; i &gt; 0; i--<span style="color: #000000;">){
+            removeEdge(index, i);
+            removeEdge(i, index);
+        }
+
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">删除该结点</span>
+        <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = index; i &lt; numVertex - 1; i++<span style="color: #000000;">){
+            vertexs[i] </span>= vertexs[i + 1<span style="color: #000000;">];
+        }
+        numVertex</span>--<span style="color: #000000;">;
+    }
+}</span></pre>
+</div>
+<p>　　4，邻接多重表</p>
+<p>　　上面的三种结构看似已经解决了所有问题，但在编写代码的时候才能体会到，插入顶点，插入边时非常方便，但删除时很麻烦。如何解决呢？ 有时又要对已访问的边做标记，又怎么做呢？&nbsp;</p>
+<p>　　下面我们来看面向无向图的邻接多重表。</p>
+<p>&nbsp;　　我们把邻接表中的边表结点的结构进行改造如下</p>
+<p>&nbsp;　　<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索8.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;　　其中ivex和jvex是与某条边依附的两个顶点在顶点表中的下标。ilink指向依附顶点ivex的下一条边，jlink指向依附顶点jvex的下一条边。这就是邻接多重表。</p>
+<p>　　　　　　<strong>注意：ilink指向的结点的jvex和它本身的ivex值相同</strong></p>
+<p>&nbsp;　　下面举例</p>
+<p><img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索9.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;若要删除左图（v0 , v2）这条边，仅需让6 ， 9这两个链接改为^即可，删除方便了很多。</p>
+<p>上面这种方法是《大话数据结构》中的画法，它 &ldquo;貌似&rdquo; 限制了ivex和jvex的顺序，使得在代码实现上难以思考。我找到了下面这个视频，是一个很好的邻接多重表的解释，（咖喱英语警告）。它没有限制ivex必须指向相同的jvex，没有限制ivex和jvex的顺序，也没有限制数组中的顶点结点只能指向一个边结点，更灵活，更好理解，代码也更容易实现。</p>
+<p><a href="https://www.youtube.com/watch?v=f2z1n6atBsc">https://www.youtube.com/watch?v=f2z1n6atBsc</a></p>
+<p>　　下面是视频中画法的代码实现。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+邻接多重表的顶点定义
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> VertexAM&lt;T&gt;<span style="color: #000000;"> {
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> T data;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> EdgeAM firstEdge;
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> VertexAM(T data){
+        </span><span style="color: #0000ff;">this</span>.data =<span style="color: #000000;"> data;
+    }
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> T getData() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> data;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setData(T data) {
+        </span><span style="color: #0000ff;">this</span>.data =<span style="color: #000000;"> data;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> EdgeAM getFirstEdge() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> firstEdge;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setFirstEdge(EdgeAM firstEdge) {
+        </span><span style="color: #0000ff;">this</span>.firstEdge =<span style="color: #000000;"> firstEdge;
+    }
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+邻接多重表的边结点定义
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> EdgeAM {
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> ivex;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> jvex;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> EdgeAM ilink;
+    </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> EdgeAM jlink;
+
+    </span><span style="color: #0000ff;">public</span> EdgeAM(<span style="color: #0000ff;">int</span> ivex, <span style="color: #0000ff;">int</span><span style="color: #000000;"> jvex){
+        </span><span style="color: #0000ff;">this</span>.ivex =<span style="color: #000000;"> ivex;
+        </span><span style="color: #0000ff;">this</span>.jvex =<span style="color: #000000;"> jvex;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> getIvex() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ivex;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setIvex(<span style="color: #0000ff;">int</span><span style="color: #000000;"> ivex) {
+        </span><span style="color: #0000ff;">this</span>.ivex =<span style="color: #000000;"> ivex;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> getJvex() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> jvex;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setJvex(<span style="color: #0000ff;">int</span><span style="color: #000000;"> jvex) {
+        </span><span style="color: #0000ff;">this</span>.jvex =<span style="color: #000000;"> jvex;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> EdgeAM getIlink() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ilink;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setIlink(EdgeAM ilink) {
+        </span><span style="color: #0000ff;">this</span>.ilink =<span style="color: #000000;"> ilink;
+    }
+
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> EdgeAM getJlink() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> jlink;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setJlink(EdgeAM jlink) {
+        </span><span style="color: #0000ff;">this</span>.jlink =<span style="color: #000000;"> jlink;
+    }
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+邻接多重表的代码实现
+ </span><span style="color: #008000;">*/</span>
+<span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> GraphAM &lt;T&gt;<span style="color: #000000;">{
+    </span><span style="color: #0000ff;">private</span> VertexAM&lt;T&gt;<span style="color: #000000;">[] vertexs;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> numVertex;
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> maxNumVertex;
+
+    </span><span style="color: #0000ff;">public</span> GraphAM(<span style="color: #0000ff;">int</span><span style="color: #000000;"> maxNumVertex){
+        </span><span style="color: #0000ff;">this</span>.maxNumVertex =<span style="color: #000000;"> maxNumVertex;
+        </span><span style="color: #0000ff;">this</span>.vertexs = (VertexAM&lt;T&gt;[])<span style="color: #0000ff;">new</span><span style="color: #000000;"> VertexAM[maxNumVertex];
+        numVertex </span>= 0<span style="color: #000000;">;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;"> isFull(){
+        </span><span style="color: #0000ff;">return</span> numVertex ==<span style="color: #000000;"> maxNumVertex;
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> addVertex(T data){
+        </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (isFull()){
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">;
+        }
+        vertexs[numVertex</span>++] = <span style="color: #0000ff;">new</span> VertexAM&lt;&gt;<span style="color: #000000;">(data);
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 将新结点连在iLink链表的链尾和jLink链表的链尾
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> ivex
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> jvex
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> addEdge(<span style="color: #0000ff;">int</span> ivex, <span style="color: #0000ff;">int</span><span style="color: #000000;"> jvex){
+        EdgeAM e </span>= <span style="color: #0000ff;">new</span><span style="color: #000000;"> EdgeAM(ivex, jvex);
+        </span><span style="color: #0000ff;">if</span> (vertexs[ivex].getFirstEdge() == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+            vertexs[ivex].setFirstEdge(e);
+        } </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (vertexs[jvex].getFirstEdge() == <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            vertexs[jvex].setFirstEdge(e);
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            EdgeAM ptr </span>=<span style="color: #000000;"> vertexs[ivex].getFirstEdge();
+            </span><span style="color: #0000ff;">while</span> (ptr.getIlink() != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                ptr </span>=<span style="color: #000000;"> ptr.getIlink();
+            }
+            ptr.setIlink(e);
+
+            ptr </span>=<span style="color: #000000;"> vertexs[jvex].getFirstEdge();
+            </span><span style="color: #0000ff;">while</span> (ptr.getJlink() != <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+                ptr </span>=<span style="color: #000000;"> ptr.getJlink();
+            }
+            ptr.setJlink(e);
+        }
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 删除边，如果边结点直连顶点结点，则直接删除；若不直连，先找到边结点的上一个边结点，然后将上一个边结点的link域置空。
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> ivex
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> jvex
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> removeEdge(<span style="color: #0000ff;">int</span> ivex, <span style="color: #0000ff;">int</span><span style="color: #000000;"> jvex) {
+        </span><span style="color: #0000ff;">if</span> (vertexs[ivex].getFirstEdge() != <span style="color: #0000ff;">null</span> &amp;&amp; vertexs[ivex].getFirstEdge().getJvex() ==<span style="color: #000000;"> jvex) {
+            vertexs[ivex].setFirstEdge(</span><span style="color: #0000ff;">null</span><span style="color: #000000;">);
+        } </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (vertexs[jvex].getFirstEdge() != <span style="color: #0000ff;">null</span> &amp;&amp; vertexs[jvex].getFirstEdge().getIvex() ==<span style="color: #000000;"> ivex) {
+            vertexs[jvex].setFirstEdge(</span><span style="color: #0000ff;">null</span><span style="color: #000000;">);
+        } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            removeFromLink(ivex, jvex);
+
+            removeFromLink(jvex, ivex);
+        }
+    }
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> removeFromLink(<span style="color: #0000ff;">int</span> ivex, <span style="color: #0000ff;">int</span><span style="color: #000000;"> jvex){
+        EdgeAM ptr </span>=<span style="color: #000000;"> vertexs[ivex].getFirstEdge();
+        </span><span style="color: #0000ff;">if</span> (ptr == <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #0000ff;">while</span> (ptr.getIlink() != <span style="color: #0000ff;">null</span> &amp;&amp; ptr.getIlink().getJvex() !=<span style="color: #000000;"> jvex) {
+            ptr </span>=<span style="color: #000000;"> ptr.getIlink();
+        }
+        </span><span style="color: #0000ff;">if</span> (ptr.getIlink() == <span style="color: #0000ff;">null</span><span style="color: #000000;">){
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;">;
+        }</span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+            ptr.setIlink(</span><span style="color: #0000ff;">null</span><span style="color: #000000;">);
+        }
+    }
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 先删除与本顶点相连的所有边，然后再删除顶点
+     * </span><span style="color: #808080;">@param</span><span style="color: #008000;"> index
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> removeVertex(<span style="color: #0000ff;">int</span><span style="color: #000000;"> index){
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; numVertex; i++<span style="color: #000000;">){
+            removeEdge(i, index);
+            removeEdge(index, i);
+        }
+
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = index; i &lt; numVertex - 1; i++<span style="color: #000000;">){
+            vertexs[i] </span>= vertexs[i + 1<span style="color: #000000;">];
+        }
+        numVertex</span>--<span style="color: #000000;">;
+    }
+}</span></pre>
+</div>
+<p>　　5，边集数组</p>
+<p>　　　边集数组由两个一维数组构成，一个存储顶点的信息；另一个存储边的信息，这个边数组每个数据元素由一条边的起点下标（begin）、终点下标（end）和权（weight）组成。</p>
+<p>　　　　边集数组的效率并不高，它适合对边依次进行处理的操作，而不适合对顶点进行相关的操作。边集数组的应用将在后面的克鲁斯卡尔（Kruskal）算法中有介绍。</p>
+<p><img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索10.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;四、图的遍历</p>
+<p>　　图的遍历是和树的遍历类似，我们希望从图中某一顶点出发仿遍图中其余顶点，且使每一个顶点仅被访问一次，这一过程就叫做图的遍历（Traversing Graph）</p>
+<p>　　1，深度优先遍历（Depth_First_Search DFS）&nbsp;</p>
+<p>　　<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索11.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;我们以上图为例，假设我们从A出发，只要没碰到访问过的结点，就一直往右手边走，先到B，再到C，再到D，E，F，此时再往右走就碰到A了，所以我们往左边走，到G，往右为D，D访问过了，所以往左走到H，这时H的左右D和E都已经访问过了，到了死胡同。</p>
+<p>但是此时图中还有I结点没有访问过，所以我们从H沿原路后退经过G,F,E,D,C，此时从C往左手边走访问了I。这就是深度优先遍历的思路：从图中某个顶点v出发，只要它存在没有被访问过的邻接点，就进入该邻接点，然后以该点进行深度优先遍历。</p>
+<p>仔细观察大家会感受到，<span style="color: #ff0000;"><strong>深度优先遍历其实很像栈/递归</strong></span>。所以想到用递归来实现深度优先遍历。注意实现过程中不必拘泥于上面解释图片时的一直往右走这个说法，因为图的存储只有画出图片对人的观察来说才有左和右的意义。代码如下</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">/*</span><span style="color: #008000;">
+        对于使用邻接矩阵存储的图的深度优先遍历
+    </span><span style="color: #008000;">*/<br /><br /></span>
+    <span style="color: #008000;">//</span><span style="color: #008000;">标识结点是否被访问过</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[] visited;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">深度优先遍历操作入口</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> DFSTraverse(){
+        </span><span style="color: #0000ff;">this</span>.visited = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[getNumVertex()];
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">boolean</span><span style="color: #000000;"> bool : visited){
+            bool </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">若该顶点没被访问过，则从该顶点为起点深度优先遍历,若为连通图，则只会执行一次DFS</span>
+        <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; getNumVertex(); i++<span style="color: #000000;">){
+            DFS(i);
+        }
+    }
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">深度优先遍历算法</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> DFS(<span style="color: #0000ff;">int</span><span style="color: #000000;"> i) {
+        visited[i] </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        System.out.println(vertexs[i].getData());
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> j = 0; j &lt; numVertex; j++<span style="color: #000000;">){
+            </span><span style="color: #0000ff;">if</span> ( !visited[j] &amp;&amp; (edges[i][j] != 0 || edges[i][j] !=<span style="color: #000000;"> INFINITY)){
+                DFS(j);
+            }
+        }
+    }</span></pre>
+</div>
+<p>　　</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">标识结点是否被访问过</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[] visited;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">深度优先遍历操作入口</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> DFSTraverse(){
+        </span><span style="color: #0000ff;">this</span>.visited = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[getNumVertex()];
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">boolean</span><span style="color: #000000;"> bool : visited){
+            bool </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #008000;">//</span><span style="color: #008000;">若该顶点没被访问过，则从该顶点为起点深度优先遍历,若为连通图，则只会执行一次DFS</span>
+        <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; getNumVertex(); i++<span style="color: #000000;">){
+            </span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">visited[i]) {
+                DFS(i);
+            }
+        }
+    }
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">深度优先遍历算法</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> DFS(<span style="color: #0000ff;">int</span><span style="color: #000000;"> i) {
+        visited[i] </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+        System.out.println(vertexs[i].getData());
+        </span><span style="color: #0000ff;">if</span> (!(vertexs[i].getFirstEdge() == <span style="color: #0000ff;">null</span><span style="color: #000000;">)) {
+            EdgeL e </span>= vertexs[i].getFirstEdge();  <span style="color: #008000;">//</span><span style="color: #008000;">取到邻接表的第一个元素</span>
+            <span style="color: #0000ff;">while</span> (e != <span style="color: #0000ff;">null</span>) {      <span style="color: #008000;">//</span><span style="color: #008000;">邻接表不为空</span>
+                <span style="color: #0000ff;">if</span> (!visited[e.getAdjvex()]) {     <span style="color: #008000;">//</span><span style="color: #008000;">如果该元素没有被访问过，则以该元素为起点再次进行深度优先遍历；如果访问过，则取到邻接表的下一个结点（可以理解为往右走走不通，变成往左走）</span>
+<span style="color: #000000;">                    DFS(e.getAdjvex());
+                }
+                e </span>=<span style="color: #000000;"> e.getNextEdge();
+            }
+        }
+    }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>上面是两种存储方式的深度优先遍历的递归写法，我们可以看出邻接矩阵的DFS的时间复杂度是O(n<sup>2</sup>)而邻接表的DFS是O(n+e)所以当点多边少的稀疏图时，邻接表结构在深度优先遍历上的时间效率大大提高。</strong></p>
+<p>　　众所周知，递归算法在数据量过大时容易引起栈溢出等问题，所以下面我们来看一下DFS的<strong>非递归写法</strong></p>
+<p><strong>　　如下是邻接矩阵，DFS非递归写法（ArrayStack是我在前面关于栈的博客中实现的一个简单链栈demo）</strong></p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #008000;">//</span><span style="color: #008000;">标识结点是否被访问过</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[] visited_2;
+
+    </span><span style="color: #008000;">/**</span><span style="color: #008000;">
+     * 利用栈来实现，如果该顶点被访问，则压栈；
+     * 当走到死胡同，查询栈顶元素是否有其他未被访问的邻接点，如果有，则访问它，并压栈，如果没有，则将栈顶元素弹栈，直到栈为空。
+     </span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> DFSTraverse_2(){
+        </span><span style="color: #0000ff;">this</span>.visited = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[numVertex];
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; numVertex; i++<span style="color: #000000;">){
+            visited[i] </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+
+        ArrayStack</span>&lt;Integer&gt; s = <span style="color: #0000ff;">new</span> ArrayStack&lt;Integer&gt;<span style="color: #000000;">();
+        </span><span style="color: #0000ff;">int</span> i = 0<span style="color: #000000;">;
+        visit(i);
+        s.push(i);
+        </span><span style="color: #0000ff;">while</span> (!<span style="color: #000000;">s.isEmpty()){
+            </span><span style="color: #0000ff;">int</span> j = 0<span style="color: #000000;">;
+            </span><span style="color: #0000ff;">int</span> top =<span style="color: #000000;"> s.getTop();
+            </span><span style="color: #0000ff;">for</span> (; j &lt; numVertex; j++<span style="color: #000000;">){
+                </span><span style="color: #0000ff;">if</span> ( !visited[j] &amp;&amp; (edges[top][j] != 0 || edges[top][j] !=<span style="color: #000000;"> INFINITY)){
+                    visit(j);
+                    visited[j] </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+                    s.push(j);
+                    </span><span style="color: #0000ff;">break</span><span style="color: #000000;">;
+                }
+            }
+            </span><span style="color: #0000ff;">if</span> (j ==<span style="color: #000000;"> numVertex){
+                s.pop();
+            }
+        }
+    }
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> visit(<span style="color: #0000ff;">int</span><span style="color: #000000;"> i){
+        System.out.println(vertexs[i].getData());
+        visited[i] </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<p>　　以下是邻接表DFS非递归写法。</p>
+<div class="cnblogs_code">
+<pre><code>   <span style="color: #008000;">//</span><span style="color: #008000;">标识结点是否被访问过</span>
+    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[] visited_2;
+    </span><span style="color: #008000;">//</span><span style="color: #008000;">深度优先遍历操作入口</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> DFSTraverse_2(){
+        </span><span style="color: #0000ff;">this</span>.visited = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[getNumVertex()];
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; numVertex; i++<span style="color: #000000;">){
+            visited[i] </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; numVertex; i++<span style="color: #000000;">) {
+            ArrayStack</span>&lt;Integer&gt; s = <span style="color: #0000ff;">new</span> ArrayStack&lt;&gt;<span style="color: #000000;">();
+            visit(i);
+            s.push(i);
+            </span><span style="color: #0000ff;">while</span> (!<span style="color: #000000;">s.isEmpty()) {
+                </span><span style="color: #0000ff;">int</span> topIndex =<span style="color: #000000;"> s.getTopData();
+
+                EdgeL p </span>=<span style="color: #000000;"> vertexs[topIndex].getFirstEdge();
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">遍历邻接表，直到找到邻接表中没有被访问过的结点</span>
+                <span style="color: #0000ff;">while</span> (p != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                    </span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">visited[p.getAdjvex()]) {
+                        visit(p.getAdjvex());
+                        s.push(p.getAdjvex());
+                    } </span><span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span>(p.getNextEdge() != <span style="color: #0000ff;">null</span> &amp;&amp; visited[p.getNextEdge().getAdjvex()] == <span style="color: #0000ff;">false</span><span style="color: #000000;">){
+                        p </span>=<span style="color: #000000;"> p.getNextEdge();
+                    }
+                }
+                </span><span style="color: #0000ff;">if</span> (p == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+                    s.pop();
+                }
+            }
+        }
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> visit(<span style="color: #0000ff;">int</span><span style="color: #000000;"> i){
+        System.out.println(vertexs[i].getData());
+        visited[i] </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<p>　　2,广度优先遍历(Breadth_First_Search&nbsp; BFS)&nbsp;</p>
+<p>　　<strong>如果说图的深度优先遍历类似于树的前序遍历，那么广度优先遍历就类似于树的层序遍历</strong>。</p>
+<p>　<img src="./images/[从今天开始修炼数据结构]图结构的五种物理存储方式、深度优先搜索的递归和非递归写法、广度优先搜索12.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;我们把上左图调整一下位置，形成有层间关系的类似树的结构。然后以队列的形式，当一个元素被遍历，则将它出队的同时，将它的未被遍历的邻接结点入队，直到队列中的全部元素都被遍历。</p>
+<p>代码如下</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+　　邻接矩阵存储的图的广度优先遍历
+</span><span style="color: #008000;">*/</span> 
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> BFSTraverse(){
+        ArrayDeque</span>&lt;Integer&gt; queue = <span style="color: #0000ff;">new</span> ArrayDeque&lt;&gt;<span style="color: #000000;">();
+        </span><span style="color: #0000ff;">this</span>.visited = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[getNumVertex()];
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; numVertex; i++<span style="color: #000000;">){
+            visited[i] </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+        </span><span style="color: #0000ff;">for</span>(<span style="color: #0000ff;">int</span> i = 0; i &lt; numVertex; i++<span style="color: #000000;">){
+            </span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">visited[i]) {
+                queue.add(i);
+            }
+            </span><span style="color: #0000ff;">while</span> (!<span style="color: #000000;">queue.isEmpty()){
+                </span><span style="color: #0000ff;">int</span> row =<span style="color: #000000;"> queue.remove();
+                visit(row);
+                </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> j = 0; j &lt; numVertex; j++<span style="color: #000000;">){
+                    </span><span style="color: #008000;">//</span><span style="color: #008000;">如果存在这条边，且这条边的邻接点没有被访问过，且邻接点不在队列中，则将该邻接点入队</span>
+                    <span style="color: #0000ff;">if</span> ((edges[row][j] != 0 &amp;&amp; edges[row][j] != INFINITY) &amp;&amp; !visited[j] &amp;&amp; !<span style="color: #000000;">queue.contains(j)){
+                        queue.add(j);
+                    }
+                }
+            }
+        }
+    }
+
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> visit(<span style="color: #0000ff;">int</span><span style="color: #000000;"> i){
+        System.out.println(vertexs[i].getData());
+        visited[i] </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+    }
+}</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">/*</span><span style="color: #008000;">
+    邻接表存储的图的广度优先遍历
+</span><span style="color: #008000;">*/</span>
+    <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> BFSTraverse(){
+        ArrayDeque</span>&lt;Integer&gt; queue = <span style="color: #0000ff;">new</span> ArrayDeque&lt;&gt;<span style="color: #000000;">();
+        </span><span style="color: #0000ff;">this</span>.visited = <span style="color: #0000ff;">new</span> <span style="color: #0000ff;">boolean</span><span style="color: #000000;">[getNumVertex()];
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; getNumVertex(); i++<span style="color: #000000;">){
+            visited[i] </span>= <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+        }
+
+        </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; getNumVertex(); i++<span style="color: #000000;">){
+            </span><span style="color: #0000ff;">if</span> (!<span style="color: #000000;">visited[i]) {
+                queue.add(i);
+            }
+            </span><span style="color: #0000ff;">while</span> (!<span style="color: #000000;">queue.isEmpty()){
+                </span><span style="color: #0000ff;">int</span> node =<span style="color: #000000;"> queue.remove();
+                visit(node);
+                EdgeL e </span>=<span style="color: #000000;"> vertexs[node].getFirstEdge();
+                </span><span style="color: #0000ff;">if</span> (e != <span style="color: #0000ff;">null</span> &amp;&amp; !queue.contains(e.getAdjvex()) &amp;&amp; !<span style="color: #000000;">visited[e.getAdjvex()]) {
+                    queue.add(e.getAdjvex());
+
+                    </span><span style="color: #0000ff;">while</span> (e != <span style="color: #0000ff;">null</span> &amp;&amp; e.getNextEdge() != <span style="color: #0000ff;">null</span> &amp;&amp; !queue.contains(e.getAdjvex()) &amp;&amp; !<span style="color: #000000;">visited[e.getAdjvex()]) {
+                        queue.add(e.getAdjvex());
+                        e </span>=<span style="color: #000000;"> e.getNextEdge();
+                    }
+                }
+            }
+        }
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> visit(<span style="color: #0000ff;">int</span><span style="color: #000000;"> i){
+        System.out.println(vertexs[i].getData());
+        visited[i] </span>= <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+    }</span></pre>
+</div>
+<p>对比发现，DFS和BFS在时间复杂度上是一样的，仅仅是访问次序不同。深度优先更适合目标明确，以找到目标为目的的情况；广度优先更适合在不断扩大遍历范围时找到相对最优解的情况。</p>
+<p>下面应该是最小生成树这一部分，但是研究了一天，发现大话数据结构这本书的图这部分写的实在是烂，难以下咽，所以后面将再起一篇博客，来记录后续部分，将会以Sedgewick版《算法》的风格来叙述。如果有人看到博客对后续有期待，请等我几天。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

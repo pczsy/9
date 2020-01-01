@@ -1,0 +1,202 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修9.Go-反射、日志和线程休眠' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>9.Go-反射、日志和线程休眠</center></div><div class='banquan'>原文出处:本文由博客园博主zhang_derek提供。<br/>
+原文连接:https://www.cnblogs.com/derek1184405959/p/11332260.html</div><br>
+    <h3><span style="color: #ff00ff;">9.1反射</span></h3>
+<p>在Go语言标准库中reflect包提供了运行时反射，程序运行过程中动态操作结构体</p>
+<p>当变量存储结构体属性名称，想要对结构体这个属性赋值或查看时，就可以使用反射</p>
+<p>反射还可以用作判断变量类型</p>
+<p>整个reflect包中最重要的两个类型</p>
+<ul>
+<li>reflect.Type类型</li>
+<li>reflect.Value值</li>
+</ul>
+<p>获取到Type和Value的函数</p>
+<ul>
+<li>reflect.TypeOf(interface{})返回type</li>
+<li>reflect.ValueOf(interface{})返回值Value</li>
+</ul>
+<p>&nbsp;　(1)获取变量属性和值</p>
+<div class="cnblogs_Highlighter">
+<pre><code>//Learn_Go/main.go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+func main() {
+	a := 1.5
+	fmt.Println(reflect.TypeOf(a))       //float64
+	fmt.Println(reflect.ValueOf(a))      //1.5
+}
+</pre>
+</div>
+<p>　（2）获取结构体属性的值</p>
+<div class="cnblogs_Highlighter">
+<pre><code>//Learn_Go/main.go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type People struct {
+	name string
+	address string
+}
+func main() {
+	peo := People{"derek","guangdong"}
+	v := reflect.ValueOf(peo)
+	//有多少个字段
+	fmt.Println(v.NumField())                  //2
+	//根据索引获取字段值
+	fmt.Println(v.FieldByIndex([]int {0}))     //derek
+	
+	content := "address"
+	fmt.Println(v.FieldByName(content))       //guangdong
+}
+</pre>
+</div>
+<p>　（3）设置结构体属性的值</p>
+<p>反射时获取peo的地址，Elem()获取指针指向地址的封装</p>
+<div class="cnblogs_Highlighter">
+<pre><code>//Learn_Go/main.go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type People struct {
+	Name string
+	Address string
+}
+func main() {
+	content := "Name"
+	peo := new(People)
+	//Elem()获取指针对应元素的值
+	v := reflect.ValueOf(peo).Elem()
+	//CanSet():判断值有没有被设置，有设置:True,没有设置：false
+	fmt.Println(v.FieldByName(content).CanSet())
+
+	//需要修改属性的内容时，要求结构体中属性名首字母大写才可以设置
+	v.FieldByName(content).SetString("alice")
+	v.FieldByName("Address").SetString("beijing")
+	fmt.Println(peo)       //&amp;{alice beijing}
+}
+</pre>
+</div>
+<p>　（4）结构体支持标记（tag），标记通常都是通过反射技术获取到　</p>
+<div class="cnblogs_Highlighter">
+<pre><code>//Learn_Go/main.go
+package main
+
+import (
+	"fmt"
+	"reflect"
+)
+
+type People struct {
+	Name string `xml:"name"`
+	Address string
+}
+func main() {
+	t := reflect.TypeOf(People{})
+	fmt.Println(t.FieldByName("Name"))      //{Name  string xml:"name" 0 [0] false} true
+	name,_ := t.FieldByName("Name")
+	fmt.Println(name.Tag)                  //xml:"name"
+	fmt.Println(name.Tag.Get("xml"))       //name
+}
+</pre>
+</div>
+<h3><span style="color: #ff00ff;">9.2.日志</span></h3>
+<p><span style="color: #000000;">有三种级别日志输出</span></p>
+<ul>
+<li>Print() 输出日志信息</li>
+<li>Panic()打印日志信息，并处罚panic，日志信息为Panic信息</li>
+<li>Fatal()打印日志信息后调用os.Exit(0)</li>
+</ul>
+<p>所有日志信息打印时都带有时间，且颜色为红色，输出日志信息到文件中</p>
+<div class="cnblogs_Highlighter">
+<pre><code>//Learn_Go/main.go
+package main
+
+import (
+	"log"
+	"os"
+)
+
+func main() {
+	f,_ := os.OpenFile("D:/golog.log",os.O_APPEND|os.O_CREATE,0777)
+	logger := log.New(f,"[Info]",log.Ltime)         //"[Info]":prefix string
+	logger.Println("打印日志信息")                  //[Info]22:13:59 打印日志信息
+}
+</pre>
+</div>
+<h3><span style="color: #ff00ff;">9.3.线程休眠和延迟执行</span></h3>
+<p>（1）线程休眠　</p>
+<p>Go语言中main()函数为主线程（协程），程序是从上向下执行的</p>
+<p>可以通过time包下的Sleep(n)让程序阻塞多少纳秒</p>
+<div class="cnblogs_Highlighter">
+<pre><code>//Learn_Go/main.go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("111")
+	time.Sleep(2e9)     //2e9 相当于2秒
+	fmt.Println("222")
+}
+</pre>
+</div>
+<p>（2）延迟执行</p>
+<p>延迟指定时间后执行一次，但是需要注意在触发时程序没有结束</p>
+<div class="cnblogs_Highlighter">
+<pre><code>//Learn_Go/main.go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main() {
+	fmt.Println("程序开始")
+	time.AfterFunc(3e9, func() {
+		fmt.Println("延迟执行")
+	})
+	time.Sleep(4e9)    //必须阻塞4s，要不主程序执行完直接退出，不会执行&ldquo;延迟执行&rdquo;的代码
+	fmt.Println("程序结束")
+}
+</pre>
+</div>
+<p>　　</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

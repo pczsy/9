@@ -1,0 +1,135 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修当我有一台服务器时我做了什么' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>当我有一台服务器时我做了什么</center></div><div class='banquan'>原文出处:本文由博客园博主山月水风提供。<br/>
+原文连接:https://www.cnblogs.com/xianwang/p/12099871.html</div><br>
+    <p>当一八年末的时候，我写了一篇文章 <a href="https://github.com/shfshanyue/op-note/blob/master/when-server.md">当我有一台服务器时我做了什么</a></p>
+<p>又是年末，我服务器的架构也发生了一些变化，因此总结一番</p>
+<!--more-->
+<ul>
+<li>原文地址: <a href="https://github.com/shfshanyue/op-note/blob/master/when-server-2019.md">当我有一台服务器时我做了什么</a></li>
+<li>系列文章: <a href="https://github.com/shfshanyue/op-note">当我有一台服务器时我做了什么</a></li>
+</ul>
+<h2 id="概览">概览</h2>
+<p>去年服务器有两台，一台 2C4G，一台 1C2G</p>
+<p>今年服务器有三台，以以下名称作为 <code>hostname</code>，配置如下</p>
+<ul>
+<li><code>dev</code>: 1C2G，不到一百块钱。用以日常编码，简单的反向代理以及项目部署</li>
+<li><code>shanyue</code>: 2C4G，k8s master node</li>
+<li><code>shuifeng</code>: 4C16G，k8s work node</li>
+</ul>
+<p>由于 <code>dev</code> 的机器与去年列举出来的事情相似，这里只介绍下在这台1C2G的服务器上做了什么</p>
+<p>简单画了这台服务器的架构图（不太会画，所以建了一个仓库 <a href="https://github.com/shfshanyue/graph">shfshanyue/graph</a> 用以学习各种架构图画法）</p>
+<p><img src="./images/当我有一台服务器时我做了什么0.png" /></p>
+<h2 id="博客与编码">博客与编码</h2>
+<p>基本上自己的博客以及个人编码都在这台测试服务器上完成，至于为什么要在服务器下开发：</p>
+<ol>
+<li>在公司 Mac 及我自己的笔记本间同步博客实在太痛苦了，而使用服务器作为中介则方便很多</li>
+</ol>
+<p>由于在服务器下写博客以及一些个人的代码，因此我新买的 MBP 也变成了一个显示器</p>
+<h3 id="开发环境">开发环境</h3>
+<p><code>zsh</code> + <code>tmux</code> + <code>vim</code>，截图如下</p>
+<p><img src="./images/当我有一台服务器时我做了什么1.png" /></p>
+<p>大部分时间都在这个模式下，如果写博客过程中需要截图，则先下载到随便一个目录，然后使用 <code>rsync</code> 复制到目标路径</p>
+<pre><code><code>$ rsync ~/Documents/tmux.png dev:/path/Documents/blog/op/assets/dev-env.png</code></pre>
+<p><code>vscode remote</code></p>
+<p>如果需要调试代码，或者在写 <code>typescript</code>，则使用 <code>vscode remote</code> 来完成工作</p>
+<p>在 vscode 插件中关键字搜索，安装下载最多的三个插件就是了</p>
+<h3 id="开发调试">开发调试</h3>
+<p>如果调试前端页面需要在浏览器中打开地址，比如 <code>IP:8000</code>，一般采用两种方案</p>
+<ol>
+<li><code>nginx</code>镜像 + <code>volume</code>挂载 + <code>docker-compose</code> + <code>traefik</code>服务发现。略微麻烦</li>
+<li><code>npm run dev</code> + <code>openvpn</code>。在本地环境中的浏览器通过 <code>openvpn</code> 连接局域网</li>
+</ol>
+<p>如果调试后端接口，需要打断点直接使用 <code>vscode remote</code></p>
+<h2 id="对外服务">对外服务</h2>
+<p>有几个在公网下可访问的服务，如</p>
+<ul>
+<li><a href="https://github.com/shfshanyue/wechat">公众号开发</a>: 主要用以给我的公众号导流 -&gt; 如果想知道流程是什么，请转到这篇文章 <a href="https://q.shanyue.tech/interviews/2018.html">两年前端头条面试记</a>，从中的隐藏部分你便能知道大概。过几天，我将写一篇文章作为总结。</li>
+<li><a href="https://whoami.shanyue.tech/" class="uri">https://whoami.shanyue.tech/</a>: 用以测试 <code>traefik</code> 的负载均衡及服务发现</li>
+<li>若干 <code>reveal.js</code> 页面</li>
+</ul>
+<h2 id="对内服务">对内服务</h2>
+<p>主要以数据库为主，使用 <code>local DNS</code> + <code>traefik</code> + <code>openvpn</code> 暴露在本地环境，使用禁掉公网端口以及仅在内网访问的IP白名单保证安全</p>
+<ul>
+<li><code>postgres</code>，主要是一个关于诗词的数据库</li>
+<li><code>redis</code></li>
+<li><code>traefik dashboard</code>，管理流量</li>
+</ul>
+<p>另外，这些对内对外的服务均是通过 <code>docker</code> 以及 <code>docker-compose</code> 部署</p>
+<h2 id="博客去了哪里">博客去了哪里？</h2>
+<p>以下是我博客的历程</p>
+<ol>
+<li>个人服务器，后来服务器部署了 <code>k8s</code> 就把博客挪出了</li>
+<li><code>netlify</code>，但是网络不好</li>
+<li><code>alioss</code> + <code>github actions</code>，速度挺好，但是对 <code>http rewrite</code> 支持的不是很好</li>
+</ol>
+<p>以后将会考虑 <code>serverless</code></p>
+<p>你可以发现，我现在更多的转向了一些免费的云服务，如</p>
+<ol>
+<li><code>serverless</code> 可以写后端服务，我将把我的公众号的服务迁移过来。国内可用阿里云以及腾讯云，国外 aws</li>
+<li><code>dynomodb</code> 与 <code>tablestore</code> 免费的数据存储</li>
+<li><code>oss</code> 很便宜的对象存储服务</li>
+<li><code>netlify</code> 免费的静态网站托管托管服务</li>
+<li><code>github actions</code> 免费的CICD及构建服务器</li>
+<li><code>sentry</code> 免费的错误日志收集系统</li>
+<li><code>github</code> 免费的私有仓库服务</li>
+<li><code>prerender.io</code> 免费的预渲染服务</li>
+</ol>
+<p>嗯，有了这些都可以做一个自由开发者了 (自惭形秽中...)</p>
+<h2 id="openvpn">openVPN</h2>
+<p>数据库放在公网访问有点危险，用docker建了vpn在本地开发访问。使用了以下镜像</p>
+<p><a href="https://github.com/kylemanna/docker-openvpn">docker-openvpn</a></p>
+<h2 id="traefik">traefik</h2>
+<p>前后端需要做一个反向代理，选择了 traefik，更方便的服务配置以及服务发现，只需要配置容器的 <code>labels</code> 就可以部署成功</p>
+<p>另外 <code>traefik</code> 可以很方便的自动生成 ssl/tls 证书，为你提供 https 服务</p>
+<h2 id="dns-server">DNS server</h2>
+<p>有了这么多的服务，但有的东西不好放在公网，如 <code>redis</code>，<code>postgres</code> 一些私有服务以及开发待调试的服务，又记不住端口号，所以又搭了一个 <code>dns server</code>，方便在本地访问</p>
+<h2 id="自动化运维">自动化运维</h2>
+<p>初期折腾服务器的时候经常需要重装系统，并且我有三台服务器，自动化运维是必不可少的了。</p>
+<p>必备工具如 <code>docker</code>，<code>git</code>，<code>vim</code>，<code>tmux</code>，<code>jq</code> 都是通过 <code>ansible</code> 进行的安装</p>
+<p>可以参考我的配置</p>
+<ul>
+<li><a href="https://github.com/shfshanyue/ansible-op" class="uri">https://github.com/shfshanyue/ansible-op</a></li>
+</ul>
+<p>当你有了一台新服务器时，你可以遵循以下步骤</p>
+<ol>
+<li>使用 ansible-role 预配置环境</li>
+<li>如果没有 ansible-role，则自己写 role</li>
+<li>对于一些服务使用 docker 进行安装</li>
+<li>如果以上都无法解决，手动安装</li>
+</ol>
+<h2 id="监控">监控</h2>
+<p>没有像去年那样使用 <code>prometheus</code> 一套，只简单了使用了两个命令以及阿里云自带的监控</p>
+<ul>
+<li><code>ctop</code>: 监控容器</li>
+<li><code>htop</code>: 监控进程</li>
+</ul>
+<h2 id="对比">对比</h2>
+<p>如果说与去年有对比的话，体现在两方面</p>
+<ol>
+<li>更彻底的容器化</li>
+<li>更加拥抱云服务，如 <code>github actions</code>，serverless，netlify 等</li>
+</ol>
+<p>另外，还有一方面是自建了 k8s 集群 (真是烧钱)，将会在另一个仓库中介绍它的体系。但是如果你对 k8s 没有什么兴趣的话，<strong>这一台1C2G的服务器完全满足你的要求</strong></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

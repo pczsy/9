@@ -1,0 +1,720 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Dubbo源码分析之SPI（三）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Dubbo源码分析之SPI（三）</center></div><div class='banquan'>原文出处:本文由博客园博主yxfree提供。<br/>
+原文连接:https://www.cnblogs.com/yxfree/p/12057327.html</div><br>
+    <h2>一、概述</h2>
+<p>　　本篇介绍自适应扩展，方法getAdaptiveExtension()的实现。ExtensionLoader类本身很多功能也使用到了自适应扩展。包括ExtensionFactory扩展。</p>
+<p>　　通俗的讲，自适应扩展要实现的逻辑是：调用扩展点的方法时，自动判断要调用那个扩展点实现类的方法。我们知道，一个扩展点通常有多个实现类，在配置文本文件中分多行配置，在前面的分析中，我们知道通过getExtension(String name)方法，返回的是指定key的扩展点，而自适应扩展点方法getAdaptiveExtension()在调用前，不确认返回那个扩展点。而是在方法调用的时候，根据方法入参，进行确定，具体是调用那个实现类。</p>
+<p>　　自适应扩展基于@Adaptive注解，可以修饰类，也可以修饰方法。修饰类的时候，逻辑比较简单，不会动态生成代码逻辑，使用的场景也比较少，主要包括AdaptiveCompiler 和 AdaptiveExtensionFactory。修饰方法的时候，会动态生成一个新类，新类包括扩展点的所有方法，调用getAdaptiveExtension()返回的就是新类对象。</p>
+<h2>二、详细介绍</h2>
+<p>　　前面我们说过，@Adaptive可以修饰类，也可以修饰方法。我们先看下修饰类的场景。</p>
+<p>　　通过一个具体的实现类来看下，这里我们分析AdaptiveCompiler类的实现：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">@Adaptive
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> AdaptiveCompiler <span style="color: #0000ff;">implements</span><span style="color: #000000;"> Compiler {
+</span><span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">volatile</span><span style="color: #000000;"> String DEFAULT_COMPILER;
+</span><span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span>     <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setDefaultCompiler(String compiler) {
+</span><span style="color: #008080;"> 7</span>         DEFAULT_COMPILER =<span style="color: #000000;"> compiler;
+</span><span style="color: #008080;"> 8</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 9</span> 
+<span style="color: #008080;">10</span> <span style="color: #000000;">    @Override
+</span><span style="color: #008080;">11</span>     <span style="color: #0000ff;">public</span> Class&lt;?&gt;<span style="color: #000000;"> compile(String code, ClassLoader classLoader) {
+</span><span style="color: #008080;">12</span> <span style="color: #000000;">        Compiler compiler;
+</span><span style="color: #008080;">13</span>         ExtensionLoader&lt;Compiler&gt; loader = ExtensionLoader.getExtensionLoader(Compiler.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+</span><span style="color: #008080;">14</span>         String name = DEFAULT_COMPILER; <span style="color: #008000;">//</span><span style="color: #008000;"> copy reference</span>
+<span style="color: #008080;">15</span>         <span style="color: #0000ff;">if</span> (name != <span style="color: #0000ff;">null</span> &amp;&amp; name.length() &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">16</span>             compiler =<span style="color: #000000;"> loader.getExtension(name);
+</span><span style="color: #008080;">17</span>         } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">18</span>             compiler =<span style="color: #000000;"> loader.getDefaultExtension();
+</span><span style="color: #008080;">19</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">20</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> compiler.compile(code, classLoader);
+</span><span style="color: #008080;">21</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">22</span> 
+<span style="color: #008080;">23</span> }</pre>
+</div>
+<p>　　此类，只有一个对外提供的方法compile(String code, ClassLoader classLoader)，我们来看方法的实现。</p>
+<p>首先沟通ExtensionLoader.getExtensionLoader(Compiler.class)，获取Compiler对应的ExtensionLoader对象，然后判断构造器中初始化的DEFAULT_COMPILER 变量是否有值。如果存在就通过loader.getExtension(name)方法获得扩展点实现。如果DEFAULT_COMPILER 为空，则调用loader.getDefaultExtension()方法，返回默认实现。获取compiler扩展点实现对象后，调用对应的compile方法。</p>
+<p>　　由此，我们可以看到，@Adaptive修饰的类，在调用具体方法的时候，是根据一定的条件进行判断，确认具体调用的实现类对象。</p>
+<p>　　我们再说下@Adaptive修饰方法的场景。</p>
+<p>　　扩展点实现类的方法如果被@Adaptive修饰，在调用getAdaptiveExtension()方法时候，程序会自动生成一个新类，新类是一个名为扩展点接口名+$Adaptive，实现了扩展点接口的类。新类中的方法，主要分为两类，一是有@Adaptive注解的方法，一个是没有@Adaptive注解的方法。</p>
+<p>　　有@Adaptive注解的方法，方法内部会判断方法入参是否有URL(此处是dubbo内的URL)，或是方法入参对象是否可以get到URL。如果都不能获取到URL，直接throw 出Exception。如果能获取到URL，则从URL对象中获取需要调用的实现类对应的配置文本文件的key，根据什么参数从URL中获取呢？首先是从@Adaptive的value获取（此value是一个字符串数组），如果@Adaptive为空，则根据类名进行转换，得出从URL获取key的参数名，转换规则是根据驼峰规则，遇到大写字符添加&rdquo;.&ldquo;，如 AdaptiveFactory 为：adaptive.factory。获得参数后，再通过getExtension(..)方法，获得需要调用的扩展点实现类对象。</p>
+<p>　　到这里，我们基本介绍了自适应扩展点的实现逻辑，但是有一点没有说到，就是不管@Adaptive修饰类还是修饰方法，自适应扩展点的返回逻辑，这点是要结合代码进行说明，接下来就开启我们的源代码分析。</p>
+<h2>三、源代码分析</h2>
+<p>　　我们从getAdaptiveExtension()方法开始</p>
+<p>　　</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">public</span><span style="color: #000000;"> T getAdaptiveExtension() {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 从缓存中获取自定义拓展</span>
+<span style="color: #008080;"> 3</span>     Object instance =<span style="color: #000000;"> cachedAdaptiveInstance.get();
+</span><span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">if</span> (instance == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 5</span>         <span style="color: #0000ff;">if</span> (createAdaptiveInstanceError == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 6</span>             <span style="color: #0000ff;">synchronized</span><span style="color: #000000;"> (cachedAdaptiveInstance) {
+</span><span style="color: #008080;"> 7</span>                 instance =<span style="color: #000000;"> cachedAdaptiveInstance.get();
+</span><span style="color: #008080;"> 8</span>                 <span style="color: #0000ff;">if</span> (instance == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 9</span>                     <span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">10</span>                         instance =<span style="color: #000000;"> createAdaptiveExtension();
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">                        cachedAdaptiveInstance.set(instance);
+</span><span style="color: #008080;">12</span>                     } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Throwable t) {
+</span><span style="color: #008080;">13</span>                         createAdaptiveInstanceError =<span style="color: #000000;"> t;
+</span><span style="color: #008080;">14</span>                         <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("fail to create adaptive instance: " +<span style="color: #000000;"> t.toString(), t);
+</span><span style="color: #008080;">15</span> <span style="color: #000000;">                    }
+</span><span style="color: #008080;">16</span> <span style="color: #000000;">                }
+</span><span style="color: #008080;">17</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">18</span>         } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">19</span>             <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("fail to create adaptive instance: " +<span style="color: #000000;"> createAdaptiveInstanceError.toString(), createAdaptiveInstanceError);
+</span><span style="color: #008080;">20</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">21</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">22</span> 
+<span style="color: #008080;">23</span>     <span style="color: #0000ff;">return</span><span style="color: #000000;"> (T) instance;
+</span><span style="color: #008080;">24</span> }</pre>
+</div>
+<p>　　这个方法的逻辑很简单，主要包括</p>
+<p>　　1、从缓存对象cachedAdaptiveInstance获取自适应扩展点实例<br />　　2、缓存有直接返回，没有进行方法createAdaptiveExtension()调用<br />　　3、根据方法返回的实例，设置到到缓存里，并进行返回</p>
+<p>　　所以我们接着分析createAdaptiveExtension方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span><span style="color: #000000;"> T createAdaptiveExtension() {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #008080;"> 3</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> injectExtension 为@Adaptive注解的类 可能存在的IOC服务
+</span><span style="color: #008080;"> 4</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> @Adaptive注解方法 自动生成的代理类不存在IOC可能</span>
+<span style="color: #008080;"> 5</span>         T instance =<span style="color: #000000;"> (T) getAdaptiveExtensionClass().newInstance();
+</span><span style="color: #008080;"> 6</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> injectExtension(instance);
+</span><span style="color: #008080;"> 7</span>     } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Exception e) {
+</span><span style="color: #008080;"> 8</span>         <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("Can not create adaptive extension " + type + ", cause: " +<span style="color: #000000;"> e.getMessage(), e);
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">10</span> }</pre>
+</div>
+<p>　　可以看到，方法内部是通过getAdaptiveExtensionClass() 获取到Class实例，再反射实例化，获取到实例对象。</p>
+<p>　　我们接着往下看getAdaptiveExtensionClass()方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> Class&lt;?&gt;<span style="color: #000000;"> getAdaptiveExtensionClass() {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 通过SPI获取所有的扩展类，赋值相关的成员变量</span>
+<span style="color: #008080;"> 3</span> <span style="color: #000000;">    getExtensionClasses();
+</span><span style="color: #008080;"> 4</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 如果有@Adaptive修饰的类，cachedAdaptiveClass不为空</span>
+<span style="color: #008080;"> 5</span>     <span style="color: #0000ff;">if</span> (cachedAdaptiveClass != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 6</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> cachedAdaptiveClass;
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 8</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 没有@Adaptive修饰的类时，根据@Adaptive修饰方法 创建自适应扩展类</span>
+<span style="color: #008080;"> 9</span>     <span style="color: #0000ff;">return</span> cachedAdaptiveClass =<span style="color: #000000;"> createAdaptiveExtensionClass();
+</span><span style="color: #008080;">10</span> }</pre>
+</div>
+<p>　　首先执行的是getExtensionClasses()方法，之后判断cachedAdaptiveClass&nbsp; 是否为空，不为空就直接返回了。这个cachedAdaptiveClass 变量，其实就是有@Adaptive修饰的扩展点实现。也就是说，如果在扩展点的实现类中，存在@Adaptive修饰的类，就直接返回这个类了。</p>
+<p>　　那么cachedAdaptiveClass 在是哪里赋值的呢？我们需要再看getExtensionClasses（）方法。getExtensionClasses这个方法在前面两篇文章中已经都有介绍。在默认扩展点的实现里面，cachedDefaultName变量的赋值就是在这个方法里进行的。cachedAdaptiveClass 的赋值的方法调用链我们这里直接给出来</p>
+<p>　　</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> getExtensionClasses()--&gt;loadExtensionClasses()--&gt;loadDirectory()--&gt;loadResource()--&gt;loadClass()</pre>
+</div>
+<p>　　隐藏的比较深，第5个方法才对cachedDefaultName进行了赋值。</p>
+<p>　　我们一步一步来分析，先看getExtensionClasses()</p>
+<p>　　</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> Map&lt;String, Class&lt;?&gt;&gt;<span style="color: #000000;"> getExtensionClasses() {
+</span><span style="color: #008080;"> 2</span>     Map&lt;String, Class&lt;?&gt;&gt; classes =<span style="color: #000000;"> cachedClasses.get();
+</span><span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">if</span> (classes == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 4</span>         <span style="color: #0000ff;">synchronized</span><span style="color: #000000;"> (cachedClasses) {
+</span><span style="color: #008080;"> 5</span>             classes =<span style="color: #000000;"> cachedClasses.get();
+</span><span style="color: #008080;"> 6</span>             <span style="color: #0000ff;">if</span> (classes == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 7</span>                 classes =<span style="color: #000000;"> loadExtensionClasses();
+</span><span style="color: #008080;"> 8</span> <span style="color: #000000;">                cachedClasses.set(classes);
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">10</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">12</span>     <span style="color: #0000ff;">return</span><span style="color: #000000;"> classes;
+</span><span style="color: #008080;">13</span> }</pre>
+</div>
+<p>　　这个方法很简单，我们接着看loadExtensionClasses（）</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> Map&lt;String, Class&lt;?&gt;&gt;<span style="color: #000000;"> loadExtensionClasses() {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 获取注解 SPI的接口
+</span><span style="color: #008080;"> 3</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> type为传入的扩展接口，必须有@SPI注解</span>
+<span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">final</span> SPI defaultAnnotation = type.getAnnotation(SPI.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+</span><span style="color: #008080;"> 5</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 获取默认扩展实现value，如果存在，赋值给cachedDefaultName</span>
+<span style="color: #008080;"> 6</span>     <span style="color: #0000ff;">if</span> (defaultAnnotation != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 7</span>         String value =<span style="color: #000000;"> defaultAnnotation.value();
+</span><span style="color: #008080;"> 8</span>         <span style="color: #0000ff;">if</span> ((value = value.trim()).length() &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #008080;"> 9</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> @SPI value 只能是一个，不能为逗号分割的多个
+</span><span style="color: #008080;">10</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> @SPI value为默认的扩展实现</span>
+<span style="color: #008080;">11</span>             String[] names =<span style="color: #000000;"> NAME_SEPARATOR.split(value);
+</span><span style="color: #008080;">12</span>             <span style="color: #0000ff;">if</span> (names.length &gt; 1<span style="color: #000000;">) {
+</span><span style="color: #008080;">13</span>                 <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("more than 1 default extension name on extension " + type.getName() + ": " +<span style="color: #000000;"> Arrays.toString(names));
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">15</span>             <span style="color: #0000ff;">if</span> (names.length == 1<span style="color: #000000;">)
+</span><span style="color: #008080;">16</span>                 cachedDefaultName = names[0<span style="color: #000000;">];
+</span><span style="color: #008080;">17</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">18</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">19</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 加载三个目录配置的扩展类</span>
+<span style="color: #008080;">20</span>     Map&lt;String, Class&lt;?&gt;&gt; extensionClasses = <span style="color: #0000ff;">new</span> HashMap&lt;String, Class&lt;?&gt;&gt;<span style="color: #000000;">();
+</span><span style="color: #008080;">21</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> META-INF/dubbo/internal</span>
+<span style="color: #008080;">22</span> <span style="color: #000000;">    loadDirectory(extensionClasses, DUBBO_INTERNAL_DIRECTORY);
+</span><span style="color: #008080;">23</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> META-INF/dubbo</span>
+<span style="color: #008080;">24</span> <span style="color: #000000;">    loadDirectory(extensionClasses, DUBBO_DIRECTORY);
+</span><span style="color: #008080;">25</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> META-INF/services/</span>
+<span style="color: #008080;">26</span> <span style="color: #000000;">    loadDirectory(extensionClasses, SERVICES_DIRECTORY);
+</span><span style="color: #008080;">27</span>     <span style="color: #0000ff;">return</span><span style="color: #000000;"> extensionClasses;
+</span><span style="color: #008080;">28</span> }</pre>
+</div>
+<p>　　很熟悉吧，这个方法我们在第一篇文章中已经有介绍了，我们再接着往下看loadDirectory方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> loadDirectory(Map&lt;String, Class&lt;?&gt;&gt;<span style="color: #000000;"> extensionClasses, String dir) {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 扩展配置文件完整文件路径+文件名</span>
+<span style="color: #008080;"> 3</span>     String fileName = dir +<span style="color: #000000;"> type.getName();
+</span><span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span>         Enumeration&lt;java.net.URL&gt;<span style="color: #000000;"> urls;
+</span><span style="color: #008080;"> 7</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 获取类加载器</span>
+<span style="color: #008080;"> 8</span>         ClassLoader classLoader =<span style="color: #000000;"> findClassLoader();
+</span><span style="color: #008080;"> 9</span>         <span style="color: #0000ff;">if</span> (classLoader != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">10</span>             urls =<span style="color: #000000;"> classLoader.getResources(fileName);
+</span><span style="color: #008080;">11</span>         } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">12</span>             urls =<span style="color: #000000;"> ClassLoader.getSystemResources(fileName);
+</span><span style="color: #008080;">13</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">14</span>         <span style="color: #0000ff;">if</span> (urls != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">15</span>             <span style="color: #0000ff;">while</span><span style="color: #000000;"> (urls.hasMoreElements()) {
+</span><span style="color: #008080;">16</span>                 java.net.URL resourceURL =<span style="color: #000000;"> urls.nextElement();
+</span><span style="color: #008080;">17</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 加载</span>
+<span style="color: #008080;">18</span> <span style="color: #000000;">                loadResource(extensionClasses, classLoader, resourceURL);
+</span><span style="color: #008080;">19</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">20</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">21</span>     } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Throwable t) {
+</span><span style="color: #008080;">22</span>         logger.error("Exception when load extension class(interface: " + type + ", description file: " + fileName + ")."<span style="color: #000000;">, t);
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">24</span> }</pre>
+</div>
+<p>　　这个方法我们也很分析过了，再往下看loadResource()方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> loadResource(Map&lt;String, Class&lt;?&gt;&gt;<span style="color: #000000;"> extensionClasses, ClassLoader classLoader, java.net.URL resourceURL) {
+</span><span style="color: #008080;"> 2</span>         <span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #008080;"> 3</span>             BufferedReader reader = <span style="color: #0000ff;">new</span> BufferedReader(<span style="color: #0000ff;">new</span> InputStreamReader(resourceURL.openStream(), "utf-8"<span style="color: #000000;">));
+</span><span style="color: #008080;"> 4</span>             <span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #008080;"> 5</span> <span style="color: #000000;">                String line;
+</span><span style="color: #008080;"> 6</span>                 <span style="color: #0000ff;">while</span> ((line = reader.readLine()) != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 7</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> 字符#是注释开始标志，只取#前面的字符</span>
+<span style="color: #008080;"> 8</span>                     <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">int</span> ci = line.indexOf('#'<span style="color: #000000;">);
+</span><span style="color: #008080;"> 9</span>                     <span style="color: #0000ff;">if</span> (ci &gt;= 0<span style="color: #000000;">)
+</span><span style="color: #008080;">10</span>                         line = line.substring(0<span style="color: #000000;">, ci);
+</span><span style="color: #008080;">11</span>                     line =<span style="color: #000000;"> line.trim();
+</span><span style="color: #008080;">12</span>                     <span style="color: #0000ff;">if</span> (line.length() &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">13</span>                         <span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">14</span>                             String name = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+</span><span style="color: #008080;">15</span>                             <span style="color: #0000ff;">int</span> i = line.indexOf('='<span style="color: #000000;">);
+</span><span style="color: #008080;">16</span>                             <span style="color: #0000ff;">if</span> (i &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">17</span>                                 <span style="color: #008000;">//</span><span style="color: #008000;"> 解析出 name 和 实现类</span>
+<span style="color: #008080;">18</span>                                 name = line.substring(0<span style="color: #000000;">, i).trim();
+</span><span style="color: #008080;">19</span>                                 line = line.substring(i + 1<span style="color: #000000;">).trim();
+</span><span style="color: #008080;">20</span> <span style="color: #000000;">                            }
+</span><span style="color: #008080;">21</span>                             <span style="color: #0000ff;">if</span> (line.length() &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">22</span>                                 loadClass(extensionClasses, resourceURL, Class.forName(line, <span style="color: #0000ff;">true</span><span style="color: #000000;">, classLoader), name);
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">                            }
+</span><span style="color: #008080;">24</span>                         } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Throwable t) {
+</span><span style="color: #008080;">25</span>                             IllegalStateException e = <span style="color: #0000ff;">new</span> IllegalStateException("Failed to load extension class(interface: " + type + ", class line: " + line + ") in " + resourceURL + ", cause: " +<span style="color: #000000;"> t.getMessage(), t);
+</span><span style="color: #008080;">26</span> <span style="color: #000000;">                            exceptions.put(line, e);
+</span><span style="color: #008080;">27</span> <span style="color: #000000;">                        }
+</span><span style="color: #008080;">28</span> <span style="color: #000000;">                    }
+</span><span style="color: #008080;">29</span> <span style="color: #000000;">                }
+</span><span style="color: #008080;">30</span>             } <span style="color: #0000ff;">finally</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">31</span> <span style="color: #000000;">                reader.close();
+</span><span style="color: #008080;">32</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">33</span>         } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (Throwable t) {
+</span><span style="color: #008080;">34</span>             logger.error("Exception when load extension class(interface: " + type + ", class file: " + resourceURL + ") in " +<span style="color: #000000;"> resourceURL, t);
+</span><span style="color: #008080;">35</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">36</span>     }</pre>
+</div>
+<p>　　这里是解析配置文本文件的内容，通过反射获得Class，再调用loadClass()，我们接着往下</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span> loadClass(Map&lt;String, Class&lt;?&gt;&gt; extensionClasses, java.net.URL resourceURL, Class&lt;?&gt; clazz, String name) <span style="color: #0000ff;">throws</span><span style="color: #000000;"> NoSuchMethodException {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> type是否为clazz的超类，clazz是否实现了type接口
+</span><span style="color: #008080;"> 3</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 此处clazz 是扩展实现类的Class</span>
+<span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">type.isAssignableFrom(clazz)) {
+</span><span style="color: #008080;"> 5</span>         <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("Error when load extension class(interface: " + type + ", class line: " + clazz.getName() + "), class " + clazz.getName() + "is not subtype of interface."<span style="color: #000000;">);
+</span><span style="color: #008080;"> 6</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;"> 7</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> clazz是否注解了 Adaptive 自适应扩展
+</span><span style="color: #008080;"> 8</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 不允许多个类注解Adaptive
+</span><span style="color: #008080;"> 9</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 注解adaptive的实现类，赋值给cachedAdaptiveClass</span>
+<span style="color: #008080;">10</span>     <span style="color: #0000ff;">if</span> (clazz.isAnnotationPresent(Adaptive.<span style="color: #0000ff;">class</span><span style="color: #000000;">)) {
+</span><span style="color: #008080;">11</span>         <span style="color: #0000ff;">if</span> (cachedAdaptiveClass == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">12</span>             cachedAdaptiveClass =<span style="color: #000000;"> clazz;
+</span><span style="color: #008080;">13</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 不允许多个实现类都注解@Adaptive</span>
+<span style="color: #008080;">14</span>         } <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">cachedAdaptiveClass.equals(clazz)) {
+</span><span style="color: #008080;">15</span>             <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("More than 1 adaptive class found: " + cachedAdaptiveClass.getClass().getName() + ", " +<span style="color: #000000;"> clazz.getClass().getName());
+</span><span style="color: #008080;">16</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">17</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 是否为包装类，判断扩展类是否提供了参数是扩展点的构造函数</span>
+<span style="color: #008080;">18</span>     } <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span><span style="color: #000000;"> (isWrapperClass(clazz)) {
+</span><span style="color: #008080;">19</span>         Set&lt;Class&lt;?&gt;&gt; wrappers =<span style="color: #000000;"> cachedWrapperClasses;
+</span><span style="color: #008080;">20</span>         <span style="color: #0000ff;">if</span> (wrappers == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">21</span>             cachedWrapperClasses = <span style="color: #0000ff;">new</span> ConcurrentHashSet&lt;Class&lt;?&gt;&gt;<span style="color: #000000;">();
+</span><span style="color: #008080;">22</span>             wrappers =<span style="color: #000000;"> cachedWrapperClasses;
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">24</span> <span style="color: #000000;">        wrappers.add(clazz);
+</span><span style="color: #008080;">25</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 普通扩展类</span>
+<span style="color: #008080;">26</span>     } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">27</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 检测 clazz 是否有默认的构造方法，如果没有，则抛出异常</span>
+<span style="color: #008080;">28</span> <span style="color: #000000;">        clazz.getConstructor();
+</span><span style="color: #008080;">29</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 此处name为 SPI配置中的key
+</span><span style="color: #008080;">30</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> @SPI配置中key可以为空，此时key为扩展类的类名（getSimpleName()）小写</span>
+<span style="color: #008080;">31</span>         <span style="color: #0000ff;">if</span> (name == <span style="color: #0000ff;">null</span> || name.length() == 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">32</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 兼容旧版本</span>
+<span style="color: #008080;">33</span>             name =<span style="color: #000000;"> findAnnotationName(clazz);
+</span><span style="color: #008080;">34</span>             <span style="color: #0000ff;">if</span> (name.length() == 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">35</span>                 <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("No such extension name for the class " + clazz.getName() + " in the config " +<span style="color: #000000;"> resourceURL);
+</span><span style="color: #008080;">36</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">37</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">38</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 逗号分割</span>
+<span style="color: #008080;">39</span>         String[] names =<span style="color: #000000;"> NAME_SEPARATOR.split(name);
+</span><span style="color: #008080;">40</span>         <span style="color: #0000ff;">if</span> (names != <span style="color: #0000ff;">null</span> &amp;&amp; names.length &gt; 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">41</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 获取Activate注解</span>
+<span style="color: #008080;">42</span>             Activate activate = clazz.getAnnotation(Activate.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+</span><span style="color: #008080;">43</span>             <span style="color: #0000ff;">if</span> (activate != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">44</span>                 cachedActivates.put(names[0<span style="color: #000000;">], activate);
+</span><span style="color: #008080;">45</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">46</span>             <span style="color: #0000ff;">for</span><span style="color: #000000;"> (String n : names) {
+</span><span style="color: #008080;">47</span>                 <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">cachedNames.containsKey(clazz)) {
+</span><span style="color: #008080;">48</span> <span style="color: #000000;">                    cachedNames.put(clazz, n);
+</span><span style="color: #008080;">49</span> <span style="color: #000000;">                }
+</span><span style="color: #008080;">50</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> name不能重复</span>
+<span style="color: #008080;">51</span>                 Class&lt;?&gt; c =<span style="color: #000000;"> extensionClasses.get(n);
+</span><span style="color: #008080;">52</span>                 <span style="color: #0000ff;">if</span> (c == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">53</span> <span style="color: #000000;">                    extensionClasses.put(n, clazz);
+</span><span style="color: #008080;">54</span>                 } <span style="color: #0000ff;">else</span> <span style="color: #0000ff;">if</span> (c !=<span style="color: #000000;"> clazz) {
+</span><span style="color: #008080;">55</span>                     <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("Duplicate extension " + type.getName() + " name " + n + " on " + c.getName() + " and " +<span style="color: #000000;"> clazz.getName());
+</span><span style="color: #008080;">56</span> <span style="color: #000000;">                }
+</span><span style="color: #008080;">57</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">58</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">59</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">60</span> }</pre>
+</div>
+<p>　　我们在第10行，终于看到了Adaptive注解判断。</p>
+<p>　　如果扩展点实现类存在@Adaptive注解，Class对象赋值给cachedAdaptiveClass，并且在第14行判断是否存在多个类都是@Adaptive注解，如果同一个扩展点的多个实现类都有@Adaptive注解，则抛出异常。</p>
+<p>　　到这里，我们看到了扩展点自适应扩展点的类级别注解的调用及返回逻辑。其实前面也说过了，@Adaptive修饰类的场景并不多，也不是重点，重点是@Adaptive修饰方法的时候。</p>
+<p>　　我们返回到getAdaptiveExtensionClass()方法，为了清晰，我们再看看这个方法的代码</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> Class&lt;?&gt;<span style="color: #000000;"> getAdaptiveExtensionClass() {
+</span><span style="color: #008080;"> 2</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 通过SPI获取所有的扩展类，赋值相关的成员变量</span>
+<span style="color: #008080;"> 3</span> <span style="color: #000000;">        getExtensionClasses();
+</span><span style="color: #008080;"> 4</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 如果有@Adaptive修饰的类，cachedAdaptiveClass不为空</span>
+<span style="color: #008080;"> 5</span>         <span style="color: #0000ff;">if</span> (cachedAdaptiveClass != <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 6</span>             <span style="color: #0000ff;">return</span><span style="color: #000000;"> cachedAdaptiveClass;
+</span><span style="color: #008080;"> 7</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;"> 8</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 没有@Adaptive修饰的类时，根据@Adaptive修饰方法 创建自适应扩展类</span>
+<span style="color: #008080;"> 9</span>         <span style="color: #0000ff;">return</span> cachedAdaptiveClass =<span style="color: #000000;"> createAdaptiveExtensionClass();
+</span><span style="color: #008080;">10</span> }</pre>
+</div>
+<p>　　通过前面的分析，如果@Adaptive没有修饰类，则cachedAdaptiveClass 为空，此时，我们会进入createAdaptiveExtensionClass（），这个方法是实现@Adaptive修饰方法的逻辑实现，也是自适应扩展的重点所在。</p>
+<p><em id="__mceDel">　　</em>我们来看createAdaptiveExtensionClass这个方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">private</span> Class&lt;?&gt;<span style="color: #000000;"> createAdaptiveExtensionClass() {
+</span><span style="color: #008080;">2</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 创建自适应扩展代码 字符串</span>
+<span style="color: #008080;">3</span>     String code =<span style="color: #000000;"> createAdaptiveExtensionClassCode();
+</span><span style="color: #008080;">4</span>     ClassLoader classLoader =<span style="color: #000000;"> findClassLoader();
+</span><span style="color: #008080;">5</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 获取编译器实现类</span>
+<span style="color: #008080;">6</span>     com.alibaba.dubbo.common.compiler.Compiler compiler = ExtensionLoader.getExtensionLoader(com.alibaba.dubbo.common.compiler.Compiler.<span style="color: #0000ff;">class</span><span style="color: #000000;">).getAdaptiveExtension();
+</span><span style="color: #008080;">7</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 编译代码，获取自适应扩展类的Class</span>
+<span style="color: #008080;">8</span>     <span style="color: #0000ff;">return</span><span style="color: #000000;"> compiler.compile(code, classLoader);
+</span><span style="color: #008080;">9</span> }</pre>
+</div>
+<p>　　这个方法实现的功能主要两点：</p>
+<p>　　1、通过createAdaptiveExtensionClassCode()获取创建的新类字符串</p>
+<p>　　2、通过Compiler编译器，编译新类字符串，获得新类的Class对象</p>
+<p>　　所以，我们的重点是分析新类字符串的实现逻辑，这也是自适应扩展的重点。</p>
+<p>　　我们接着看createAdaptiveExtensionClassCode()方法，这个方法有300多行，我们分段来看</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span><span style="color: #000000;"> String createAdaptiveExtensionClassCode() {
+</span><span style="color: #008080;"> 2</span>     StringBuilder codeBuilder = <span style="color: #0000ff;">new</span><span style="color: #000000;"> StringBuilder();
+</span><span style="color: #008080;"> 3</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 通过反射获取所有方法</span>
+<span style="color: #008080;"> 4</span>     Method[] methods =<span style="color: #000000;"> type.getMethods();
+</span><span style="color: #008080;"> 5</span>     <span style="color: #0000ff;">boolean</span> hasAdaptiveAnnotation = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 6</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 遍历方法，判断至少有一个方法被@Adaptive修饰</span>
+<span style="color: #008080;"> 7</span>     <span style="color: #0000ff;">for</span><span style="color: #000000;"> (Method m : methods) {
+</span><span style="color: #008080;"> 8</span>         <span style="color: #0000ff;">if</span> (m.isAnnotationPresent(Adaptive.<span style="color: #0000ff;">class</span><span style="color: #000000;">)) {
+</span><span style="color: #008080;"> 9</span>             hasAdaptiveAnnotation = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+</span><span style="color: #008080;">10</span>             <span style="color: #0000ff;">break</span><span style="color: #000000;">;
+</span><span style="color: #008080;">11</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">12</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">13</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> no need to generate adaptive class since there's no adaptive method found.
+</span><span style="color: #008080;">14</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 没有被@Adaptive修饰的方法，抛出异常</span>
+<span style="color: #008080;">15</span>     <span style="color: #0000ff;">if</span> (!<span style="color: #000000;">hasAdaptiveAnnotation)
+</span><span style="color: #008080;">16</span>         <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("No adaptive method on extension " + type.getName() + ", refuse to create the adaptive class!"<span style="color: #000000;">);
+</span><span style="color: #008080;">17</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成package代码：package+type所在包</span>
+<span style="color: #008080;">18</span>     codeBuilder.append("package ").append(type.getPackage().getName()).append(";"<span style="color: #000000;">);
+</span><span style="color: #008080;">19</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成import代码：import+ExtensionLoader权限定名</span>
+<span style="color: #008080;">20</span>     codeBuilder.append("\nimport ").append(ExtensionLoader.<span style="color: #0000ff;">class</span>.getName()).append(";"<span style="color: #000000;">);
+</span><span style="color: #008080;">21</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成类代码：public class + type简单名称+$Adaptive+implements + type权限定名+{</span>
+<span style="color: #008080;">22</span>     codeBuilder.append("\npublic class ").append(type.getSimpleName()).append("$Adaptive").append(" implements ").append(type.getCanonicalName()).append(" {"<span style="color: #000000;">);
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">    ...............
+</span><span style="color: #008080;">24</span> <span style="color: #000000;">    ...暂时省略....
+</span><span style="color: #008080;">25</span> <span style="color: #000000;">    ..............
+</span><span style="color: #008080;">26</span> }</pre>
+</div>
+<p>　　方法开始的逻辑很简单，拿到扩展点type的方法，循环方法列表，判断是否存在一个方法是被@Adaptive注解的，如果存在则继续，否则抛出异常。这也符合正常的逻辑，如果所有的方法都没@Adaptive注解，那么获取自适应扩展就没有意义了。</p>
+<p>　　从15行开始进行新类字符串的构造，我们看到了关键字&rdquo;package&ldquo;、&rdquo;import&ldquo;、&rdquo;class&ldquo;等，执行到22行处，生成的代码字符串，我们以扩展点Protocol为例，展示一下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">package</span><span style="color: #000000;"> com.alibaba.dubbo.rpc;
+</span><span style="color: #008080;">2</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> com.alibaba.dubbo.common.extension.ExtensionLoader;
+</span><span style="color: #008080;">3</span> <span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> Protocol$Adaptive <span style="color: #0000ff;">implements</span><span style="color: #000000;"> com.alibaba.dubbo.rpc.Protocol {
+</span><span style="color: #008080;">4</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 省略方法代码</span>
+<span style="color: #008080;">5</span> }</pre>
+</div>
+<p>　　这个类就是我们生成的新的扩展点实现类，我们可以看到类名以及实现的接口。<br />　　我们接着往下分析，前面我们说过，扩展点方法分为两种，一个是有@Adaptive注解的，一个是无@Adaptive注解的，既然实现了扩展点接口，这两种方法都要在新类中实现。<br />　　我们首先分析没有@Adaptive注解的方法。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span><span style="color: #000000;"> String createAdaptiveExtensionClassCode() {
+</span><span style="color: #008080;"> 2</span> <span style="color: #000000;">    ...............
+</span><span style="color: #008080;"> 3</span> <span style="color: #000000;">    ...暂时省略....
+</span><span style="color: #008080;"> 4</span> <span style="color: #000000;">    ..............
+</span><span style="color: #008080;"> 5</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成方法</span>
+<span style="color: #008080;"> 6</span>     <span style="color: #0000ff;">for</span><span style="color: #000000;"> (Method method : methods) {
+</span><span style="color: #008080;"> 7</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 方法返回类型</span>
+<span style="color: #008080;"> 8</span>         Class&lt;?&gt; rt =<span style="color: #000000;"> method.getReturnType();
+</span><span style="color: #008080;"> 9</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 方法参数数组</span>
+<span style="color: #008080;">10</span>         Class&lt;?&gt;[] pts =<span style="color: #000000;"> method.getParameterTypes();
+</span><span style="color: #008080;">11</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 方法异常数组</span>
+<span style="color: #008080;">12</span>         Class&lt;?&gt;[] ets =<span style="color: #000000;"> method.getExceptionTypes();
+</span><span style="color: #008080;">13</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 方法的Adaptive注解</span>
+<span style="color: #008080;">14</span>         Adaptive adaptiveAnnotation = method.getAnnotation(Adaptive.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+</span><span style="color: #008080;">15</span>         StringBuilder code = <span style="color: #0000ff;">new</span> StringBuilder(512<span style="color: #000000;">);
+</span><span style="color: #008080;">16</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 没有@Adaptive注解的方法，生成的方法体内为 throw 异常</span>
+<span style="color: #008080;">17</span>         <span style="color: #0000ff;">if</span> (adaptiveAnnotation == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">18</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> throw new UnsupportedOperationException(
+</span><span style="color: #008080;">19</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> "method " + 方法签名 + of interface + 全限定接口名 + is not adaptive method!&rdquo;)</span>
+<span style="color: #008080;">20</span>             code.append("throw new UnsupportedOperationException(\"method ").append(method.toString()).append(" of interface ").append(type.getName()).append(" is not adaptive method!\");"<span style="color: #000000;">);
+</span><span style="color: #008080;">21</span>         } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">22</span> <span style="color: #000000;">         ...............
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">         ...暂时省略....
+</span><span style="color: #008080;">24</span> <span style="color: #000000;">         ..............
+</span><span style="color: #008080;">25</span>          }</pre>
+</div>
+<p>　　通过for循环，进行逐个方法生成。</p>
+<p>　　在第14行，获取到方法的@Adaptive注解，第17行进行判断，如果为空，生成的代码是抛出一个异常，示例如下：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span><span style="color: #000000;"> UnsupportedOperationException(
+</span><span style="color: #008080;">2</span>             "method public abstract void com.alibaba.dubbo.rpc.Protocol.destroy() of interface com.alibaba.dubbo.rpc.Protocol is not adaptive method!");</pre>
+</div>
+<p>　　我们接着分析存在@Adaptive注解的方法，生成代码的逻辑</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">...暂时省略....
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">if</span> (adaptiveAnnotation == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;"> 3</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> throw new UnsupportedOperationException(
+</span><span style="color: #008080;"> 4</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> "method " + 方法签名 + of interface + 全限定接口名 + is not adaptive method!&rdquo;)</span>
+<span style="color: #008080;"> 5</span>         code.append("throw new UnsupportedOperationException(\"method "<span style="color: #000000;">).append(method.toString())
+</span><span style="color: #008080;"> 6</span>                 .append(" of interface ").append(type.getName()).append(" is not adaptive method!\");"<span style="color: #000000;">);
+</span><span style="color: #008080;"> 7</span>     } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;"> 8</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 有@Adaptive注解的方法，参数中必须有URL，或是可以从方法参数中获取URL</span>
+<span style="color: #008080;"> 9</span>         <span style="color: #0000ff;">int</span> urlTypeIndex = -1<span style="color: #000000;">;
+</span><span style="color: #008080;">10</span>         <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; pts.length; ++<span style="color: #000000;">i) {
+</span><span style="color: #008080;">11</span>             <span style="color: #0000ff;">if</span> (pts[i].equals(URL.<span style="color: #0000ff;">class</span><span style="color: #000000;">)) {
+</span><span style="color: #008080;">12</span>                 urlTypeIndex =<span style="color: #000000;"> i;
+</span><span style="color: #008080;">13</span>                 <span style="color: #0000ff;">break</span><span style="color: #000000;">;
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">15</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">16</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> found parameter in URL type
+</span><span style="color: #008080;">17</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 方法中存在URL</span>
+<span style="color: #008080;">18</span>         <span style="color: #0000ff;">if</span> (urlTypeIndex != -1<span style="color: #000000;">) {
+</span><span style="color: #008080;">19</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> Null Point check
+</span><span style="color: #008080;">20</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 为URL类型参数判断空代码，格式如下：
+</span><span style="color: #008080;">21</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> if (arg + urlTypeIndex == null)
+</span><span style="color: #008080;">22</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> throw new IllegalArgumentException("url == null");</span>
+<span style="color: #008080;">23</span>             String s =<span style="color: #000000;"> String.format(
+</span><span style="color: #008080;">24</span>                     "\nif (arg%d == null) throw new IllegalArgumentException(\"url == null\");"<span style="color: #000000;">, urlTypeIndex);
+</span><span style="color: #008080;">25</span> <span style="color: #000000;">            code.append(s);
+</span><span style="color: #008080;">26</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 为URL类型参数生成赋值代码，例如：URL url = arg1;</span>
+<span style="color: #008080;">27</span>             s = String.format("\n%s url = arg%d;", URL.<span style="color: #0000ff;">class</span><span style="color: #000000;">.getName(), urlTypeIndex);
+</span><span style="color: #008080;">28</span> <span style="color: #000000;">            code.append(s);
+</span><span style="color: #008080;">29</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">30</span> ...暂时省略....</pre>
+</div>
+<p>　　第10行，循环的变量pts 为方法参数数组，如果参数数组中有URL类型，数组下标赋值给urlTypeIndex，跳出循环。</p>
+<p>　　第18行进行urlTypeIndex 判断，此时如果不为-1，说明方法参数数组中存在URL类型的参数，生成的代码首先是非空判断，接着就是把对应的URL类型参数就行变量赋值。<br />　　接着往下看</p>
+<p>　　</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">...暂时省略....
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;"> 3</span> String attribMethod = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 4</span> <span style="color: #008000;">//</span><span style="color: #008000;"> find URL getter method
+</span><span style="color: #008080;"> 5</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 遍历方法的参数类型</span>
+<span style="color: #008080;"> 6</span> LBL_PTS: <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; pts.length; ++<span style="color: #000000;">i) {
+</span><span style="color: #008080;"> 7</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 方法参数类型的方法数组</span>
+<span style="color: #008080;"> 8</span>     Method[] ms =<span style="color: #000000;"> pts[i].getMethods();
+</span><span style="color: #008080;"> 9</span>     <span style="color: #0000ff;">for</span><span style="color: #000000;"> (Method m : ms) {
+</span><span style="color: #008080;">10</span>         String name =<span style="color: #000000;"> m.getName();
+</span><span style="color: #008080;">11</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 1、方法名以get开头，或方法名大于3个字符
+</span><span style="color: #008080;">12</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 2、方法的访问权限是public
+</span><span style="color: #008080;">13</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 3、非静态方法
+</span><span style="color: #008080;">14</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 4、方法参数数量为0
+</span><span style="color: #008080;">15</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 5、方法返回值类型为URL</span>
+<span style="color: #008080;">16</span>         <span style="color: #0000ff;">if</span> ((name.startsWith("get") || name.length() &gt; 3) &amp;&amp;<span style="color: #000000;"> Modifier.isPublic(m.getModifiers())
+</span><span style="color: #008080;">17</span>                 &amp;&amp; !Modifier.isStatic(m.getModifiers()) &amp;&amp; m.getParameterTypes().length == 0
+<span style="color: #008080;">18</span>                 &amp;&amp; m.getReturnType() == URL.<span style="color: #0000ff;">class</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">19</span>             urlTypeIndex =<span style="color: #000000;"> i;
+</span><span style="color: #008080;">20</span>             attribMethod =<span style="color: #000000;"> name;
+</span><span style="color: #008080;">21</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 结束for (int i = 0; i &lt; pts.length; ++i)循环</span>
+<span style="color: #008080;">22</span>             <span style="color: #0000ff;">break</span><span style="color: #000000;"> LBL_PTS;
+</span><span style="color: #008080;">23</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">24</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">25</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">26</span> ...暂时省略....</pre>
+</div>
+<p>　　上面的代码是参数数组中不存在URL类型参数的情况。如果不存在URL类型的参数，就需要从所有的入参中判断，参数对象中是否可以通过get方法 获取到URL对象。如果不可以则抛出异常。</p>
+<p>　　标签LBL_PTS用于结束最外部的循环。我们看到最外边的循环，还是参数数组pts。</p>
+<p>　　第8行是拿到参数数组中单个参数的所有方法，再进行循环，判断是否存在满足如下条件： 1、方法名以get开头，或方法名大于3个字符；2、方法的访问权限是public； 3、非静态方法；4、方法参数数量为0； 5、方法返回值类型为URL的方法，如果存在赋值方法名给attribMethod ，跳出最外变循环。</p>
+<p>　　我们接着往下看</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">1</span> <span style="color: #000000;">...暂时省略....
+</span><span style="color: #008080;">2</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 如果参数中都不包含可返回的URL的get方法，抛出异常</span>
+<span style="color: #008080;">3</span> <span style="color: #0000ff;">if</span> (attribMethod == <span style="color: #0000ff;">null</span><span style="color: #000000;">) {
+</span><span style="color: #008080;">4</span>     <span style="color: #0000ff;">throw</span> <span style="color: #0000ff;">new</span> IllegalStateException("fail to create adaptive class for interface " +<span style="color: #000000;"> type.getName()
+</span><span style="color: #008080;">5</span>             + ": not found url parameter or url attribute in parameters of method "
+<span style="color: #008080;">6</span>             +<span style="color: #000000;"> method.getName());
+</span><span style="color: #008080;">7</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">8</span> ...暂时省略....</pre>
+</div>
+<p>　　我们看到，如果attribMethod 为空，也就是前面的两个循环没有找到存在返回URL方法的参数对象，直接抛出异常，方法结束执行。</p>
+<p>　　如果attribMethod 不为空，即存在返回URL方法的参数对象，我们再往下看：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">...暂时省略....
+</span><span style="color: #008080;"> 2</span> <span style="color: #008000;">//</span><span style="color: #008000;"> Null point check
+</span><span style="color: #008080;"> 3</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 为可返回URL的参数生成判空代码，格式如下：
+</span><span style="color: #008080;"> 4</span> <span style="color: #008000;">//</span><span style="color: #008000;"> if (arg + urlTypeIndex == null)
+</span><span style="color: #008080;"> 5</span> <span style="color: #008000;">//</span><span style="color: #008000;"> throw new IllegalArgumentException("参数全限定名 + argument == null");</span>
+<span style="color: #008080;"> 6</span> String s =<span style="color: #000000;"> String.format(
+</span><span style="color: #008080;"> 7</span>         "\nif (arg%d == null) throw new IllegalArgumentException(\"%s argument == null\");"<span style="color: #000000;">,
+</span><span style="color: #008080;"> 8</span> <span style="color: #000000;">        urlTypeIndex, pts[urlTypeIndex].getName());
+</span><span style="color: #008080;"> 9</span> <span style="color: #000000;">code.append(s);
+</span><span style="color: #008080;">10</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 为 getter 方法返回的 URL 生成判空代码，格式如下：
+</span><span style="color: #008080;">11</span> <span style="color: #008000;">//</span><span style="color: #008000;"> if (argN.getter方法名() == null)
+</span><span style="color: #008080;">12</span> <span style="color: #008000;">//</span><span style="color: #008000;"> throw new IllegalArgumentException(参数全限定名 + argument getUrl() == null);</span>
+<span style="color: #008080;">13</span> s =<span style="color: #000000;"> String.format(
+</span><span style="color: #008080;">14</span>         "\nif (arg%d.%s() == null) throw new IllegalArgumentException(\"%s argument %s() == null\");"<span style="color: #000000;">,
+</span><span style="color: #008080;">15</span> <span style="color: #000000;">        urlTypeIndex, attribMethod, pts[urlTypeIndex].getName(), attribMethod);
+</span><span style="color: #008080;">16</span> <span style="color: #000000;">code.append(s);
+</span><span style="color: #008080;">17</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 生成赋值语句，格式如下：
+</span><span style="color: #008080;">18</span> <span style="color: #008000;">//</span><span style="color: #008000;"> URL全限定名 url = argN.getter方法名()，比如
+</span><span style="color: #008080;">19</span> <span style="color: #008000;">//</span><span style="color: #008000;"> com.alibaba.dubbo.common.URL url = invoker.getUrl();</span>
+<span style="color: #008080;">20</span> s = String.format("%s url = arg%d.%s();", URL.<span style="color: #0000ff;">class</span><span style="color: #000000;">.getName(), urlTypeIndex, attribMethod);
+</span><span style="color: #008080;">21</span> <span style="color: #000000;">code.append(s);
+</span><span style="color: #008080;">22</span> ...暂时省略....</pre>
+</div>
+<p>　　第6行生成新类代码是空判断，如果参数数组下标为urlTypeIndex的参数为空，抛出异常。</p>
+<p>　　第13行是返回URL类型方法的空判断，我们知道参数数组下标是urlTypeIndex的参数，存在返回URL类型的方法，方法名为attribMethod，此处就是判断方法attribMethod是否为空null。</p>
+<p>　　第20行就是执行attribMethod，赋值给url变量。</p>
+<p>　　至此，从入参中获得了URL类型的变量。前面是直接从参数数组中获取类型为URL的参数，后面是从参数数组中的某个可以返回URL参数方法的参数。两种方式目的就是获取到URL类型的变量，这个是必须的，因为自适应的扩展，获取扩展点的key是从URL中解析出来的。</p>
+<p>　　在获取到URL类型的变量后，现在就要获取关键字key了，根据key从URL中获取的value，就是自适应扩展点在配置文本文件中对应的key。</p>
+<p>　　我们接着往下看</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">...暂时省略....
+</span><span style="color: #008080;"> 2</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 获取方法@Adaptive的注解值</span>
+<span style="color: #008080;"> 3</span> String[] value =<span style="color: #000000;"> adaptiveAnnotation.value();
+</span><span style="color: #008080;"> 4</span> <span style="color: #008000;">//</span><span style="color: #008000;"> value is not set, use the value generated from class name as the key
+</span><span style="color: #008080;"> 5</span> <span style="color: #008000;">//</span><span style="color: #008000;"> @Adaptive的value为空，需要特殊处理
+</span><span style="color: #008080;"> 6</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 将类名转换为字符数组，然后遍历字符数组，并将字符存入StringBulder
+</span><span style="color: #008080;"> 7</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 若字符为大写字母，则向StringBuiilder中添加&ldquo;.&rdquo;，随后字符变为小写存入StringBuilder
+</span><span style="color: #008080;"> 8</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 比如LoadBalance经过处理，得到load.balance</span>
+<span style="color: #008080;"> 9</span> <span style="color: #0000ff;">if</span> (value.length == 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">10</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 获取类名，并将类名转换为字符数组</span>
+<span style="color: #008080;">11</span>     <span style="color: #0000ff;">char</span>[] charArray =<span style="color: #000000;"> type.getSimpleName().toCharArray();
+</span><span style="color: #008080;">12</span>     StringBuilder sb = <span style="color: #0000ff;">new</span> StringBuilder(128<span style="color: #000000;">);
+</span><span style="color: #008080;">13</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 遍历字符数组</span>
+<span style="color: #008080;">14</span>     <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; charArray.length; i++<span style="color: #000000;">) {
+</span><span style="color: #008080;">15</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 判断大小写</span>
+<span style="color: #008080;">16</span>         <span style="color: #0000ff;">if</span><span style="color: #000000;"> (Character.isUpperCase(charArray[i])) {
+</span><span style="color: #008080;">17</span>             <span style="color: #0000ff;">if</span> (i != 0<span style="color: #000000;">) {
+</span><span style="color: #008080;">18</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 大写字符时，加</span>
+<span style="color: #008080;">19</span>                 sb.append("."<span style="color: #000000;">);
+</span><span style="color: #008080;">20</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">21</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 转为小写</span>
+<span style="color: #008080;">22</span> <span style="color: #000000;">            sb.append(Character.toLowerCase(charArray[i]));
+</span><span style="color: #008080;">23</span>         } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">24</span> <span style="color: #000000;">            sb.append(charArray[i]);
+</span><span style="color: #008080;">25</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">26</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">27</span>     value = <span style="color: #0000ff;">new</span><span style="color: #000000;"> String[] { sb.toString() };
+</span><span style="color: #008080;">28</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">29</span> ...暂时省略....</pre>
+</div>
+<p>　　第3行，是直接从@Adaptive注解中获取value，类型为字符串数组。</p>
+<p>　　如果@Adaptive注解没有设置value的值，接着看第9行的判断。</p>
+<p>　　从第11行开始，自动生成从URL获取自适应扩展关键字的key。生成的逻辑是根据扩展点type的名称，遍历type名称的字符数组，除了首字符，遇到大写的字符前面加&ldquo;."，大写转小写，组装的字符串就是要获取的value值。</p>
+<p>　　我们接着往下看</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">...暂时省略....
+</span><span style="color: #008080;"> 2</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 检测方法列表中是否存在Invocation类型的参数
+</span><span style="color: #008080;"> 3</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 若存在，则为其生成判空代码和其他一些代码</span>
+<span style="color: #008080;"> 4</span> <span style="color: #0000ff;">boolean</span> hasInvocation = <span style="color: #0000ff;">false</span><span style="color: #000000;">;
+</span><span style="color: #008080;"> 5</span> <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; pts.length; ++<span style="color: #000000;">i) {
+</span><span style="color: #008080;"> 6</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 判断参数名称是否等于 com.alibaba.dubbo.rpc.Invocation</span>
+<span style="color: #008080;"> 7</span>     <span style="color: #0000ff;">if</span> (pts[i].getName().equals("com.alibaba.dubbo.rpc.Invocation"<span style="color: #000000;">)) {
+</span><span style="color: #008080;"> 8</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> Null Point check
+</span><span style="color: #008080;"> 9</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 为Invocation 类型参数生成判空代码</span>
+<span style="color: #008080;">10</span>         String s =<span style="color: #000000;"> String.format(
+</span><span style="color: #008080;">11</span>                 "\nif (arg%d == null) throw new IllegalArgumentException(\"invocation == null\");"<span style="color: #000000;">, i);
+</span><span style="color: #008080;">12</span> <span style="color: #000000;">        code.append(s);
+</span><span style="color: #008080;">13</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 生成getMethodName方法调用代码，格式为：
+</span><span style="color: #008080;">14</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> String methodName = argN.getMethodName();</span>
+<span style="color: #008080;">15</span>         s = String.format("\nString methodName = arg%d.getMethodName();"<span style="color: #000000;">, i);
+</span><span style="color: #008080;">16</span> <span style="color: #000000;">        code.append(s);
+</span><span style="color: #008080;">17</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 设置hasInvocation为true</span>
+<span style="color: #008080;">18</span>         hasInvocation = <span style="color: #0000ff;">true</span><span style="color: #000000;">;
+</span><span style="color: #008080;">19</span>         <span style="color: #0000ff;">break</span><span style="color: #000000;">;
+</span><span style="color: #008080;">20</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">21</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">22</span> ...暂时省略....</pre>
+</div>
+<p>　　这段代码选好pts，判断是否存在类型为Invocation的参数。如果存在生成为空判断，之后从Invocation类型的参数中获取methodName。并设置hasInvocation为true。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #000000;">...暂时省略....
+</span><span style="color: #008080;"> 2</span> <span style="color: #008000;">/**</span>
+<span style="color: #008080;"> 3</span> <span style="color: #008000;"> * 根据SPI和Adaptive注解值生成&ldquo;获取扩展名逻辑&rdquo;，同时生成逻辑也受Invocation类型参数影响 生成格式如： String extName =
+</span><span style="color: #008080;"> 4</span> <span style="color: #008000;"> * url.getMethodParameter(methodName, "loadbalance","random");
+</span><span style="color: #008080;"> 5</span>  <span style="color: #008000;">*/</span>
+<span style="color: #008080;"> 6</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 设置默认扩展名,cachedDefaultName源于SPI注解值，默认情况下，
+</span><span style="color: #008080;"> 7</span> <span style="color: #008000;">//</span><span style="color: #008000;"> SPI注解值为空串，此时cachedDefaultName 为 null</span>
+<span style="color: #008080;"> 8</span> String defaultExtName =<span style="color: #000000;"> cachedDefaultName;
+</span><span style="color: #008080;"> 9</span> String getNameCode = <span style="color: #0000ff;">null</span><span style="color: #000000;">;
+</span><span style="color: #008080;">10</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 遍历value，value是Adaptive的注解值，上面有value的获取过程
+</span><span style="color: #008080;">11</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 此处循环的目的是生成从URL中获取扩展名的代码，生成的代码会赋值给getNameCode变量
+</span><span style="color: #008080;">12</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 这个循环的遍历顺序是由后向前遍历的</span>
+<span style="color: #008080;">13</span> <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = value.length - 1; i &gt;= 0; --<span style="color: #000000;">i) {
+</span><span style="color: #008080;">14</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> i为最后一个元素的坐标时</span>
+<span style="color: #008080;">15</span>     <span style="color: #0000ff;">if</span> (i == value.length - 1<span style="color: #000000;">) {
+</span><span style="color: #008080;">16</span>         <span style="color: #008000;">//</span><span style="color: #008000;"> 默认扩展名非空</span>
+<span style="color: #008080;">17</span>         <span style="color: #0000ff;">if</span> (<span style="color: #0000ff;">null</span> !=<span style="color: #000000;"> defaultExtName) {
+</span><span style="color: #008080;">18</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> protocol是扩展名的一部分，可以通过getProtocol方法获取，其他则是从URL参数中获取
+</span><span style="color: #008080;">19</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 因为获取方式不同，因此要进行判断</span>
+<span style="color: #008080;">20</span>             <span style="color: #0000ff;">if</span> (!"protocol"<span style="color: #000000;">.equals(value[i])) {
+</span><span style="color: #008080;">21</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> hasInvocation 用于标识方法参数列表中是否有Invocation类型参数</span>
+<span style="color: #008080;">22</span>                 <span style="color: #0000ff;">if</span><span style="color: #000000;"> (hasInvocation) {
+</span><span style="color: #008080;">23</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成的代码功能等价于下面的代码：
+</span><span style="color: #008080;">24</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> url.getMethodParameter(methodName, value[i], defaultExtName)
+</span><span style="color: #008080;">25</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> 以 LoadBalance 接口的 select 方法为例，最终生成的代码如下：
+</span><span style="color: #008080;">26</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> url.getMethodParameter(methodName, "loadbalance", "random")</span>
+<span style="color: #008080;">27</span>                     getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")"<span style="color: #000000;">,
+</span><span style="color: #008080;">28</span> <span style="color: #000000;">                            value[i], defaultExtName);
+</span><span style="color: #008080;">29</span>                 } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">30</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成的代码功能等价于下面的代码：
+</span><span style="color: #008080;">31</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> url.getParameter(value[i], defaultExtName)</span>
+<span style="color: #008080;">32</span>                     getNameCode = String.format("url.getParameter(\"%s\", \"%s\")"<span style="color: #000000;">, value[i],
+</span><span style="color: #008080;">33</span> <span style="color: #000000;">                            defaultExtName);
+</span><span style="color: #008080;">34</span> <span style="color: #000000;">                }
+</span><span style="color: #008080;">35</span>             } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">36</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 生成的代码功能等价于下面的代码：
+</span><span style="color: #008080;">37</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> ( url.getProtocol() == null ? defaultExtName : url.getProtocol() )</span>
+<span style="color: #008080;">38</span>                 getNameCode =<span style="color: #000000;"> String.format(
+</span><span style="color: #008080;">39</span>                         "( url.getProtocol() == null ? \"%s\" : url.getProtocol() )"<span style="color: #000000;">, defaultExtName);
+</span><span style="color: #008080;">40</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 默认扩展名为空</span>
+<span style="color: #008080;">41</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">42</span>         } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">43</span>             <span style="color: #0000ff;">if</span> (!"protocol"<span style="color: #000000;">.equals(value[i])) {
+</span><span style="color: #008080;">44</span>                 <span style="color: #0000ff;">if</span><span style="color: #000000;"> (hasInvocation) {
+</span><span style="color: #008080;">45</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成代码格式同上</span>
+<span style="color: #008080;">46</span>                     getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")"<span style="color: #000000;">,
+</span><span style="color: #008080;">47</span> <span style="color: #000000;">                            value[i], defaultExtName);
+</span><span style="color: #008080;">48</span>                 } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">49</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> 生成的代码功能等价于下面的代码：
+</span><span style="color: #008080;">50</span>                     <span style="color: #008000;">//</span><span style="color: #008000;"> url.getParameter(value[i])</span>
+<span style="color: #008080;">51</span>                     getNameCode = String.format("url.getParameter(\"%s\")"<span style="color: #000000;">, value[i]);
+</span><span style="color: #008080;">52</span> <span style="color: #000000;">                }
+</span><span style="color: #008080;">53</span>             } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">54</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 生成从 url 中获取协议的代码，比如 "dubbo"</span>
+<span style="color: #008080;">55</span>                 getNameCode = "url.getProtocol()"<span style="color: #000000;">;
+</span><span style="color: #008080;">56</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">57</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">58</span>     } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">59</span>         <span style="color: #0000ff;">if</span> (!"protocol"<span style="color: #000000;">.equals(value[i])) {
+</span><span style="color: #008080;">60</span>             <span style="color: #0000ff;">if</span><span style="color: #000000;"> (hasInvocation) {
+</span><span style="color: #008080;">61</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 生成代码格式同上</span>
+<span style="color: #008080;">62</span>                 getNameCode = String.format("url.getMethodParameter(methodName, \"%s\", \"%s\")"<span style="color: #000000;">,
+</span><span style="color: #008080;">63</span> <span style="color: #000000;">                        value[i], defaultExtName);
+</span><span style="color: #008080;">64</span>             } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">65</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 生成的代码功能等价于下面的代码：
+</span><span style="color: #008080;">66</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> url.getParameter(value[i], getNameCode)
+</span><span style="color: #008080;">67</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> 以 Transporter 接口的 connect 方法为例，最终生成的代码如下：
+</span><span style="color: #008080;">68</span>                 <span style="color: #008000;">//</span><span style="color: #008000;"> url.getParameter("client", url.getParameter("transporter", "netty"))</span>
+<span style="color: #008080;">69</span>                 getNameCode = String.format("url.getParameter(\"%s\", %s)"<span style="color: #000000;">, value[i], getNameCode);
+</span><span style="color: #008080;">70</span> <span style="color: #000000;">            }
+</span><span style="color: #008080;">71</span>         } <span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+</span><span style="color: #008080;">72</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 生成的代码功能等价于下面的代码：
+</span><span style="color: #008080;">73</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> url.getProtocol() == null ? getNameCode : url.getProtocol()
+</span><span style="color: #008080;">74</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> 以 Protocol 接口的 connect 方法为例，最终生成的代码如下：
+</span><span style="color: #008080;">75</span>             <span style="color: #008000;">//</span><span style="color: #008000;"> url.getProtocol() == null ? "dubbo" : url.getProtocol()</span>
+<span style="color: #008080;">76</span>             getNameCode = String.format("url.getProtocol() == null ? (%s) : url.getProtocol()"<span style="color: #000000;">,
+</span><span style="color: #008080;">77</span> <span style="color: #000000;">                    getNameCode);
+</span><span style="color: #008080;">78</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;">79</span> <span style="color: #000000;">    }
+</span><span style="color: #008080;">80</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">81</span> ...暂时省略....</pre>
+</div>
+<p>　　第8行获取默认扩展名。来自于@SPI注解的value值。</p>
+<p>　　第13行开始循环value，此处的value是@Adaptive注解的内容，前面有过分析，如果@Adaptive没有设置value，则通过type名称解析出value。</p>
+<p>　　上面的代码分支比较多，但是主要是集中在protocol、hasInvocation的判断上。</p>
+<p>　　首先看hasInvocation，如果hasInvocation不为空，我们看到生成的代码是&ldquo;url.getMethodParameter(methodName...&rdquo;，这个methodName也是前面判断hasInvocation时获取到的。这等于在从URL中获取值的时候，加上了methodName。如果hasInvocation为空，此时的分支生成的代码，直接是&ldquo;url.getParameter(.."。<br />第二个是判断protocol的分支，由于URL类中有单独的protocol变量，所以 如果value值为protocol，此时从URL中取值，可以直接调用url.getProtocol()，不需要通过URL的getParameter方法。<br />　　上面的代码是从URL中获取扩展点key的主要逻辑，分支比较多，但是很多重复的代码，也进行了比较详细的注释。</p>
+<p>　　我们接着往下看，从URL中拿到扩展点的key后的代码</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> code.append("\nString extName = ").append(getNameCode).append(";"<span style="color: #000000;">);
+</span><span style="color: #008080;"> 2</span> <span style="color: #008000;">//</span><span style="color: #008000;"> check extName == null?</span>
+<span style="color: #008080;"> 3</span> String s = String.format("\nif(extName == null) "
+<span style="color: #008080;"> 4</span>         + "throw new IllegalStateException(\"Fail to get extension(%s) name from url(\" + url.toString() + \") use keys(%s)\");"<span style="color: #000000;">,
+</span><span style="color: #008080;"> 5</span> <span style="color: #000000;">        type.getName(), Arrays.toString(value));
+</span><span style="color: #008080;"> 6</span> <span style="color: #000000;">code.append(s);
+</span><span style="color: #008080;"> 7</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 生成扩展获取代码，格式如下：
+</span><span style="color: #008080;"> 8</span> <span style="color: #008000;">//</span><span style="color: #008000;"> type 全限定名 extension = (type全限定名)ExtensionLoader全限定名
+</span><span style="color: #008080;"> 9</span> <span style="color: #008000;">//</span><span style="color: #008000;"> .getExtensionLoader(type全限定名.class).getExtension(extName);
+</span><span style="color: #008080;">10</span> <span style="color: #008000;">//</span><span style="color: #008000;"> Tips: 格式化字符串中的 %&lt;s 表示使用前一个转换符所描述的参数，即 type 全限定名</span>
+<span style="color: #008080;">11</span> s = String.format("\n%s extension = (%&lt;s)%s.getExtensionLoader(%s.class).getExtension(extName);"<span style="color: #000000;">,
+</span><span style="color: #008080;">12</span>         type.getName(), ExtensionLoader.<span style="color: #0000ff;">class</span><span style="color: #000000;">.getSimpleName(), type.getName());
+</span><span style="color: #008080;">13</span> <span style="color: #000000;">code.append(s);
+</span><span style="color: #008080;">14</span> 
+<span style="color: #008080;">15</span> <span style="color: #008000;">//</span><span style="color: #008000;"> return statement
+</span><span style="color: #008080;">16</span> <span style="color: #008000;">//</span><span style="color: #008000;"> 如果方法返回值类型非 void，则生成 return 语句。</span>
+<span style="color: #008080;">17</span> <span style="color: #0000ff;">if</span> (!rt.equals(<span style="color: #0000ff;">void</span>.<span style="color: #0000ff;">class</span><span style="color: #000000;">)) {
+</span><span style="color: #008080;">18</span>     code.append("\nreturn "<span style="color: #000000;">);
+</span><span style="color: #008080;">19</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">20</span> 
+<span style="color: #008080;">21</span> s = String.format("extension.%s("<span style="color: #000000;">, method.getName());
+</span><span style="color: #008080;">22</span> <span style="color: #000000;">code.append(s);
+</span><span style="color: #008080;">23</span> <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; pts.length; i++<span style="color: #000000;">) {
+</span><span style="color: #008080;">24</span>     <span style="color: #0000ff;">if</span> (i != 0<span style="color: #000000;">)
+</span><span style="color: #008080;">25</span>         code.append(", "<span style="color: #000000;">);
+</span><span style="color: #008080;">26</span>     code.append("arg"<span style="color: #000000;">).append(i);
+</span><span style="color: #008080;">27</span> <span style="color: #000000;">}
+</span><span style="color: #008080;">28</span> code.append(");");</pre>
+</div>
+<p>　　这段代码就比较简单明了了，核心在第11行，强制转换为扩展点type类型，通过ExtensionLoader的getExtensionLoader获取type接口对应的ExtensionLoader实例。</p>
+<p>　　现在已经拿到的扩展点实现的key，只要调用ExtensionLoader实例的getExtension()方法，即可返回需要调用的扩展点实现。</p>
+<p>　　我们分析的主线是按扩展点的一个方法进行，每个被@Adaptive修饰的方法，生成的逻辑都是一样的，主要的逻辑是：</p>
+<p>　　1、根据@Adaptive注解的value，或是扩展点type的名称生成从URL获取扩展点实现类key的关键字<br />　　2、根据第一步获取的关键字，从URL中获取要调用的扩展点实现类的key<br />　　3、获取到扩展点实现类对应的key，调用ExtensionLoader实例的getExtension()方法，即可拿到对应的扩展点实现<br />　　4、方法的执行是调用扩展点实现类的目标方法。</p>
+<p>　　至此新类的字符串已经生成了，我们回到createAdaptiveExtensionClass方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">private</span> Class&lt;?&gt;<span style="color: #000000;"> createAdaptiveExtensionClass() {
+</span><span style="color: #008080;"> 2</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 创建自适应扩展代码 字符串</span>
+<span style="color: #008080;"> 3</span>     String code =<span style="color: #000000;"> createAdaptiveExtensionClassCode();
+</span><span style="color: #008080;"> 4</span>     ClassLoader classLoader =<span style="color: #000000;"> findClassLoader();
+</span><span style="color: #008080;"> 5</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 获取编译器实现类</span>
+<span style="color: #008080;"> 6</span>     com.alibaba.dubbo.common.compiler.Compiler compiler =<span style="color: #000000;"> ExtensionLoader
+</span><span style="color: #008080;"> 7</span>             .getExtensionLoader(com.alibaba.dubbo.common.compiler.Compiler.<span style="color: #0000ff;">class</span><span style="color: #000000;">).getAdaptiveExtension();
+</span><span style="color: #008080;"> 8</span>     <span style="color: #008000;">//</span><span style="color: #008000;"> 编译代码，获取自适应扩展类的Class</span>
+<span style="color: #008080;"> 9</span>     <span style="color: #0000ff;">return</span><span style="color: #000000;"> compiler.compile(code, classLoader);
+</span><span style="color: #008080;">10</span> }</pre>
+</div>
+<p>　　第3行就是我们前面分析的获取新类字符串的方法，拿到code之后，再获取类加载器，获取编辑器，执行编译。返回的就是自适应扩展类的Class对象。</p>
+<p>　　通过此方法，再往上返回就是自适应扩展类的对象，以及缓存对象等逻辑。自适应扩展的获取基本就结束了。</p>
+<h2>四、总结</h2>
+<p>　　通过上面的分析，我们基本了解的自适应扩展点的实现逻辑，难点就是@Adaptive注解方法时，生成新类的字符串之处。别的逻辑还算清晰。如果在读到此处有困惑，请评论留言，我会进行详细解释。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

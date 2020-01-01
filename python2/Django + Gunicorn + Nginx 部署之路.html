@@ -1,0 +1,282 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django + Gunicorn + Nginx 部署之路' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django + Gunicorn + Nginx 部署之路</center></div><div class='banquan'>原文出处:本文由博客园博主hippieZhou提供。<br/>
+原文连接:https://www.cnblogs.com/hippieZhou/p/11488514.html</div><br>
+    <p><img src="./images/Django + Gunicorn + Nginx 部署之路0.png" /></p>
+<h2 id="前言">前言</h2>
+<p>最近，我已经成功将我的个人网站从 <strong>Flask</strong> 迁移到 <strong>Django</strong> 了，最早接触 <strong>Django</strong> 的时候大概是在 4 年前，我记得那个时候 <strong>Django</strong> 中的路由配置使用 <code>正则</code> 来进行的，但是我有特别烦这个东西，所以就果断弃坑了。然后今年年初的时候，我用 <strong>Flask</strong> 写了一个我的个人网站，刚开始的时候功能还是比较简单，看着路由配置和部署规则都很方便，就果断采用了。但是后来我想添加的功能越来越多的时候，我发现我已经越来越难掌控它了，正好最近我稍微看了一下 Django 这几年的变化，最新的 2.2 版本还是很不错的，路由规则和 Flask 已经一致了，所以我就重新入坑了。</p>
+<p>目前我的个人网站基本功能已经迁移完毕。但是在部署的时候，我遇到了一些问题，在网上看了一些解决方法，要么太乱，要么太旧，个人觉得都已经不太适用了。所以在这里记录一下我的部署过程。</p>
+<h2 id="部署">部署</h2>
+<p>网上有很多都是用 <strong>UWSGI</strong> 的方式来部署，但是我个人比较喜欢 <strong>Gunicorn</strong>，所以以下内容我只是记录了 <strong>Django + Gunicorn + Nginx</strong> 在 <strong>Ubuntu</strong> 上的部署方式相关内容。</p>
+<h3 id="步骤一">步骤一</h3>
+<blockquote>
+<p>上传网站源码至目标服务器</p>
+</blockquote>
+<p>由于我的源码是用 Github 来托管的，所以我直接执行下述命令来克隆我的网站源码到服务器即可。</p>
+<pre><code><code>git clone https://github.com/your-name/repo-name.git
+
+# 进入项目目录
+cd repo-name
+
+# 创建并激活虚拟环境
+python3 -m virtualenv venv
+source venv/bin/activate
+
+# 安装项目依赖
+pip install -r requirements.txt</code></pre>
+<p>目前我的网站采用的相关依赖包如下：</p>
+<pre><code><code>autopep8
+Django
+django-bootstrap4
+django-ckeditor
+gunicorn
+Markdown
+Pillow
+python-slugify
+requests</code></pre>
+<blockquote>
+<p>这里有个坑需要注意，如果你使用了 <strong>awesome-slugify</strong>，请尝试使用 <strong>python-slugify</strong>，因为有的服务器可能无法正常安装 <strong>awesome-slugify</strong>，具体 BUG 可参考：<a href="https://github.com/voronind/awesome-slugify/issues/37">Clashes with python-slugify package</a>。</p>
+</blockquote>
+<h3 id="步骤二">步骤二</h3>
+<blockquote>
+<p>修改项目相关配置，并进行静态资源收集</p>
+</blockquote>
+<p>由于我需要将我的网站部署到生产环境，所以我需要关闭 Django 的调试模式，并修改静态资源相关配置，示例配置如下所示：</p>
+<ul>
+<li>settings.py</li>
+</ul>
+<pre><code><code>SECRET_KEY = os.environ.get(&#39;DJANGO_SECRET_KEY&#39;)
+
+DEBUG = os.environ.get(&#39;DJANGO_DEBUG&#39;, False)
+
+TEMPLATE_DEBUG = os.environ.get(&#39;DJANGO_TEMPLATE_DEBUG&#39;, False)
+
+ALLOWED_HOSTS = [&quot;*&quot;]
+
+TEMPLATES = [
+    {
+        &#39;BACKEND&#39;: &#39;django.template.backends.django.DjangoTemplates&#39;,
+        &#39;DIRS&#39;: [os.path.join(BASE_DIR, &#39;templates&#39;)],
+        &#39;APP_DIRS&#39;: True,
+        &#39;OPTIONS&#39;: {
+            &#39;context_processors&#39;: [
+                &#39;django.template.context_processors.debug&#39;,
+                &#39;django.template.context_processors.request&#39;,
+                &#39;django.contrib.auth.context_processors.auth&#39;,
+                &#39;django.contrib.messages.context_processors.messages&#39;,
+            ],
+        },
+    },
+]
+
+STATIC_URL = &#39;/static/&#39;
+STATIC_ROOT = os.path.join(BASE_DIR, &#39;staticfiles&#39;)
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, &#39;static&#39;),
+]
+
+MEDIA_URL = &#39;/media/&#39;
+MEDIA_ROOT = os.path.join(BASE_DIR, &#39;media&#39;)</code></pre>
+<p>然后执行如下命令进行静态资源收集：</p>
+<pre><code><code>python manage.py collectstatic</code></pre>
+<p>之后，我还需要创建一个 <strong>Gunicorn</strong> 进程的相关配置，示例配置如下所示：</p>
+<ul>
+<li>gunicorn.conf.py</li>
+</ul>
+<pre><code><code># 安装
+# sudo pip3 install gunicorn
+
+import sys
+import os
+import logging
+import logging.handlers
+from logging.handlers import WatchedFileHandler
+import multiprocessing
+
+BASE_DIR = &#39;/home/hippie/hippiezhou.fun/src&#39;
+sys.path.append(BASE_DIR)
+
+LOG_DIR = os.path.join(BASE_DIR, &#39;log&#39;)
+if not os.path.exists(LOG_DIR):
+    os.makedirs(LOG_DIR)
+
+# 绑定的ip与端口
+bind = &quot;0.0.0.0:8000&quot;
+
+# 以守护进程的形式后台运行
+daemon = True
+
+# 最大挂起的连接数，64-2048
+backlog = 512
+
+# 超时
+timeout = 30
+
+# 调试状态
+debug = False
+
+# gunicorn要切换到的目的工作目录
+chdir = BASE_DIR
+
+# 工作进程类型(默认的是 sync 模式，还包括 eventlet, gevent, or tornado, gthread, gaiohttp)
+worker_class = &#39;sync&#39;
+
+# 工作进程数
+workers = multiprocessing.cpu_count()
+
+# 指定每个工作进程开启的线程数
+threads = multiprocessing.cpu_count() * 2
+
+# 日志级别，这个日志级别指的是错误日志的级别(debug、info、warning、error、critical)，而访问日志的级别无法设置
+loglevel = &#39;info&#39;
+
+# 日志格式
+access_log_format = &#39;%(t)s %(p)s %(h)s &quot;%(r)s&quot; %(s)s %(L)s %(b)s %(f)s&quot; &quot;%(a)s&quot;&#39;
+# 其每个选项的含义如下：
+&#39;&#39;&#39;
+h          remote address
+l          &#39;-&#39;
+u          currently &#39;-&#39;, may be user name in future releases
+t          date of the request
+r          status line (e.g. ``GET / HTTP/1.1``)
+s          status
+b          response length or &#39;-&#39;
+f          referer
+a          user agent
+T          request time in seconds
+D          request time in microseconds
+L          request time in decimal seconds
+p          process ID
+&#39;&#39;&#39;
+
+# 访问日志文件
+accesslog = os.path.join(LOG_DIR, &#39;gunicorn_access.log&#39;)
+# 错误日志文件
+errorlog = os.path.join(LOG_DIR, &#39;gunicorn_error.log&#39;)
+# pid 文件
+pidfile = os.path.join(LOG_DIR, &#39;gunicorn_error.pid&#39;)
+
+# 访问日志文件，&quot;-&quot; 表示标准输出
+accesslog = &quot;-&quot;
+# 错误日志文件，&quot;-&quot; 表示标准输出
+errorlog = &quot;-&quot;
+
+# 进程名
+proc_name = &#39;hippiezhou_fun.pid&#39;
+
+# 更多配置请执行：gunicorn -h 进行查看</code></pre>
+<p>之后可用通过如下方式启动我们的网站：</p>
+<pre><code><code># 启动方式(首先需要切换到项目根目录，即和 manage.py 在同级目录下)：
+
+gunicorn -c gunicorn.conf.py website.wsgi:application
+
+# 或
+gunicorn website.wsgi:application -b 0.0.0.0:8000 -w 4 -k gthread
+
+# 或
+gunicorn website.wsgi:application -b 0.0.0.0:8000 -w 4 -k gthread  --thread 40 --max-requests 4096 --max-requests-jitter 512
+
+# 查看进程
+ps aux | grep gunicorn
+
+# 退出 gunicorn
+pkill gunicorn</code></pre>
+<h3 id="步骤三">步骤三</h3>
+<blockquote>
+<p>配置 Nginx</p>
+</blockquote>
+<p>通过前两步，我们可以成功将我们的网站跑起来，但是目前还只能在内部访问，所以我们需要通过 Nginx 来做反向代理，供外网访问。</p>
+<p>执行下述命令进行安装和配置</p>
+<pre><code><code>sudo apt-get install nginx
+
+sudo service nginx start
+
+# 备份默认配置
+sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.bak
+
+# 启动 Vim 修改我们的网站配置
+sudo vim /etc/nginx/sites-available/default</code></pre>
+<p>示例配置如下所示：</p>
+<pre><code><code>server{
+        ...
+        server_name hippiezhou.fun *.hippiezhou.fun;
+        access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+        ...
+
+        location / {
+                # First attempt to serve request as file, then
+                # as directory, then fall back to displaying a 404.
+                # try_files $uri $uri/ =404;
+                proxy_pass         http://127.0.0.1:8000; #此处要和你 gunicore 的 ip 和端口保持一致
+                proxy_redirect     off;
+
+                proxy_set_header   Host                 $host;
+                proxy_set_header   X-Real-IP            $remote_addr;
+                proxy_set_header   X-Forwarded-For      $proxy_add_x_forwarded_for;
+                proxy_set_header   X-Forwarded-Proto    $scheme;
+        }
+
+        location /static {
+                alias /root/hippiezhou.fun/src/staticfiles; # 此次需要配置为你的网站对应的静态资源的绝对路径
+        }
+
+        location /media {
+                alias /root/hipiezhou.fun/src/media; # 如果你的网站有上传功能，需要配置该结点并指向目标路径
+        }
+
+        ...
+}</code></pre>
+<p>配置完成后执行下述操作即可将我们的网站运行起来</p>
+<pre><code><code># 若网站未启动执行该命令
+gunicorn -c gunicorn.conf.py website.wsgi:application
+
+sudo nginx -t
+sudo service nginx restart</code></pre>
+<p>如果不出意外，网站应该是可以正常访问，如果静态资源依然不能访问，打开网站的 开发者工具看一下是什么错误。</p>
+<ul>
+<li>如果是 404 的问题，请确保你的 settings 相关配置和我上面列出来的是一致的；</li>
+<li>如果是 403 的问题，应该是 Nginx 无权访问你指定的静态资源，你需要修改 Nginx 的用户类型，亲执行下述命令</li>
+</ul>
+<pre><code><code>sudo vim /etc/nginx/nginx.conf</code></pre>
+<p>将 <code>user</code> 后面的值修改为 <code>root</code>，然后重启 Nginx 即可。</p>
+<p>最后，关于如何配置 HTTPS，这里就不过多介绍了，直接列出相关示例脚本：</p>
+<pre><code><code>sudo apt-get update
+sudo apt-get install software-properties-common
+sudo add-apt-repository universe
+sudo add-apt-repository ppa:certbot/certbot
+sudo apt-get update
+sudo apt-get install certbot python-certbot-nginx
+
+sudo certbot --nginx
+
+# sudo certbot renew --dry-run
+
+sudo ufw allow https
+
+sudo systemctl restart nginx</code></pre>
+<h2 id="总结">总结</h2>
+<p>在部署的过程中，其实遇到最多的问题就是关于静态资源无法问题的问题，但是看到网上很多文章，都不一样，并且有的写的还是错误的。所以这里就总结一些。还好，一切顺利。算是填了 4 年前的一个坑吧。</p>
+<p>最后，打个广告，欢迎访问我的个人网站： <a href="https://hippiezhou.fun">hippiezhou.fun</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

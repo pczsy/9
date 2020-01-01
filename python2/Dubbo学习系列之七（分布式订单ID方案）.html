@@ -1,0 +1,100 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Dubbo学习系列之七（分布式订单ID方案）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Dubbo学习系列之七（分布式订单ID方案）</center></div><div class='banquan'>原文出处:本文由博客园博主甲由崽提供。<br/>
+原文连接:https://www.cnblogs.com/xxbiao/p/12048893.html</div><br>
+    <p>既然选择，就注定风雨兼程！</p>
+<p>开始吧！</p>
+<p><strong>准备</strong>：Idea201902/JDK11/ZK3.5.5/Gradle5.4.1/RabbitMQ3.7.13/Mysql8.0.11/Lombok0.26/Erlang21.2/postman7.5.0</p>
+<p><strong>难度</strong>：新手--<span style="background-color: #ff0000;">战士</span>--老兵--大师</p>
+<p><strong>目标</strong>：1，使用&ldquo;雪花算法&rdquo;生成订单ID &nbsp;2，使用集中式Redis生成订单明细ID，3.Logback+slf4j打印日志</p>
+<p><strong>步骤</strong>：1.项目架构及代码基础设施，见往期文章。2.整体思路：其实ID的生成有很多种方案，如UUID，DB自增id，那分布式环境下有何方案呢？UUID也可以，但无规律；DB生成法，间隔初始值加步长，水平扩展差；雪花算法，服务器间时间同步是个问题，Redis集中式生成，容易单点瓶颈。总结而言，各有千秋,一是独立式，每个使用者自己生成，二是中心式，ID集中产生再分发。今天我们来看看典型代表: 雪花算法和Redis集中式。3.先说"雪花算法",理解也简单，&ldquo;世界上没有一片雪花是相同的&rdquo;顾名思义，雪花算法即是多维度组合，生成一个ID值，且这个值&ldquo;趋势递增&rdquo;，其核心构成如下图：</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）0.png" alt="" width="792" height="407" /></p>
+<p>&nbsp;</p>
+<p>64bit，第一位0固定，二进制符号位，41bit时间戳，注意是当前与初始值相减的值，10bit工作机器id，12bit序列号，毫秒内的计数，其中工作机器id可预先人工指定，最后64位刚好转成Long类型即可。</p>
+<p>4.算法生成类，放公共模块，com.biao.mall.common.util.SnowFlake</p>
+<p>先来个整体的代码，包含了几个内部方法：</p>
+<p>&nbsp;<img src="./images/Dubbo学习系列之七（分布式订单ID方案）1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>再来分析一下，</p>
+<p>&nbsp;</p>
+<p>&nbsp;<img src="./images/Dubbo学习系列之七（分布式订单ID方案）2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>重点看下最大值，使用对-1左移位算法，(二进制右边补0)，再按位取反，举例：最多2位，</p>
+<p>~(-1L&lt;&lt;2)--&gt;11111111--&gt;11111100--&gt;00000011--&gt;3，实际上这里，就是(2的n次方-1),因<span style="background-color: #ff6600;">移位算法是效率最高</span>的，因此采用。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">long</span> MAX_DATAC_ENTER_ID = ~(-1L &lt;&lt;<span style="color: #000000;"> DATACENTER_BIT);
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">long</span> MAX_WORK_ID= ~(-1L &lt;&lt;<span style="color: #000000;"> MACHINE_BIT);
+</span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">final</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">long</span> MAX_SEQUENCE = ~(-1L &lt;&lt; SEQUENCE_BIT);</pre>
+</div>
+<p>&nbsp;</p>
+<p>构造函数中判断下数据中心id和主机id是否合法，</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>5.算法核心部分,nextId()方法,注意这是个同步方法，线程安全的：</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）4.png" alt="" /></p>
+<p>&nbsp;</p>
+<p><span style="background-color: #ff6600;">A.先取得当前主机的毫秒，判断下是否小于上个时间戳，这个很重要！因为如果时间回拨，会导致可能的ID重复，因此当遇到时间回拨的情况，可以考虑使用备份的主机ID，这里是直接抛异常了。</span></p>
+<p>B.如果取ID并发非常高，导致时间间隔很小，在同一毫秒内，则序列号自增并和最大序列号"按位与"，这样的目的就是如果序列号达到最大，+1再按位与，就会等于0,(假设2位最大值加1：011+001=100，再100 &amp; 011=000，然后只有2位就成0了)</p>
+<p>C. 如果同一毫秒内序列号达到最大归为0，就使用getNextMill(),无限循环直到获得下个毫秒数</p>
+<p>D.最后生成id就是时间戳差值，移位再按位或其他部分的数值，</p>
+<p>6.再看Redis方案，这个主要是利用Redis速度快的特点，并可以使用Redis集群，就可确保速度和可用性，集中式的好处即统一生产，易控制，但分发受网络波动影响。具体位置在：com.biao.mall.common.util.RedisUitl7.分析重点：类里写了两个生成方式，第一个doGetId()是个简单生成法，直接使用对一个key做自增操作，每次递增一个，但坏处明显，容易暴露一天的订单量！数鸭子的游戏。</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）5.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>这里使用的是redisAPI的redisTemplate，其有操作如下，即对redis的五种数据类型都有对应的封装方法。</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）6.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>还有一个思路是先缓存，再取值，过程是：先生成一定量的顺序数，打乱顺序，再分成若干段，循环存入redis，取值时，根据全局计数器进行检索取值，</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）7.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>以下为分段存储，每个段都有个keyId。这里为啥，做分段？主要是存取效率问题，显然从一小段中检索数据要快于直接从一个大的List中检索快。</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）8.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>取乱序值方法getShuffleId：因为这个是个开箱即用的静态方法，必须保证首次使用时，初始化计数器，并执行分段存储操作，而应用重启，不重复这个操作，故可以先判断计数器是否已存在。取值是先找到分段的list的key，再找到偏移量index：</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）9.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>7.测试一下，我写了个controller：com.biao.mall.business.controller.MsgProducerController</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）10.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>启动Redis--&gt;zk--&gt;business：</p>
+<p>可以看到，前面两图就是顺序的，而后面的两图则是乱序的。</p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）11.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>8.项目地址：day10</p>
+<p><span style="background-color: #ff6600;">https://github.com/xiexiaobiao/dubbo-project.git</span></p>
+<p>&nbsp;</p>
+<p style="text-align: center;">后记：</p>
+<p>1.关于服务间通信：内部服务间通信宜使用私有通信，如RPC，Netty等，效率高，对外使用Restful，兼容性好，因此，项目代码编号day09成为了一个临时版，其实现了MQ独立部署，Restful对内通信的模式，但技术上不可取。</p>
+<p>2.redis生产中不会使用单点，常用的是集群式，如三主三从集群，但从使用者角度，有JedisCluster，如操作redisTemplate类似，逻辑上是操作一个，不必考虑后台实现与具体的物理分库存储。</p>
+<p>3.看代码，多思考，才有收获，此文中有关于二进制的操作，试问(1L&lt;&lt;-1)可否？为啥使用二进制操作呢？</p>
+<p>4.分布式Id方案，有很多，各有特点，生搬硬套行不通，必须根据业务特点取舍和改造。</p>
+<p>5.之前在做MQ解析时遇到，一定小心！注意jsonString传输：以下String将发生JSON.parse()错误。"{\"orderId\":\"362951082266333184\",\"URL\":\"http://localhost:8085/delivery/one\"}"，去掉json中的转义字符,可使用StringEscapeUtils.unescapeJava(jsonString)</p>
+<p>&nbsp;</p>
+<p>往期文章导航：</p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247483816&amp;idx=1&amp;sn=2e601414a33b51ef924ed9938a5de727&amp;chksm=eb9e63d3dce9eac5fc8aa38219439e817dc780c3ea02cd21a0db4cffb3b34fa24a0a080df4ff&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之六（微服务架构实战）</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247483775&amp;idx=1&amp;sn=dc3909e65ab080754a88c221320273fb&amp;chksm=eb9e6304dce9ea12dde34a58fb9cbd705c42645137866643dbfa0250c22beaa53a8f15b6e6dc&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之五（MQ实现微服务间通信）</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247483739&amp;idx=1&amp;sn=1391b5a00129e8af22254713586fc8f1&amp;chksm=eb9e6320dce9ea361efe6e75936463c2e1dcdf024b0f7a2767b223af59925ad6ba658bde6075&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之四（MybaitsPlus+Druid使用）</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247483718&amp;idx=1&amp;sn=2148ca428a5d9ea2aa0049d90ee2d505&amp;chksm=eb9e633ddce9ea2ba86cb35d2088b714c0a1de49a91d08861675e53b2f74fa3f46cc0cbe29f2&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之三（Gradle打包可运行jar）</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247483691&amp;idx=1&amp;sn=c0e7305ba0efaaad73ef78d151268a40&amp;chksm=eb9e6350dce9ea469e4d53d6c1949903e0038bd04677bc426e84f2b9e76f3e10f7488238c900&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之二（Nacos做配置中心）</a></p>
+<p><a href="http://mp.weixin.qq.com/s?__biz=MzI4MjA5NzQyOA==&amp;mid=2247483675&amp;idx=1&amp;sn=47faef35194dd23aaeaf2e2d752a853c&amp;chksm=eb9e6360dce9ea7664b8c69e84f13e549e8030fa944ebe3c8572b202447aa85551e81e75d009&amp;scene=21#wechat_redirect" target="_blank" data-itemshowtype="0" data-linktype="2">Dubbo学习系列之一（消费者生产者模式搭建）</a></p>
+<p><img src="./images/Dubbo学习系列之七（分布式订单ID方案）12.png" alt="" width="168" height="189" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

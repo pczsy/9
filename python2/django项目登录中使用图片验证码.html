@@ -1,0 +1,170 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修django项目登录中使用图片验证码' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>django项目登录中使用图片验证码</center></div><div class='banquan'>原文出处:本文由博客园博主记住我忘记我提供。<br/>
+原文连接:https://www.cnblogs.com/nmsghgnv/p/11357202.html</div><br>
+    <p>应用下创建untils文件夹放置封装图片验证码的函数</p>
+<p>创建validCode.py文件定义验证码规则</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> random
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get_random_color():
+        </span><span style="color: #0000ff;">return</span> (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255<span style="color: #000000;">))
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get_valid_code_img(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 方式:</span>
+
+    <span style="color: #0000ff;">from</span> PIL <span style="color: #0000ff;">import</span><span style="color: #000000;"> Image, ImageDraw, ImageFont
+    </span><span style="color: #0000ff;">from</span> io <span style="color: #0000ff;">import</span><span style="color: #000000;"> BytesIO
+    </span><span style="color: #0000ff;">import</span><span style="color: #000000;"> random
+
+    img </span>= Image.new(<span style="color: #800000;">"</span><span style="color: #800000;">RGB</span><span style="color: #800000;">"</span>, (270, 40), color=get_random_color())<span style="color: #008000;">#</span><span style="color: #008000;">生成一个宽270*高40的画布，背景颜色随机</span>
+<span style="color: #000000;">
+    draw </span>= ImageDraw.Draw(img)<span style="color: #008000;">#</span><span style="color: #008000;">进行绘画</span>
+    kumo_font = ImageFont.truetype(<span style="color: #800000;">"</span><span style="color: #800000;">static/font/kumo.ttf</span><span style="color: #800000;">"</span>, size=32)<span style="color: #008000;">#</span><span style="color: #008000;">字体  字体大小</span>
+<span style="color: #000000;">
+    valid_code_str </span>= <span style="color: #800000;">""</span>
+
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(5<span style="color: #000000;">):
+        random_num </span>= str(random.randint(0, 9))<span style="color: #008000;">#</span><span style="color: #008000;">0-9的随机数  9</span>
+        random_low_alpha = chr(random.randint(97, 122))<span style="color: #008000;">#</span><span style="color: #008000;">a 到 z 随机的一个小写字母  b</span>
+        random_upper_alpha = chr(random.randint(65, 90))<span style="color: #008000;">#</span><span style="color: #008000;">A 到 Z 随机的一个大写字母  Q</span>
+        random_char = random.choice([random_num, random_low_alpha, random_upper_alpha])        <span style="color: #008000;">#</span><span style="color: #008000;">2</span>
+        draw.text((i * 50 + 20, 5), random_char, get_random_color(), font=kumo_font) <span style="color: #008000;">#</span><span style="color: #008000;">往长方形上写字</span>
+
+
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 保存验证码字符串</span>
+        valid_code_str += random_char <span style="color: #008000;">#</span><span style="color: #008000;">85656</span>
+    width=270<span style="color: #000000;">
+    height</span>=40
+    <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(10<span style="color: #000000;">):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> draw.point([random.randint(0, width), random.randint(0, height)], fill=get_random_color())#画小点</span>
+        x =<span style="color: #000000;"> random.randint(0, width)
+        y </span>=<span style="color: #000000;"> random.randint(0, height)
+        draw.arc((x, y, x </span>+ 4, y + 4), 0, 90, fill=get_random_color()) <span style="color: #008000;">#</span><span style="color: #008000;">小线段</span>
+<span style="color: #000000;">
+
+
+    request.session[</span><span style="color: #800000;">"</span><span style="color: #800000;">valid_code_str</span><span style="color: #800000;">"</span>] =<span style="color: #000000;"> valid_code_str
+
+
+    f </span>=<span style="color: #000000;"> BytesIO()
+    img.save(f, </span><span style="color: #800000;">"</span><span style="color: #800000;">png</span><span style="color: #800000;">"</span>) <span style="color: #008000;">#</span><span style="color: #008000;">png</span>
+    data =<span style="color: #000000;"> f.getvalue()
+
+
+    </span><span style="color: #0000ff;">return</span> data</pre>
+</div>
+<p>建路由</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> 登录</span>
+path(<span style="color: #800000;">'</span><span style="color: #800000;">login/</span><span style="color: #800000;">'</span>, login.login,name=<span style="color: #800000;">'</span><span style="color: #800000;">login</span><span style="color: #800000;">'</span><span style="color: #000000;">),
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 图片验证码</span>
+re_path(<span style="color: #800000;">'</span><span style="color: #800000;">get_valid_code_img/</span><span style="color: #800000;">'</span>, login.get_valid_code_img, name=<span style="color: #800000;">'</span><span style="color: #800000;">get_valid_code_img</span><span style="color: #800000;">'</span>),</pre>
+</div>
+<p>写后台方法</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> blog.utils <span style="color: #0000ff;">import</span> validCode  <span style="color: #008000;">#</span><span style="color: #008000;"> 引入自定义的验证码</span><span style="color: #008000;">
+#</span><span style="color: #008000;">页面返回方法</span>
+<span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> render, HttpResponse, redirect
+</span><span style="color: #008000;">#</span><span style="color: #008000;">哈希加密</span>
+<span style="color: #0000ff;">from</span> django.contrib.auth.hashers <span style="color: #0000ff;">import</span><span style="color: #000000;"> make_password, check_password
+</span><span style="color: #008000;">#</span><span style="color: #008000;">数据库</span>
+<span style="color: #0000ff;">from</span> blog.models <span style="color: #0000ff;">import</span><span style="color: #000000;"> Article, Comment, Member, Praise, Web, Image
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 登陆</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> login(request):
+    res </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: None, <span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">: None}
+
+    </span><span style="color: #0000ff;">if</span> request.method == <span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        valid_code </span>= request.POST.get(<span style="color: #800000;">"</span><span style="color: #800000;">valid_code</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        valid_code_str </span>= request.session.get(<span style="color: #800000;">"</span><span style="color: #800000;">valid_code_str</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(valid_code, valid_code_str)
+        </span><span style="color: #0000ff;">if</span> valid_code.upper() ==<span style="color: #000000;"> valid_code_str.upper():
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 查询用户和密码是否正确</span>
+            username = request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">username</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            pwd </span>= request.POST.get(<span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+            username_obj </span>= Member.objects.filter(member_name=<span style="color: #000000;">username).first()
+            </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span><span style="color: #000000;"> username_obj:
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 3<span style="color: #000000;">
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">用户名不存在</span><span style="color: #800000;">'</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> check_password(pwd, username_obj.member_pwd):
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 1<span style="color: #000000;">
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">登录成功</span><span style="color: #800000;">'</span><span style="color: #000000;">
+                request.session[</span><span style="color: #800000;">'</span><span style="color: #800000;">member_name</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> username
+                request.session[</span><span style="color: #800000;">'</span><span style="color: #800000;">member_id</span><span style="color: #800000;">'</span>] = Member.objects.filter(member_name=<span style="color: #000000;">username).first().member_id
+                response_new </span>= HttpResponse(json.dumps(res))  <span style="color: #008000;">#</span><span style="color: #008000;"> 把这个结果告诉给前台，ajax</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> response_new
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] =<span style="color: #000000;"> 0
+                res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">帐号/密码错误</span><span style="color: #800000;">'</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            res[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] = 2<span style="color: #000000;">
+            res[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span>] = <span style="color: #800000;">'</span><span style="color: #800000;">验证码错误</span><span style="color: #800000;">'</span>
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> HttpResponse(json.dumps(res))
+    </span><span style="color: #0000ff;">return</span> render(request, <span style="color: #800000;">'</span><span style="color: #800000;">blog/login.html</span><span style="color: #800000;">'</span><span style="color: #000000;">, locals())
+    
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 生成图片验证码</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> get_valid_code_img(request):
+    img_data </span>=<span style="color: #000000;"> validCode.get_valid_code_img(request)
+    </span><span style="color: #0000ff;">return</span> HttpResponse(img_data)</pre>
+</div>
+<p>前端登录的表单</p>
+<div class="cnblogs_code">
+<pre><code>{<span style="color: #008000;">#</span><span style="color: #008000;">登陆的表单#}</span>
+
+&lt;form action=<span style="color: #800000;">"</span><span style="color: #800000;">{% url 'blog:login' %}</span><span style="color: #800000;">"</span> method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">login</span><span style="color: #800000;">"</span>&gt;
+    &lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">username</span><span style="color: #800000;">"</span> Placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">Username</span><span style="color: #800000;">"</span> required=<span style="color: #800000;">""</span>/&gt;
+    &lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">password</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">password</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">pwd</span><span style="color: #800000;">"</span> Placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">Password</span><span style="color: #800000;">"</span> required=<span style="color: #800000;">""</span>/&gt;<span style="color: #000000;">
+    {</span>% csrf_token %<span style="color: #000000;">}
+    </span>&lt;input type=<span style="color: #800000;">"</span><span style="color: #800000;">text</span><span style="color: #800000;">"</span> name=<span style="color: #800000;">"</span><span style="color: #800000;">valid_code</span><span style="color: #800000;">"</span> placeholder=<span style="color: #800000;">"</span><span style="color: #800000;">验证码</span><span style="color: #800000;">"</span>&gt;
+    &lt;img width=<span style="color: #800000;">"</span><span style="color: #800000;">270</span><span style="color: #800000;">"</span> height=<span style="color: #800000;">"</span><span style="color: #800000;">36</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">valid_code_img</span><span style="color: #800000;">"</span> src=<span style="color: #800000;">"</span><span style="color: #800000;">/blog/get_valid_code_img/</span><span style="color: #800000;">"</span> alt=<span style="color: #800000;">""</span><span style="color: #000000;">
+         onclick</span>=<span style="color: #800000;">"</span><span style="color: #800000;">this.src='/blog/get_valid_code_img/?'+Math.random()</span><span style="color: #800000;">"</span>&gt;
+    &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">login-agileits-bottom</span><span style="color: #800000;">"</span>&gt;
+        &lt;h6&gt;&lt;a href=<span style="color: #800000;">"</span><span style="color: #800000;">javascript:;</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">button</span><span style="color: #800000;">"</span> id=<span style="color: #800000;">"</span><span style="color: #800000;">onsubmit</span><span style="color: #800000;">"</span>&gt;登陆&lt;/a&gt;&lt;/h6&gt;
+    &lt;/div&gt;
+&lt;/form&gt;<span style="color: #000000;">
+
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">登陆的表单结束#}</span></pre>
+</div>
+<p>前端提交登录表单的jquery</p>
+<div class="cnblogs_code">
+<pre><code>{<span style="color: #008000;">#</span><span style="color: #008000;">  登陆的jquery  #}</span>
+<span style="color: #000000;">$(document).ready(function () {
+    $(</span><span style="color: #800000;">'</span><span style="color: #800000;">#onsubmit</span><span style="color: #800000;">'</span><span style="color: #000000;">).click(function () {
+        $.post(</span><span style="color: #800000;">'</span><span style="color: #800000;">/blog/login/</span><span style="color: #800000;">'</span>, $(<span style="color: #800000;">'</span><span style="color: #800000;">#login</span><span style="color: #800000;">'</span><span style="color: #000000;">).serialize(), function (data) {
+            </span><span style="color: #0000ff;">if</span> (data[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] == 1<span style="color: #000000;">) {
+                layer.msg(data.info);
+                location.href </span>= <span style="color: #800000;">"</span><span style="color: #800000;">{% url 'index' %}</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+            } </span><span style="color: #0000ff;">else</span><span style="color: #000000;"> {
+                layer.msg(data[</span><span style="color: #800000;">'</span><span style="color: #800000;">info</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+            }
+        }, </span><span style="color: #800000;">'</span><span style="color: #800000;">json</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    })
+})
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">  登陆的jquery结束  #}</span></pre>
+</div>
+<p>页面效果</p>
+<p><img src="./images/django项目登录中使用图片验证码0.png" alt="" /></p>
+<p>done。</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

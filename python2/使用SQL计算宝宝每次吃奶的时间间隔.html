@@ -1,0 +1,207 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修使用SQL计算宝宝每次吃奶的时间间隔' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>使用SQL计算宝宝每次吃奶的时间间隔</center></div><div class='banquan'>原文出处:本文由博客园博主AlfredZhao提供。<br/>
+原文连接:https://www.cnblogs.com/jyzhao/p/12036186.html</div><br>
+    <p><strong>需求：</strong>媳妇儿最近担心宝宝的吃奶时间不够规律，网上说是正常平均3小时喂奶一次，让我记录下每次的吃奶时间，分析下实际是否偏差很大，好在下次去医院复查时反馈给医生。<br />
+此外，还要注意有时候哭闹要吃奶，而实际只吃了两口便不吃了。这种情况要特殊标记下，如果不算这种情况的话，分析看是否正常。<br />
+<strong>环境：</strong>Oracle 11.2.0.4</p>
+<ul>
+<li><a href="#1">1.记录每次吃奶时间</a></li>
+<li><a href="#2">2.计算吃奶时间间隔</a></li>
+</ul>
+<h1 id="1">1.记录每次吃奶时间</h1>
+<p>我在自己的Oracle测试环境中创建了一张表t_baby，用于实现记录宝宝每次的吃奶时间：</p>
+<pre><code><code>test@DEMO&gt; desc t_baby
+ Name                                      Null?    Type
+ ----------------------------------------- -------- ------------
+ ID                                        NOT NULL NUMBER
+ FEED_TIME                                 NOT NULL DATE
+ LABEL                                              VARCHAR2(1)</code></pre>
+<p>注意:这里的LABEL字段就是用于标志吃奶量的。<br />
+默认值设置为'N',代表吃奶量正常；如果吃奶量很少，则可将对应记录的LABEL字段值手工更新为'L'；如果吃奶量非常多，超过正常值，则更新为'M'。</p>
+<p>由于每次吃奶都要人为的插入一条数据，为了简化这个运维操作，将插入语句保存到文件i.sql中，内容如下：</p>
+<pre><code><code>test@DEMO&gt; get i
+  1  PROMPT Please input your feed_time(mmdd hh24:mi). eg:1213 08:00
+  2* insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;&amp;feed_time&#39;,&#39;mmdd hh24:mi&#39;))
+test@DEMO&gt; </code></pre>
+<p>这样每次执行插入就可以方便的直接@i调用插入，比如刚刚媳妇儿告知我本次吃奶时间是13:16，那直接调用插入即可：</p>
+<pre><code><code>test@DEMO&gt; @i
+Please input your feed_time(mmdd hh24:mi). eg:1213 08:00
+Enter value for feed_time: 1213 13:16
+old   1: insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;&amp;feed_time&#39;,&#39;mmdd hh24:mi&#39;))
+new   1: insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;1213 08:00&#39;,&#39;mmdd hh24:mi&#39;))
+
+1 row created.
+
+test@DEMO&gt; commit;
+
+Commit complete.</code></pre>
+<p>确认刚刚插入的数据无误后，一定要记得提交事物。我之所以没有将commit写到脚本中，就是为了当发现数据输入有误，方便直接rollback回滚。</p>
+<p>现在我们来看一下现有的数据，详细记录了每一次的吃奶时间：</p>
+<pre><code><code>test@DEMO&gt; alter session set nls_date_format=&#39;yyyy-mm-dd hh24:mi:ss&#39;;
+
+Session altered.
+
+test@DEMO&gt; select * from t_baby;
+
+        ID FEED_TIME           LABEL
+---------- ------------------- -----
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N
+         8 2019-12-13 09:01:00 N
+         9 2019-12-13 10:40:00 L
+        15 2019-12-13 11:50:00 N
+        16 2019-12-13 13:16:00 N
+
+6 rows selected.</code></pre>
+<p>可以看到ID=9这条记录的LABEL='L',也就是说这次吃奶量非常少。</p>
+<h1 id="2">2.计算吃奶时间间隔</h1>
+<p>也许有人禁不住会问，你这么简单的需求还把它弄到Oracle数据库里，还用SQL计算实现。什么？你说你还要用到Oracle分析函数？<br />
+其实不必太较真了，适合自己的才是最好的，我就是喜欢敲sqlplus不喜欢用Excel等工具，还能复习下分析函数，何乐而不为呢。<br />
+废话不多说，来看如何用分析函数显示上次喂奶时间L_TIME：<br />
+select t.*, lag(feed_time) over(order by id) l_time from t_baby t;</p>
+<pre><code><code>test@DEMO&gt; select t.*, lag(feed_time) over(order by id) l_time from t_baby t;
+
+        ID FEED_TIME           L L_TIME
+---------- ------------------- - -------------------
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N 2019-12-13 02:49:00
+         8 2019-12-13 09:01:00 N 2019-12-13 04:58:00
+         9 2019-12-13 10:40:00 L 2019-12-13 09:01:00
+        15 2019-12-13 11:50:00 N 2019-12-13 10:40:00
+        16 2019-12-13 13:16:00 N 2019-12-13 11:50:00
+
+6 rows selected.</code></pre>
+<p>然后直接查询计算下喂奶间隔即可，以分钟为单位：<br />
+select id, feed_time, label, round((feed_time - l_time) * 24 * 60, 2) &quot;LAG(min)&quot;<br />
+from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t);</p>
+<pre><code><code>test@DEMO&gt; select id, feed_time, label, round((feed_time - l_time) * 24 * 60, 2) &quot;LAG(min)&quot; from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t);
+
+        ID FEED_TIME           L   LAG(min)
+---------- ------------------- - ----------
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N        129
+         8 2019-12-13 09:01:00 N        243
+         9 2019-12-13 10:40:00 L         99
+        15 2019-12-13 11:50:00 N         70
+        16 2019-12-13 13:16:00 N         86
+
+6 rows selected.</code></pre>
+<p>媳妇儿主要担心是喂奶间隔太短，会不会撑到宝宝，那如果说我们假定间隔在2h以上都是正常的话，那么对应的也就是LAG(min)&gt;120分钟以上的为正常。<br />
+从目前已有的数据来看，的确异常次数比较多。<br />
+而我们之前说到存在喂奶量极少的情况，如果将这种情况排除在外呢？再重新计算：<br />
+select id, feed_time, label, round((feed_time - l_time) * 24 * 60, 2) &quot;LAG(min)&quot;<br />
+from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t where label &lt;&gt; 'L');</p>
+<pre><code><code>test@DEMO&gt; select id, feed_time, label, round((feed_time - l_time) * 24 * 60, 2) &quot;LAG(min)&quot; from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t where label &lt;&gt; &#39;L&#39;);
+
+        ID FEED_TIME           L   LAG(min)
+---------- ------------------- - ----------
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N        129
+         8 2019-12-13 09:01:00 N        243
+        15 2019-12-13 11:50:00 N        169
+        16 2019-12-13 13:16:00 N         86</code></pre>
+<p>这下可以看到数据趋于正常，只有一次喂奶间隔在120分钟以下了。当然目前数据还比较少，后续数据多了才可以更准确的反映出异常的比例。</p>
+<p>因为会经常查询到这个间隔时间。将这个两个语句分别保存为v1.sql和v2.sql，方便后续使用。</p>
+<pre><code><code>test@DEMO&gt; l
+  1* select id, feed_time, label, round((feed_time - l_time) * 24 * 60, 2) &quot;LAG(min)&quot; from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t)
+test@DEMO&gt; save v1 rep
+Wrote file v1.sql
+
+test@DEMO&gt; l  
+  1* select id, feed_time, label, round((feed_time - l_time) * 24 * 60, 2) &quot;LAG(min)&quot; from (select t.*, lag(feed_time) over(order by id) l_time from t_baby t where label &lt;&gt; &#39;L&#39;)
+test@DEMO&gt; save v2 rep
+Wrote file v2.sql
+
+test@DEMO&gt; @v1
+
+        ID FEED_TIME           L   LAG(min)
+---------- ------------------- - ----------
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N        129
+         8 2019-12-13 09:01:00 N        243
+         9 2019-12-13 10:40:00 L         99
+        15 2019-12-13 11:50:00 N         70
+        16 2019-12-13 13:16:00 N         86
+
+6 rows selected.
+
+test@DEMO&gt; @v2  
+
+        ID FEED_TIME           L   LAG(min)
+---------- ------------------- - ----------
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N        129
+         8 2019-12-13 09:01:00 N        243
+        15 2019-12-13 11:50:00 N        169
+        16 2019-12-13 13:16:00 N         86
+
+test@DEMO&gt; </code></pre>
+<p>最后总结下，实际以后每次记录喂奶时间直接@i输入具体时间，每次查喂奶间隔就根据实际需求看@v1或者@v2就ok，确认无误后提交更改，再实际熟悉下整个流程：</p>
+<pre><code><code>--1.插入喂奶时间：
+test@DEMO&gt; @i
+Please input your feed_time(mmdd hh24:mi). eg:1213 08:00
+Enter value for feed_time: 1213 16:30
+old   1: insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;&amp;feed_time&#39;,&#39;mmdd hh24:mi&#39;))
+new   1: insert into t_baby(id,feed_time) values(s1.nextval,to_date(&#39;1213 16:30&#39;,&#39;mmdd hh24:mi&#39;))
+
+1 row created.
+
+--2.查看喂奶间隔：
+test@DEMO&gt; @v1  
+
+        ID FEED_TIME           L   LAG(min)
+---------- ------------------- - ----------
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N        129
+         8 2019-12-13 09:01:00 N        243
+         9 2019-12-13 10:40:00 L         99
+        15 2019-12-13 11:50:00 N         70
+        16 2019-12-13 13:16:00 N         86
+        19 2019-12-13 16:30:00 N        194
+
+7 rows selected.
+
+--3.查看喂奶间隔（排除Label=&#39;L&#39;的情况）：
+test@DEMO&gt; @v2
+
+        ID FEED_TIME           L   LAG(min)
+---------- ------------------- - ----------
+         6 2019-12-13 02:49:00 N
+         7 2019-12-13 04:58:00 N        129
+         8 2019-12-13 09:01:00 N        243
+        15 2019-12-13 11:50:00 N        169
+        16 2019-12-13 13:16:00 N         86
+        19 2019-12-13 16:30:00 N        194
+
+6 rows selected.
+
+--4.确认无误提交事物：
+test@DEMO&gt; commit;
+
+Commit complete.
+
+test@DEMO&gt; </code></pre>
+<p>可以清楚看到最新的一次喂奶间隔是194分钟，也是正常的^_^</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

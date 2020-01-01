@@ -1,0 +1,143 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修胸部CT提取分割肺部' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>胸部CT提取分割肺部</center></div><div class='banquan'>原文出处:本文由博客园博主芒果和小猫提供。<br/>
+原文连接:https://www.cnblogs.com/WAoyu/p/12037576.html</div><br>
+    <h2 id="肺部分割提取简介">1. 肺部分割提取简介</h2>
+<p>在处理胸部CT时，我们常常需要获取肺部的一个mask，也就是将肺部结构从数据中提取出来。二维图像还好说，但是三维图像就会变得复杂复杂一点。肺部的分割常常做后续操作的预处理，所以有必要提取提取一个肺部的mask，来辅助后面的操作，所以这里利用传统图像处理方法来提取了一下肺部，当时方法又很多，这里只是抛砖引玉，也许对有些数据不适用，可以对其进行改动。</p>
+<h2 id="原理">2. 原理</h2>
+<p>利用阈值分割、种子填充图像形态学、图像连通域这些操作来进行肺部的分割。</p>
+<h3 id="阈值分割">2.1 阈值分割</h3>
+<p>这个好理解，一般来说CT值的范围是-1000-+1000，而基于简单的观察，肺部就是胸腔内两个大的空洞，所以可以首先对图像进行二值化处理，这里是将CT大于-300的位置置为1，小于-300置为0，这样就将数据分为了三部分，外部空气，内部空气，躯干组织。如下图所示。<br />
+<div align="center"><br />
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221722188-1052482889.jpg" width="40%"><br />
+</div></p>
+<h3 id="种子填充">2.2 种子填充</h3>
+<p>利用种子填充算法，将外部的空气和内部的躯干分割出来，给定两个种子，一般就能分出来。分割的效果如下。然后再用阈值图像减去这个躯干就能得到初步的肺部mask。此时肺部的值是1，组织值是0。<br />
+<div align="center"><br />
+<img src="./images/胸部CT提取分割肺部1.png" width="40%"><br />
+</div></p>
+<h3 id="图像形态学">2.3 图像形态学</h3>
+<p>因为肺内部有许多纤维，所以看起来会有以下空洞（相对于肺部来说），要填补这些空洞，所以利用形态学里的闭操作（先膨胀，再腐蚀）。先膨胀肺部，将小的空洞填充，再腐蚀，恢复原来的大小。</p>
+<h3 id="连通域">2.4 连通域</h3>
+<p>最后保留最大的连通域，此时最大的连通域就是肺部。</p>
+<h3 id="效果">2.5 效果</h3>
+<p>以下图片是使用3dslicer渲染出来的。</p>
+<div align="center">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221808255-627241194.jpg" width="30%">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221817877-1996346013.jpg" width="30%">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221822170-365656151.jpg" width="30%">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221825677-956230743.jpg" width="30%">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221831757-666789993.jpg" width="30%">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221836832-1839751858.jpg" width="30%">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221840561-1053535318.jpg" width="30%">
+<img src = "https://img2018.cnblogs.com/blog/1335980/201912/1335980-20191213221843836-1996617.jpg" width="30%">
+</div>
+<h2 id="代码">3.代码</h2>
+<p>依赖库</p>
+<ul>
+<li>SimpleITK</li>
+<li>skimage</li>
+</ul>
+<pre><code><code>import SimpleITK as sitk
+from skimage import measure
+
+
+
+def lungmask(vol):
+    #获取体数据的尺寸
+    size = sitk.Image(vol).GetSize()
+    #获取体数据的空间尺寸
+    spacing = sitk.Image(vol).GetSpacing()
+    #将体数据转为numpy数组
+    volarray = sitk.GetArrayFromImage(vol)
+
+    #根据CT值，将数据二值化（一般来说-300以下是空气的CT值）
+    volarray[volarray&gt;=-300]=1
+    volarray[volarray&lt;=- 300]=0
+    #生成阈值图像
+    threshold = sitk.GetImageFromArray(volarray)
+    threshold.SetSpacing(spacing)
+
+    #利用种子生成算法，填充空气
+    ConnectedThresholdImageFilter = sitk.ConnectedThresholdImageFilter()
+    ConnectedThresholdImageFilter.SetLower(0)
+    ConnectedThresholdImageFilter.SetUpper(0)
+    ConnectedThresholdImageFilter.SetSeedList([(0,0,0),(size[0]-1,size[1]-1,0)])
+    
+    #得到body的mask，此时body部分是0，所以反转一下
+    bodymask = ConnectedThresholdImageFilter.Execute(threshold)
+    bodymask = sitk.ShiftScale(bodymask,-1,-1)
+    
+    #用bodymask减去threshold，得到初步的lung的mask
+    temp = sitk.GetImageFromArray(sitk.GetArrayFromImage(bodymask)-sitk.GetArrayFromImage(threshold))
+    temp.SetSpacing(spacing)
+    #利用形态学来去掉一定的肺部的小区域
+    
+    bm = sitk.BinaryMorphologicalClosingImageFilter()
+    bm.SetKernelType(sitk.sitkBall)
+    bm.SetKernelRadius(2)
+    bm.SetForegroundValue(1)
+    lungmask = bm.Execute(temp)
+    
+    #利用measure来计算连通域
+    lungmaskarray = sitk.GetArrayFromImage(lungmask)
+    label = measure.label(lungmaskarray,connectivity=2)
+    props = measure.regionprops(label)
+
+    #计算每个连通域的体素的个数
+    numPix = []
+    for ia in range(len(props)):
+        numPix += [props[ia].area]
+
+    #最大连通域的体素个数，也就是肺部
+    maxnum = max(numPix)
+    #遍历每个连通区域
+    for i in range(len(numPix)):
+        #如果当前连通区域不是最大值所在的区域，则当前区域的值全部置为0，否则为1
+        if numPix[i]!=maxnum:
+            label[label==i+1]=0
+        else:
+            label[label==i+1]=1
+
+    label = label.astype(&quot;int16&quot;)
+    l = sitk.GetImageFromArray(label)
+    l.SetSpacing(spacing)
+    return l
+
+
+
+def main():
+    vol = sitk.ReadImage(&quot;Test.mha&quot;)
+    volarray = sitk.GetArrayFromImage(vol)
+    newvol = sitk.GetImageFromArray(volarray)
+    newvol.SetSpacing(vol.GetSpacing())
+    newvol.SetDirection(vol.GetDirection())
+    newvol.SetOrigin(vol.GetOrigin())
+    mask = lungmask(newvol)
+    sitk.WriteImage(mask,&quot;newlungmask.mha&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

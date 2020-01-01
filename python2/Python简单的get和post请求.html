@@ -1,0 +1,153 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python简单的get和post请求' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python简单的get和post请求</center></div><div class='banquan'>原文出处:本文由博客园博主python学习者0提供。<br/>
+原文连接:https://www.cnblogs.com/xxpythonxx/p/11305420.html</div><br>
+    <p>1.<code>json</code> 模块提供了一种很简单的方式来编码和解码JSON数据。 其中两个主要的函数是 <code>json.dumps()</code> 和 <code>json.loads()</code> ， 要比其他序列化函数库如pickle的接口少得多。 下面演示如何将一个Python数据结构转换为JSON：</p>
+<pre><code><code>
+import json
+ 
+data = {
+    &#39;name&#39; : &#39;ACME&#39;,
+    &#39;shares&#39; : 100,
+    &#39;price&#39; : 542.23
+}
+ 
+json_str = json.dumps(data)</code></pre>
+<p>下面演示如何将一个JSON编码的字符串转换回一个Python数据结构：</p>
+<pre><code><code>data = json.loads(json_str)</code></pre>
+<p>2.简单的get和post请求，使用import requests</p>
+<pre><code><code>import requests
+ 
+response = requests.get(&#39;http://httpbin.org/get&#39;)
+print(response.text)</code></pre>
+<pre><code><code>
+#通过在发送post请求时添加一个data参数，这个data参数可以通过字典构造成
+import requests
+ 
+data = {
+    &quot;name&quot;:&quot;zhaofan&quot;,
+    &quot;age&quot;:23
+}
+response = requests.post(&quot;http://httpbin.org/post&quot;,data=data)
+print(response.text)</code></pre>
+<p>3.GET方法，并且自定义header</p>
+<pre><code><code>
+# -* - coding: UTF-8 -* - 
+import urllib2
+ 
+request = urllib2.Request(&quot;http://www.baidu.com/&quot;)
+request.add_header(&#39;content-TYPE&#39;, &#39;application/x-www-form-urlencoded&#39;)
+response = urllib2.urlopen(request)
+print response.getcode()
+print response.geturl()
+print response.read()</code></pre>
+<p>POST方法，并且自定义header</p>
+<pre><code><code>
+# -* - coding: UTF-8 -* - 
+import urllib2
+import urllib
+ 
+request = urllib2.Request(&quot;http://passport.cnblogs.com/login.aspx&quot;)
+request.add_header(&#39;content-TYPE&#39;, &#39;application/x-www-form-urlencoded&#39;)
+data={&quot;tbUserName&quot;:&quot;test_username&quot;, &quot;tbPassword&quot;:&quot;test_password&quot;}
+ 
+response = urllib2.urlopen(request, urllib.urlencode(data))
+print response.getcode()
+print response.geturl()
+print response.read()　</code></pre>
+<p>4.实际测试脚本编写</p>
+<pre><code><code>
+# coding:utf-8
+import json
+import urllib2
+import requests
+ 
+ 
+class AddScores:
+    def __init__(self):
+        pass
+ 
+    def getToken(self):  # 获取token值
+        url1 = &#39;xxxxx&#39;#url
+        r1 = requests.get(url1)
+        self.tokenObj = json.loads(r1.text)#解码JSON数据
+ 
+        if self.tokenObj[&quot;result&quot;] == &quot;success&quot;:
+            print self.tokenObj[&quot;token&quot;]
+        else:
+            print &quot;failed&quot;
+        return self.tokenObj[&quot;token&quot;]
+ 
+    def personMess(self):  # 获取个人信息
+        url2 = &#39;xxx&#39; + self.getToken()
+        r2 = requests.post(url2)
+        print r2.text
+ 
+    def addSco(self,resId):  # 添加分数
+        data = {
+            &quot;memberId&quot;: &quot;xxx&quot;,
+            &quot;orgCode&quot;: &quot;xxx&quot;,
+            &quot;resourceId&quot;: resId,#传参，传resourceId
+            &quot;configName&quot;: &quot;wsp&quot;, &quot;resourceType&quot;: &quot;wsp&quot;
+        }
+ 
+        print &quot;添加分数的请求参数：&quot;
+        print json.dumps(data)#编码JSON
+ 
+        headers = {&#39;Content-Type&#39;: &#39;application/json&#39;}
+        url3 = &#39;xxx&#39; + self.getToken()
+        re3 = urllib2.Request(url=url3, headers=headers, data=json.dumps(data))
+        response = urllib2.urlopen(re3)
+        print response.read()</code></pre>
+<p>5.读写TXT文件</p>
+<pre><code><code>
+#coding:utf-8
+import time
+ 
+from Demo2.token import AddScores
+ 
+ 
+class ResId:
+    def getResId(self):
+        file=open(&#39;xxxx&#39;)
+        # a=file.read()
+        # print a
+        lId= file.readline()
+        lId=lId.strip(&#39;,\n&#39;)
+ 
+        while lId != &#39;&#39;:#逐行读取数据
+            print lId
+            addScores = AddScores()
+            addScores.getToken()
+            addScores.personMess()
+            addScores.addSco(lId)
+ 
+            time.sleep(68)
+ 
+            lId = file.readline()
+            print &quot;=============================&quot;
+ 
+ 
+ResId().getResId()</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

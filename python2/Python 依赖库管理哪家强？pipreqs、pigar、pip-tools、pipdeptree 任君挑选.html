@@ -1,0 +1,118 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 依赖库管理哪家强？pipreqs、pigar、pip-tools、pipdeptree 任君挑选' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 依赖库管理哪家强？pipreqs、pigar、pip-tools、pipdeptree 任君挑选</center></div><div class='banquan'>原文出处:本文由博客园博主豌豆花下猫提供。<br/>
+原文连接:https://www.cnblogs.com/pythonista/p/11781006.html</div><br>
+    <p>在 Python 的项目中，如何管理所用的全部依赖库呢？最主流的做法是维护一份“requirements.txt”，记录下依赖库的名字及其版本号。</p>
+<p>那么，如何来生成这份文件呢？在上篇文章《<a href="https://mp.weixin.qq.com/s/kvipFZ81dtt04loPTt3ryQ">由浅入深：Python 中如何实现自动导入缺失的库？</a>》中，我提到了一种常规的方法：</p>
+<pre><code><code>pip freeze &gt; requirements.txt</code></pre>
+<p>这种方法用起来方便，但有几点不足：</p>
+<ul>
+<li>它搜索依赖库的范围是全局环境，因此会把项目之外的库加入进来，造成冗余（一般是在虚拟环境中使用，但还是可能包含无关的依赖库）</li>
+<li>它只会记录以“pip install”方式安装的库</li>
+<li>它对依赖库之间的依赖关系不做区分</li>
+<li>它无法判断版本差异及循环依赖等情况</li>
+<li>…………</li>
+</ul>
+<p>可用于项目依赖管理的工具有很多，本文主要围绕与 requirements.txt 文件相关的、比较相似却又各具特色的 4 个三方库，简要介绍它们的使用方法，罗列一些显著的功能点。至于哪个是最好的管理方案呢？卖个关子，请往下看……</p>
+<h2 id="pipreqs">pipreqs</h2>
+<p>这是个很受欢迎的用于管理项目中依赖库的工具，可以用“pip install pipreqs”命令来安装。它的主要特点有：</p>
+<ul>
+<li>搜索依赖库的范围是基于目录的方式，很有针对性</li>
+<li>搜索的依据是脚本中所 import 的内容</li>
+<li>可以在未安装依赖库的环境上生成依赖文件</li>
+<li>查找软件包信息时，可以指定查询方式（只在本地查询、在 PyPi 查询、或者在自定义的 PyPi 服务）</li>
+</ul>
+<p>基本的命令选项如下：</p>
+<pre><code><code>Usage:
+    pipreqs [options] &lt;path&gt;
+
+Options:
+    --use-local           Use ONLY local package info instead of querying PyPI
+    --pypi-server &lt;url&gt;   Use custom PyPi server
+    --proxy &lt;url&gt;         Use Proxy, parameter will be passed to requests library. You can also just set the
+                          environments parameter in your terminal:
+                          $ export HTTP_PROXY=&quot;http://10.10.1.10:3128&quot;
+                          $ export HTTPS_PROXY=&quot;https://10.10.1.10:1080&quot;
+    --debug               Print debug information
+    --ignore &lt;dirs&gt;...    Ignore extra directories
+    --encoding &lt;charset&gt;  Use encoding parameter for file open
+    --savepath &lt;file&gt;     Save the list of requirements in the given file
+    --print               Output the list of requirements in the standard output
+    --force               Overwrite existing requirements.txt
+    --diff &lt;file&gt;         Compare modules in requirements.txt to project imports.
+    --clean &lt;file&gt;        Clean up requirements.txt by removing modules that are not imported in project.</code></pre>
+<p>其中需注意，很可能遇到编码错误：<code>UnicodeDecodeError: 'gbk' codec can't decode byte 0xae in</code> 。需要指定编码格式“--encoding=utf8”。</p>
+<p>在已生成依赖文件“requirements.txt”的情况下，它可以强行覆盖、比对差异以及清除不再使用的依赖项。</p>
+<h2 id="pigar">pigar</h2>
+<p>pigar 同样可以根据项目路径来生成依赖文件，而且会列出依赖库在文件中哪些位置使用到了。这个功能充分利用了 requirements.txt 文件中的注释，可以提供很丰富的信息。</p>
+<p><img src="./images/Python 依赖库管理哪家强？pipreqs、pigar、pip-tools、pipdeptree 任君挑选0.png" /></p>
+<p>pigar 对于查询真实的导入源很有帮助，例如<code>bs4</code> 模块来自<code>beautifulsoup4</code> 库，<code>MySQLdb</code> 则来自于<code>MySQL_Python</code> 库。可以通过“-s”参数，查找真实的依赖库。</p>
+<pre><code><code>$ pigar -s bs4 MySQLdb</code></pre>
+<p>它使用解析 AST 的方式，而非正则表达式的方式，可以很方便地从 exec/eval 的参数、文档字符串的文档测试中提取出依赖库。</p>
+<p>另外，它对于不同 Python 版本的差异可以很好地支持。例如，<code>concurrent.futures</code> 是 Python 3.2+ 的标准库，而在之前早期版本中，需要安装三方库<code>futures</code> ，才能使用它。pigar 做到了有效地识别区分。（PS：pipreqs 也支持这个识别，详见这个合入：<a href="https://github.com/bndr/pipreqs/pull/80" class="uri">https://github.com/bndr/pipreqs/pull/80</a>）</p>
+<h2 id="pip-tools">pip-tools</h2>
+<p>pip-tools 包含一组管理项目依赖的工具：pip-compile 与 pip-sync，可以使用命令“pip install pip-tools”统一安装。它最大的优势是可以精准地控制项目的依赖库。</p>
+<p>两个工具的用途及关系图如下：</p>
+<p><img src="./images/Python 依赖库管理哪家强？pipreqs、pigar、pip-tools、pipdeptree 任君挑选1.png" /></p>
+<p>pip-compile 命令主要用于生成依赖文件和升级依赖库，另外它可以支持 pip 的“<em>Hash-Checking Mode</em> ”，并支持在一个依赖文件中嵌套其它的依赖文件（例如，在 requirements.in 文件内，可以用“-c requirements.txt”方式，引入一个依赖文件）。</p>
+<p>它可以根据 setup.py 文件来生成 requirements.txt，假如一个 Flask 项目的 setup.py 文件中写了“install_requires=['Flask']”，那么可以用命令来生成它的所有依赖：</p>
+<pre><code><code>$ pip-compile
+#
+# This file is autogenerated by pip-compile
+# To update, run:
+#
+#    pip-compile --output-file requirements.txt setup.py
+#
+click==6.7                # via flask
+flask==0.12.2
+itsdangerous==0.24        # via flask
+jinja2==2.9.6             # via flask
+markupsafe==1.0           # via jinja2
+werkzeug==0.12.2          # via flask</code></pre>
+<p>在不使用 setup.py 文件的情况下，可以创建“requirements.in”，在里面写入“Flask”，再执行“pip-compile requirements.in”，可以达到跟前面一样的效果。</p>
+<p>pip-sync 命令可以根据 requirements.txt 文件，来对虚拟环境中进行安装、升级或卸载依赖库（注意：除了 setuptools、pip 和 pip-tools 之外）。这样可以有针对性且按需精简地管理虚拟环境中的依赖库。</p>
+<p>另外，该命令可以将多个“*.txt”依赖文件归并成一个：</p>
+<pre><code><code>$ pip-sync dev-requirements.txt requirements.txt</code></pre>
+<h2 id="pipdeptree">pipdeptree</h2>
+<p>它的主要用途是展示 Python 项目的依赖树，通过有层次的缩进格式，显示它们的依赖关系，不像前面那些工具只会生成扁平的并列关系。</p>
+<p><img src="./images/Python 依赖库管理哪家强？pipreqs、pigar、pip-tools、pipdeptree 任君挑选2.png" /></p>
+<p>除此之外，它还可以：</p>
+<ul>
+<li>生成普遍适用的 requirements.txt 文件</li>
+<li>逆向查找某个依赖库是怎么引入进来的</li>
+<li>提示出相互冲突的依赖库</li>
+<li>可以发现循环依赖，进行告警</li>
+<li>生成多种格式的依赖树文件（json、graph、pdf、png等等）</li>
+</ul>
+<p>它也有缺点，比如无法穿透虚拟环境。如果要在虚拟环境中工作，必须在该虚拟环境中安装 pipdeptree。因为跨虚拟环境会出现重复或冲突等情况，因此需要限定虚拟环境。但是每个虚拟环境都安装一个 pipdeptree，还是挺让人难受的。</p>
+<p>好啦，4 种库介绍完毕，它们的核心功能都是分析依赖库，生成 requirements.txt 文件，同时，它们又具有一些差异，补齐了传统的 pip 的某些不足。</p>
+<p>本文不对它们作全面的测评，只是选取了一些主要特性进行介绍，好在它们安装方便（pip install xxx），使用也简单，感兴趣的同学不妨一试。</p>
+<p>更多丰富的细节，请查阅官方文档：</p>
+<p><a href="https://github.com/bndr/pipreqs" class="uri">https://github.com/bndr/pipreqs</a></p>
+<p><a href="https://github.com/damnever/pigar" class="uri">https://github.com/damnever/pigar</a></p>
+<p><a href="https://github.com/jazzband/pip-tools" class="uri">https://github.com/jazzband/pip-tools</a></p>
+<p><a href="https://github.com/naiquevin/pipdeptree" class="uri">https://github.com/naiquevin/pipdeptree</a></p>
+<p><img src="./images/Python 依赖库管理哪家强？pipreqs、pigar、pip-tools、pipdeptree 任君挑选3.png" /></p>
+<p>公众号【<strong>Python猫</strong>】， 本号连载优质的系列文章，有喵星哲学猫系列、Python进阶系列、好书推荐系列、技术写作、优质英文推荐与翻译等等，欢迎关注哦。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

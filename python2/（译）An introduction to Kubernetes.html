@@ -1,0 +1,207 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修（译）An introduction to Kubernetes' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>（译）An introduction to Kubernetes</center></div><div class='banquan'>原文出处:本文由博客园博主成天提供。<br/>
+原文连接:https://www.cnblogs.com/chengtian/p/12038285.html</div><br>
+    <p><img src="./images/（译）An introduction to Kubernetes0.png" alt="" /></p>
+<p data-mpa-powered-by="yiban.io">原文：https://www.jeremyjordan.me/kubernetes/（博客园团队推荐的）</p>
+<p data-mpa-powered-by="yiban.io">&nbsp;</p>
+<p>这篇博客文章将对Kubernetes进行介绍，以便您了解该工具背后的动机，含义以及使用方式。在后续文章中，我将讨论如何使用更具体的（数据科学）示例来利用Kubernetes增强数据科学工作负载。但是，这有助于您首先了解基本原理-这是本文的重点。</p>
+<p>先决条件：我将假设您熟悉Docker等容器技术。如果您没有构建和运行容器映像的经验，建议您先熟悉之后，在继续阅读本文</p>
+<h2><span><strong>总览</strong></span></h2>
+<p>&nbsp;<em>这是我们将在本文中讨论的内容。</em></p>
+<p><img src="./images/（译）An introduction to Kubernetes1.png" alt="" /></p>
+<h2>Kubernetes有什么意义？</h2>
+<p>Kubernetes通常被描述为容器编排平台。为了理解确切的含义，它有助于重新审视容器的用途，缺少的内容以及Kubernetes如何填补这一空白。</p>
+<blockquote>
+<p>注意：您还将看到Kubernetes其简称numeronym，K8S。这意味着同一件事，只是更容易键入。</p>
+</blockquote>
+<p>为什么我们喜欢容器？容器提供了一种轻量级的机制来隔离应用程序的环境。对于给定的应用程序，我们可以指定要安装的系统配置和库，而不必担心与可能在同一台物理计算机上运行的其他应用程序产生冲突。我们将每个应用程序封装为<strong>容器映像</strong>（<strong>container image</strong>）可以在任何机器上可靠地执行*（只要它能够运行容器映像），从而为我们提供了可移植性，以实现从开发到部署的平稳过渡。此外，由于每个应用程序都是独立的，无需担心环境冲突，因此将多个工作负载放置在同一台物理计算机上并实现更高的资源（内存和CPU）利用率更加容易-最终降低了成本。</p>
+<p>缺少的东西？但是，如果您的容器死了怎么办？甚至更糟的是，如果运行您的容器的计算机发生故障，会发生什么？容器没有提供<strong>容错（</strong><strong>fault tolerance</strong><strong>）</strong>解决方案。或者，如果您有多个需要通信的容器，该如何在容器之间实现联网？当您旋转单个容器时，此变化如何？容器<strong>网络（networking&nbsp;）</strong>很容易变成一团糟。最后，假设您的生产环境由多台机器组成-您如何决定使用哪台机器来运行容器？</p>
+<p>Kubernetes作为容器编排平台。我们可以使用容器编排平台解决上述许多问题。</p>
+<blockquote>
+<p><strong><em>乐团的负责人拥有音乐表演的愿景，并与音乐家</em></strong><em>沟通</em><strong><em>，以</em></strong><strong><em>协调</em></strong><strong><em>他们个人的乐器演奏，以实现总体愿景。作为系统的架构师，您的工作只是简单地</em></strong><strong><em>创作音乐</em></strong><strong><em>（指定要运行的容器），然后将控制权移交给乐团总监（容器编排平台）以实现该愿景。</em></strong></p>
+</blockquote>
+<p><img src="./images/（译）An introduction to Kubernetes2.png" alt="" /></p>
+<p>容器编排平台管理单个容器的整个生命周期，根据需要扩展和关闭资源。如果某个容器意外关闭，编排平台将通过在其位置启动另一个容器来作出反应。</p>
+<p>最重要的是，编排平台为应用程序之间的通信提供了一种机制，即使底层的单个容器被创建和销毁也是如此。</p>
+<p>最后，在给定（1）一组要运行的容器工作负载和（2）集群上的一组计算机的情况下，容器协调器将检查每个容器并确定最佳的计算机来调度该工作负载。要了解为什么这很有价值，请观看Kelsey Hightower（17：47-20：55）使用俄罗斯方块示例游戏来说明自动化部署和容器编排之间的区别。</p>
+<h2><span><strong>设计原则。</strong></span></h2>
+<p>现在我们大致了解了容器编排的动机，让我们花一些时间来讨论Kubernetes背后的动机设计原则。它有助于理解这些原理，以便您可以<em>按预期</em>使用该工具。</p>
+<h3>陈述式</h3>
+<p>也许Kubernetes中最重要的设计原则是，我们仅定义系统的<strong>期望状态</strong>，并让Kubernetes自动化工作以确保系统的<strong>实际状态</strong>反映这些期望。这使您免于在大多数事物损坏时进行修复的责任；你只需说明你的系统是什么<em>应该</em>看起来像一个理想的状态。Kubernetes将检测到系统的实际状态何时不符合这些期望，它将代表您进行干预以解决问题。这使我们的系统能够<strong>自我修复</strong>并对问题做出反应，而无需人工干预。</p>
+<p>系统的&ldquo;状态&rdquo;由一组<em>对象</em>定义。每个Kubernetes对象具有（1）一个<em>规范</em>在其中提供所期望的状态和（2）<em>的状态</em>反映了对象的当前状态。Kubernetes维护所有对象规范的列表，并不断轮询每个对象，以确保其状态与规范相等。如果对象无响应，Kubernetes将启动一个新版本来替换它。如果对象的状态偏离了规范，Kubernetes将发出必要的命令以将该对象驱动回到其所需状态。</p>
+<h3>分布式</h3>
+<p>对于一定的操作规模，有必要将您的应用程序设计为分布式系统。Kubernetes旨在为此类分布式系统提供基础设施层，产生干净的抽象以在一组机器（统称为集群）之上构建应用程序。更具体地说，Kubernetes提供了一个用于与该集群交互的<em>统一</em>界面，因此您不必担心与每台机器进行单独通信。</p>
+<p><img src="./images/（译）An introduction to Kubernetes3.png" alt="" /></p>
+<h3>解耦</h3>
+<p>容器开发通常建议<em>单一关注</em>。结果，开发容器化应用程序非常适合微服务架构设计模式，该模式建议&ldquo;将软件应用程序设计为可独立部署的服务套件&rdquo;。</p>
+<p>Kubernetes中提供的抽象自然支持分离服务的思想，该服务可以独立缩放和更新。这些服务在逻辑上是分开的，并通过定义良好的API进行通信。这种逻辑上的分离使团队可以更快地将更改部署到生产中，因为每个服务都可以在独立的发布周期内运行（前提是他们遵守现有的API合约）。</p>
+<h3>不变的基础设施</h3>
+<p>为了从容器和容器编排中获得最大收益，您应该部署不可变的基础结构。这是不是应该登录到计算机上的容器以进行更改（例如，更新库），而是应该构建新的容器映像，部署新版本并终止旧版本。在项目的生命周期（开发-&gt;测试-&gt;生产）中跨环境过渡时，您应该<em>使用相同的容器映像，</em>并且只能修改容器映像外部的配置（例如，通过安装配置文件）。</p>
+<p>这一点非常重要，因为容器被设计为短暂的，随时可以被另一个容器实例替换。如果您的原始容器处于突变状态（例如，手动配置），但是由于运行状况检查失败而被关闭，则在其位置旋转的新容器不会反映这些手动更改，并可能破坏您的应用程序。</p>
+<p>当您维护不可变的基础结构时，将应用程序回滚到以前的状态（例如，如果发生错误）也变得更加容易-您可以简单地更新配置以使用较旧的容器映像。</p>
+<h2><span><strong>Kubernetes中的基本对象。</strong></span></h2>
+<p>之前，我提到过，我们通过Kubernetes&nbsp;<strong>对象</strong>的集合描述了系统的<em>期望状态</em>。到目前为止，我们对Kubernetes的讨论还相对抽象和高层次。在本节中，我们将通过覆盖Kubernetes中可用的基本对象，深入探讨有关如何在Kubernetes上部署应用程序的更多细节。</p>
+<p>可以使用<strong>YAML</strong>或<strong>JSON</strong>文件定义Kubernetes对象。这些定义对象的文件通常称为<strong>清单（</strong><strong>manifests</strong><strong>）</strong>。将这些清单保留在版本控制的存储库中是一个好习惯，该存储库可作为有关集群上正在运行哪些对象的唯一事实来源。</p>
+<h3>Pod</h3>
+<p>pod对象是Kubernetes的基本构建块，由一个或多个（紧密相关的）的容器，一个共享的网络层，和共享文件系统的卷。与容器类似，Pods被设计为短暂的-不会期望<em>特定的单个POD</em>会长期存在。</p>
+<p><img src="./images/（译）An introduction to Kubernetes4.png" alt="" /></p>
+<p>通常，您不会在清单中显式创建Pod对象，因为使用更高级的组件来为您管理Pod对象通常更简单。</p>
+<p><strong>部署方式</strong></p>
+<p>&nbsp;</p>
+<p>一个部署对象包括由模板和副本数量（模板的多少副本，我们要运行）定义的pods的集合。您可以为副本数设置特定的值，也可以使用单独的Kubernetes资源（例如，水平Pod自动缩放器）根据系统指标（例如CPU利用率）来控制副本数。</p>
+<blockquote>
+<p>注意：<strong>Deployment</strong>对象的控制器实际上在内部创建了另一个对象<strong>ReplicaSet</strong>。但是，这是作为用户从您那里抽象出来的。</p>
+</blockquote>
+<p><img src="./images/（译）An introduction to Kubernetes5.png" alt="" /></p>
+<p>虽然您不能依赖任何一个<strong>Pod</strong>来无限期地运行，但是您可以依靠集群将始终尝试使n个Pod可用的事实（其中n由您指定的副本数定义）。&nbsp;如果我们有一个部署的副本数为10的Deployment，并且其中3个Pod因机器故障而崩溃，那么将安排另外3个Pod在群集中的另一台计算机上运行。因此，<strong><em>Deployment</em></strong><em>最适合无状态应用程序</em>，在这些<em>应用程序</em>中Pod可以随时更换而不会损坏。</p>
+<p>以下<strong>YAML</strong>文件提供了有关如何定义Deployment对象的带注释的示例。在此示例中，我们要运行一个容器的10个实例，该实例通过<strong>REST</strong>接口提供<strong>ML</strong>模型。</p>
+<p><img class="rich_pages img_loading" src="./images/（译）An introduction to Kubernetes6.png" alt="" data-ratio="0.6836158192090396" data-s="300,640" data-src="https://mmbiz.qpic.cn/mmbiz_png/L3GzzkxmBjM7RBYbqlAnDzvgic8e99mhJuicxYQ7N1Z8yKVk6hLkwfVaVGemAap4oibh1WzwHF4MJdhzLeEiahko8Q/640?wx_fmt=png" data-type="png" data-w="885" /></p>
+<blockquote>
+<p>注意：为了让<strong>Kubernetes</strong>知道此工作负载可能有多计算密集型，我们还应该在<strong>Pod</strong>模板规范中提供资源限制。</p>
+</blockquote>
+<p>部署还允许我们指定当我们有新版本的容器映像时我们希望如何推出更新；这篇博客文章很好地概述了您的不同选择。如果我们想覆盖默认值，我们将<code>strategy</code>在<strong>object</strong>下包含一个附加字段<code>spec</code>。<strong>Kubernetes</strong>将确保正常关闭运行旧容器映像的<strong>Pod</strong>并启动运行新容器映像的新<strong>Pod</strong>。</p>
+<p><img class="rich_pages img_loading" src="./images/（译）An introduction to Kubernetes6.png" alt="" data-ratio="0.6610738255033557" data-s="300,640" data-src="https://mmbiz.qpic.cn/mmbiz_png/L3GzzkxmBjM7RBYbqlAnDzvgic8e99mhJeCA2Do1flXibiaxlBrwdBWtNQ6vaRicb67I8SFWSRepwQwy359RZV6ylQ/640?wx_fmt=png" data-type="png" data-w="894" /></p>
+<p><strong>服务</strong></p>
+<p>Kubernetes中的每个Pod都分配有一个唯一的IP地址，我们可以用来与之通信。但是，由于Pod是短暂的，因此很难将流量发送到所需的容器。例如，让我们考虑上面的&ldquo;部署&rdquo;，其中有<strong>10</strong>个<strong>Pod</strong>运行一个容器，通过<strong>REST</strong>为机器学习模型提供服务。如果作为部署的一部分运行的<strong>Pod</strong>集合可以随时更改，我们如何与服务器可靠地通信？这是<strong>服务</strong>对象输入图片的地方。<strong>Kubernetes</strong>服务为您提供了一个稳定的端点，即使由于更新，扩展和故障导致确切的基础<strong>Pod</strong>发生变化，它也可以用于将流量引导到所需的<strong>Pod</strong>。服务根据<em>标签</em>知道应将流量发送到哪个<strong>Pod&nbsp;</strong>（键值对），我们在<strong>Pod</strong>元数据中定义。</p>
+<blockquote>
+<p>注意：这篇博客文章很好地解释了如何实际路由流量。</p>
+</blockquote>
+<p><img class="rich_pages img_loading" src="./images/（译）An introduction to Kubernetes6.png" alt="" data-ratio="0.39453125" data-s="300,640" data-src="https://mmbiz.qpic.cn/mmbiz_png/L3GzzkxmBjM7RBYbqlAnDzvgic8e99mhJqIt4le3PiaE1Tem7UjTZp1fWTfb1LCwHvMCWkdPHZOYeY0Uz2TYzH7g/640?wx_fmt=png" data-type="png" data-w="1280" /></p>
+<p>在此示例中，我们的服务使用标签将流量发送到所有健康的Pod&nbsp;<code>app="ml-model"</code>。</p>
+<p>&nbsp;<img src="./images/（译）An introduction to Kubernetes9.png" alt="" /></p>
+<p>以下YAML文件提供了一个示例，说明了我们如何围绕早期的Deployment示例包装Service。</p>
+<p><img src="./images/（译）An introduction to Kubernetes10.png" alt="" /></p>
+<p><strong>Ingress</strong></p>
+<p>尽管&ldquo;服务&rdquo;使我们可以在稳定的终结点后面公开应用程序，但该终结点仅可用于内部群集通信。如果我们想将应用程序暴露给集群外部的流量，则需要定义一个Ingress对象。</p>
+<p><img src="./images/（译）An introduction to Kubernetes11.png" alt="" /></p>
+<p>这种方法的好处在于，您可以选择公开哪些服务。例如，假设除了我们的机器学习模型服务外，我们还有一个UI，该UI利用了模型的预测作为大型应用程序的一部分。我们可能选择仅使UI可用于公共流量，从而阻止用户直接查询服务模型服务。</p>
+<p><img src="./images/（译）An introduction to Kubernetes12.png" alt="" /></p>
+<p>以下<strong>YAML</strong>文件为上述示例定义了一个<strong>Ingress</strong>对象，使UI可以公开访问。</p>
+<p><img src="./images/（译）An introduction to Kubernetes13.png" alt="" /></p>
+<h3><strong>Job</strong></h3>
+<p>到目前为止，我已经描述过的Kubernetes对象可以组成可靠的，长期运行的服务。相反，当您要执行离散任务时，<strong>Job</strong>对象很有用。例如，假设我们想根据前一天收集的信息每天重新训练模型。每天，我们都希望启动一个容器来执行预定义的工作负载（例如<code>train.py</code>脚本），然后在培训结束时关闭它。乔布斯为我们提供了做到这一点的能力！如果由于某种原因我们的容器在完成脚本之前崩溃了，Kubernetes将通过在其位置启动一个新<strong>Pod</strong>来完成工作来做出反应。对于<strong>Job</strong>对象，对象的&ldquo;所需状态&rdquo;是作业的完成。</p>
+<p>以下<strong>YAML</strong>定义了一个用于训练机器学习模型的示例Job（假设在中定义了训练代码<code>train.py</code>）。</p>
+<p><img src="./images/（译）An introduction to Kubernetes14.png" alt="" /></p>
+<p><img class="rich_pages img_loading" src="./images/（译）An introduction to Kubernetes6.png" alt="" data-ratio="0.48028673835125446" data-s="300,640" data-src="https://mmbiz.qpic.cn/mmbiz_png/L3GzzkxmBjM7RBYbqlAnDzvgic8e99mhJKo30YkibtnadFwW8jgFtHq7JZ9BnH3ZI5KNPUUDOg5jicCdU76Y2MAQw/640?wx_fmt=png" data-type="png" data-w="837" /></p>
+<blockquote>
+<p>注意：此作业规范将仅执行一次训练。如果我们想每天执行此作业，则可以定义一个CronJob对象。</p>
+</blockquote>
+<h2><strong>...还有很多</strong>。</h2>
+<p>上面讨论的对象当然不是Kubernetes中可用资源类型的详尽列表。在部署应用程序时，您可能会发现有用的其他一些对象包括：</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>Volume：用于管理安装在Pod上的目录</p>
+</li>
+<li>
+<p>Secret：用于存储敏感凭证</p>
+</li>
+<li>
+<p>NameSpace：用于分隔群集上的资源</p>
+</li>
+<li>
+<p>ConfigMap：用于指定要作为文件挂载的应用程序配置值</p>
+</li>
+<li>
+<p>HorizontalPodAutoscaler：用于基于现有Pod的当前资源利用率扩展部署</p>
+</li>
+<li>
+<p>StatefulSet：与Deployment类似，但适用于需要运行有状态应用程序的情况</p>
+</li>
+</ul>
+<p>怎么样？Kubernetes control plane(控制平面)。</p>
+<p>至此，您可能想知道Kubernetes如何能够采用我们所有的对象规范并在集群上实际执行这些工作负载。在本节中，我们将讨论组成Kubernetes&nbsp;控制平面的组件，这些组件控制如何在集群上执行，监视和维护工作负载。</p>
+<p>&nbsp;</p>
+<p>在深入研究之前，重要的是区分集群上的两类计算机：</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>一个master node主节点包含了大部分，这使得我们的控制平面，我们将在下面讨论的组件。在大多数中等大小的集群中，您只有一个主节点，尽管可以有多个主节点来实现高可用性。如果您使用云提供商的托管Kubernetes服务，则它们通常会抽象化主节点，而您不必进行管理或为此付费。</p>
+</li>
+<li>
+<p>一个worker node工作节点是实际运行我们的应用程序工作负载的机器。可以针对集群上的不同类型的工作负载量身定制多种不同的计算机类型。例如，您可能具有一些<strong>GPU</strong>优化的节点以进行更快的模型训练，然后使用<strong>CPU</strong>优化的节点进行服务。定义对象规格时，可以指定有关将工作负载分配给哪种机器的首选项。</p>
+</li>
+</ul>
+<p>现在，让我们深入了解主节点上的主要组件。与Kubernetes通信以提供新的或更新的对象规范时，您正在与API服务器进行通信。</p>
+<p><img src="./images/（译）An introduction to Kubernetes16.png" alt="" /></p>
+<p>更具体地说，<strong>API</strong>服务器验证更新对象的请求，并充当有关集群当前状态的问题的统一接口。但是，集群的<em>状态</em>存储在<strong>etcd</strong>（分布式键值存储）中。我们将使用etcd来保存有关以下信息：集群配置，对象规范，对象状态，集群上的节点以及分配对象在哪些节点上运行。</p>
+<p><img src="./images/（译）An introduction to Kubernetes17.png" alt="" /></p>
+<blockquote>
+<p>注意：<strong>etcd</strong>是我们控制平面中唯一的有状态组件，所有其他组件都是无状态的。</p>
+</blockquote>
+<p>说到应该在哪里运行对象，调度程序<strong>scheduler</strong>&nbsp;负责确定这一点！调度程序将询问API服务器（然后将与etcd通信）尚未分配给计算机的对象。然后，调度程序将确定这些对象应分配给哪些机器，并将回复API服务器以反映此分配（该分配将传播到etcd）。</p>
+<p><img src="./images/（译）An introduction to Kubernetes18.png" alt="" /></p>
+<p>我们将在本文中讨论的主节点上的最后一个组件是<strong>controller-manager</strong>，它通过API服务器监视集群的状态，以查看集群的当前状态是否符合我们的期望状态。如果实际状态与我们的期望状态不同，则控制器管理器将通过API服务器进行更改，以尝试将集群驱动到期望状态。控制器管理器由一组<strong>控制器</strong><strong>controllers</strong>定义，每个负责管理集群上特定资源类型的对象。在非常高的级别上，控制器将监视存储在etcd中的特定资源类型（例如，部署），并为应运行的Pod创建规范以实现对象的所需状态。然后，控制者有责任确保这些吊舱在运行时保持健康，并在需要时关闭。</p>
+<p>总结到目前为止我们所涵盖的内容...</p>
+<p><img src="./images/（译）An introduction to Kubernetes19.png" alt="" /></p>
+<p><img class="rich_pages img_loading" src="./images/（译）An introduction to Kubernetes6.png" alt="" data-ratio="0.5751295336787565" data-s="300,640" data-src="https://mmbiz.qpic.cn/mmbiz_png/L3GzzkxmBjM7RBYbqlAnDzvgic8e99mhJl6kRSfH7ibibjWIk230Ox29jcYtowJ8ibQ1SibYtz6vEIWRm2NiaZcL8dibA/640?wx_fmt=png" data-type="png" data-w="772" /></p>
+<p>接下来，让我们讨论在工作程序节点上运行的控制平面组件。我们的工作程序节点上可用的大多数资源都花在了运行我们的实际应用程序上，但是我们的节点确实需要知道他们应该运行哪些Pod，以及如何与其他计算机上的Pod通信。我们将讨论的控制平面的两个最后组成部分恰好涵盖了这两个方面。</p>
+<p>该<strong>kubelet</strong>作为一个节点的&ldquo;代理人&rdquo;，其与<strong>API</strong>服务器进行通信，以查看哪些容器工作量被分配到节点。然后，它负责旋转<strong>Pod</strong>以运行这些分配的工作负载。当节点首次加入集群时，<strong>kubelet</strong>负责向<strong>API</strong>服务器宣布节点的存在，以便调度程序可以为其分配容器。</p>
+<p><img src="./images/（译）An introduction to Kubernetes21.png" alt="" /></p>
+<p>最后，<strong>kube-proxy</strong>使容器能够跨集群上的各个节点相互通信。该组件处理所有网络问题，例如如何将流量转发到适当的Pod。</p>
+<p>希望到这一点，您应该能够开始了解Kubernetes集群中事物的运行方式。所有组件都通过API服务器进行交互，我们将群集的状态存储在etcd中。有多种组件（通过API服务器）写入etcd，以对集群进行更改，并且集群上的节点（通过API服务器）侦听etcd，以查看其应运行的Pod。</p>
+<p><img src="./images/（译）An introduction to Kubernetes22.png" alt="" /></p>
+<p>整个系统的设计使故障对整个群集的影响最小。例如，如果我们的主节点发生故障，那么我们的应用程序都不会立即受到影响；在新的主节点上线之前，我们将无法对集群进行任何进一步的更改。</p>
+<h2><strong>什么时候不应该使用Kubernetes？</strong></h2>
+<p>与每项新技术一样，你会花费一些时间，您了解它是如何工作的，以及它如何应用于您正在构建的应用程序时。问&ldquo;我真的需要Kubernetes吗？&rdquo;是一个合理的问题。因此，我将尝试提供一些答案可能为否的示例情况。</p>
+<ul class="list-paddingleft-2">
+<li>
+<p>您可以在单台计算机上运行工作负载。<em>（Kubernetes可以看作是构建分布式系统的平台，但是如果不需要，则不应构建分布式系统！</em><em>）</em></p>
+</li>
+<li>
+<p>您的计算需求不多。<em>（在本例中，用于编排框架的计算相对较高！</em><em>）</em></p>
+</li>
+<li>
+<p>您不需要高可用性，并且可以容忍停机时间。</p>
+</li>
+<li>
+<p>您不会想到对已部署的服务进行大量更改。</p>
+</li>
+<li>
+<p>您已经拥有一个满意的有效工具栈。</p>
+</li>
+<li>
+<p>您拥有一个单体架构，不打算将其分成微服务。<em>（这可以回到原本打算使用的工具的状态。</em><em>）</em></p>
+</li>
+<li>
+<p>您阅读了这篇文章，并认为&ldquo;这很复杂&rdquo;而不是&ldquo;这很有用&rdquo;。</p>
+</li>
+</ul>
+<p><br /><strong>参考：</strong></p>
+<ul class="list-paddingleft-2">
+<ul class="list-paddingleft-2">
+<li>
+<p><em>朱莉娅&middot;埃文斯（Julia Evans）-Kubernetes很酷的原因（https://jvns.ca/blog/2017/10/05/reasons-kubernetes-is-cool/）</em></p>
+
+
+</li>
+<li>
+<p><em>朱莉娅&middot;埃文斯（Julia Evans）-我对Kubernetes的一些了解（Julia的杂志对我的视觉解释Kubernetes控制平面有很大的启发）（https://jvns.ca/blog/2017/06/04/learning-about-kubernetes/）</em></p>
+
+
+</li>
+
+
+</ul>
+
+</ul>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

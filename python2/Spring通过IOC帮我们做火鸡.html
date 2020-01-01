@@ -1,0 +1,227 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Spring通过IOC帮我们做火鸡' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Spring通过IOC帮我们做火鸡</center></div><div class='banquan'>原文出处:本文由博客园博主哈希马普提供。<br/>
+原文连接:https://www.cnblogs.com/HashMap-Fantasy/p/12017701.html</div><br>
+    <h2 id="前言">前言</h2>
+<p>什么是IOC，IOC是控制反转，打个比方，本来你自己new一只火鸡，现在让控制权交给spring，它使用依赖注入的技术做给你吃。</p>
+<h2 id="一iocsetter注入">一、IOC——setter注入</h2>
+<h3 id="准备dmo">1、准备dmo</h3>
+<p>首先准备一只火鸡</p>
+<pre><code><code>public class Turkey {
+    private int id;
+    private String name;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+</code></pre>
+<p>然后准备一个厨房， 属性包含火鸡</p>
+<pre><code><code>public class Cookhouse {
+    private int id;
+    private String name;
+    private Turkey turkey;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Turkey getTurkey() {
+        return turkey;
+    }
+
+    public void setTurkey(Turkey turkey) {
+        this.turkey = turkey;
+    }
+
+    @Override
+    public String toString() {
+        return &quot;Cookhouse{&quot; +
+                &quot;id=&quot; + id +
+                &quot;, name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &#39;}&#39;;
+    }
+}
+</code></pre>
+<h3 id="applicationcontext.xml配置">2、applicationContext.xml配置</h3>
+<p>给bean起个名字，class就是dmo类，property name是属性名，value和ref是属性值，<strong>如果属性是对象要使用&quot;ref=&quot;</strong></p>
+<pre><code><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xmlns:tx=&quot;http://www.springframework.org/schema/tx&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;
+   http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/aop
+   http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+   http://www.springframework.org/schema/tx
+   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+   http://www.springframework.org/schema/context
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd&quot;&gt;
+
+    &lt;bean name=&quot;t&quot; class=&quot;Turkey&quot;&gt;
+        &lt;property name=&quot;name&quot; value=&quot;usaTurkey&quot;/&gt;
+    &lt;/bean&gt;
+
+    &lt;bean name=&quot;c&quot; class=&quot;Cookhouse&quot;&gt;
+        &lt;property name=&quot;name&quot; value=&quot;cnCookhouse&quot;/&gt;
+        &lt;property name=&quot;turkey&quot; ref=&quot;t&quot;/&gt;
+    &lt;/bean&gt;
+&lt;/beans&gt;</code></pre>
+<h3 id="添加spring的相关jar包">3、添加spring的相关JAR包</h3>
+<p>JAR包以及其它知识详见网上一个大神的项目：<a href="https://how2j.cn/k/spring/spring-ioc-di/87.html?p=33866">自学网站</a><br />
+<img src="./images/Spring通过IOC帮我们做火鸡0.png" alt="在这里插入图片描述" /></p>
+<h3 id="spring帮我们在厨房做火鸡">4、spring帮我们在厨房做火鸡</h3>
+<p>让spring帮我在厨房做火鸡吃，spring根据核心配置文件applicationContext.xml创建了一个中国厨房，然后做了只美国火鸡。</p>
+<pre><code><code>public class TestSpring {
+    public static void main(String[] args) {
+        ClassPathXmlApplicationContext applicationContext = new ClassPathXmlApplicationContext(new String[]{&quot;applicationContext.xml&quot;});
+        Cookhouse c = (Cookhouse)applicationContext.getBean(&quot;c&quot;);
+        System.out.println(c.getName()+&quot;做了只&quot;+c.getTurkey().getName());
+    }
+}</code></pre>
+<p>运行结果：<br />
+<img src="./images/Spring通过IOC帮我们做火鸡1.png" alt="在这里插入图片描述" /></p>
+<h2 id="二ioc注解注入">二、IOC——注解注入</h2>
+<p>有小伙伴说：火鸡做太慢，等饿了<br />
+spring说：那我来用注解注入的方式给你做火鸡</p>
+<h3 id="autowired对属性的注解">1、@Autowired对属性的注解</h3>
+<p>首先优化对象的注入方式，applicationContext.xml添加<code>&lt;context:annotation-config/&gt;</code>，表示告诉Spring要用注解的方式进行注入，<code>&lt;property name=&quot;turkey&quot; ref=&quot;t&quot;/&gt;</code>就可以注释掉了，我们只需要在Cookhouse类的属性Turkey上面加上@Autowired就可以注入火鸡了</p>
+<pre><code><code>@Autowired
+    private Turkey turkey;</code></pre>
+<h3 id="component对bean的注解">2、@Component对Bean的注解</h3>
+<p>然后优化Bean的注入方式，applicationContext.xml的Bean注入看上去还是比较繁琐，我们再简化下，只新增：</p>
+<p><code>&lt;context:component-scan base-package=&quot;com.fantasy.dmo&quot;/&gt;</code><br />
+其作用是告诉Spring，bean都放在这个包下</p>
+<pre><code><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;beans xmlns=&quot;http://www.springframework.org/schema/beans&quot;
+       xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
+       xmlns:aop=&quot;http://www.springframework.org/schema/aop&quot;
+       xmlns:tx=&quot;http://www.springframework.org/schema/tx&quot;
+       xmlns:context=&quot;http://www.springframework.org/schema/context&quot;
+       xsi:schemaLocation=&quot;
+   http://www.springframework.org/schema/beans
+   http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+   http://www.springframework.org/schema/aop
+   http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+   http://www.springframework.org/schema/tx
+   http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+   http://www.springframework.org/schema/context
+   http://www.springframework.org/schema/context/spring-context-3.0.xsd&quot;&gt;
+
+    &lt;!--bean都放在这个包下--&gt;
+    &lt;context:component-scan base-package=&quot;com.fantasy.dmo&quot;/&gt;
+&lt;/beans&gt;</code></pre>
+<p>因为Bean移到dmo了，所以在dmo分别给Cookhouse和Turkey加上注解@Component，然后给它们的属性name命名。</p>
+<pre><code><code>@Component(&quot;c&quot;)
+public class Cookhouse {
+    private int id;
+    private String name=&quot;cnCookhouse&quot;;
+    @Autowired
+    private Turkey turkey;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Turkey getTurkey() {
+        return turkey;
+    }
+
+    public void setTurkey(Turkey turkey) {
+        this.turkey = turkey;
+    }
+
+    @Override
+    public String toString() {
+        return &quot;com.fantasy.dmo.Cookhouse{&quot; +
+                &quot;id=&quot; + id +
+                &quot;, name=&#39;&quot; + name + &#39;\&#39;&#39; +
+                &#39;}&#39;;
+    }
+}
+
+@Component(&quot;t&quot;)
+public class Turkey {
+    private int id;
+    private String name=&quot;usaTurkey&quot;;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+</code></pre>
+<p>运行程序发现结果一样，又省去很多配置，香喷喷的火鸡做的更快了呢~<br />
+<img src="./images/Spring通过IOC帮我们做火鸡2.png" alt="在这里插入图片描述" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

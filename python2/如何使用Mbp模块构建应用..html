@@ -1,0 +1,58 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修如何使用Mbp模块构建应用.' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>如何使用Mbp模块构建应用.</center></div><div class='banquan'>原文出处:本文由博客园博主PeaceLee提供。<br/>
+原文连接:https://www.cnblogs.com/mbpframework/p/12084478.html</div><br>
+    <p>上一篇文章<a href="https://www.cnblogs.com/mbpframework/p/12073102.html">https://www.cnblogs.com/mbpframework/p/12073102.html</a>,介绍了一下Mbp的框架.其实这个框架写出来主要是为了学习,当然也可以经过优化运用到实际的项目中.今天我们来说说怎么使用这个框架.</p>
+<p>首先我们用分层的方式来规划下我们的项目代码结构.</p>
+<p>Medical.Ai.Mbdp.Application(应用服务层)</p>
+<p>　　这层,通过poco controller,将应用服务方法提供为动态web api.并提供身份验证,权限鉴定,事务功能.在这层使用ef core来进行数据库操作.如果需要使用领域驱动的方式也是可以,在domain定义实体就好了.依赖注入然后通过依赖注入,获取实体对象.前提是需要对领域驱动方式熟悉,确保实施的合理性.</p>
+<p>Medical.Ai.Mbdp.Application.Contracts(应用服务契约层)</p>
+<p>　　这个层的设计是借鉴abp的分层架构里面的,在我的设计里面,这个层主要用来定义DTO及对外公布的接口.这个层在单体结构下会显得有些多余,但是在分布式应用中,特别是微服务的架构中作用会很明显.</p>
+<p>在分布式或者微服务架构中,各个微服务之间的业务来往大部分时候是通过这个层来做的.</p>
+<p>Medical.Ai.Mbdp.Domain(实体层/领域层)</p>
+<p>　　这个层用来定义实体的.当我们不实施DDD时候,可以把这个当作poco entity 层来看代就好了.如果要实施DDD,那么就需要费点劲喔,毕竟很多时候我们的业务都不是一直那么复杂.</p>
+<p>Medical.Ai.Mbdp.EntityFrameworkCore(EF CORE基础设施)</p>
+<p>　　这个层是数据访问的基础设施层,因为换ORM的场景毕竟是不多的,如果考虑到性能问题,在早期的时候就应该分离那些场景.所以这个层就没考虑做仓储层了.</p>
+<p>Medical.Ai.Mbdp.Web(web api启动项目)</p>
+<p>　　这个层就是用来启动我们的程序的,在net core里面,我们的web程序也是一个独立运行的程序了,不需要一定要放在IIS上了.</p>
+<p>熟悉ABP的小伙伴,一定熟悉这种分层方式,而我也是借鉴了别人的分层方式.</p>
+<p>好了,简单介绍了一下分层设计的想法之后.我还是上一张图来诠释下.</p>
+<p><img src="./images/如何使用Mbp模块构建应用.0.png" alt="" width="897" height="349" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>好了,前面写得文字够多了.接下来就说说怎么启动应用.(确保你的电脑安装了vs2019,sqlserver 2012以上.并且装了.net core3.1的SDK)</p>
+<p>1.下载代码,使用git下载代码,gti clone&nbsp;https://github.com/mbpframework/Mbp.git</p>
+<p>2.点击生成,生成成功后,开始下一步</p>
+<p>3.删除Medical.Ai.Mbdp.EntityFrameworkCore项目下Migrations里的代码文件,全部删掉.</p>
+<p>4.设置Medical.Ai.Mbdp.Web项目为启动项</p>
+<p>5.打开程序包管理控制台,选中项目Medical.Ai.Mbdp.EntityFrameworkCore,然后输入命令行Add-Migration InitDB</p>
+<p>然后再输入update-database.</p>
+<p>6.F5运行,出现界面</p>
+<p><img src="./images/如何使用Mbp模块构建应用.1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>到此,就OK.为了方便大家交流,我建一个QQ群.</p>
+<p>&nbsp;<img src="./images/如何使用Mbp模块构建应用.2.png" alt="" width="137" height="182" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

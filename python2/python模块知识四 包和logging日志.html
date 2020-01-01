@@ -1,0 +1,164 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python模块知识四 包和logging日志' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python模块知识四 包和logging日志</center></div><div class='banquan'>原文出处:本文由博客园博主OnlyWang提供。<br/>
+原文连接:https://www.cnblogs.com/Onlywang/p/11291041.html</div><br>
+    <h2 id="包">11.包</h2>
+<p>包：文件夹下具有__init__.py文件就是一个包，包用来管理多个模块</p>
+<p>包的结构如下：</p>
+<pre><code><code>bake            
+
+    ├── __init__.py       
+
+    ├── api               
+
+        ├── __init__.py
+
+        ├── policy.py
+
+        └── versions.py
+
+  ├── cmd             
+
+    ├── __init__.py
+
+    └── manage.py
+
+  └── db                
+
+      ├── __init__.py
+
+      └── models.py</code></pre>
+<p>在bake的同级创建一个test.py导入policy.py：</p>
+<pre><code><code>import bake.api.policy
+bake.api.policy.get()
+#导入的名字太长了，可以起别名
+import bake.api.policy as p
+p.get()
+#from 导入在__init__.py修改
+from . import policy
+
+#我们需要在policy文件中向sys.path添加了当前的路径
+import os
+import sys
+sys.path.insert(os.path.dirname(__file__))
+#print(__file__)查看一下
+
+#使用__all__,在__init__.py中
+__all__ = [&quot;policy&quot;]
+#或
+from . import policy</code></pre>
+<p>总结：</p>
+<p>​ import 包.包.包</p>
+<p>​ from 包.包.包 import 模块</p>
+<p>​ 路径：</p>
+<p>​ 绝对：从在外层开始导入</p>
+<p>​ 相对：从当前开始（.）导入或者从父级（..）导入</p>
+<p>​ 使用相对路径时必须在包的最外层且同级</p>
+<p>​ from 包 import *</p>
+<p>​ 需要在__init__.py做操作</p>
+<p>​ python2：import文件夹（没有__init__.py）会报错</p>
+<p>​ python3：import文件夹（没有__init__.py）不会报错</p>
+<h2 id="logging模块">12.logging模块</h2>
+<p>​ logging模块用于记录软件的各种状态，交易记录，错误记录，登录记录……</p>
+<h3 id="函数式简单配置">1.函数式简单配置：</h3>
+<pre><code><code>import logging
+logging.debug(&#39;debug message&#39;)
+logging.info(&#39;info message&#39;)
+logging.warning(&#39;warning message&#39;)
+logging.error(&#39;error message&#39;)
+logging.critical(&#39;critical message&#39;)</code></pre>
+<p>​ 默认情况下python的logging模块将日志打印到了标准输出中，且只显示了大于等于WARNING级别的日志，证明默认的级别为WARNING</p>
+<p>日志级别：CRITICAL &gt; ERROR &gt; WARNING &gt; INFO &gt; DEBUG</p>
+<h3 id="灵活配置日志级别日志模式输入位置低配版">2.灵活配置日志级别，日志模式，输入位置（低配版）</h3>
+<p>​ 只能写入日志，不能公屏输出</p>
+<pre><code><code>import logging
+logging.basicConfig(level = logging.DEBUG,
+                    format = &#39;%(astime)s %(filename)s [line:%(lineno)d] %(levelname)s %(message)s&#39;,
+                    datefmt = &#39;%Y-%m-%d %H:%M:%S&#39;,
+                    filename = &#39;test.log&#39;,
+                    filemode = &#39;a&#39;)
+dic = {&quot;key&quot;:123}
+logging.debug(dic)
+
+num = 100
+logging.info(f&quot;用户余额：{num - 50}&quot;)
+
+try:
+    num = int(input(&quot;请输入数字：&quot;))
+except Exception as e:
+    logging.warning(&quot;e&quot;)
+
+logging.error(&#39;error message&#39;)
+logging.critical(&#39;critical message&#39;)</code></pre>
+<p><strong>basicConfig()函数中可通过具体参数来更改logging模块默认行为，可用参数有：</strong></p>
+<ul>
+<li>filename：用指定的文件名创建FiledHandler，这样日志会被存储在指定的文件中。</li>
+<li>filemode：文件打开方式，在指定了filename时使用这个参数，默认值为“a”还可指定为“w”。</li>
+<li>format：指定handler使用的日志显示格式。</li>
+<li>datefmt：指定日期时间格式。</li>
+<li>level：设置记录日志的级别</li>
+<li>stream：用指定的stream创建StreamHandler。可以指定输出到</li>
+<li>sys.stderr,sys.stdout或者文件(f=open(‘test.log’,’w’))，默认为sys.stderr。若同时列出了filename和stream两个参数，则stream参数会被忽略。</li>
+</ul>
+<p><strong>format参数中可能用到的格式化串</strong>：</p>
+<ul>
+<li>%(name)s Logger的名字</li>
+<li>%(levelno)s 数字形式的日志级别</li>
+<li>%(levelname)s 文本形式的日志级别</li>
+<li>%(pathname)s 调用日志输出函数的模块的完整路径名，可能没有</li>
+<li>%(filename)s 调用日志输出函数的模块的文件名</li>
+<li>%(module)s 调用日志输出函数的模块名</li>
+<li>%(funcName)s 调用日志输出函数的函数名</li>
+<li>%(lineno)d 调用日志输出函数的语句所在的代码行</li>
+<li>%(created)f 当前时间，用UNIX标准的表示时间的浮 点数表示</li>
+<li>%(relativeCreated)d 输出日志信息时的，自Logger创建以 来的毫秒数</li>
+<li>%(asctime)s 字符串形式的当前时间。默认格式是 “2003-07-08 16:49:45,896”。逗号后面的是毫秒</li>
+<li>%(thread)d 线程ID。可能没有</li>
+<li>%(threadName)s 线程名。可能没有</li>
+<li>%(process)d 进程ID。可能没有</li>
+<li>%(message)s用户输出的消息</li>
+</ul>
+<h3 id="logger对象配置中配版">3.logger对象配置（中配版）</h3>
+<pre><code><code>import logging
+logger = logging.getLogger()
+# 创建一个logger
+fh = logging.FileHandler(&#39;test.log&#39;,mode=&quot;a&quot;,encoding=&#39;utf-8&#39;)   # 文件
+ch = logging.StreamHandler()   # 屏幕
+formatter = logging.Formatter(&#39;%(asctime)s - %(name)s - %(filename)s - [line:%(lineno)d] -  %(levelname)s - %(message)s&#39;)
+# 将屏幕和文件都是用以上格式
+logger.setLevel(logging.DEBUG)
+# 设置记录级别
+fh.setFormatter(formatter)
+# 使用自定义的格式化内容
+ch.setFormatter(formatter)
+logger.addHandler(fh) #logger对象可以添加多个fh和ch对象
+logger.addHandler(ch)
+
+logger.debug(&#39;logger debug message&#39;)
+logger.info(&#39;logger info message&#39;)
+logger.warning(&#39;logger warning message&#39;)
+logger.error(&#39;logger error message&#39;)
+logger.critical(&#39;logger critical message&#39;)</code></pre>
+<h3 id="section"></h3>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

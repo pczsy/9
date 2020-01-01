@@ -1,0 +1,82 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修聊一聊 JS 输出为 [object object] 是怎么回事？' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>聊一聊 JS 输出为 [object object] 是怎么回事？</center></div><div class='banquan'>原文出处:本文由博客园博主happyCoding1024提供。<br/>
+原文连接:https://www.cnblogs.com/zhangguicheng/p/12081060.html</div><br>
+    <h4 id="聊一聊-js-输出为-object-object-是怎么回事">聊一聊 JS 输出为 [object object] 是怎么回事？</h4>
+<p>今天在学习ES6中的 <code>Symbol</code> 数据类型时，在写demo时控制台输出为 <code>Symbol[object object]</code> ，当时有点疑惑，查阅了相关资料后搞清楚了其中的原因。</p>
+<p>在解释之前，由于有些小伙伴可能还没有接触过ES6，所以先说一下上面用到的ES6的一些特性：</p>
+<hr />
+<blockquote>
+<ul>
+<li><p>const: 声明一个常量</p></li>
+<li><p>Symbol：JS中的第7种数据类型，表示独一无二的值。Symbol类型的值有Symbol函数生成。</p>
+<p>如 <code>var s1 = Symbol(&quot;abc&quot;);</code> // 生成Symbol类型的值<code>s=Symbol(abc)</code> 这个值是独一无二的。</p>
+<p><code>var s2 = Symbol(&quot;abc&quot;);</code> // <code>s2 = Symbol(abc)</code></p>
+<p><code>console.log(s1 === s2)</code> // false, 说明这两个值是不相等的</p></li>
+<li><p>如果 Symbol 的参数是一个对象，那么就会调用 <code>toString()</code> 方法先将其转换为字符串。</p></li>
+<li><p>关于 Symbol 更详细的介绍可以参考阮一峰老师的<a href="http://es6.ruanyifeng.com/">ES6标准入门</a>。</p></li>
+</ul>
+</blockquote>
+<hr />
+<p>现在上那段输出 <code>Symbol[object object]</code> 的代码：</p>
+<pre><code><code>const obj = {
+    f() {
+        return &quot;abc&quot;;
+    }
+};
+
+const sym = Symbol(obj);
+console.log(sym); // Symbol[object object]</code></pre>
+<p>由于 <code>obj</code> 是一个对象，所以会调用 <code>toString()</code> 方法将其转换为字符串，对 <code>toString</code> 方法不太了解的小伙伴可以查看下面MDN的解释：</p>
+<hr />
+<blockquote>
+<ul>
+<li>除了<code>null</code>和<code>undefined</code>之外，其他的类型(数值、布尔、字符串、对象)都有<code>toString()</code>方法，它返回相应值的字符串表现(并不修改原变量)。</li>
+<li>每个对象都有一个<code>toString()</code>方法。</li>
+<li>当该对象被表示为一个文本值时，或者一个对象以预期的字符串方式引用时自动调用。</li>
+<li><strong>默认情况下，<code>toString()</code>方法被每个<code>Object</code>对象继承。如果此方法在自定义对象中未被覆盖，<code>toString()</code>返回 &quot;<code>[object type]</code>&quot;，其中<code>type</code>是对象的类型。</strong></li>
+</ul>
+</blockquote>
+<hr />
+<p><code>obj</code>是我们自定义的对象，而且 <code>toString()</code> 方法也没有被覆盖，所以会返回 <code>[object object]</code>。</p>
+<p>现在我们尝试覆盖 <code>toString()</code> 方法，如下面的代码所示：</p>
+<pre><code><code>// ES5写法
+var obj = {
+    toString: function() {
+        return &quot;abc&quot;;
+    }
+};
+
+// ES6写法
+const obj = {
+    toString() {
+        return &quot;abc&quot;;
+    }
+};
+
+const sym = Symbol(obj);
+console.log(sym); // Symbol(abc)</code></pre>
+<p>当我们覆盖掉 <code>toString()</code> 方法之后，自定义对象 <code>obj</code> 在调用 <code>toString()</code> 方法的时候调用的就是我们自定义的 <code>toString()</code> 方法， 输出为 <code>&quot;abc&quot;</code> 。因此最终的结果为 <code>Symbol(abc)</code>。</p>
+<p>完，如有不恰当之处欢迎指正哦。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,122 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修mysql主从复制原理及实践' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>mysql主从复制原理及实践</center></div><div class='banquan'>原文出处:本文由博客园博主浪潮之巅、提供。<br/>
+原文连接:https://www.cnblogs.com/JackSparrow-/p/12024901.html</div><br>
+    <h2 id="mysql主从复制原理及实践">Mysql主从复制原理及实践</h2>
+<h4 id="mysql主从框架">mysql主从框架</h4>
+<p>      MySQL主从架构是MySQL集群中最基本也是最常用的一种架构部署，能够满足很多业务需求，常见的有一主一从或者一主多从。可以防止单一主机的数据丢失，提高数据的安全性，务上可以实现读写分离，可以把一些读操作在从服务器上执行，减小主服务器的负担。</p>
+<h3 id="主从复制原理">主从复制原理</h3>
+<p>      mysql主从复制是指数据可以从一个mysql服务器节点复制到一台或者多台mysql服务器上，多个从服务器采用异步的方式更新主数据库的变化。MySQL主从同步是基于从库对主库binlog文件的增量订阅来实现,更新的事件类型写入到主库的binlog文件中，日志用于记录所有更新了数据或者已经潜在更新了数据的所有语句，以“事件”的形式保存，它描述数据更改，它是以二进制的形式保存在磁盘中。以.000001的方式结尾，binlog文件大小和数字会不断增加，当mysql重启时，数字会不断递增。</p>
+<p>                                                                                           主从复制的原理图：</p>
+<p>                                       <img src="./images/mysql主从复制原理及实践0.png" /></p>
+<hr />
+<p>    对于每一个主从连接，都需要三个进程来完成，master（binlog dump thread）、slave（I/O thread 、SQL thread）。</p>
+<ul>
+<li>主节点会为每一个当前连接的从节点建一个binary log dump 进程</li>
+<li>从节点上执行start slave命令之后，从节点会创建一个I/O线程用来连接主节点，请求主库中更新的bin-log。I/O线程接收到主节点binlog dump 进程发来的更新之后，保存在本地relay-log中。</li>
+<li>SQL线程负责读取relay log中的内容，解析成具体的操作并执行，最终保证主从数据的一致性。整个同步操作是异步执行的。</li>
+</ul>
+<p>下面讲下在linux系统下实现主从同步的相关操作步骤：</p>
+<h4 id="主库配置">主库配置</h4>
+<ul>
+<li>开启master的binglog日志，</li>
+<li>创建唯一的server_id，</li>
+<li>指定要同步的数据库和和不需要同步的数据库</li>
+</ul>
+<p>1、编辑my.cnf文件</p>
+<pre><code><code>vi /etc/my.cnf</code></pre>
+<p>2、添加配置：</p>
+<pre><code><code>log-bin=master-bin
+server-id=1
+#需要同步的数据库
+binlog-do-db=shoes
+#不需要同步的mysql系统数据库
+binlog-ignore-db=mysql
+</code></pre>
+<p>3、授予从库replication权限</p>
+<pre><code><code> grant replication slave on *.* to &#39;root&#39;@&#39;192.168.48.133&#39; identified by &#39;123456&#39;;</code></pre>
+<p>   这里的ip地址和用户密码都是从库的，如果提示：Your password does not satisfy the current policy requirements 说明你的密码是不安全的，此时需要设置密码的校验级别，可自行百度。<br />
+设置完毕后，重启master的mysql服务。</p>
+<p>使用命令: <code>mysql -uroot -p</code> 登录mysql服务后，执行 <code>show master status；</code></p>
+<p>会出现类似如图所示的信息：</p>
+<p><img src="./images/mysql主从复制原理及实践1.png" /></p>
+<p>记录下File和Position的值，后面从库配置的时候需要使用。<br />
+好了，到这里主库配置完毕，接下来是从库的配置。</p>
+<p>同样修改my.cnf文件，添加如下信息：</p>
+<pre class="xml"><code>server-id=2 
+log-bin=mysql-bin 
+replicate-do-db=shoes
+replicate-ignore-db=mysql</code></pre>
+<p>配置连接主服务器的信息：</p>
+<pre><code><code>mysql&gt; CHANGE MASTER TO
+-&gt; MASTER_HOST=&#39;192.168.48.128&#39;,
+-&gt; MASTER_USER=&#39;root&#39;,
+-&gt; MASTER_PASSWORD=&#39;123456&#39;,
+-&gt; MASTER_LOG_FILE=&#39;mysql-bin.000002&#39;,
+-&gt; MASTER_LOG_POS=7641;
+mysql&gt; start slave;</code></pre>
+<p>这里的 MASTER_LOG_POS 是要告诉slave库从master二进制日志的哪个地方开始复制，也就是前文查看主库状态的Position的值。</p>
+<p>然后查看slave的状态：</p>
+<pre><code><code>mysql&gt;show slave status\G</code></pre>
+<p>会出现如图所示的信息：<br />
+<img src="./images/mysql主从复制原理及实践2.png" /></p>
+<p>   当出现Slave_IO_Running和Slave_SQL_Running都是yes,并且Slave_IO_State是：Waiting for master to send event的时候，说明配置是成功的。如果是Connecting to.......说明没连上，这时候要检查下ip地址、账号或者防火墙等问题了。</p>
+<p>在复制的过程中，由于一些其他不当的操作，可能会遇到如图所示类似的问题，</p>
+<p><img src="./images/mysql主从复制原理及实践3.png" /></p>
+<p>   这种情况比如说我在从库上把数据删掉了，然后主库又进行删除，此时找不到从库上对应的记录就会报错，当发生这样的错误之后，从库就无法更新主库的数据了。如果主库都已经删除了，那么从库也就没有必要保留了，这种情况的话可以设置从库复制的时候跳过当前这个事件，需要暂停slave操作:</p>
+<pre><code><code>stop slave;
+set global sql_slave_skip_counter=1;
+start slave;</code></pre>
+<p>   类似的问题还有比如说重复插入，更新丢失，relay log 损坏等，都可以采取相应的策略来恢复，如重新选择到同步的binlog和POS点，然后重新做同步等。</p>
+<p><strong>binlog日志文示例</strong><br />
+使用命令</p>
+<p>mysql&gt; show binlog events in 'mysql-bin.000002;<br />
+查看binlog日志。</p>
+<p><img src="./images/mysql主从复制原理及实践4.png" /></p>
+<h4 id="binlog的日志格式">binlog的日志格式</h4>
+<p>mysql的binlog格式分为三种：</p>
+<p><strong>Statement</strong><br />
+      每一条会修改数据的 SQL 都会记录到 master 的 bin-log 中。slave 在复制的时候 SQL 进程会解析成和原来 master 端执行过的相同的 SQL 再次执行。</p>
+<p>优点：不需要记录每一行的变化，减少了binlog日志量，节约了IO，提高性能。</p>
+<p>缺点：由于记录的只是执行语句，为了这些语句能在slave上正确运行，因此还必须记录每条语句在执行的时候的一些相关信息，以保证所有语句能在slave得到和在master端执行时候相同的结果。另外mysql 的复制,像一些特定函数功能，slave可与master上要保持一致会有很多相关问题</p>
+<p><strong>row</strong><br />
+   日志中会记录成每一行数据被修改的形式，然后在 slave 端再对相同的数据进行修改。</p>
+<p>优点：Binnary Log可以不记录执行的Query语句的上下文相关信息，不会出现某些特定情况下存储过程或function，以及trigger的调用和触发器无法被正确复制的问题。<br />
+缺点：如果批量修改数据，记录的不是批量修改的SQL语句事件，而是每条记录被更改的SQL语句，比如说update语句，会记录每一行被修改的sql语句，当alter表的时候，更是会产生大量的日志。</p>
+<p><strong>Mixedlevel</strong><br />
+      以上两种的结合体，MySQL会根据执行的每一条具体的sql语句来区分对待记录的日志形式，也就是在Statement和Row之间选择一种.新版本的MySQL中队row level模式也被做了优化，并不是所有的修改都会以row level来记录，像遇到表结构变更的时候就会以statement模式来记录。<br />
+因此，企业生产上使用哪种弄场景可以根据具体的场景来选择合适的格式。<br />
+查看binlog格式使用命令：</p>
+<pre><code><code>mysql&gt; show global variables like &quot;%binlog_format%&quot;;
++---------------+-------+
+| Variable_name | Value |
++---------------+-------+
+| binlog_format | ROW   |
++---------------+-------+</code></pre>
+<p>格式可以在my.cnf文件中进行配置：</p>
+<pre><code><code>binlog_format=&quot;ROW&quot;  </code></pre>
+<p>或者在运行时动态的修改格式：</p>
+<pre><code><code>mysql&gt; SET SESSION binlog_format = &#39;STATEMENT&#39;;</code></pre>
+<p>   通过mysql复制可以将读操作分布在多个服务器上，实现对密集型应用的优化，通过简单的代码修改就可以实现基本的负载均衡，并且能够帮助应用程序避免mysql的单点故障，实现mysql的高可用性。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

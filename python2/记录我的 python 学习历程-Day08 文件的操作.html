@@ -1,0 +1,385 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修记录我的 python 学习历程-Day08 文件的操作' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>记录我的 python 学习历程-Day08 文件的操作</center></div><div class='banquan'>原文出处:本文由博客园博主Dylan_Yu提供。<br/>
+原文连接:https://www.cnblogs.com/guanshou/p/12075610.html</div><br>
+    <h3 id="文件操作的初识">文件操作的初识</h3>
+<ul>
+<li><p><strong><em>用 python 代码对文件进行各种操作。</em></strong></p>
+<p><strong><em>基本构成：</em></strong></p>
+<ul>
+<li>文件路径：path</li>
+<li>打开方式：读、写、追加、读写、写读……</li>
+<li>编码方式：utf-8 / gbk / gb2312……</li>
+</ul>
+<pre><code><code>f = open(&#39;文件路径或者相对路&#39;,encoding=&#39;编码方式&#39;,mode=&#39;模式&#39;) # 格式构成
+cotent = f.read()
+print(content)
+f.close()</code></pre></li>
+<li><p><strong><em>代码解释：</em></strong></p>
+<ul>
+<li><p><strong>open：</strong></p>
+<p>​ 内置函数，open 底层调用的是操作系统的接口。</p></li>
+<li><p><strong>f：</strong></p>
+<p>​ 变量，约定俗成的变量名有(f1,fh,file_handler,f_h)，这个变量还有一个名字，叫文件句柄。对亠件进行的任何操作，都得通过文件句柄加'.'的方式。</p></li>
+<li><p><strong>encoding:</strong></p>
+<p>​ 可以不写，如果不写，默认的编码本就是系统默认的编码。</p>
+<p>​ Windows: gkb</p>
+<p>​ Linux: utf-8</p>
+<p>​ MacOS: utf-8</p></li>
+<li><p><strong>mode：</strong></p>
+<p>​ 就是定义你的操作方式：r 为读模式。</p></li>
+<li><p><strong>f.read():</strong></p>
+<p>​ 你想操作文件，比如读文件，给文件写内容，等等，都必须通过文件句柄进行操作。</p></li>
+<li><p><strong>f.colse():</strong></p>
+<p>​ 关闭文件。（必须关闭，否则会常驻内存。）</p></li>
+</ul></li>
+<li><p><strong><em>文件操作的三个步骤：</em></strong></p>
+<ul>
+<li><p>打开文件。</p></li>
+<li><p>对文件句柄进行相应的操作。</p></li>
+<li><p>关闭文件。</p>
+<pre><code><code># 打开文件,得到文件句柄并赋值给一个变量
+f = open(&#39;文件.txt&#39;, &#39;r&#39;, encoding=&#39;utf-8&#39;)   # 默认打开模式就为 r
+
+# 通过句柄对文件进行操作
+date = f.read()
+
+# 关闭文件
+f.close()</code></pre></li>
+</ul></li>
+<li><p><strong><em>报错的原因：</em></strong></p>
+<ul>
+<li><p>UnicodeDecodeError：文件存储时与文件打开时编码本不一致。</p></li>
+<li><p>路径分隔符产生的问题：</p>
+<pre><code><code>解决方法:在路径前加个 r
+r&#39;C:\Users\Desktop\文件.txt&#39;</code></pre></li>
+</ul></li>
+</ul>
+<h3 id="文件操作的读">文件操作的：读</h3>
+<p>​ 文件操作的读，有四种模式（r、rb、r+、r+b），r+ 和 r+b 不常用， rb 操作的是非文本的文件，比如：图片、视频、音频。每种模式有五种方法（read()、read(n)、readline()、readlines()、for）。</p>
+<ul>
+<li><p><strong><em>r 模式</em></strong></p>
+<p>​ 以只读方式打开文件，文件的指针将会放在文件的开头。是文件操作最常用的模式，也是默认模式，如果一个文件不设置mode，那么默认使用r模式操作文件。</p>
+<p>举例:</p>
+<pre><code><code>f = open(&#39;文件.txt&#39;, mode=&#39;r&#39;, encoding=&#39;utf-8&#39;)
+msg = f.read()
+f.close()
+print(msg)</code></pre>
+<ul>
+<li><p><strong>read()</strong> 一次性全部读取</p>
+<p>read() 将文件中的内容全部读取出来； 弊端：如果文件很大就会非常的占用内存，容易导致内存崩溃。</p>
+<pre><code><code>f = open(&#39;测试&#39;, mode=&#39;r&#39;, encoding=&#39;utf-8&#39;)
+msg = f.read()
+f.close()
+print(msg)
+
+# 输出结果:
+这是一行测试
+A:这是第二行
+B:这是第三行
+C:这是第几行
+D:这是我也不知道第几行
+就这么地吧.</code></pre></li>
+<li><p><strong>read(n)</strong> 指定读取到什么位置</p>
+<p>在 r 模式下,n 按照字符读取</p>
+<pre><code><code>f = open(&#39;测试&#39;, mode=&#39;r&#39;, encoding=&#39;utf-8&#39;)
+msg = f.read(4)
+f.close()
+print(msg)
+
+# 输出结果:
+这是一行</code></pre></li>
+<li><p><strong>readline()</strong> 按行读取</p>
+<p>readline() 每次只读取一行,注意: readline() 读取出来的数据在后面都有一个\n,解决这个问题只需要在我们读取出来的文件后边加一个strip()就OK了</p>
+<pre><code><code>f = open(&#39;测试&#39;, mode=&#39;r&#39;, encoding=&#39;utf-8&#39;)
+msg1 = f.readline()
+msg2 = f.readline().strip()
+msg3 = f.readline()
+msg4 = f.readline()
+f.close()
+print(msg1)
+print(msg2)
+print(msg3)
+print(msg4)
+
+# 输出结果:
+这是一行测试
+
+A:这是第二行
+B:这是第三行
+
+C:这是第几行
+</code></pre></li>
+<li><p><strong>readlines()</strong> 返回一个列表</p>
+<p>readlines() 返回一个列表，列表里面每个元素是原文件的每一行，如果文件很大，占内存，容易崩盘。</p>
+<pre><code><code>f = open(&#39;测试&#39;, mode=&#39;r&#39;, encoding=&#39;utf-8&#39;)
+print(f.readlines())    # 还可以这么写的,哈哈
+f.close()
+
+# 输出结果:
+[&#39;这是一行测试\n&#39;, &#39;A:这是第二行\n&#39;, &#39;B:这是第三行\n&#39;, &#39;C:这是第几行\n&#39;, &#39;D:这是我也不知道第几行\n&#39;, &#39;就这么地吧.&#39;]</code></pre></li>
+</ul>
+<p>上面这四种都不太好，如果文件超大，内容超多，他们就很容易将内存撑爆，所以，我们还有第五种方法。</p>
+<ul>
+<li><p><strong>for 循环</strong></p>
+<p>可以通过for循环去读取，文件句柄是一个迭代器，他的特点就是每次循环只在内存中占一行的数据，非常节省内存。</p>
+<pre><code><code>f = open(&#39;测试&#39;, mode=&#39;r&#39;, encoding=&#39;utf-8&#39;)
+for line in f:
+    print(line)     # 去掉 \n 可以这样写: print(line.strip())  
+# 这种方式就是在一行一行的进行读取,它就执行了下边的功能
+
+&#39;&#39;&#39;
+print(f.readline())
+print(f.readline())
+print(f.readline())
+.......
+&#39;&#39;&#39;
+# 输出结果:
+这是一行测试
+
+A:这是第二行
+
+B:这是第三行
+
+C:这是第几行
+
+D:这是我也不知道第几行
+
+就这么地吧.
+</code></pre></li>
+</ul>
+<p><strong>特别注意: <em>读完的文件一定必须要关闭</em></strong></p></li>
+<li><p><strong><em>rb 模式</em></strong></p>
+<p>rb模式：以二进制格式打开一个文件用于只读。文件指针将会放在文件的开头。记住下面讲的也是一样，带b的都是以二进制的格式操作文件，他们主要是操作非文字文件：图片，音频，视频等,<strong>并且如果你要是带有b的模式操作文件，那么不用声明编码方式。</strong></p>
+<pre><code><code>f1 = open(&#39;图片.jpeg&#39;, mode=&#39;rb&#39;)
+tu = f1.read()
+f1.close()
+print(tu)
+
+# 输出结果:
+b&#39;\xff\xd8\xff\xe0\x00\x10JFIF\x00\x01\x01\x00\x00H\x00H\x00\x00\xff\xe1\x00\xb0Exif\x............后面还有.老长老长了..此处省略了.</code></pre>
+<p>rb模式也有read read(n) readline(),readlines() for循环这几种方法，这里就不一一演示了。</p></li>
+</ul>
+<h3 id="文件操作的写">文件操作的：写</h3>
+<p>​ 文件操作的写，有四种模式（w、wb、w+、w+b），w+ 和 w+b 不常用， wb 操作的是非文本的文件，比如：图片、视频、音频。操作方法是:write('要写入的内容')</p>
+<ul>
+<li><p><strong><em>w 模式</em></strong></p>
+<p>如果文件不存在，用 w 模式操作文件，它会先创建文件，然后写入内容。</p>
+<pre><code><code>f = open(&#39;这是一个新创建的文件&#39;, encoding=&#39;utf-8&#39;, mode=&#39;w&#39;)
+f.write(&#39;果然是一个新创建的文件&#39;)
+f.close()</code></pre>
+<p>如果文件存在，利用w模式操作文件，先清空原文件内容，在写入新内容。</p>
+<pre><code><code>f = open(&#39;这是一个新创建的文件&#39;, encoding=&#39;utf-8&#39;, mode=&#39;w&#39;)
+f.write(&#39;这是清空后重新写入的内容&#39;)
+f.close()</code></pre></li>
+<li><p><strong><em>wb 模式</em></strong></p>
+<p>wb模式：以二进制格式打开一个文件只用于写入。如果该文件已存在则打开文件，并从开头开始编辑，即原有内容会被删除。如果该文件不存在，创建新文件。一般用于非文本文件如：图片，音频，视频等。</p>
+<p><strong><em>&gt;&gt;举个例子 :</em></strong></p>
+<p><strong>我先以rb的模式将一个图片的内容以bytes类型全部读取出来，然后在以wb将全部读取出来的数据写入一个新文件，这样我就完成了类似于一个图片复制的流程。具体代码如下：</strong></p>
+<pre><code><code># 第一步:将原图片通过 rb 模式读取出来。
+f = open(&#39;图片.jpeg&#39;, mode=&#39;rb&#39;)
+content = f.read()
+f.close()
+# 第二步:将读取出来的数据通过 wb 模式写入新文件。
+f1 = open(&#39;图片1.jpeg&#39;, mode=&#39;wb&#39;)
+f1.write(content)
+f1.close()</code></pre></li>
+</ul>
+<h3 id="文件操作的追加">文件操作的：追加</h3>
+<p>就是在文件中追加内容。这里也有四种文件分类主要四种模式：a，ab，a+，a+b，<strong>我们只讲a</strong></p>
+<ul>
+<li><p><strong><em>a 模式</em></strong></p>
+<p><strong>如果文件不存在，利用a模式操作文件，那么它会先创建文件，然后写入内容。</strong></p>
+<pre><code><code>f = open(&#39;追加文本&#39;, encoding=&#39;utf-8&#39;, mode=&#39;a&#39;)
+f.write(&#39;这个文件是没有的,我是新创建的&#39;)
+f.close()</code></pre>
+<p><strong>如果文件存在，利用a模式操作文件，那么它会在文件的最后面追加内容。</strong></p>
+<pre><code><code>f = open(&#39;追加文本&#39;, encoding=&#39;utf-8&#39;, mode=&#39;a&#39;)
+f.write(&#39;这是己存在的文件,我是新追加的内容&#39;)
+f.close()</code></pre></li>
+</ul>
+<h3 id="文件操作的其它模式">文件操作的其它模式</h3>
+<p>​ 咱们还有一种模式没有讲，就是那种带+号的模式。什么是带+的模式呢？+就是加一个功能。比如刚才讲的r模式是只读模式，在这种模式下，文件句柄只能进行类似于read的这读的操作，而不能进行write这种写的操作。所以我们想让这个文件句柄既可以进行读的操作，又可以进行写的操作，那么这个如何做呢？这就是接下来要说这样的模式：r+ 读写模式，w+写读模式,a+写读模式，r+b 以bytes类型的读写模式.........<br />
+在这里咱们只讲一种就是<strong>r+</strong>，其他的大同小异，自己可以练练就行了。</p>
+<pre><code><code>#1. 打开文件的模式有(默认为文本模式)：
+r，只读模式【默认模式，文件必须存在，不存在则抛出异常】
+w，只写模式【不可读；不存在则创建；存在则清空内容】
+a， 只追加写模式【不可读；不存在则创建；存在则只追加内容】
+
+#2. 对于非文本文件，我们只能使用b模式，&quot;b&quot;表示以字节的方式操作（而所有文件也都是以字节的形式存储的，使用这种模式无需考虑文本文件的字符编码、图片文件的jgp格式、视频文件的avi格式）
+rb 
+wb
+ab
+注：以b方式打开时，读取到的内容是字节类型，写入时也需要提供字节类型，不能指定编码
+
+#3,‘+’模式（就是增加了一个功能）
+r+，读写【可读，可写】
+w+，写读【可写，可读】
+a+，写读【可写，可读】
+
+#4，以bytes类型操作的读写，写读，写读模式
+r+b，读写【可读，可写】
+w+b，写读【可写，可读】
+a+b，写读【可写，可读】</code></pre>
+<ul>
+<li><p><strong><em>r+ 模式</em></strong> 读并追加 顺序不能错</p>
+<p>r+: 打开一个文件用于读写。文件指针默认将会放在文件的开头。</p>
+<pre><code><code>f = open(&#39;文件的读写.txt&#39;, encoding=&#39;utf-8&#39;, mode=&#39;r+&#39;)
+content = f.read()
+print(content)
+f.write(&#39;这是新写入的内容&#39;)
+f.close()</code></pre>
+<p>　　<strong>注意：如果你在读写模式下，先写后读，那么文件就会出问题，因为默认光标是在文件的最开始，你要是先写，则写入的内容会讲原内容覆盖掉，直到覆盖到你写完的内容，然后在后面开始读取。</strong></p></li>
+</ul>
+<p><strong>小总结:</strong></p>
+<p>​ <strong><em>三个大方向：</em></strong><br />
+​ 读， 四种模式： r rb r+ r+b<br />
+​ 写， 四种模式 : w,wb, w+,w+b<br />
+​ 追加 四种模式: a, ab, a+,a+b</p>
+<p>​ <strong><em>相应的功能：</em></strong><br />
+​ 对文件句柄的操作：read read(n) readline() readlines() write()</p>
+<h3 id="文件操作的其它功能">文件操作的其它功能</h3>
+<ul>
+<li><p><strong><em>f.tell()</em></strong> 获取光标的位置 单位是:字节</p>
+<pre><code><code>f = open(&#39;测试&#39;, encoding=&#39;utf-8&#39;, mode=&#39;r&#39;)
+print(f.tell())
+content = f.read()
+print(f.tell())
+f.close()
+
+# 原文件内容
+这是一行测试
+A:这是第二行
+B:这是第三行
+C:这是第几行
+D:这是我也不知道第几行
+就这么地吧.
+
+# 输出结果:
+0   # 开始的位置
+122 # 结束的位置</code></pre></li>
+<li><p><strong><em>f.seek()</em></strong> 调整光标的位置 (注意:移动单位是byte , 如果是utf-8的中文部分要是3的倍数)</p>
+<pre><code><code>f = open(&#39;测试&#39;, encoding=&#39;utf-8&#39;, mode=&#39;r&#39;)
+f.seek(9)
+content = f.read()
+print(content)
+f.close()
+
+# 原文件内容
+这是一行测试
+A:这是第二行
+B:这是第三行
+C:这是第几行
+D:这是我也不知道第几行
+就这么地吧.
+
+# 输出结果:
+行测试
+A:这是第二行
+B:这是第三行
+C:这是第几行
+D:这是我也不知道第几行
+就这么地吧.</code></pre></li>
+<li><p><strong><em>f.flush()</em></strong> 强制刷新</p>
+<pre><code><code>f = open(&#39;测试&#39;, encoding=&#39;utf-8&#39;, mode=&#39;w&#39;)
+f.write(&#39;fafdsfsfsadfsaf&#39;)
+f.flush()
+f.close()</code></pre></li>
+</ul>
+<h3 id="打开文件的另一种方式常用的是这种">打开文件的另一种方式(常用的是这种)</h3>
+<ul>
+<li><p><strong><em>with open() as ....</em></strong></p>
+<pre><code><code># 优点1:不用手动关闭文件句柄
+# 利用with上下文管理这种方式，它会自动关闭文件句柄。
+with open(&#39;测试&#39;, encoding=&#39;utf-8&#39;, mode=&#39;r&#39;) as f:
+    print(f.read())
+
+# 优点2:可以加多个 open 操作
+# 一个with 语句可以操作多个文件，产生多个文件句柄。
+with open(&#39;测试&#39;, encoding=&#39;utf-8&#39;, mode=&#39;r&#39;) as f,\
+        open(&#39;测试&#39;, encoding=&#39;utf-8&#39;, mode=&#39;w&#39;) as f1:
+    print(f.read())
+    f1.write(&#39;kckckckckckckkck&#39;)</code></pre>
+<p>　　<strong>这里要注意一个问题，虽然使用with语句方式打开文件，不用你手动关闭文件句柄，比较省事儿，但是依靠其自动关闭文件句柄，是有一段时间的，这个时间不固定，所以这里就会产生问题，如果你在with语句中通过r模式打开t1文件，那么你在下面又以a模式打开t1文件，此时有可能你第二次打开t1文件时，第一次的文件句柄还没有关闭掉，可能就会出现错误,他的解决方式只能在你第二次打开此文件前，手动关闭上一个文件句柄。</strong></p></li>
+</ul>
+<h3 id="文件的修改">文件的修改</h3>
+<p>​ 文件的数据是存放于硬盘上的，因而只存在覆盖、不存在修改这么一说，我们平时看到的修改文件，都是模拟出来的效果，具体的说有两种实现方式：</p>
+<ul>
+<li><p><strong>文件操作改的流程：</strong><br />
+1，以读的模式打开原文件。<br />
+2，以写的模式创建一个新文件。<br />
+3，将原文件的内容读出来修改成新内容，写入新文件。<br />
+4，将原文件删除。<br />
+5，将新文件重命名成原文件。</p></li>
+<li><p><strong><em>方式一：</em></strong>将硬盘存放的该文件的内容全部加载到内存，在内存中是可以修改的，修改完毕后，再由内存覆盖到硬盘（word，vim，nodpad++等编辑器）</p>
+<pre><code><code>import os   # 调用系统模块
+with open(&#39;测试&#39;, encoding=&#39;utf-8&#39;) as f1,\
+    open(&#39;测试.bak&#39;, encoding=&#39;utf-8&#39;,mode=&#39;w&#39;) as f2:
+    old_content = f1.read() # 全部读入内存,如果文件很大,会卡死
+    new_content = old_content.replace(&#39;文&#39;, &#39;wen&#39;)   # 在内存中完成修改
+    f2.write(new_content)   # 一次性写入新文件
+os.remove(&#39;测试&#39;) # 删除原文件
+os.rename(&#39;测试.bak&#39;, &#39;测试&#39;)   # 将新建的文件重命名为原文件
+
+# 原文件内容
+**文件操作改的流程：**
+1，以读的模式打开原文件。
+2，以写的模式创建一个新文件。
+3，将原文件的内容读出来修改成新内容，写入新文件。
+4，将原文件删除。
+5，将新文件重命名成原文件。
+# 修改后的内容
+**wen件操作改的流程：**
+1，以读的模式打开原wen件。
+2，以写的模式创建一个新wen件。
+3，将原wen件的内容读出来修改成新内容，写入新wen件。
+4，将原wen件删除。
+5，将新wen件重命名成原wen件。</code></pre></li>
+<li><p><strong><em>方式二：</em></strong>将硬盘存放的该文件的内容一行一行地读入内存，修改完毕就写入新文件，最后用新文件覆盖源文件<strong>(这种是常用的)</strong></p>
+<pre><code><code>import os
+with open(&#39;测试&#39;, encoding=&#39;utf-8&#39;) as f1,\
+    open(&#39;测试.bak&#39;, encoding=&#39;utf-8&#39;,mode=&#39;w&#39;) as f2:
+    for line in f1: # 一行一行的改,占内存少
+        new_line = line.replace(&#39;wen&#39;, &#39;文&#39;)
+        f2.write(new_line)
+os.remove(&#39;测试&#39;)
+os.rename(&#39;测试.bak&#39;, &#39;测试&#39;)
+
+# 原文件内容
+**wen件操作改的流程：**
+1，以读的模式打开原wen件。
+2，以写的模式创建一个新wen件。
+3，将原wen件的内容读出来修改成新内容，写入新wen件。
+4，将原wen件删除。
+5，将新wen件重命名成原wen件。
+
+# 修改后的内容
+**文件操作改的流程：**
+1，以读的模式打开原文件。
+2，以写的模式创建一个新文件。
+3，将原文件的内容读出来修改成新内容，写入新文件。
+4，将原文件删除。
+5，将新文件重命名成原文件。</code></pre></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

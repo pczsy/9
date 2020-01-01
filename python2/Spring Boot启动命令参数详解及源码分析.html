@@ -1,0 +1,221 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Spring Boot启动命令参数详解及源码分析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Spring Boot启动命令参数详解及源码分析</center></div><div class='banquan'>原文出处:本文由博客园博主程序新视界提供。<br/>
+原文连接:https://www.cnblogs.com/secbro/p/12080818.html</div><br>
+    <p>使用过Spring Boot，我们都知道通过java -jar可以快速启动Spring Boot项目。同时，也可以通过在执行jar -jar时传递参数来进行配置。本文带大家系统的了解一下Spring Boot命令行参数相关的功能及相关源码分析。</p>
+<h2 id="命令行参数使用">命令行参数使用</h2>
+<p>启动Spring Boot项目时，我们可以通过如下方式传递参数：</p>
+<pre><code><code>java -jar xxx.jar --server.port=8081</code></pre>
+<p>默认情况下Spring Boot使用8080端口，通过上述参数将其修改为8081端口，而且通过命令行传递的参数具有更高的优先级，会覆盖同名的其他配置参数。</p>
+<p>启动Spring Boot项目时传递参数，有三种参数形式：</p>
+<ul>
+<li>选项参数</li>
+<li>非选项参数</li>
+<li>系统参数</li>
+</ul>
+<p>选项参数，上面的示例便是选项参数的使用方法，通过“–-server.port”来设置应用程序的端口。基本格式为“--name=value”（“--”为连续两个减号）。其配置作用等价于在application.properties中配置的server.port=8081。</p>
+<p>非选项参数的使用示例如下：</p>
+<pre><code><code>java -jar xxx.jar abc def </code></pre>
+<p>上述示例中，“abc”和“def”便是非选项参数。</p>
+<p>系统参数，该参数会被设置到系统变量中，使用示例如下：</p>
+<pre><code><code>java -jar -Dserver.port=8081 xxx.jar</code></pre>
+<h2 id="参数值的获取">参数值的获取</h2>
+<p>选项参数和非选项参数均可以通过ApplicationArguments接口获取，具体获取方法直接在使用参数的类中注入该接口即可。</p>
+<pre><code><code>@RestController
+public class ArgumentsController {
+    @Resource
+    private ApplicationArguments arguments;
+}</code></pre>
+<p>通过ApplicationArguments接口提供的方法即可获得对应的参数。关于该接口后面会详细讲解。</p>
+<p>另外，选项参数，也可以直接通过@Value在类中获取，如下：</p>
+<pre><code><code>@RestController
+public class ParamController {
+    @Value(&quot;${server.port}&quot;)
+    private String serverPort;
+}
+</code></pre>
+<p>系统参数可以通过java.lang.System提供的方法获取：</p>
+<pre><code><code>String systemServerPort = System.getProperty(&quot;server.port&quot;);</code></pre>
+<h2 id="参数值的区别">参数值的区别</h2>
+<p>关于参数值区别，重点看选项参数和系统参数。通过上面的示例我们已经发现使用选项参数时，参数在命令中是位于xxx.jar之后传递的，而系统参数是紧随java -jar之后。</p>
+<p>如果不按照该顺序进行执行，比如使用如下方式使用选项参数：</p>
+<pre><code><code>java -jar --server.port=8081 xxx.jar</code></pre>
+<p>则会抛出如下异常：</p>
+<pre><code><code>Unrecognized option: --server.port=8081
+Error: Could not create the Java Virtual Machine.
+Error: A fatal exception has occurred. Program will exit.</code></pre>
+<p>如果将系统参数放在jar包后面，问题会更严重。会出现可以正常启动，但参数无法生效。这也是为什么有时候明明传递了参数但是却未生效，那很可能是因为把参数的位置写错了。</p>
+<p><strong>这个错误是最坑的，所以一定谨记：通过-D传递系统参数时，务必放置在待执行的jar包之前。</strong></p>
+<p>另外一个重要的不同是：通过@Value形式可以获得系统参数和选项参数，但通过System.getProperty方法只能获得系统参数。</p>
+<h2 id="applicationarguments解析">ApplicationArguments解析</h2>
+<p>上面提到了可以通过注入ApplicationArguments接口获得相关参数，下面看一下具体的使用示例：</p>
+<pre><code><code>@RestController
+public class ArgumentsController {
+
+    @Resource
+    private ApplicationArguments arguments;
+
+    @GetMapping(&quot;/args&quot;)
+    public String getArgs() {
+
+        System.out.println(&quot;# 非选项参数数量: &quot; + arguments.getNonOptionArgs().size());
+        System.out.println(&quot;# 选项参数数量: &quot; + arguments.getOptionNames().size());
+        System.out.println(&quot;# 非选项具体参数:&quot;);
+        arguments.getNonOptionArgs().forEach(System.out::println);
+
+        System.out.println(&quot;# 选项参数具体参数:&quot;);
+        arguments.getOptionNames().forEach(optionName -&gt; {
+            System.out.println(&quot;--&quot; + optionName + &quot;=&quot; + arguments.getOptionValues(optionName));
+        });
+
+        return &quot;success&quot;;
+    }
+}</code></pre>
+<p>通过注入ApplicationArguments接口，然后在方法中调用该接口的方法即可获得对应的参数信息。</p>
+<p>ApplicationArguments接口中封装了启动时原始参数的数组、选项参数的列表、非选项参数的列表以及选项参数获得和检验。相关源码如下：</p>
+<pre><code><code>public interface ApplicationArguments {
+
+    /**
+     * 原始参数数组（未经过处理的参数）
+     */
+    String[] getSourceArgs();
+
+    /**
+     * 选项参数名称
+     */
+    Set&lt;String&gt; getOptionNames();
+
+    /**
+     * 根据名称校验是否包含选项参数
+     */
+    boolean containsOption(String name);
+
+    /**
+     * 根据名称获得选项参数
+     */
+    List&lt;String&gt; getOptionValues(String name);
+
+    /**
+     * 获取非选项参数列表
+     */
+    List&lt;String&gt; getNonOptionArgs();
+}</code></pre>
+<h2 id="命令行参数的解析">命令行参数的解析</h2>
+<p>上面直接使用了ApplicationArguments的注入和方法，那么它的对象是何时被创建，何时被注入Spring容器的？</p>
+<p>在执行SpringApplication的run方法的过程中会获得传入的参数，并封装为ApplicationArguments对象。相关源代码如下：</p>
+<pre><code><code>public ConfigurableApplicationContext run(String... args) {
+        
+    try {
+        ApplicationArguments applicationArguments = new DefaultApplicationArguments(args);
+        // ...
+        prepareContext(context, environment, listeners, // ...
+    } catch (Throwable ex) {
+        // ...
+    }
+    return context;
+}</code></pre>
+<p>在上述代码中，通过创建一个它的实现类DefaultApplicationArguments来完成命令行参数的解析。</p>
+<p>DefaultApplicationArguments部分代码如下：</p>
+<pre><code><code>public class DefaultApplicationArguments implements ApplicationArguments {
+
+    private final Source source;
+    private final String[] args;
+
+    public DefaultApplicationArguments(String... args) {
+        Assert.notNull(args, &quot;Args must not be null&quot;);
+        this.source = new Source(args);
+        this.args = args;
+    }
+    
+    // ...
+
+    @Override
+    public List&lt;String&gt; getOptionValues(String name) {
+        List&lt;String&gt; values = this.source.getOptionValues(name);
+        return (values != null) ? Collections.unmodifiableList(values) : null;
+    }
+
+    private static class Source extends SimpleCommandLinePropertySource {
+        Source(String[] args) {
+            super(args);
+        }
+        // ...
+    }
+}</code></pre>
+<p>通过构造方法，将args赋值给成员变量args，其中接口ApplicationArguments中getSourceArgs方法的实现在该类中便是返回args值。</p>
+<p>针对成员变量Source（内部类）的设置，在创建Source对象时调用了其父类SimpleCommandLinePropertySource的构造方法：</p>
+<pre><code><code>public SimpleCommandLinePropertySource(String... args) {
+    super(new SimpleCommandLineArgsParser().parse(args));
+}</code></pre>
+<p>在该方法中创建了真正的解析器SimpleCommandLineArgsParser并调用其parse方法对参数进行解析。</p>
+<pre><code><code>class SimpleCommandLineArgsParser {
+
+    public CommandLineArgs parse(String... args) {
+        CommandLineArgs commandLineArgs = new CommandLineArgs();
+        for (String arg : args) {
+            // --开头的选参数解析
+            if (arg.startsWith(&quot;--&quot;)) {
+                // 获得key=value或key值
+                String optionText = arg.substring(2, arg.length());
+                String optionName;
+                String optionValue = null;
+                // 如果是key=value格式则进行解析
+                if (optionText.contains(&quot;=&quot;)) {
+                    optionName = optionText.substring(0, optionText.indexOf(&#39;=&#39;));
+                    optionValue = optionText.substring(optionText.indexOf(&#39;=&#39;)+1, optionText.length());
+                } else {
+                    // 如果是仅有key（--foo）则获取其值
+                    optionName = optionText;
+                }
+                // 如果optionName为空或者optionValue不为空但optionName为空则抛出异常
+                if (optionName.isEmpty() || (optionValue != null &amp;&amp; optionValue.isEmpty())) {
+                    throw new IllegalArgumentException(&quot;Invalid argument syntax: &quot; + arg);
+                }
+                // 封装入CommandLineArgs
+                commandLineArgs.addOptionArg(optionName, optionValue);
+            } else {
+                commandLineArgs.addNonOptionArg(arg);
+            }
+        }
+        return commandLineArgs;
+    }
+}</code></pre>
+<p>上述解析规则比较简单，就是根据“--”和“=”来区分和解析不同的参数类型。</p>
+<p>通过上面的方法创建了ApplicationArguments的实现类的对象，但此刻还并未注入Spring容器，注入Spring容器是依旧是通过上述SpringApplication#run方法中调用的prepareContext方法来完成的。相关代码如下：</p>
+<pre><code><code>private void prepareContext(ConfigurableApplicationContext context, ConfigurableEnvironment environment,
+        SpringApplicationRunListeners listeners, ApplicationArguments applicationArguments, Banner printedBanner) {
+    // ...
+    ConfigurableListableBeanFactory beanFactory = context.getBeanFactory();
+    // 通过beanFactory将ApplicationArguments的对象注入Spring容器
+    beanFactory.registerSingleton(&quot;springApplicationArguments&quot;, applicationArguments);
+    // ...
+}</code></pre>
+<p>至此关于Spring Boot中ApplicationArguments的相关源码解析完成。</p>
+<p>原文链接：《<a href="https://www.choupangxia.com/2019/12/22/spring-boot-arguments/">Spring Boot启动命令参数详解及源码分析</a>》</p>
+<h2 id="spring技术视频">Spring技术视频</h2>
+<p>CSDN学院：<a href="https://edu.csdn.net/course/detail/20369">《Spring Boot 视频教程全家桶》</a></p>
+<h2 id="section"><br></h2>
+<center><b>程序新视界</b>：精彩和成长都不容错过</center>
+<p><img src="./images/Spring Boot启动命令参数详解及源码分析0.png" alt="程序新视界-微信公众号" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

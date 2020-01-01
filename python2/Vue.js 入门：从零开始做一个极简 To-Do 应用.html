@@ -1,0 +1,610 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Vue.js 入门：从零开始做一个极简 To-Do 应用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Vue.js 入门：从零开始做一个极简 To-Do 应用</center></div><div class='banquan'>原文出处:本文由博客园博主乐亦栗提供。<br/>
+原文连接:https://www.cnblogs.com/leyili/p/vue-todo-app.html</div><br>
+    <h1 id="vue.js-入门从零开始做一个极简-to-do-应用">Vue.js 入门：从零开始做一个极简 To-Do 应用</h1>
+<p>写作时间：2019-12-10<br />版本信息：Vue.js 2.6.10<br />官网文档：<a href="https://cn.vuejs.org/index.html">https://cn.vuejs.org/</a></p>
+<p><a name="sGmoJ"></a></p>
+<h1 id="前言">前言 </h1>
+<p>学习 Vue 的最佳方式之一是「请立刻查阅 Vue.js 的<a href="https://cn.vuejs.org/v2/guide/">官方文档</a>」，简单看一下「基础」部分，配合本文食用更佳。</p>
+<p><img src="./images/Vue.js 入门：从零开始做一个极简 To-Do 应用0.png" alt="image.png" /></p>
+<p>在开始写代码之前，首先去 <a href="https://www.bootcdn.cn/vue/">BootCDN</a> 上找一下目前最新版本完整版的 Vue.js 的链接：<a href="https://cdn.bootcss.com/vue/2.6.10/vue.js" class="uri">https://cdn.bootcss.com/vue/2.6.10/vue.js</a> ，与压缩版（vue.min.js）不同，它（vue.js）包含完整的警告和调试模式。</p>
+<p>为了尽可能地保持简单，本文不使用 <a href="https://cli.vuejs.org/zh/">Vue CLI</a> 来构建项目，而是像用 jQuery 开发那样，直接在 HTML 文件里引入 Vue.js 文件。</p>
+<p>如果文章中的代码有不明白的地方，我的建议是：直接抄代码，看效果，看文档，改代码，看效果，如此循环往复。</p>
+<p><a name="JART7"></a></p>
+<h1 id="声明式渲染">声明式渲染</h1>
+<p>了解一下 <a href="https://cn.vuejs.org/v2/guide/index.html#%E5%A3%B0%E6%98%8E%E5%BC%8F%E6%B8%B2%E6%9F%93">Vue 官网的基础部分的「声明式渲染」部分</a> ，我们可以创建如下代码：</p>
+<p><img src="./images/Vue.js 入门：从零开始做一个极简 To-Do 应用1.png" alt="image.png" /></p>
+<p>此时预览 index.html 文件，会看到页面上出现 Hello, Vue.js! 的文字。</p>
+<p><a name="VcXQO"></a></p>
+<h1 id="组件结构">组件结构</h1>
+<p>我们把要做的 To-Do App 拆分成一个个小组件，目前先来一个组件 TodoList 和一个它的子组件 TodoItem 。通过熟悉 <a href="https://cn.vuejs.org/v2/guide/components.html">官网上的「组件基础」教程</a> 我们来继续做下去。</p>
+<p><a name="MVkgj"></a></p>
+<h1 id="todolist组件">TodoList 组件</h1>
+<p>先来做一下 TodoList 组件。我把代码都粘贴过来，方便取用学习。<br />此文章之后的代码都是在下面这段代码的基础上修改，到时我就只放修改的部分代码了，有必要的时候我会把全部代码贴出来。</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;ie=edge&quot;&gt;
+  &lt;title&gt;Vue.js To-Do App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id=&quot;app&quot;&gt;
+    &lt;todo-list&gt;&lt;/todo-list&gt;
+  &lt;/div&gt;
+
+  &lt;script src=&quot;https://cdn.bootcss.com/vue/2.6.10/vue.js&quot;&gt;&lt;/script&gt;
+  &lt;script&gt;
+    Vue.component(&#39;todo-list&#39;, {
+      data: function() {
+        return {}
+      },
+      template:`
+      &lt;ul&gt;
+        &lt;li&gt;Todo A&lt;/li&gt;
+        &lt;li&gt;Todo B&lt;/li&gt;
+        &lt;li&gt;Todo C&lt;/li&gt;
+      &lt;/ul&gt;
+      `
+    })
+
+    new Vue({
+      el: &#39;#app&#39;,
+      data: {}
+    })
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>需要注意的内容：</p>
+<ol>
+<li>组件的代码需要放到 new Vue 之前</li>
+<li>定义组件的 data 时，data 必须是一个函数</li>
+<li>template 中的代码必须要有个外层容器包裹（最外层只能有一个元素）</li>
+</ol>
+<p>改写 TodoList 组件，添加所需数据：</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-hans&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;ie=edge&quot;&gt;
+  &lt;title&gt;Vue.js To-Do App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id=&quot;app&quot;&gt;
+    &lt;todo-list v-bind:todos=&quot;todos&quot;&gt;&lt;/todo-list&gt;
+  &lt;/div&gt;
+
+  &lt;script src=&quot;https://cdn.bootcss.com/vue/2.6.10/vue.js&quot;&gt;&lt;/script&gt;
+  &lt;script&gt;
+    Vue.component(&#39;todo-list&#39;, {
+      data: function() {
+        return {}
+      },
+      props: [&#39;todos&#39;],
+      template:`
+      &lt;div class=&quot;todo-list&quot;&gt;
+        &lt;p&gt;已完成：{{todos.filter(todo =&gt; todo.done === true).length}}&lt;/p&gt;
+        &lt;p&gt;未完成：{{todos.filter(todo =&gt; todo.done === false).length}}&lt;/p&gt;
+        &lt;div class=&quot;todo-item&quot; v-for=&quot;todo in todos&quot;&gt;
+          &lt;div class=&quot;title&quot;&gt;{{todo.title}}&lt;/div&gt;
+          &lt;div class=&quot;content&quot;&gt;{{todo.content}}&lt;/div&gt;
+          &lt;div class=&quot;button&quot; v-show=&quot;!todo.done&quot;&gt;点击完成&lt;/div&gt;
+          &lt;div class=&quot;button&quot; v-show=&quot;todo.done&quot;&gt;已完成&lt;/div&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      `
+    })
+
+    new Vue({
+      el: &#39;#app&#39;,
+      data: {
+        todos: [
+          {
+            title: &#39;待办 1&#39;,
+            content: &#39;上课之前要抄一下同学的作业。&#39;,
+            done: false
+          },
+          {
+            title: &#39;待办 2&#39;,
+            content: &#39;课间和朋友去球场打篮球。&#39;,
+            done: true
+          },
+          {
+            title: &#39;待办 3&#39;,
+            content: &#39;英语课上故意调皮一下让美丽的英语老师注意到然后提问我。&#39;,
+            done: false
+          },
+          {
+            title: &#39;待办 4&#39;,
+            content: &#39;放学后赶紧跑，绝对不能听某些人的话：「放学后你给我等着」。&#39;,
+            done: false
+          }
+        ]
+      }
+    })
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>需要注意的内容：</p>
+<ol>
+<li>数据在 new Vue 的 data 中定义，需要传递给  TodoList 组件，使用 v-bind 指令，该代码表示将 todos 变量传递给 TodoList 组件的 todos 属性。</li>
+</ol>
+<pre><code><code>&lt;div id=&quot;app&quot;&gt;
+  &lt;todo-list v-bind:todos=&quot;todos&quot;&gt;&lt;/todo-list&gt;
+&lt;/div&gt;</code></pre>
+<ol>
+<li>TodoList 组件定义 props 用来接收传递过来的 todos ，在组件的 template 中可以直接使用。这里我们使用 v-for 来循环渲染数据。</li>
+</ol>
+<pre class="javascript"><code>Vue.component(&#39;todo-list&#39;, {
+  // ... 省略 ...
+  props: [&#39;todos&#39;],
+    template:`
+&lt;div class=&quot;todo-list&quot;&gt;
+  &lt;p&gt;已完成：{{todos.filter(todo =&gt; todo.done === true).length}}&lt;/p&gt;
+  &lt;p&gt;未完成：{{todos.filter(todo =&gt; todo.done === false).length}}&lt;/p&gt;
+  &lt;div class=&quot;todo-item&quot; v-for=&quot;todo in todos&quot;&gt;
+    &lt;div class=&quot;title&quot;&gt;{{todo.title}}&lt;/div&gt;
+    &lt;div class=&quot;content&quot;&gt;{{todo.content}}&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;!todo.done&quot;&gt;点击完成&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;todo.done&quot;&gt;已完成&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+`
+})</code></pre>
+<p>虽然写了给某些元素写了 class 但是还没有写任何样式，现在打开 index.html 预览是这样的：</p>
+<p><img src="./images/Vue.js 入门：从零开始做一个极简 To-Do 应用2.png" alt="image.png" /><br />
+<a name="vcT74"></a></p>
+<h1 id="todoitem-组件">TodoItem 组件</h1>
+<p>现在我们把 class 为 todo-item 的元素提取出来作为单独的组件，除此之外我们什么也不做，预览效果与刚才一致。</p>
+<pre class="javascript"><code>Vue.component(&#39;todo-item&#39;, {
+  props: [&#39;todo&#39;],
+  template: `
+&lt;div class=&quot;todo-item&quot;&gt;
+  &lt;div class=&quot;title&quot;&gt;{{todo.title}}&lt;/div&gt;
+  &lt;div class=&quot;content&quot;&gt;{{todo.content}}&lt;/div&gt;
+  &lt;div class=&quot;button&quot; v-show=&quot;!todo.done&quot;&gt;点击完成&lt;/div&gt;
+  &lt;div class=&quot;button&quot; v-show=&quot;todo.done&quot;&gt;已完成&lt;/div&gt;
+&lt;/div&gt;
+`
+})
+
+Vue.component(&#39;todo-list&#39;, {
+  data: function() {
+    return {}
+  },
+  props: [&#39;todos&#39;],
+  template:`
+&lt;div class=&quot;todo-list&quot;&gt;
+  &lt;p&gt;已完成：{{todos.filter(todo =&gt; todo.done === true).length}}&lt;/p&gt;
+  &lt;p&gt;未完成：{{todos.filter(todo =&gt; todo.done === false).length}}&lt;/p&gt;
+  &lt;todo-item
+    v-for=&quot;(todo, index) in todos&quot; v-bind:key=&quot;index&quot;
+    v-bind:todo=&quot;todo&quot;&gt;
+  &lt;/todo-item&gt;
+&lt;/div&gt;
+`
+})</code></pre>
+<p>接下来加入编辑的功能</p>
+<pre class="javascript"><code>Vue.component(&#39;todo-item&#39;, {
+  props: [&#39;todo&#39;],
+  data: function() {
+    return {
+      isEditing: false
+    }
+  },
+  template: `
+&lt;div&gt;
+  &lt;div class=&quot;todo-item&quot; v-show=&quot;!isEditing&quot;&gt;
+    &lt;div class=&quot;title&quot;&gt;{{todo.title}}&lt;/div&gt;
+    &lt;div class=&quot;content&quot;&gt;{{todo.content}}&lt;/div&gt;
+    &lt;div class=&quot;button edit&quot; v-on:click=&quot;showForm&quot;&gt;编辑 ✏&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;!todo.done&quot;&gt;点击完成&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;todo.done&quot;&gt;已完成&lt;/div&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;todo-item&quot; v-show=&quot;isEditing&quot;&gt;
+    &lt;div class=&quot;form&quot;&gt;
+      &lt;div class=&quot;field&quot;&gt;
+        &lt;label&gt;Title&lt;/label&gt;
+        &lt;input type=&quot;text&quot; v-model=&quot;todo.title&quot; /&gt;
+      &lt;/div&gt;
+      &lt;div class=&quot;field&quot;&gt;
+        &lt;label&gt;Content&lt;/label&gt;
+        &lt;input type=&quot;text&quot; v-model=&quot;todo.content&quot; /&gt;
+      &lt;/div&gt;
+      &lt;button class=&quot;close&quot; v-on:click=&quot;closeForm&quot;&gt;保存并关闭编辑模式&lt;/button&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+`,
+  methods: {
+    showForm: function() {
+      this.isEditing = true
+    },
+    closeForm: function() {
+      this.isEditing = false
+    }
+  }
+})
+</code></pre>
+<p>添加的代码做了这几点：</p>
+<ol>
+<li>在 TodoItem 组件中添加编辑按钮，并添加一个 isEditing 的属性用来区分是否是编辑状态。</li>
+<li>添加编辑模式时 TodoItem 组件的代码</li>
+<li>添加并绑定打开和关闭编辑模式的事件</li>
+</ol>
+<p><a name="bJbSK"></a></p>
+<h1 id="删除-todo">删除 Todo</h1>
+<pre class="javascript"><code>Vue.component(&#39;todo-item&#39;, {
+  // ... 省略 ...
+  template: `
+&lt;div&gt;
+  &lt;div class=&quot;todo-item&quot; v-show=&quot;!isEditing&quot;&gt;
+    &lt;div class=&quot;title&quot;&gt;{{todo.title}}&lt;/div&gt;
+    &lt;div class=&quot;content&quot;&gt;{{todo.content}}&lt;/div&gt;
+    &lt;div class=&quot;button edit&quot; v-on:click=&quot;showForm&quot;&gt;编辑 ✏&lt;/div&gt;
+    &lt;div class=&quot;button delete&quot; v-on:click=&quot;deleteTodo(todo)&quot;&gt;删除 ×××&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;!todo.done&quot;&gt;点击完成&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;todo.done&quot;&gt;已完成&lt;/div&gt;
+  &lt;/div&gt;
+  // ... 省略 ...
+&lt;/div&gt;
+`,
+  methods: {
+    // ... 省略 ...
+    deleteTodo(todo) {
+      this.$emit(&#39;delete-todo&#39;, todo)
+    }
+  },
+})</code></pre>
+<p>在 TodoItem 组件中添加删除按钮，并添加删除的方法，这个方法会向父组件 TodoList 发送一个 delete-todo 事件以及要删除的 todo 数据。</p>
+<p>父组件 TodoList 中添加一个删除事件，并监听来自子组件的 delete-todo 事件。</p>
+<pre class="javascript"><code>Vue.component(&#39;todo-list&#39;, {
+  data: function() {
+    return {}
+  },
+  props: [&#39;todos&#39;],
+  template:`
+&lt;div class=&quot;todo-list&quot;&gt;
+  &lt;p&gt;已完成：{{todos.filter(todo =&gt; todo.done === true).length}}&lt;/p&gt;
+  &lt;p&gt;未完成：{{todos.filter(todo =&gt; todo.done === false).length}}&lt;/p&gt;
+  &lt;todo-item
+  v-for=&quot;(todo, index) in todos&quot; v-bind:key=&quot;index&quot;
+  v-bind:todo=&quot;todo&quot; v-on:delete-todo=&quot;deleteTodo&quot;
+  &gt;
+  &lt;/todo-item&gt;
+&lt;/div&gt;
+`,
+  methods: {
+    deleteTodo(todo) {
+      const index = this.todos.indexOf(todo)
+      this.todos.splice(index, 1)
+    }
+  },
+})</code></pre>
+<p><a name="ZHM9i"></a></p>
+<h1 id="新增-todo">新增 Todo</h1>
+<p>新建一个 AddTodo 组件，将组件添加到 TodoList 组件中。</p>
+<pre class="javascript"><code>Vue.component(&#39;add-todo&#39;, {
+  data: function() {
+    return {
+      isAdding: false,
+      todo: {
+        title: &#39;&#39;,
+        content: &#39;&#39;,
+        done: false
+      }
+    }
+  },
+  template: `
+&lt;div&gt;
+  &lt;div v-on:click=&quot;showForm&quot;&gt;添加 +++&lt;/div&gt;
+  &lt;div class=&quot;form&quot; v-show=&quot;isAdding&quot;&gt;
+    &lt;div class=&quot;field&quot;&gt;
+    &lt;label&gt;标题&lt;/label&gt;
+    &lt;input type=&quot;text&quot; v-model=&quot;todo.title&quot; /&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;field&quot;&gt;
+    &lt;label&gt;内容&lt;/label&gt;
+    &lt;input type=&quot;text&quot; v-model=&quot;todo.content&quot; /&gt;
+    &lt;/div&gt;
+    &lt;button class=&quot;close&quot; v-on:click=&quot;saveForm&quot;&gt;保存&lt;/button&gt;
+    &lt;button class=&quot;close&quot; v-on:click=&quot;closeForm&quot;&gt;取消&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+`,
+  methods: {
+    showForm() {
+      this.isAdding = true
+    },
+    saveForm() {
+      if (this.todo.title &amp;&amp; this.todo.content) {
+        this.$emit(&#39;add-todo&#39;, this.todo)
+        this.closeForm()
+      }
+    },
+    closeForm() {
+      this.isAdding = false
+      this.todo = {
+        title: &#39;&#39;,
+        content: &#39;&#39;,
+        done: false
+      }
+    }
+  }
+})
+
+Vue.component(&#39;todo-list&#39;, {
+  // ... 省略 ...
+  template:`
+&lt;div class=&quot;todo-list&quot;&gt;
+  &lt;add-todo v-on:add-todo=&quot;addTodo&quot;&gt;&lt;/add-todo&gt;
+  &lt;p&gt;已完成：{{todos.filter(todo =&gt; todo.done === true).length}}&lt;/p&gt;
+  &lt;p&gt;未完成：{{todos.filter(todo =&gt; todo.done === false).length}}&lt;/p&gt;
+  &lt;todo-item
+    v-for=&quot;(todo, index) in todos&quot; v-bind:key=&quot;index&quot;
+    v-bind:todo=&quot;todo&quot; v-on:delete-todo=&quot;deleteTodo&quot;
+  &gt;
+  &lt;/todo-item&gt;
+&lt;/div&gt;
+`,
+  methods: {
+    // ... 省略 ...
+    addTodo(todo) {
+      this.todos.push(todo)
+    }
+  },
+})</code></pre>
+<p>AddTodo 组件默认只显示一个添加按钮，当点击添加按钮的时候显示需要填写的表单，填写完成后点击保存，将向父组件 TodoList 发送一个 add-todo 事件以及表单信息。</p>
+<p>父组件 TodoList 监听 add-todo 事件并在事件触发后向 todos 数据中新增一条由 AddTodo 组件发送的数据。</p>
+<p><a name="QrAhJ"></a></p>
+<h1 id="完成-todo">完成 Todo</h1>
+<p>TodoItem 组件中，点击完成按钮，发送 complete-todo 事件给父组件 TodoList 。</p>
+<p>父组件 TodoList 监听 complete-todo 事件并在事件触发后从 todos 数据中要完成的那条数据标记为已完成。</p>
+<pre class="javascript"><code>Vue.component(&#39;todo-item&#39;, {
+ // ... 省略 ...
+  template: `
+&lt;div&gt;
+  &lt;div class=&quot;todo-item&quot; v-show=&quot;!isEditing&quot;&gt;
+    &lt;div class=&quot;title&quot;&gt;{{todo.title}}&lt;/div&gt;
+    &lt;div class=&quot;content&quot;&gt;{{todo.content}}&lt;/div&gt;
+    &lt;div class=&quot;button edit&quot; v-on:click=&quot;showForm&quot;&gt;编辑 ✏&lt;/div&gt;
+    &lt;div class=&quot;button delete&quot; v-on:click=&quot;deleteTodo(todo)&quot;&gt;删除 ×××&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;!todo.done&quot; v-on:click=&quot;completeTodo(todo)&quot;&gt;点击完成&lt;/div&gt;
+    &lt;div class=&quot;button&quot; v-show=&quot;todo.done&quot;&gt;已完成&lt;/div&gt;
+  &lt;/div&gt;
+  ......
+`,
+  methods: {
+    // ... 省略 ...
+    completeTodo(todo) {
+      this.$emit(&#39;complete-todo&#39;, todo)
+    }
+  }
+})
+
+Vue.component(&#39;todo-list&#39;, {
+  // ... 省略 ...
+  template:`
+&lt;div class=&quot;todo-list&quot;&gt;
+  ......
+  &lt;todo-item
+    v-for=&quot;(todo, index) in todos&quot; v-bind:key=&quot;index&quot;
+    v-bind:todo=&quot;todo&quot;
+    v-on:delete-todo=&quot;deleteTodo&quot;
+    v-on:complete-todo=&quot;completeTodo&quot;
+  &gt;
+  &lt;/todo-item&gt;
+&lt;/div&gt;
+`,
+  methods: {
+    // ... 省略 ...
+    completeTodo(todo) {
+      const index = this.todos.indexOf(todo)
+      this.todos[index].done = true
+    }
+  }
+})
+</code></pre>
+<p>至此，一个基本功能还算健全的 To-Do App 就完成了。</p>
+<p><a name="SExEm"></a></p>
+<h1 id="完整代码">完整代码</h1>
+<p>最终的完整代码如下，可以直接拿走自己运行预览一下。</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;zh-hans&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta http-equiv=&quot;X-UA-Compatible&quot; content=&quot;ie=edge&quot;&gt;
+  &lt;title&gt;Vue.js To-Do App&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div id=&quot;app&quot;&gt;
+    &lt;todo-list v-bind:todos=&quot;todos&quot;&gt;&lt;/todo-list&gt;
+  &lt;/div&gt;
+
+  &lt;script src=&quot;https://cdn.bootcss.com/vue/2.6.10/vue.js&quot;&gt;&lt;/script&gt;
+  &lt;script&gt;
+    Vue.component(&#39;add-todo&#39;, {
+      data: function() {
+        return {
+          isAdding: false,
+          todo: {
+            title: &#39;&#39;,
+            content: &#39;&#39;,
+            done: false
+          }
+        }
+      },
+      template: `
+      &lt;div&gt;
+        &lt;div v-on:click=&quot;showForm&quot;&gt;添加 +++&lt;/div&gt;
+        &lt;div class=&quot;form&quot; v-show=&quot;isAdding&quot;&gt;
+          &lt;div class=&quot;field&quot;&gt;
+            &lt;label&gt;标题&lt;/label&gt;
+            &lt;input type=&quot;text&quot; v-model=&quot;todo.title&quot; /&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;field&quot;&gt;
+            &lt;label&gt;内容&lt;/label&gt;
+            &lt;input type=&quot;text&quot; v-model=&quot;todo.content&quot; /&gt;
+          &lt;/div&gt;
+          &lt;button class=&quot;close&quot; v-on:click=&quot;saveForm&quot;&gt;保存&lt;/button&gt;
+          &lt;button class=&quot;close&quot; v-on:click=&quot;closeForm&quot;&gt;取消&lt;/button&gt;
+        &lt;/div&gt;
+      &lt;/div&gt;
+      `,
+      methods: {
+        showForm() {
+          this.isAdding = true
+        },
+        saveForm() {
+          if (this.todo.title &amp;&amp; this.todo.content) {
+            this.$emit(&#39;add-todo&#39;, this.todo)
+            this.closeForm()
+          }
+        },
+        closeForm() {
+          this.isAdding = false
+          this.todo = {
+            title: &#39;&#39;,
+            content: &#39;&#39;,
+            done: false
+          }
+        }
+      },
+    })
+
+    Vue.component(&#39;todo-item&#39;, {
+      props: [&#39;todo&#39;],
+      data: function() {
+        return {
+          isEditing: false
+        }
+      },
+      template: `
+      &lt;div&gt;
+          &lt;div class=&quot;todo-item&quot; v-show=&quot;!isEditing&quot;&gt;
+            &lt;div class=&quot;title&quot;&gt;{{todo.title}}&lt;/div&gt;
+            &lt;div class=&quot;content&quot;&gt;{{todo.content}}&lt;/div&gt;
+            &lt;div class=&quot;button edit&quot; v-on:click=&quot;showForm&quot;&gt;编辑 ✏&lt;/div&gt;
+            &lt;div class=&quot;button delete&quot; v-on:click=&quot;deleteTodo(todo)&quot;&gt;删除 ×××&lt;/div&gt;
+            &lt;div class=&quot;button&quot; v-show=&quot;!todo.done&quot; v-on:click=&quot;completeTodo(todo)&quot;&gt;点击完成&lt;/div&gt;
+            &lt;div class=&quot;button&quot; v-show=&quot;todo.done&quot;&gt;已完成&lt;/div&gt;
+          &lt;/div&gt;
+          &lt;div class=&quot;todo-item&quot; v-show=&quot;isEditing&quot;&gt;
+            &lt;div class=&quot;form&quot;&gt;
+              &lt;div class=&quot;field&quot;&gt;
+                &lt;label&gt;Title&lt;/label&gt;
+                &lt;input type=&quot;text&quot; v-model=&quot;todo.title&quot; /&gt;
+              &lt;/div&gt;
+              &lt;div class=&quot;field&quot;&gt;
+                &lt;label&gt;Content&lt;/label&gt;
+                &lt;input type=&quot;text&quot; v-model=&quot;todo.content&quot; /&gt;
+              &lt;/div&gt;
+              &lt;button class=&quot;close&quot; v-on:click=&quot;closeForm&quot;&gt;保存并关闭编辑模式&lt;/button&gt;
+            &lt;/div&gt;
+          &lt;/div&gt;
+      &lt;/div&gt;
+      `,
+      methods: {
+        showForm: function() {
+          this.isEditing = true
+        },
+        closeForm: function() {
+          this.isEditing = false
+        },
+        deleteTodo(todo) {
+          this.$emit(&#39;delete-todo&#39;, todo)
+        },
+        completeTodo(todo) {
+          this.$emit(&#39;complete-todo&#39;, todo)
+        }
+      },
+    })
+
+    Vue.component(&#39;todo-list&#39;, {
+      data: function() {
+        return {}
+      },
+      props: [&#39;todos&#39;],
+      template:`
+      &lt;div class=&quot;todo-list&quot;&gt;
+        &lt;add-todo v-on:add-todo=&quot;addTodo&quot;&gt;&lt;/add-todo&gt;
+        &lt;p&gt;已完成：{{todos.filter(todo =&gt; todo.done === true).length}}&lt;/p&gt;
+        &lt;p&gt;未完成：{{todos.filter(todo =&gt; todo.done === false).length}}&lt;/p&gt;
+        &lt;todo-item
+          v-for=&quot;(todo, index) in todos&quot; v-bind:key=&quot;index&quot;
+          v-bind:todo=&quot;todo&quot;
+          v-on:delete-todo=&quot;deleteTodo&quot;
+          v-on:complete-todo=&quot;completeTodo&quot;
+        &gt;
+        &lt;/todo-item&gt;
+      &lt;/div&gt;
+      `,
+      methods: {
+        deleteTodo(todo) {
+          const index = this.todos.indexOf(todo)
+          this.todos.splice(index, 1)
+        },
+        addTodo(todo) {
+          this.todos.push(todo)
+        },
+        completeTodo(todo) {
+          const index = this.todos.indexOf(todo)
+          this.todos[index].done = true
+        }
+      },
+    })
+
+    new Vue({
+      el: &#39;#app&#39;,
+      data: {
+        todos: [
+          {
+            title: &#39;待办 1&#39;,
+            content: &#39;上课之前要抄一下同学的作业。&#39;,
+            done: false
+          },
+          {
+            title: &#39;待办 2&#39;,
+            content: &#39;课间和朋友去球场打篮球。&#39;,
+            done: true
+          },
+          {
+            title: &#39;待办 3&#39;,
+            content: &#39;英语课上故意调皮一下让美丽的英语老师注意到然后提问我。&#39;,
+            done: false
+          },
+          {
+            title: &#39;待办 4&#39;,
+            content: &#39;放学后赶紧跑，绝对不能听某些人的话：「放学后你给我等着」。&#39;,
+            done: false
+          }
+        ]
+      }
+    })
+  &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>（完）</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

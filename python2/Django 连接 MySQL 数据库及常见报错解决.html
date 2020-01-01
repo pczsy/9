@@ -1,0 +1,94 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django 连接 MySQL 数据库及常见报错解决' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django 连接 MySQL 数据库及常见报错解决</center></div><div class='banquan'>原文出处:本文由博客园博主紫月蓝风提供。<br/>
+原文连接:https://www.cnblogs.com/izbw/p/11279237.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#django-连接-mysql数据库及常见报错解决">Django 连接 MySQL数据库及常见报错解决</a><ul>
+        <li><a href="#终端或者数据库管理工具连接-mysql-并新建项目所需数据库">终端或者数据库管理工具连接 MySQL ，并新建项目所需数据库</a></li>
+        <li><a href="#安装访问-mysql-的-python-模块">安装访问 MySQL 的 Python 模块</a></li>
+        <li><a href="#django-相关配置">Django 相关配置</a></li>
+        <li><a href="#可能会遇到的报错">可能会遇到的报错</a><ul>
+        <li><a href="#报错1-django.core.exceptions.improperlyconfigured-mysqlclient-1.x.xx-or-newer-is-required-you-have-0.x.x.">报错1: django.core.exceptions.ImproperlyConfigured: mysqlclient 1.x.xx or newer is required; you have 0.x.x.</a></li>
+        <li><a href="#报错2attributeerror-str-object-has-no-attribute-decode">报错2：AttributeError: 'str' object has no attribute 'decode'</a></li>
+        </ul></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="django-连接-mysql数据库及常见报错解决">Django 连接 MySQL数据库及常见报错解决</h1>
+<blockquote>
+<p>MySQL 的安装以及设置远程访问权限，不属于本笔记的重点，此处不做多余赘述</p>
+</blockquote>
+<p><strong>前提：</strong><br />
+MySQL 安装成功，且已配置远程访问权限（如在本地测试的忽略此项）</p>
+<h2 id="终端或者数据库管理工具连接-mysql-并新建项目所需数据库">终端或者数据库管理工具连接 MySQL ，并新建项目所需数据库</h2>
+<pre><code><code>CREATE DATABASE drf_shop CHARACTER SET utf8;</code></pre>
+<blockquote>
+<p>创建数据库一定要将字符编码设置为utf8，很多错误就是没正确设置编码导致的！</p>
+</blockquote>
+<h2 id="安装访问-mysql-的-python-模块">安装访问 MySQL 的 Python 模块</h2>
+<pre><code><code>pip install pymysql</code></pre>
+<h2 id="django-相关配置">Django 相关配置</h2>
+<p><strong>工程文件夹(settings平级的文件夹)/_<em>init_</em>.py</strong></p>
+<pre class="python"><code>from pymysql import install_as_MySQLdb
+
+install_as_MySQLdb()</code></pre>
+<p><strong>settings.py 中替换默认 <code>DATABASE</code> 相关配置</strong></p>
+<pre class="python"><code>DATABASES = {
+    &#39;default&#39;: {
+        &#39;ENGINE&#39;: &#39;django.db.backends.mysql&#39;,  # django 数据库后台
+        &#39;NAME&#39;: &#39;drf_shop&#39;,  # 连接数据库的名称
+        &#39;USER&#39;: &#39;root&#39;,  # 用户名
+        &#39;PASSWORD&#39;: &#39;123456&#39;,  # 密码
+        &#39;HOST&#39;: &#39;127.0.0.1&#39;,  # 主机
+        &#39;PORT&#39;: &#39;3306&#39;,  # 端口
+    }
+}</code></pre>
+<p>至此，就可以像使用SQLite一样使用MySQL了！</p>
+<h2 id="可能会遇到的报错">可能会遇到的报错</h2>
+<blockquote>
+<p>首先需要保证前面所有步骤均配置成功</p>
+</blockquote>
+<h3 id="报错1-django.core.exceptions.improperlyconfigured-mysqlclient-1.x.xx-or-newer-is-required-you-have-0.x.x.">报错1: django.core.exceptions.ImproperlyConfigured: mysqlclient 1.x.xx or newer is required; you have 0.x.x.</h3>
+<p><strong>报错内容：</strong></p>
+<pre class="python"><code>raise ImproperlyConfigured(&#39;mysqlclient 1.x.xx or newer is required; you have %s.&#39; % Database.__version__)
+
+django.core.exceptions.ImproperlyConfigured: mysqlclient 1.x.xx or newer is required; you have 0.x.x.</code></pre>
+<blockquote>
+<p>这里 <code>xx</code> 表示版本，报错版本可能不同但解决方法时一样的</p>
+</blockquote>
+<p><strong>解决方法：</strong></p>
+<p><code>/Python37（python安装目录）/Lib/site-packages/django/db/backends/mysql/base.py</code>，注释掉以下内容：</p>
+<pre class="python"><code># if version &lt; (1, 3, 13):
+#   raise ImproperlyConfigured(&#39;mysqlclient 1.3.13 or newer is required; you have %s.&#39; % Database.__version__)</code></pre>
+<h3 id="报错2attributeerror-str-object-has-no-attribute-decode">报错2：AttributeError: 'str' object has no attribute 'decode'</h3>
+<p><strong>报错内容：</strong></p>
+<pre class="python"><code>File &quot;xx\Python37\lib\site-packages\django\db\backends\mysql\operations.py&quot;, line 146, in last_executed_query
+query = query.decode(errors=&#39;replace&#39;)
+AttributeError: &#39;str&#39; object has no attribute &#39;decode&#39;</code></pre>
+<p><strong>解决方法：</strong></p>
+<p>打开 <code>xx\Python37\lib\site-packages\django\db\backends\mysql\operations.py</code> 把146行的 <code>decode</code> 修改为 <code>encode</code> 即可</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

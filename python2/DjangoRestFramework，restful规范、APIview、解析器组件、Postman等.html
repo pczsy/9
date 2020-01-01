@@ -1,0 +1,506 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修DjangoRestFramework，restful规范、APIview、解析器组件、Postman等' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>DjangoRestFramework，restful规范、APIview、解析器组件、Postman等</center></div><div class='banquan'>原文出处:本文由博客园博主changxin7提供。<br/>
+原文连接:https://www.cnblogs.com/changxin7/p/12038305.html</div><br>
+    <h1 id="一-预备知识">一 预备知识</h1>
+<p>　　预备知识：django的CBV和FBV</p>
+<p>　　　　CBV(class based view)：多用，简单回顾一下</p>
+<p>　　　　FBV(function based view)：</p>
+<p>　　CBV模式的简单操作：来个登陆页面吧</p>
+<p>　　login.html文件内容如下：</p>
+<pre><code><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+
+&lt;form action=&quot;{% url &#39;login&#39; %}&quot; method=&quot;post&quot;&gt;
+    {% csrf_token %}
+    用户名: &lt;input type=&quot;text&quot; name=&quot;username&quot;&gt;
+    密码: &lt;input type=&quot;text&quot; name=&quot;password&quot;&gt;
+    &lt;input type=&quot;submit&quot;&gt;
+&lt;/form&gt;
+
+
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>　　url.py内容如下</p>
+<pre><code><code>from django.conf.urls import url
+from django.contrib import admin
+from app01 import views
+urlpatterns = [
+    url(r&#39;^admin/&#39;, admin.site.urls),
+    url(r&#39;^login/&#39;, views.LoginView.as_view(),name=&#39;login&#39;),
+]</code></pre>
+<p>　　views.py</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+
+# Create your views here.
+from django.views import View
+
+class LoginView(View):
+
+    def get(self,request):
+
+        return render(request,&#39;login.html&#39;)
+    def post(self,request):
+
+        return HttpResponse(&#39;post&#39;)</code></pre>
+<p>　　大家还记得CBV的这个视图函数，为什么get请求就能找到类的get方法，post请求就能找到post方法，其内部有个dispatch方法来进行分发，这又怎么玩呢，看源码啦，从哪里看呢？那里先执行，就从哪里看</p>
+<p>　　views.LoginView.as_view()这个东西是不是先执行啊，url接收到请求，调用了它对不对，as_view()类方法，这个类方法给你返回了一个叫view的方法，就是说这个url对应这个一个view方法，当用户访问login页面的时候是不是就是执行了view(request)，大家进去看看源码吧。</p>
+<p>　　然后你就可以玩dispatch方法了，看代码：</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+
+# Create your views here.
+from django.views import View
+
+class LoginView(View):
+
+    def dispatch(self, request, *args, **kwargs):
+        print(&#39;something...&#39;)
+        res = super().dispatch(request, *args, **kwargs) #注意，不用传self，为什么呢，因为super已经帮你吧self放进去啦
+        print(&#39;someting....&#39;)
+        return res
+
+    def get(self,request):
+
+        return render(request,&#39;login.html&#39;)
+    def post(self,request):
+
+        return HttpResponse(&#39;post&#39;)</code></pre>
+<p>　　为什么要说它呢，因为后面咱们的drf学习，就要用它啦。</p>
+<h1 id="二-restful规范">二 restful规范</h1>
+<p>　　摘自：<a href="http://www.ruanyifeng.com/blog/2014/05/restful_api.html" class="uri">http://www.ruanyifeng.com/blog/2014/05/restful_api.html</a></p>
+<p>　　1. 什么是RESTFUl</p>
+<p>　　　　<a href="http://www.ruanyifeng.com/blog/2011/09/restful.html">RESTful</a> 是目前最流行的 API 设计规范，用于 Web 数据接口的设计。</p>
+<p>　　　　REST与技术无关，代表的是一种软件架构风格，REST是Representational State Transfer的简称，中文翻译为“表征状态转移”</p>
+<p>　　　　REST从资源的角度类审视整个网络，它将分布在网络中某个节点的资源通过URL进行标识，客户端应用通过URL来获取资源的表征，获得这些表征致使这些应用转变状态</p>
+<p>　　　　所有的数据，不过是通过网络获取的还是操作（增删改查）的数据，都是资源，将一切数据视为资源是REST区别与其他架构风格的最本质属性</p>
+<p>　　　　对于REST这种面向资源的架构风格，有人提出一种全新的结构理念，即：面向资源架构（ROA：Resource Oriented Architecture）</p>
+<p>　　　　　　另外还有其他两种，简单了解。</p>
+<pre><code><code>远程过程调用（RPC）
+远程过程调用为 Web 服务提供一个分布式函数/方法接口供用户调用。这是一种较传统的方式。通常，在 WSDL 中对 RPC 接口进行定义（类似于早期的XML-RPC）。本质上，RPC 方式利用一个简单映射，把用户请求直接转化成一个特定语言编写的函数/方法。现在，该方式已不再使用。
+
+面向服务架构（SOA）
+面向服务架构现在，业界比较关注的是遵从面向服务架构（Service-oriented architecture，SOA）来构建 Web 服务。该方式中，通讯是由消息驱动，而不再是某个动作（方法调用）。这种 Web 服务也称为“面向消息的服务”。</code></pre>
+<p>　　　　网络应用程序，分为前端和后端两个部分。当前的发展趋势，就是前端设备层出不穷（手机、平板、桌面电脑、其他专用设备......）。</p>
+<p>　　　　因此，必须有一种统一的机制，方便不同的前端设备与后端进行通信。这导致API构架的流行，甚至出现<a href="http://www.google.com.hk/search?q=API+first">&quot;API First&quot;</a>的设计思想。<a href="http://en.wikipedia.org/wiki/Representational_state_transfer">RESTful API</a>是目前比较成熟的一套互联网应用程序的API设计理论。还有一篇<a href="http://www.ruanyifeng.com/blog/2011/09/restful.html">《理解RESTful架构》</a>，探讨如何理解这个概念。</p>
+<p>　　　　表征状态转移大概图解：</p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等0.png" alt="img" /></p>
+<p>　　　　</p>
+<p>　　2.RESTFUl API设计</p>
+<p>　　　　<strong>2.1 使用协议</strong></p>
+<p>　　　　　　API与用户的通信协议，总是使用<a href="http://www.ruanyifeng.com/blog/2014/02/ssl_tls.html">HTTPs协议</a>。</p>
+<p>　　　　<strong>2.2 使用域名</strong></p>
+<p>　　　　　　应该尽量将API部署在专用域名之下，意思就是给API专门做一个服务器。</p>
+<pre><code><code>https://api.example.com</code></pre>
+<p>　　　　　　如果确定API很简单，不会有进一步扩展，可以考虑放在主域名下。</p>
+<pre><code><code>https://example.org/api/</code></pre>
+<p>　　　　<strong>2.3 版本提示</strong></p>
+<p>　　　　　　网站的API可能一直在更新，那么应该将API的版本号放入URL。</p>
+<pre><code><code>https://api.example.com/v1/</code></pre>
+<p>　　　　　　另一种做法是，将版本号放在HTTP头信息中，但不如放入URL方便和直观。<a href="https://developer.github.com/v3/media/#request-specific-version">Github</a>采用这种做法。</p>
+<p>　　　　<strong>2.4 路径写法</strong>　　　</p>
+<p>　　　　　　路径又称&quot;终点&quot;（endpoint），表示API的具体网址。</p>
+<p>　　　　　　在RESTful架构中，每个网址代表一种资源（resource），所以网址中不能有动词，只能有名词，而且所用的名词往往与数据库的表格名对应。一般来说，数据库中的表都是同种记录的&quot;集合&quot;（collection），所以API中的名词也应该使用复数。</p>
+<p>　　　　　　举例来说，有一个API提供动物园（zoo）的信息，还包括各种动物和雇员的信息，则它的路径应该设计成下面这样。</p>
+<pre><code><code>https://api.example.com/v1/zoos
+https://api.example.com/v1/animals
+https://api.example.com/v1/employees</code></pre>
+<p>　　　　<strong>2.5 HTTP动词</strong></p>
+<p>　　　　　　对于资源的具体操作类型，由HTTP动词表示，请求方式时动词，我们后端基于请求方式来分发对应的视图函数来进行逻辑处理和数据处理、提取、加工等操作，但是URL中不能出现动词。</p>
+<p>　　　　　　常用的HTTP动词有下面五个（括号里是对应的SQL命令）。</p>
+<pre><code><code>GET（SELECT）：从服务器取出资源（一项或多项）。
+POST（CREATE）：在服务器新建一个资源。
+PUT（UPDATE）：在服务器更新资源（客户端提供改变后的完整资源）。
+PATCH（UPDATE）：在服务器更新资源（客户端提供改变的属性，更新部分资源的意思）。他和put用哪个都可以，没有太大的区别，我们用put方式偏多
+DELETE（DELETE）：从服务器删除资源。</code></pre>
+<p>　　　　　　还有两个不常用的HTTP动词。</p>
+<pre><code><code>HEAD：获取资源的元数据。
+OPTIONS：获取信息，关于资源的哪些属性是客户端可以改变的</code></pre>
+<p>　　　　　　下面是一些例子。RESTful 的核心思想就是，客户端发出的数据操作指令都是&quot;动词 + 宾语&quot;的结构。比如，<code>GET /articles</code>这个命令，<code>GET</code>是动词，<code>/articles</code>是宾语。根据 HTTP 规范，动词一律大写。</p>
+<pre><code><code>GET /zoos：列出所有动物园
+POST /zoos：新建一个动物园
+GET /zoos/ID：获取某个指定动物园的信息
+PUT /zoos/ID：更新某个指定动物园的信息（提供该动物园的全部信息）
+PATCH /zoos/ID：更新某个指定动物园的信息（提供该动物园的部分信息）
+DELETE /zoos/ID：删除某个动物园
+GET /zoos/ID/animals：列出某个指定动物园的所有动物
+DELETE /zoos/ID/animals/ID：删除某个指定动物园的指定动物</code></pre>
+<p>　　　　　　动词覆盖：　　　　　　　</p>
+<p>　　　　　　　　有些客户端只能使用<code>GET</code>和<code>POST</code>这两种方法。服务器必须接受<code>POST</code>模拟其他三个方法（<code>PUT</code>、<code>PATCH</code>、<code>DELETE</code>）。</p>
+<p>　　　　　　　　这时，客户端发出的 HTTP 请求，要加上<code>X-HTTP-Method-Override</code>属性，告诉服务器应该使用哪一个动词，覆盖<code>POST</code>方法。</p>
+<pre><code><code>POST /api/Person/4 HTTP/1.1  
+X-HTTP-Method-Override: PUT</code></pre>
+<p>　　　　　　　　上面代码中，<code>X-HTTP-Method-Override</code>指定本次请求的方法是<code>PUT</code>，而不是<code>POST</code>。</p>
+<p>　　　　　　宾语必须是名字：</p>
+<p>　　　　　　　　宾语就是 API 的 URL，是 HTTP 动词作用的对象。它应该是名词，不能是动词。比如，<code>/articles</code>这个 URL 就是正确的，而下面的 URL 不是名词，所以都是错误的。</p>
+<pre><code><code>/getAllCars
+/createNewCar
+/deleteAllRedCars</code></pre>
+<p>　　　　　　　　既然 URL 是名词，那么应该使用复数，还是单数？</p>
+<p>　　　　　　　　这没有统一的规定，但是常见的操作是读取一个集合，比如<code>GET /articles</code>（读取所有文章），这里明显应该是复数。</p>
+<p>　　　　　　　　为了统一起见，建议都使用复数 URL，比如<code>GET /articles/2</code>要好于<code>GET /article/2</code>。</p>
+<p>　　　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等1.png" alt="img" /></p>
+<p>　　　　<strong>2.6 过滤信息(filtering，或称查询参数)</strong></p>
+<p>　　　　　　如果记录数量很多，服务器不可能都将它们返回给用户。API应该提供参数，过滤返回结果。</p>
+<p>　　　　　　下面是一些常见的参数。</p>
+<pre><code><code>?limit=10：指定返回记录的数量
+?offset=10：指定返回记录的开始位置。
+?page=2&amp;per_page=100：指定第几页，以及每页的记录数。
+?sortby=name&amp;order=asc：指定返回结果按照哪个属性排序，以及排序顺序。
+?animal_type_id=1：指定筛选条件</code></pre>
+<p>　　　　　　参数的设计允许存在冗余，即允许API路径和URL参数偶尔有重复。比如，GET /zoo/ID/animals 与 GET /animals?zoo_id=ID 的含义是相同的。</p>
+<p>　　　　　　常见的情况是，资源需要多级分类，因此很容易写出多级的 URL，比如获取某个作者的某一类文章。</p>
+<pre><code><code>GET /authors/12/categories/2</code></pre>
+<p>　　　　　　这种 URL 不利于扩展，语义也不明确，往往要想一会，才能明白含义。</p>
+<p>　　　　　　更好的做法是，除了第一级，其他级别都用查询字符串表达。</p>
+<pre><code><code>GET /authors/12?categories=2
+</code></pre>
+<p>　　　　　　下面是另一个例子，查询已发布的文章。你可能会设计成下面的 URL。</p>
+<pre><code><code>GET /articles/published
+</code></pre>
+<p>　　　　　　查询字符串的写法明显更好</p>
+<pre><code><code>GET /articles?published=true
+</code></pre>
+<p>　　　　<strong>2.7 状态码</strong></p>
+<p>　　　　　　2.7.1 状态码必须精确</p>
+<p>　　　　　　　　客户端的每一次请求，服务器都必须给出回应。回应包括 HTTP 状态码和数据两部分。</p>
+<p>　　　　　　　　HTTP 状态码就是一个三位数，分成五个类别。</p>
+<pre><code><code>1xx：相关信息
+2xx：操作成功
+3xx：重定向
+4xx：客户端错误
+5xx：服务器错误
+</code></pre>
+<p>　　　　　　　　这五大类总共包含<a href="https://en.wikipedia.org/wiki/List_of_HTTP_status_codes">100多种</a>状态码，覆盖了绝大部分可能遇到的情况。每一种状态码都有标准的（或者约定的）解释，客户端只需查看状态码，就可以判断出发生了什么情况，所以服务器应该返回尽可能精确的状态码。</p>
+<p>　　　　　　　　API 不需要<code>1xx</code>状态码，下面介绍其他四类状态码的精确含义。</p>
+<p>　　　　　　2.7.2 2xx状态码</p>
+<p>　　　　　　　　<code>200</code>状态码表示操作成功，但是不同的方法可以返回更精确的状态码。</p>
+<pre><code><code>GET: 200 OK
+POST: 201 Created
+PUT: 200 OK
+PATCH: 200 OK
+DELETE: 204 No Content
+</code></pre>
+<p>　　　　　　　　上面代码中，<code>POST</code>返回<code>201</code>状态码，表示生成了新的资源；<code>DELETE</code>返回<code>204</code>状态码，表示资源已经不存在。</p>
+<p>　　　　　　　　此外，<code>202 Accepted</code>状态码表示服务器已经收到请求，但还未进行处理，会在未来再处理，通常用于异步操作。下面是一个例子。</p>
+<pre><code><code>HTTP/1.1 202 Accepted
+
+{
+  &quot;task&quot;: {
+    &quot;href&quot;: &quot;/api/company/job-management/jobs/2130040&quot;,
+    &quot;id&quot;: &quot;2130040&quot;
+  }
+}
+</code></pre>
+<p>　　　　　　2.7.3 3xx状态码</p>
+<p>　　　　　　　　API 用不到<code>301</code>状态码（永久重定向）和<code>302</code>状态码（暂时重定向，<code>307</code>也是这个含义），因为它们可以由应用级别返回，浏览器会直接跳转，API 级别可以不考虑这两种情况。</p>
+<p>　　　　　　　　API 用到的<code>3xx</code>状态码，主要是<code>303 See Other</code>，表示参考另一个 URL。它与<code>302</code>和<code>307</code>的含义一样，也是&quot;暂时重定向&quot;，区别在于<code>302</code>和<code>307</code>用于<code>GET</code>请求，而<code>303</code>用于<code>POST</code>、<code>PUT</code>和<code>DELETE</code>请求。收到<code>303</code>以后，浏览器不会自动跳转，而会让用户自己决定下一步怎么办。下面是一个例子。</p>
+<pre><code><code>HTTP/1.1 303 See Other
+Location: /api/orders/12345
+</code></pre>
+<p>　　　　　　2.7.4 4xx状态码</p>
+<p>　　　　　　　　<code>4xx</code>状态码表示客户端错误，主要有下面几种。</p>
+<pre><code><code>400 Bad Request：服务器不理解客户端的请求，未做任何处理。
+
+401 Unauthorized：用户未提供身份验证凭据，或者没有通过身份验证。
+
+403 Forbidden：用户通过了身份验证，但是不具有访问资源所需的权限。
+
+404 Not Found：所请求的资源不存在，或不可用。
+
+405 Method Not Allowed：用户已经通过身份验证，但是所用的 HTTP 方法不在他的权限之内。
+
+410 Gone：所请求的资源已从这个地址转移，不再可用。
+
+415 Unsupported Media Type：客户端要求的返回格式不支持。比如，API 只能返回 JSON 格式，但是客户端要求返回 XML 格式。
+
+422 Unprocessable Entity ：客户端上传的附件无法处理，导致请求失败。
+
+429 Too Many Requests：客户端的请求次数超过限额。
+</code></pre>
+<p>　　　　　　2.7.5 5xx状态码</p>
+<p><code>　　　　　　　　5xx</code>状态码表示服务端错误。一般来说，API 不会向用户透露服务器的详细信息，所以只要两个状态码就够了。</p>
+<pre><code><code>500 Internal Server Error：客户端请求有效，服务器处理时发生了意外。
+
+503 Service Unavailable：服务器无法处理请求，一般用于网站维护状态。
+</code></pre>
+<p>　　　　　　总结一下常用状态码及对应的描述</p>
+<pre><code><code>200 OK - [GET]：服务器成功返回用户请求的数据，该操作是幂等的（Idempotent）。
+201 CREATED - [POST/PUT/PATCH]：用户新建或修改数据成功。
+202 Accepted - [*]：表示一个请求已经进入后台排队（异步任务）
+204 NO CONTENT - [DELETE]：用户删除数据成功。301  状态码（永久重定向）302  状态码（暂时重定向，307也是这个含义）
+400 INVALID REQUEST - [POST/PUT/PATCH]：用户发出的请求有错误，服务器没有进行新建或修改数据的操作，该操作是幂等的。
+401 Unauthorized - [*]：表示用户没有权限（令牌、用户名、密码错误）。
+403 Forbidden - [*] 表示用户得到授权（与401错误相对），但是访问是被禁止的。
+404 NOT FOUND - [*]：用户发出的请求针对的是不存在的记录，服务器没有进行操作，该操作是幂等的。
+406 Not Acceptable - [GET]：用户请求的格式不可得（比如用户请求JSON格式，但是只有XML格式）。
+410 Gone -[GET]：用户请求的资源被永久删除，且不会再得到的。
+422 Unprocesable entity - [POST/PUT/PATCH] 当创建一个对象时，发生一个验证错误。
+500 INTERNAL SERVER ERROR - [*]：服务器发生错误，用户将无法判断发出的请求是否成功。
+
+更多看这里：http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+</code></pre>
+<p>　　　　<strong>2.8 服务器响应</strong></p>
+<p>　　　　　　2.8.1 响应数据格式</p>
+<p>　　　　　　　　API 返回的数据格式，不应该是纯文本，而应该是一个 JSON 对象，因为这样才能返回标准的结构化数据。所以，服务器回应的 HTTP 头的<code>Content-Type</code>属性要设为<code>application/json</code>。</p>
+<p>　　　　　　　　客户端请求时，也要明确告诉服务器，可以接受 JSON 格式，即请求的 HTTP 头的<code>ACCEPT</code>属性也要设成<code>application/json</code>。下面是一个例子。</p>
+<pre><code><code>GET /orders/2 HTTP/1.1 
+Accept: application/json
+</code></pre>
+<p>　　　　　　2.8.2 发生错误时的响应</p>
+<p>　　　　　　　　发生错误时不要响应200状态码，有一种不恰当的做法是，即使发生错误，也返回<code>200</code>状态码，把错误信息放在数据体里面，就像下面这样。</p>
+<pre><code><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  &quot;status&quot;: &quot;failure&quot;,
+  &quot;data&quot;: {
+    &quot;error&quot;: &quot;Expected at least two items in list.&quot;
+  }
+}
+</code></pre>
+<p>　　　　　　　　上面代码中，解析数据体以后，才能得知操作失败。</p>
+<p>　　　　　　　　这张做法实际上取消了状态码，这是完全不可取的。正确的做法是，状态码反映发生的错误，具体的错误信息放在数据体里面返回。下面是一个例子。</p>
+<pre><code><code>HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+{
+  &quot;error&quot;: &quot;Invalid payoad.&quot;,
+  &quot;detail&quot;: {
+     &quot;surname&quot;: &quot;This field is required.&quot;
+  }
+}
+</code></pre>
+<p>　　　　　　2.8.3 响应结果</p>
+<p>　　　　　　　　针对不同操作，服务器向用户返回的结果应该符合以下规范。</p>
+<pre><code><code>GET /collection：返回资源对象的列表（数组），一般是[{&quot;id&quot;:1,&quot;name&quot;:&quot;a&quot;,},{&quot;id&quot;:2,name:&quot;b&quot;},]这种类型
+GET /collection/resource：返回单个资源对象， 一般是查看的单条数据 {&quot;id&quot;:1,&quot;name&quot;:&#39;a&#39;}
+POST /collection：返回新生成的资源对象 ， 一般是返回新添加的数据信息， 格式一般是{}
+PUT /collection/resource：返回完整的资源对象  一般时返回更新后的数据，{}
+PATCH /collection/resource：返回完整的资源对象
+DELETE /collection/resource：返回一个空文档  一般返回一个空字符串
+</code></pre>
+<p>　　　　　　　　例如：　　</p>
+<p>　　　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等2.png" alt="img" /></p>
+<p>　　　　<strong>2.9 Hypermedia API，提供链接</strong></p>
+<p>　　　　　　RESTful API最好做到Hypermedia，即返回结果中提供链接，API 的使用者未必知道，URL 是怎么设计的。一个解决方法就是，在回应中，给出相关链接，便于下一步操作。这样的话，用户只要记住一个 URL，就可以发现其他的 URL。这种方法叫做 HATEOAS。</p>
+<p>　　　　　　举例来说，GitHub 的 API 都在 <a href="https://api.github.com/">api.github.com</a> 这个域名。访问它，就可以得到其他 URL。</p>
+<pre><code><code>{
+  ...
+  &quot;feeds_url&quot;: &quot;https://api.github.com/feeds&quot;,
+  &quot;followers_url&quot;: &quot;https://api.github.com/user/followers&quot;,
+  &quot;following_url&quot;: &quot;https://api.github.com/user/following{/target}&quot;,
+  &quot;gists_url&quot;: &quot;https://api.github.com/gists{/gist_id}&quot;,
+  &quot;hub_url&quot;: &quot;https://api.github.com/hub&quot;,
+  ...
+}
+</code></pre>
+<p>　　　　　　上面的回应中，挑一个 URL 访问，又可以得到别的 URL。对于用户来说，不需要记住 URL 设计，只要从 api.github.com 一步步查找就可以了。</p>
+<p>　　　　　　HATEOAS 的格式没有统一规定，上面例子中，GitHub 将它们与其他属性放在一起。更好的做法应该是，将相关链接与其他属性分开。</p>
+<pre><code><code>HTTP/1.1 200 OK
+Content-Type: application/json
+
+{
+  &quot;status&quot;: &quot;In progress&quot;,
+   &quot;links&quot;: {[
+    { &quot;rel&quot;:&quot;cancel&quot;, &quot;method&quot;: &quot;delete&quot;, &quot;href&quot;:&quot;/api/status/12345&quot; } ,
+    { &quot;rel&quot;:&quot;edit&quot;, &quot;method&quot;: &quot;put&quot;, &quot;href&quot;:&quot;/api/status/12345&quot; }
+  ]}
+}
+</code></pre>
+<p>　　　　　　再比如：当用户向api.example.com的根目录发出请求，会得到这样一个文档。</p>
+<pre><code><code>{&quot;link&quot;: {
+  &quot;rel&quot;:   &quot;collection https://www.example.com/zoos&quot;,
+  &quot;href&quot;:  &quot;https://api.example.com/zoos&quot;,
+  &quot;title&quot;: &quot;List of zoos&quot;,
+  &quot;type&quot;:  &quot;application/vnd.yourformat+json&quot;
+}}
+</code></pre>
+<p>　　　　　　上面代码表示，文档中有一个links属性，用户读取这个属性就知道下一步该调用什么API了。rel表示这个API与当前网址的关系（collection关系，并给出该collection的网址），href表示API的路径，title表示API的标题，type表示返回类型。</p>
+<p>　　　　<strong>2.10 其他</strong></p>
+<p>　　　　　　（1）API的身份认证应该使用<a href="http://www.ruanyifeng.com/blog/2014/05/oauth_2_0.html">OAuth 2.0</a>框架。</p>
+<p>　　　　　　（2）服务器返回的数据格式，应该尽量使用JSON，避免使用XML。</p>
+<h1 id="三-django-restframework简称drf">三 Django RestFramework(简称DRF)</h1>
+<p>drf是django发展来的一个符合restful接口规范的一个东西，啥东西呢，就是django的一个app，还记得app是啥不。<a href="https://www.django-rest-framework.org/">DRF官网地址</a>，但是大家记住一句话，即便是没有这drf，我们照样能做前后端分离的项目，自己做规范的数据接口，返回json数据，都是没问题的昂，那为什么还用drf啊，这个更nb。</p>
+<p>在官网中我们看一下这里：</p>
+<p>　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等3.png" alt="img" /></p>
+<p>首先下载安装，django是必须要的，不过咱们的django已经下载好了，如果没下载好，那么pip install django，执行一下：</p>
+<pre><code><code>pip install django
+pip install djangorestframework  //执行这句话，下载drf
+
+# Set up a new project with a single application
+django-admin startproject tutorial .  # Note the trailing &#39;.&#39; character
+cd tutorial
+django-admin startapp quickstart
+cd ..
+</code></pre>
+<h2 id="先基于djangocbv不用drf来写个接口看看效果"><strong>1.先基于djangoCBV，不用DRF来写个接口，看看效果</strong></h2>
+<p>　　好，接下来我们创建一个django项目，models中创建一个表，添加一些数据，然后写一个数据接口来获取一下这些数据，返回json数据类型，按照我们CBV的模式来写，但是下面还没有用到我们的drf昂，只是告诉大家，没有drf，你也能做。</p>
+<p>　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等4.png" alt="img" /></p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等5.png" alt="img" /></p>
+<p>　　</p>
+<p>　　views.py文件内容如下：</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+import json
+# Create your views here.
+from django.views import View
+from app01 import models
+class CourseView(View):
+
+    def get(self,request):
+        #拿到queryset类型的数据，要加工成[{},{}]这种数据类型
+        course_obj_list = models.Course.objects.all()
+        ret = []
+        for course_obj in course_obj_list:
+            ret.append({
+                &quot;title&quot;:course_obj.title,
+                &quot;desc&quot;:course_obj.desc,
+            })
+
+        return HttpResponse(json.dumps(ret,ensure_ascii=False)) #ensure_ascii=False是告诉json不要对中文进行编码，不然返回给前端的数据中如果有中文的话会被编码成unicode类型的数据，导致前端看不到中文
+</code></pre>
+<p>　　urls.py内容如下：</p>
+<pre><code><code>from django.conf.urls import url
+from django.contrib import admin
+from app01 import views
+urlpatterns = [
+    #url(r&#39;^admin/&#39;, admin.site.urls),
+    url(r&#39;^courses/&#39;, views.CourseView.as_view(),name=&#39;courses&#39;), #接口就写好啦
+]
+</code></pre>
+<p>　　然后启动项目，在浏览器中一访问，就看到了我们后端返回的json数据：</p>
+<p>　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等6.png" alt="img" /></p>
+<p>　　　　有人就又说了，我们这么写也ok啊，要drf干嘛，上面这个例子是个简单的例子，数据简单、逻辑简单，你这样写当然看着没有问题啦，但是数据量很大，结构很复杂的时候，你这样写的时候就头疼了。</p>
+<p>　　所以上面这个例子你就作为了解吧，我们玩一下drf。</p>
+<p>玩DRF之前，我们先说一下我们DRF中有哪些内容：</p>
+<pre><code><code>　咱们玩下面10个组件：　　a.APIView   (*****)
+　　b.序列化组件 (*****)
+　　c.试图类(mixin) (*****)
+　　d.认证组件 (*****)
+　　e.权限组件
+　　f.频率组件
+　　g.分页组件
+　　h.解析器组件 (*****)
+　　i.相应其组件
+　　j.url控制器
+</code></pre>
+<h2 id="基于drf来写接口"><strong>2.基于DRF来写接口</strong></h2>
+<p>　　<strong>2.1 APIView组件</strong></p>
+<p>　　　　在我们的视图中，通过CBV来写视图的时候，继承APIView，url不变，还是上面那个，通过浏览器访问，照样能够看到我们返回的数据，</p>
+<p>　　　　views.py内容如下：</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+import json
+from django.views import View
+from app01 import models
+#引入APIView,APIView是继承的django的View，也就是APIView在View的基础上添加了一些其他的功能
+from rest_framework.views import APIView
+
+class CourseView(APIView):
+    def get(self,request):
+        course_obj_list = models.Course.objects.all()
+        ret = []
+        for course_obj in course_obj_list:
+            ret.append({
+                &quot;title&quot;:course_obj.title,
+                &quot;desc&quot;:course_obj.desc,
+            })
+        return HttpResponse(json.dumps(ret, ensure_ascii=False))
+</code></pre>
+<p>　　　　　　urls.py内容如下：</p>
+<pre><code><code>from django.conf.urls import url
+from django.contrib import admin
+from app01 import views
+urlpatterns = [
+    url(r&#39;^admin/&#39;, admin.site.urls),
+    url(r&#39;^courses/&#39;, views.CourseView.as_view(),name=&#39;courses&#39;),
+]
+</code></pre>
+<p>　　　　　　页面访问url效果：</p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等7.png" alt="img" /></p>
+<p>　　　　　　照样拿到了数据，那么怎么回事儿呢，我们看源码，知道一下APIView的流程就行。</p>
+<p>　　　　<strong>2.2 解析器组件</strong></p>
+<p>　　　　　　知识准备，还记得一个叫做contentType的http请求头的东西吗？回想一下。</p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等8.png" alt="img" /></p>
+<p>　　　　　　后端根据contentType的类型来找到对应的解析数据的方法来解析数据，提取数据</p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等9.png" alt="img" /></p>
+<p>　　　　　　但是django没有内置的自动解开json数据类型的方法，那么只能去request.body里面拿原始的bytes类型的数据，然后自己解，其实很简单，但是django没有，可能是早先没有考虑到。</p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等10.png" alt="img" /></p>
+<p>　　　　　　django自动通过contentType来解析数据的那些方法就叫做django的解析器，能解的是urlencode和文件的那个mutipart/form-data类型的数据，然后将数据放到了request.POST方法里面。</p>
+<pre><code><code>    def post(self,request):
+        print(request.POST)
+        print(type(request)) #通过这个对象的类型(类对象)，找到它的源码看看
+        return HttpResponse(&#39;POST&#39;)
+</code></pre>
+<p>　　　　　　而DRF通过自己的解析器，帮我们给request里面封装了一个request.data属性，获取请求体里面的数据，然后解析，并且这个解析器基本上能够解析所有的数据类型，包括django不能自动解析的json数据类型，我们通过Postman(关于Postman工具的使用，看下面那个章节)来调试一下，看看效果</p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等11.png" alt="img" /></p>
+<pre><code><code>    def post(self,request):
+        print(request.data)  #打印结果是：{&#39;name&#39;: &#39;chao&#39;}
+        return HttpResponse(&#39;POST&#39;)
+</code></pre>
+<p>　　　　我们接着往下看：首先我们给我们的试图类添加一个类变量，这些类变量是用来控制我们视图类里面的各个组件</p>
+<p>　　　　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等12.png" alt="img" /></p>
+<p>　　　　看一下代码：　</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+import json
+from django.views import View
+from app01 import models
+from rest_framework.views import APIView
+
+#导入解析器
+from rest_framework.parsers import JSONParser,FormParser,MulTiPartParser
+# JSONParser:解析json数据的额
+# FormParser：解析urlencoded数据的
+# FileUploadParser：解析文件数据的
+
+class CourseView(APIView):
+    #写一个类属性，名字必须是parser_classes
+    parser_classes = [JSONParser,] #里面存放我们上面导入的那几个解析器,如果我们里面写了一个JSONParser，那么解析器只能解析前端发送过来的json数据，存放到request.data里面，可以通过postman测试一下看看效果，为什么？看源码吧
+
+    def get(self,request):
+        course_obj_list = models.Course.objects.all()
+        ret = []
+        for course_obj in course_obj_list:
+            ret.append({
+                &quot;title&quot;:course_obj.title,
+                &quot;desc&quot;:course_obj.desc,
+            })
+        return HttpResponse(json.dumps(ret, ensure_ascii=False))
+
+    def post(self,request):        print(&#39;ok&#39;) #你会发现，即便是发送的数据类型不对，post方法也走了，但是request.data没有东西，那么肯定是它出了问题
+        print(request.data)  #request.data对我们的数据进行解析的，那么说明data不是一个变量，而是一个属性方法，还记得属性方法吗
+        return HttpResponse(&#39;POST&#39;)
+</code></pre>
+<p>　　源码看着比较复杂，这里我就不列举了，反正你要知道的是，我们的解析器的查找使用顺序是：</p>
+<p>　　　　自己写的类里面的parser_classes = [JSONParser,]----&gt;然后找settings中的-----&gt;然后找默认的，只要找到，就用了。其他的组件也都是这么个顺序，所以其他的咱们就不看了。</p>
+<h1 id="四-postman的使用">四 Postman的使用</h1>
+<p>Postman是一个模拟发送请求并获得响应结果的工具，不用这个工具的时候，我们写web项目，调试接口返回数据的时候，是不是都要启动项目，通过浏览器访问，然后查看数据啊，有了这个工具我们就可以不用启动浏览器来，通过这个工具就能进行调试，首先下载安装</p>
+<p>下载地址：<a href="https://www.getpostman.com/downloads/" class="uri">https://www.getpostman.com/downloads/</a></p>
+<p>安装，然后使用，直接看图吧，一看就明白：</p>
+<p><img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等13.png" alt="img" /></p>
+<p>　　　<img src="./images/DjangoRestFramework，restful规范、APIview、解析器组件、Postman等14.png" alt="img" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

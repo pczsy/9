@@ -1,0 +1,340 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修java之反射机制' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>java之反射机制</center></div><div class='banquan'>原文出处:本文由博客园博主西西嘛呦提供。<br/>
+原文连接:https://www.cnblogs.com/xiximayou/p/12073611.html</div><br>
+    <p>空口说反射，很难理解这是个什么东西，举个例子就明了了。</p>
+<p>假设现在我们有一张动漫的图片，我们通过这张图片，在大脑中搜索有关记忆，就清楚这张图片是什么动漫里的谁；假设我们现在有一个名字，在大脑中搜索有关记忆，就自然而然地想到了该名字人物的具体形象，这种思维过程就是反射。</p>
+<p><span style="color: #ff0000;"><strong>假设一个类已经加载进JVM，那么，给定该类名，我们就可以通过反射来获取该类的相应信息。</strong></span></p>
+<p>具体定义：反射是被视为动态语言的关键，<span style="color: #ff0000;"><strong>反射机制允许程序在执行期借助反射API取得任何类的内部信息，并能直接操作在任何对象的内部属性和方法。</strong></span></p>
+<p><span style="font-size: 16px;"><strong><span style="color: #ff0000;">java反射机制提供的功能：</span></strong></span></p>
+<ul>
+<li>在运行时判断任意一个对象所属的类；</li>
+<li>在运行时构造任意一个类的对象；</li>
+<li>在运行时判断一个类所具有的成员变量和方法；</li>
+<li>在运行时调用任意一个对象的成员变量和方法，生成动态代理；</li>
+</ul>
+<p><span style="font-size: 16px;"><strong><span style="color: #ff0000;">反射相关的API：</span></strong></span></p>
+<ul>
+<li>java.lang.Class：代表一个类</li>
+<li>java,lang.reflect.Method：代表类的方法</li>
+<li>java.lang.reflect.Field：代表类的成员变量</li>
+<li>jav.lang.reflect.Constructor：代表类的构造方法</li>
+</ul>
+<p><span style="font-size: 18pt;"><strong><span style="color: #0000ff;">一。class类</span></strong></span></p>
+<p>在Object类中定义了以下的方法，此方法将被所有子类继承：public final Class getClass()。</p>
+<p>以上方法返回值是一个Class类，此类是java反射的源头，实际上所谓反射从程序的运行结果来看也很好理解，即：通过对象反射求出类的名称。</p>
+<p>反射可以得到的信息：某个类的属性、方法、构造器、某个类到底实现了哪些接口。对于每个类而言，JRE都为其保留一个Class类型的对象。一个Class对象包含了特定某个类的有关信息。</p>
+<ul>
+<li>Class本身也是一个类；</li>
+<li>Class对象只能由系统建立；</li>
+<li>一个类在JVM中只含有一个实例；</li>
+<li>一个Class对象对应的是一个加载进JVM中的一个.class文件；</li>
+<li>每个类的实例都会记得自己是由哪个Class实例所生成；</li>
+<li>通过Class可以完整地得到一个类中的完整结构；</li>
+</ul>
+<p>实例化Class类的四种方式：</p>
+<ul>
+<li>Class clazz = String.Class();通过类名.class()</li>
+<li>Class clazz &nbsp;= p.getClass();通过对象的实例.getClass()</li>
+<li>Class clazz = Class.forName("java.lang.String);已知一个类的全类名，且在该类的类路径下，可用过forName()获取</li>
+<li>ClassLoader cl = this.getClass().getClassLoader();<br />Class clazz4 = cl.loadClass("类的全类名");</li>
+</ul>
+<p><span style="font-size: 18pt;"><strong><span style="color: #0000ff;">二、通过反射调用类的完整结构</span></strong></span></p>
+<p>Person.java</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">package</span><span style="color: #000000;"> ref;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Person {
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String name;
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">int</span><span style="color: #000000;"> age;
+}</span></pre>
+</div>
+<p>Move.java</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">package</span><span style="color: #000000;"> ref;
+
+</span><span style="color: #0000ff;">interface</span><span style="color: #000000;"> Move {
+    </span><span style="color: #0000ff;">void</span><span style="color: #000000;"> move();
+}</span></pre>
+</div>
+<p>Study.java</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">package</span><span style="color: #000000;"> ref;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">interface</span><span style="color: #000000;"> Study {
+    </span><span style="color: #0000ff;">void</span><span style="color: #000000;"> study();
+}    </span></pre>
+</div>
+<p>Student.java</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">package</span><span style="color: #000000;"> ref;
+
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span> Student <span style="color: #0000ff;">extends</span> Person <span style="color: #0000ff;">implements</span><span style="color: #000000;"> Move,Study{
+    
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String school;
+　 </span><span style="color: #0000ff;">private</span><span style="color: #000000;"> String privateField;
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> showInfo() {
+        System.out.println(</span>"学校是"+<span style="color: #0000ff;">this</span><span style="color: #000000;">.school);
+    }
+
+    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> study() {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> TODO Auto-generated method stub</span>
+        System.out.println("学习到中学的知识"<span style="color: #000000;">);
+    }
+
+    @Override
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> move() {
+        </span><span style="color: #008000;">//</span><span style="color: #008000;"> TODO Auto-generated method stub</span>
+        System.out.println("骑自行车上学"<span style="color: #000000;">);
+    }
+    
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Student() {
+        System.out.println(</span>"调用的是Student()"<span style="color: #000000;">);
+    }
+    
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> Student(String school) {
+        </span><span style="color: #0000ff;">this</span>.school =<span style="color: #000000;"> school;
+        System.out.println(</span>"调用的是Student(String school)"<span style="color: #000000;">);
+    }
+    </span><span style="color: #0000ff;">private</span> Student(String name,<span style="color: #0000ff;">int</span><span style="color: #000000;"> age) {
+        </span><span style="color: #0000ff;">this</span>.name =<span style="color: #000000;"> name;
+        </span><span style="color: #0000ff;">this</span>.age =<span style="color: #000000;"> age;
+        System.out.println(</span>"调用的是Student(String name,int age)"<span style="color: #000000;">);
+    }
+    
+    </span><span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test(String name) {}
+    </span><span style="color: #0000ff;">public</span><span style="color: #000000;"> String testGetSchool() {
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> school;
+    }
+
+}</span></pre>
+</div>
+<p>test.java</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">package</span><span style="color: #000000;"> ref;
+
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.lang.reflect.Constructor;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.lang.reflect.Field;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.lang.reflect.InvocationTargetException;
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> java.lang.reflect.Method;
+</span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> Test {
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">static</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> main(String[] args) {
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;"> {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">这里是相关代码</span>
+        } <span style="color: #0000ff;">catch</span><span style="color: #000000;"> (ClassNotFoundException e) {
+            </span><span style="color: #008000;">//</span><span style="color: #008000;"> TODO Auto-generated catch block</span>
+<span style="color: #000000;">            e.printStackTrace();
+        }
+    }
+</span><span style="font-size: 16px;">}</span></pre>
+</div>
+<p><span style="color: #ff00ff; font-size: 16px;"><strong>1.获取类的父类和接口</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>            Class clazz = Class.forName("ref.Student"<span style="color: #000000;">);
+            Class superClass </span>=<span style="color: #000000;"> clazz.getSuperclass();
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取父类的名字</span>
+            System.out.println("父类："+<span style="color: #000000;">superClass.getName());
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取实现的接口</span>
+            Class[] interfaces =<span style="color: #000000;"> clazz.getInterfaces();
+            </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Class itf:interfaces) {
+                System.out.println(</span>"接口名字："+<span style="color: #000000;">itf.getName());
+            }</span></pre>
+</div>
+<p>父类：ref.Person<br />接口名字：ref.Move<br />接口名字：ref.Study</p>
+<p><span style="font-size: 16px;"><strong><span style="color: #ff00ff;">2.获取类的构造方法</span></strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">获取公有的构造方法</span>
+            Constructor[] cons =<span style="color: #000000;"> clazz.getConstructors();
+            </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Constructor con:cons) {
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+                System.out.println(</span>"构造方法："+con.getName());<span style="color: #008000;">//</span><span style="color: #008000;">获取构造方法名称
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">返回1代表public</span>
+                System.out.println("构造方法修饰符："+con.getModifiers());<span style="color: #008000;">//</span><span style="color: #008000;">获取构造方法修饰符
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">获取构造方法的参数类型</span>
+                Class[] parameterClass =<span style="color: #000000;"> con.getParameterTypes();
+                </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Class param:parameterClass){
+                    System.out.println(</span>"构造方法："+con.getName()+"的参数类型为"+<span style="color: #000000;">param.getName());
+                }
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+            }
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取私有的构造方法</span>
+            Constructor[] cons2 =<span style="color: #000000;"> clazz.getDeclaredConstructors();
+            </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Constructor con:cons2) {
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+                System.out.println(</span>"构造方法："+con.getName());<span style="color: #008000;">//</span><span style="color: #008000;">获取构造方法名称</span>
+                System.out.println("构造方法修饰符："+con.getModifiers());<span style="color: #008000;">//</span><span style="color: #008000;">获取构造方法修饰符
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">获取构造方法的参数类型</span>
+                Class[] parameterClass =<span style="color: #000000;"> con.getParameterTypes();
+                </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Class param:parameterClass){
+                    System.out.println(</span>"构造方法："+con.getName()+"的参数类型为"+<span style="color: #000000;">param.getName());
+                }
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+            }</span></pre>
+</div>
+<p>--------------------------<br />构造方法：ref.Student<br />构造方法修饰符：1<br />--------------------------<br />--------------------------<br />构造方法：ref.Student<br />构造方法修饰符：1<br />构造方法：ref.Student的参数类型为java.lang.String<br />--------------------------</p>
+<hr />
+<p>&nbsp;</p>
+<p>--------------------------<br />构造方法：ref.Student<br />构造方法修饰符：1<br />--------------------------<br />--------------------------<br />构造方法：ref.Student<br />构造方法修饰符：2<br />构造方法：ref.Student的参数类型为java.lang.String<br />构造方法：ref.Student的参数类型为int<br />--------------------------<br />--------------------------<br />构造方法：ref.Student<br />构造方法修饰符：1<br />构造方法：ref.Student的参数类型为java.lang.String<br />--------------------------</p>
+<p><span style="color: #ff00ff; font-size: 16px;"><strong>3.通过反射来创建对象</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>                <span style="color: #008000;">//</span><span style="color: #008000;">相当于调用无参构造方法</span>
+                Object obj =<span style="color: #000000;"> clazz.newInstance();
+                Student stu </span>=<span style="color: #000000;"> (Student) obj;
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">相当于调用Student(String school)构造方法</span>
+                Constructor con = clazz.getConstructor(String.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+                Student stu1 </span>= (Student) con.newInstance("一中"<span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">通过反射机制可以强制获取私有方法</span>
+                Constructor con2 = clazz.getDeclaredConstructor(String.<span style="color: #0000ff;">class</span>,<span style="color: #0000ff;">int</span>.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">解除私有的封装</span>
+                con2.setAccessible(<span style="color: #0000ff;">true</span><span style="color: #000000;">);
+                Student stu2 </span>= (Student) con2.newInstance("jack",23<span style="color: #000000;">);
+                System.out.println(stu2.name);
+                System.out.println(stu2.age);</span></pre>
+</div>
+<p>调用的是Student()<br />调用的是Student(String school)<br />调用的是Student(String name,int age)<br />jack<br />23</p>
+<p><span style="color: #ff00ff; font-size: 16px;"><strong>4.获取类的方法</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">获取所有公有方法</span>
+            Method[] ms =<span style="color: #000000;"> clazz.getMethods();
+            </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Method m:ms) {
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+                System.out.println(</span>"方法名："+<span style="color: #000000;">m.getName());
+                System.out.println(</span>"返回值类型："+<span style="color: #000000;">m.getReturnType());
+                System.out.println(</span>"修饰符："+<span style="color: #000000;">m.getModifiers());
+                Class[] mrs </span>=<span style="color: #000000;"> m.getParameterTypes();
+                </span><span style="color: #0000ff;">if</span>(mrs!=<span style="color: #0000ff;">null</span> &amp;&amp; mrs.length&gt;0<span style="color: #000000;">) {
+                    </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Class mr:mrs){    
+                        System.out.println(</span>"方法参数类型："+<span style="color: #000000;">mr.getName());
+                    }
+                }
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+            }
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取所有方法,包括公有和私有</span>
+            Method[] ms2 =<span style="color: #000000;"> clazz.getDeclaredMethods();
+            </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Method m:ms2) {
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+                System.out.println(</span>"方法名："+<span style="color: #000000;">m.getName());
+                System.out.println(</span>"返回值类型："+<span style="color: #000000;">m.getReturnType());
+                System.out.println(</span>"修饰符："+<span style="color: #000000;">m.getModifiers());
+                Class[] mrs </span>=<span style="color: #000000;"> m.getParameterTypes();
+                </span><span style="color: #0000ff;">if</span>(mrs!=<span style="color: #0000ff;">null</span> &amp;&amp; mrs.length&gt;0<span style="color: #000000;">) {
+                    </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Class mr:mrs){    
+                        System.out.println(</span>"方法参数类型："+<span style="color: #000000;">mr.getName());
+                    }
+                }
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+            }</span></pre>
+</div>
+<p>--------------------------<br />方法名：showInfo<br />返回值类型：void<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：study<br />返回值类型：void<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：move<br />返回值类型：void<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：testGetSchool<br />返回值类型：class java.lang.String<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：wait<br />返回值类型：void<br />修饰符：17<br />--------------------------<br />--------------------------<br />方法名：wait<br />返回值类型：void<br />修饰符：17<br />方法参数类型：long<br />方法参数类型：int<br />--------------------------<br />--------------------------<br />方法名：wait<br />返回值类型：void<br />修饰符：273<br />方法参数类型：long<br />--------------------------<br />--------------------------<br />方法名：equals<br />返回值类型：boolean<br />修饰符：1<br />方法参数类型：java.lang.Object<br />--------------------------<br />--------------------------<br />方法名：toString<br />返回值类型：class java.lang.String<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：hashCode<br />返回值类型：int<br />修饰符：257<br />--------------------------<br />--------------------------<br />方法名：getClass<br />返回值类型：class java.lang.Class<br />修饰符：273<br />--------------------------<br />--------------------------<br />方法名：notify<br />返回值类型：void<br />修饰符：273<br />--------------------------<br />--------------------------<br />方法名：notifyAll<br />返回值类型：void<br />修饰符：273<br />--------------------------</p>
+<hr />
+<p><br />--------------------------<br />方法名：test<br />返回值类型：void<br />修饰符：2<br />方法参数类型：java.lang.String<br />--------------------------</p>
+<p>--------------------------<br />方法名：showInfo<br />返回值类型：void<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：study<br />返回值类型：void<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：move<br />返回值类型：void<br />修饰符：1<br />--------------------------<br />--------------------------<br />方法名：testGetSchool<br />返回值类型：class java.lang.String<br />修饰符：1<br />--------------------------</p>
+<p><span style="color: #ff00ff; font-size: 16px;"><strong>5.获取类的属性</strong></span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">　　　　　　　//</span><span style="color: #008000;">获取公有属性</span>
+            Field[] fs =<span style="color: #000000;"> clazz.getFields();
+            </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Field f:fs) {
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+                System.out.println(</span>"属性名："+<span style="color: #000000;">f.getName());
+                System.out.println(</span>"属性类型："+<span style="color: #000000;">f.getType());
+                System.out.println(</span>"修饰符："+<span style="color: #000000;">f.getModifiers());
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+            }
+            </span><span style="color: #008000;">//</span><span style="color: #008000;">获取所有属性</span>
+            Field[] fs2 =<span style="color: #000000;"> clazz.getDeclaredFields();
+            </span><span style="color: #0000ff;">for</span><span style="color: #000000;">(Field f:fs2) {
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+                System.out.println(</span>"属性名："+<span style="color: #000000;">f.getName());
+                System.out.println(</span>"属性类型："+<span style="color: #000000;">f.getType());
+                System.out.println(</span>"修饰符："+<span style="color: #000000;">f.getModifiers());
+                System.out.println(</span>"--------------------------"<span style="color: #000000;">);
+            }</span></pre>
+</div>
+<p>--------------------------<br />属性名：school<br />属性类型：class java.lang.String<br />修饰符：1<br />--------------------------<br />--------------------------<br />属性名：name<br />属性类型：class java.lang.String<br />修饰符：1<br />--------------------------<br />--------------------------<br />属性名：age<br />属性类型：int<br />修饰符：1<br />--------------------------</p>
+<hr />
+<p><br />--------------------------<br />属性名：school<br />属性类型：class java.lang.String<br />修饰符：1<br />--------------------------<br />--------------------------<br />属性名：privateField<br />属性类型：class java.lang.String<br />修饰符：2<br />--------------------------</p>
+<p><span style="font-size: 16px;"><strong><span style="color: #ff00ff;">6.获取类所在的包</span></strong></span></p>
+<div class="cnblogs_code">
+<pre><code>            <span style="color: #008000;">//</span><span style="color: #008000;">获取类所在的包</span>
+            Package p =<span style="color: #000000;"> clazz.getPackage();
+            System.out.println(p.getName());</span></pre>
+</div>
+<p>ref</p>
+<p><span style="color: #0000ff; font-size: 18pt;"><strong>三、通过反射来调用类中指定的方法和属性</strong></span></p>
+<p>向Student.java中插入以下方法：</p>
+<div class="cnblogs_code">
+<pre><code>    <span style="color: #0000ff;">private</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> test(String name) {
+        System.out.println(</span>"这是私有的test(String name)方法"<span style="color: #000000;">);
+    }
+
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span><span style="color: #000000;"> setInfo(String name,String school) {
+        </span><span style="color: #0000ff;">this</span>.name =<span style="color: #000000;"> name;
+        </span><span style="color: #0000ff;">this</span>.school =<span style="color: #000000;"> school;
+        System.out.println(</span>"这是公有的setInfo(String name,String school)方法"<span style="color: #000000;">);
+    }
+    </span><span style="color: #0000ff;">public</span> <span style="color: #0000ff;">void</span> setInfo(<span style="color: #0000ff;">int</span><span style="color: #000000;"> age) {
+        </span><span style="color: #0000ff;">this</span>.age =<span style="color: #000000;"> age;
+        System.out.println(</span>"这是公有的setInfo(int age)方法"<span style="color: #000000;">);
+    }</span></pre>
+</div>
+<p><span style="font-size: 16px;"><strong><span style="color: #ff00ff;">1.调用类中指定的方法</span></strong></span></p>
+<div class="cnblogs_code">
+<pre><code>                Constructor con =<span style="color: #000000;"> clazz.getConstructor();
+                Object obj </span>=<span style="color: #000000;"> con.newInstance();
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">先获取到方法</span>
+                Method m = clazz.getMethod("setInfo", String.<span style="color: #0000ff;">class</span>,String.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">再进行调用</span>
+                m.invoke(obj, "tom","三中"<span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">如果想调用私有的方法</span>
+                Method m2 = clazz.getDeclaredMethod("test", String.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+                m2.setAccessible(</span><span style="color: #0000ff;">true</span><span style="color: #000000;">);
+                m2.invoke(obj, </span>"jack"<span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">调用重载的方法</span>
+                Method m3 = clazz.getMethod("setInfo", <span style="color: #0000ff;">int</span>.<span style="color: #0000ff;">class</span><span style="color: #000000;">);
+                m3.invoke(obj, </span>12<span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">调用具有返回值的方法</span>
+                Method m4 = clazz.getMethod("testGetSchool"<span style="color: #000000;">);
+                String school </span>=<span style="color: #000000;"> (String) m4.invoke(obj);
+                System.out.println(school);</span></pre>
+</div>
+<p>调用的是Student()<br />这是公有的setInfo(String name,String school)方法<br />这是私有的test(String name)方法<br />这是公有的setInfo(int age)方法<br />三中</p>
+<p><span style="font-size: 16px;"><strong><span style="color: #ff00ff;">2.调用类中指定的属性</span></strong></span></p>
+<div class="cnblogs_code">
+<pre><code>                Constructor con =<span style="color: #000000;"> clazz.getConstructor();
+                Object obj </span>=<span style="color: #000000;"> con.newInstance();
+                Student stu </span>=<span style="color: #000000;"> (Student) obj;
+                Field f </span>= clazz.getField("school"<span style="color: #000000;">);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">对stu属性school设置值</span>
+                f.set(stu,"第三中学"<span style="color: #000000;">);
+                String school </span>=<span style="color: #000000;"> (String) f.get(stu);
+                System.out.println(school);
+                </span><span style="color: #008000;">//</span><span style="color: #008000;">如果是私有的属性</span>
+                Field f2 = clazz.getDeclaredField("privateField"<span style="color: #000000;">);
+                f2.setAccessible(</span><span style="color: #0000ff;">true</span><span style="color: #000000;">);
+                f2.set(stu,</span>"私有属性"<span style="color: #000000;">);
+                String privateField </span>=<span style="color: #000000;"> (String) f2.get(stu);
+                System.out.println(privateField);</span></pre>
+</div>
+<p>调用的是Student()<br />第三中学<br />私有属性</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

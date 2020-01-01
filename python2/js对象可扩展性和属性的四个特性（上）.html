@@ -1,0 +1,230 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修js对象可扩展性和属性的四个特性（上）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>js对象可扩展性和属性的四个特性（上）</center></div><div class='banquan'>原文出处:本文由博客园博主买辣椒也用券提供。<br/>
+原文连接:https://www.cnblogs.com/Juaoie/p/12004176.html</div><br>
+    <h2 id="js对象可扩展性和属性的四个特性上"># js对象可扩展性和属性的四个特性（上）</h2>
+<h2 id="一前言">一、前言</h2>
+<ul>
+<li><p>再次花时间回顾一下基础，毕竟要想楼建的好，地基就要牢固，嘻嘻！</p></li>
+<li>在开始之前需要具备对prototype、__proto__、constructor有一定得了解，可以看看我之前写的一篇文章=&gt;<a href="https://www.cnblogs.com/Juaoie/p/9217466.html">通道</a><br />
+</li>
+<li>之前的用户管理系统已经差不多了，顺便加了个socket聊天的，但是由于做java后台的哪个朋友节奏跟不上来，所以即时聊天的后台就是node+socket-io写的，由于用户列表也涉及比较多的用户隐私问题，所以我设置了页面权限和接口权限，然后下面开放的几个账号就只能看到几个页面而已，哈哈。=&gt;<a href="http://uaoie.top/cv">通道</a></li>
+<li>体验账号1：账号：“123456”。密码：“123456”</li>
+<li><p>体验账号2：账号：“123123”。密码：“123123”</p></li>
+</ul>
+<hr />
+<h2 id="二目录">二、目录</h2>
+<blockquote>
+<ul>
+<li>对象属性的四个特性</li>
+<li>对象的可扩展性</li>
+<li>删除属性</li>
+<li>检测属性</li>
+<li>枚举属性</li>
+<li>属性的getter和setter</li>
+</ul>
+</blockquote>
+<!--more-->
+<hr />
+<h2 id="三对象属性的四个特性">三、对象属性的四个特性</h2>
+<h3 id="定义">1、定义</h3>
+<h4 id="什么是数据属性">1.1、什么是数据属性？</h4>
+<pre><code><code>数据属性就是我们平常看到的对象普通属性。</code></pre>
+<p>数据属性的特性为以下四种：</p>
+<pre><code><code>值（value）
+可写性（writable）
+可枚举性（enumerable）
+可配置性（configurable）</code></pre>
+<h4 id="什么是存储器属性">1.2、什么是存储器属性？</h4>
+<pre><code><code>存储器属性是由getter和setter定义的属性</code></pre>
+<p>存储器属性特性为以下四种：</p>
+<pre><code><code>读取（get）
+写入（set）
+可枚举性（enumerable）
+可配置性（configurable）</code></pre>
+<h3 id="方法">2、方法</h3>
+<h4 id="获取某个对象特定属性的属性描述">2.1、获取某个对象特定属性的属性描述</h4>
+<pre><code><code>Object.getOwnPropertyDescriptor()</code></pre>
+<pre class="bash"><code>        const log = console.log;
+        //返回数据数据的描述
+        let aa = {
+            x: 1
+        };
+        log(Object.getOwnPropertyDescriptor(aa, &#39;x&#39;))
+            //返回存储器属性的描述
+        let bb = {
+            get y() {
+                return 2;
+            },
+        }
+        log(Object.getOwnPropertyDescriptor(bb, &#39;y&#39;))
+            //对于一个不存在的属性或者继承属性返回undefined
+        log(Object.getOwnPropertyDescriptor({}, &#39;x&#39;))
+        log(Object.getOwnPropertyDescriptor({}, &#39;toString&#39;))</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）0.png" /></p>
+<h4 id="让新建属性具有某种特性">2.2、让新建属性具有某种特性</h4>
+<pre><code><code>Object.defineProperty()</code></pre>
+<p>说明:</p>
+<ul>
+<li>defineProperty不能修改继承属性</li>
+<li>defineProperty不必包含所有四个属性，对于已有的属性来说，未指定的特性不做修改，只对指定特性进行修改。</li>
+<li>对于新创建的属性来说默认是false或者undefined。</li>
+<li>当configurable设置为false，就不能再设置为true了，因为不可配置也不能配置自己</li>
+<li>当configurable设置为true，writable设置为false时，是可以通过配置特性更改value值的</li>
+<li>当configurable设置为false时，writable可以从true设置为false，当时不能从false设置为true</li>
+</ul>
+<pre class="bash"><code>        const log = console.log;
+        var aa = {
+            y: 22
+        };
+        //添加一个x属性为不可写、不可枚举、可配置
+        Object.defineProperty(aa, &#39;x&#39;, {
+            value: 1,
+            writable: false,
+            enumerable: false,
+            configurable: true
+        })
+        log(aa.x);
+        aa.x = 2; //尝试修改这个属性会失败，但是不会报错，在严格模式下会报错
+        log(aa.x)
+        for (let i in aa) {
+            //不可枚举数据属性x，但是y可以枚举
+            console.log(i)
+        }
+        //因为这个x属性依然是可以配置的，所以可以通过配置的方式对值进行修改
+        Object.defineProperty(aa, &#39;x&#39;, {
+            value: 3,
+        })
+        log(aa.x);
+        //将数据属性设置为存储器属性
+        Object.defineProperty(aa, &#39;x&#39;, {
+            get: function() {
+                return 4;
+            },
+        })
+        log(aa.x)</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）1.png" /></p>
+<h4 id="同时修改多个属性的特性">2.3、同时修改多个属性的特性</h4>
+<pre><code><code>Object.defineProperties()</code></pre>
+<pre class="bash"><code>        const log = console.log;
+        var aa = {};
+        Object.defineProperties(aa, {
+            x: {value: 1,writable: false,enumerable: true,configurable: false},
+            y: {value: 2,writable: false,enumerable: true,configurable: false},
+            z: {
+                get:function(){
+                    return 3
+                },
+                enumerable: false,
+                configurable: false
+            }
+        })
+        for(let i in aa){
+            log(i,&#39;---&#39;,aa[i])
+        }
+        log(&#39;z&#39;,&#39;---&#39;,aa.z)</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）2.png" /></p>
+<hr />
+<h2 id="四对象的可扩展性">四、对象的可扩展性</h2>
+<h3 id="定义-1">1、定义</h3>
+<h4 id="什么是可扩展性">1.1、什么是可扩展性？</h4>
+<pre><code><code>对象可扩展性是指是否可以给该对象添加新的属性</code></pre>
+<h3 id="方法-1">2、方法</h3>
+<h4 id="将对象设置为不可扩展">2.1、将对象设置为不可扩展</h4>
+<pre><code><code>Object.preventExtensions()</code></pre>
+<p>说明：</p>
+<ul>
+<li>对象一旦设置不为不可扩展就不能转换为可扩展了</li>
+<li>Object.preventExtensions只会影响对象本身的可扩展性，所以依然还是可以给对象原型添加属性。</li>
+</ul>
+<pre class="bash"><code>        const log = console.log;
+        var aa = {};
+        Object.preventExtensions(aa);
+        aa.x = 1;
+        log(aa.x)</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）3.png" /></p>
+<h4 id="检测对象是否是可扩展的">2.2、检测对象是否是可扩展的</h4>
+<pre><code><code>Object.isExtensible()</code></pre>
+<pre class="bash"><code>        //在《javascript权威指南》第六版中6.8.3节介绍可扩展性的时候，将isExtensible写为esExtensible了。
+        const log = console.log;
+        var aa = {};
+        var bb = {};
+        Object.preventExtensions(aa);
+        log(Object.isExtensible(aa))
+        log(Object.isExtensible(bb))</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）4.png" /></p>
+<h4 id="将对象封闭sealed">2.3、将对象封闭（sealed）</h4>
+<pre><code><code>Object.seal()</code></pre>
+<p>说明：</p>
+<ul>
+<li>Object.seal不仅可以设置对象的可扩展性，还可以设置对象的所有自有属性的可配置性</li>
+<li>将对象设置为不可扩展并且不可配置，也就是说不能给这个对象添加新属性，而且已有的属性不能删除或者配置。</li>
+<li>不过这些属性可写特性依然是可以配置的</li>
+</ul>
+<pre class="bash"><code>        const log = console.log;
+        var aa = {
+            y: 2
+        };
+        Object.seal(aa);
+        aa.x = 1;
+        log(aa.x);
+        log(Object.getOwnPropertyDescriptor(aa, &#39;y&#39;))
+        Object.defineProperty(aa, &#39;y&#39;, {
+            writable: false,
+        })
+        log(Object.getOwnPropertyDescriptor(aa, &#39;y&#39;))</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）5.png" /></p>
+<h4 id="检测对象是否被封闭">2.4、检测对象是否被封闭</h4>
+<pre><code><code>Object.isSealed()</code></pre>
+<pre class="bash"><code>        const log = console.log;
+        var aa = {};
+        var bb = {};
+        Object.seal(aa);
+        log(Object.isSealed(aa));
+        log(Object.isSealed(bb))</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）6.png" /></p>
+<h4 id="将对象冻结freeze">2.5、将对象冻结（freeze）</h4>
+<pre><code><code>Object.freeze()</code></pre>
+<p>说明：</p>
+<ul>
+<li>freeze不仅仅可以将对象设置为不可扩展和所有属性为不可配置，并且会将所有对象属性设置为只读。</li>
+<li>如果存取器属性具有setter方法，则不会受到影响，仍然可以通过此方法给属性赋值。</li>
+</ul>
+<pre class="bash"><code>        const log = console.log;
+        var aa = {
+            x: 1
+        };
+        Object.freeze(aa);
+        log(Object.getOwnPropertyDescriptor(aa, &#39;x&#39;))</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）7.png" /></p>
+<h4 id="检测对象是否配冻结">2.6、检测对象是否配冻结</h4>
+<pre><code><code>Object.isFreeze()</code></pre>
+<pre class="bash"><code>        const log = console.log;
+        var aa = {};
+        var bb = {};
+        Object.freeze(aa);
+        log(Object.isFrozen(aa));
+        log(Object.isFrozen(bb));</code></pre>
+<p><img src="./images/js对象可扩展性和属性的四个特性（上）8.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

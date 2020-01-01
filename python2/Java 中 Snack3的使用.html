@@ -1,0 +1,418 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Java 中 Snack3的使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Java 中 Snack3的使用</center></div><div class='banquan'>原文出处:本文由博客园博主刘之西东提供。<br/>
+原文连接:https://www.cnblogs.com/noear/p/12002135.html</div><br>
+    <blockquote>
+<p>网上看了一篇Java 中 Gson的使用，所以也跟着写篇Java 中 Snack3的使用</p>
+</blockquote>
+<p>JSON 是一种文本形式的数据交换格式，从Ajax的时候开始流行，它比XML更轻量、比二进制容易阅读和编写；解析和生成的方式很多，Java中最常用的类库有：JSON-Java、Gson、Jackson、FastJson、Snack3等。</p>
+<p>Snack3 基于jdk8，60kb大小，非常小巧。</p>
+<pre><code><code>&lt;dependency&gt;
+  &lt;groupId&gt;org.noear&lt;/groupId&gt;
+  &lt;artifactId&gt;snack3&lt;/artifactId&gt;
+  &lt;version&gt;3.1.5.11&lt;/version&gt;
+&lt;/dependency&gt;</code></pre>
+<p>Snack3 借鉴了 <code>Javascript</code> 所有变量由 <code>var</code> 申明，及 <code>Xml dom</code> 一切都是 <code>Node</code> 的设计。其下一切数据都以<code>ONode</code>表示，<code>ONode</code>也即 <code>One node</code> 之意，代表任何类型，也可以转换为任何类型。</p>
+<ul>
+<li>强调文档树的操控和构建能力</li>
+<li>做为中间媒体，方便不同格式互转</li>
+<li>高性能<code>Json path</code>查询（兼容性和性能很赞）</li>
+<li>支持<code>序列化、反序列化</code></li>
+</ul>
+<h3 id="一snack3的基本用法">一、Snack3的基本用法</h3>
+<p><code>Snack3</code>提供了几个快捷函数：</p>
+<ul>
+<li><code>load(strOrObj)</code>, <code>loadStr(str)</code>, <code>loadObj(obj)</code> 用于解析和加载；</li>
+<li><code>stringify(obj)</code>, <code>serialize(obj)</code>, <code>deserialize(str,clz)</code> 用于序列化和反序列化</li>
+</ul>
+<h4 id="基本数据类型的解析">（1）基本数据类型的解析</h4>
+<pre class="java"><code>int i = ONode.load(&quot;100&quot;).getInt(); //100
+double d = ONode.load(&quot;\&quot;99.99\&quot;&quot;).getDouble();  //99.99
+boolean b = ONode.load(&quot;true&quot;).getBoolean();     // true
+String str = ONode.load(&quot;String&quot;).getString();   // String</code></pre>
+<h4 id="基本数据类型的生成">（2）基本数据类型的生成　</h4>
+<pre class="java"><code>String jsonNumber = ONode.load(100).toJson();       // 100
+String jsonBoolean = ONode.load(false).toJson();    // false
+String jsonString = ONode.load(&quot;String&quot;).toString(); //&quot;String&quot;</code></pre>
+<h4 id="pojo类的生成与解析">（3）POJO类的生成与解析</h4>
+<pre class="java"><code>public class User {
+    public String name;
+    public int age;
+    public String emailAddress;
+}</code></pre>
+<h6 id="生成json">生成JSON：　</h6>
+<pre class="java"><code>User user = new User(&quot;张三&quot;,24);
+
+//输出： {&quot;name&quot;:&quot;张三&quot;,&quot;age&quot;:24}
+String json = ONode.stringify(user); //JSON字符化
+
+//输出： {&quot;@type&quot;:&quot;demo.User&quot;,&quot;name&quot;:&quot;\u5F20\u4E09&quot;,&quot;age&quot;:24}
+String json2 = ONode.serialize(user); //JSON序列化</code></pre>
+<h6 id="解析并反序列化json">解析并反序列化JSON：　</h6>
+<pre class="java"><code>String json = &quot;{name:&#39;张三&#39;,age:24}&quot;;
+User user = ONode.deserialize(json, User.class);//JSON反序列化</code></pre>
+<h3 id="二序列化事项补充说明">二、序列化事项补充说明</h3>
+<p>从上面示例可以看出json的字段和值是的名称和类型是一一对应的，Snack3不支持直接改名称，但可以通过<code>transient</code>关键字进行排序，例：</p>
+<pre class="java"><code>public class User {
+    public String name;
+    public int age;
+    public String emailAddress;
+    public transient Date date;
+}</code></pre>
+<p>或者，加载后再重改名称，例：</p>
+<pre class="java"><code>User user = new User(&quot;name&quot;, 12, &quot;xxx@mail.cn&quot;);
+
+//输出： {&quot;name&quot;:&quot;name&quot;,&quot;age&quot;:12,&quot;email&quot;:&quot;xxx@mail.cn&quot;}
+ONode.load(user).rename(&quot;emailAddress&quot;,&quot;email&quot;).toJson();
+
+//o.rename(key,newKey); //重命名子节点，并返回自己</code></pre>
+<p>Snack3在序列化和反序列化时需要使用反射，且只对字段进行序列化（不管属性）。</p>
+<h6 id="特性总结">特性总结：</h6>
+<ul>
+<li>只对字段进行序列化（包括私有）</li>
+<li>使用<code>transient</code> 对字段排序</li>
+<li>加载后可进行重命名字段</li>
+</ul>
+<h3 id="三snack3中使用泛型">三、Snack3中使用泛型</h3>
+<p>例如：JSON字符串数组：<code>[&quot;Android&quot;,&quot;Java&quot;,&quot;PHP&quot;]</code></p>
+<p>当要通过Snack3解析这个json时，一般有三种方式：使用ONode，使用数组，使用List；而List对于增删都是比较方便的，所以实际使用是还是List比较多</p>
+<p>数组比较简单：</p>
+<pre class="java"><code>String jsonArray = &quot;[\&quot;Android\&quot;,\&quot;Java\&quot;,\&quot;PHP\&quot;]&quot;;
+String[] strings = ONode.deserialize(jsonArray,String[].class);</code></pre>
+<p>对于List将上面的代码中的 String[].class 直接改为 <code>List&lt;String&gt;.class</code> 是不行的，对于Java来说<code>List&lt;String&gt;</code> 和<code>List&lt;User&gt;</code> 这俩个的字节码文件只一个那就是<code>List.class</code>，这是Java泛型使用时要注意的问题 泛型擦除。</p>
+<p>为了解决的上面的问题，Snack3提供了2种方式来实现对泛型的支持，所以将以上的数据解析为<code>List&lt;String&gt;</code>时需要这样写：</p>
+<pre class="java"><code>String jsonArray = &quot;[\&quot;Android\&quot;,\&quot;Java\&quot;,\&quot;PHP\&quot;]&quot;;
+ONode ary0            = ONode.load(jsonArray);
+List&lt;String&gt; ary1 = ONode.deserialize(jsonArray,(new ArrayList&lt;String&gt;(){}).getClass());
+List&lt;String&gt; ary2 = ONode.deserialize(jsonArray,(new TypeRef&lt;List&lt;String&gt;&gt;(){}).getClass());
+
+//(new ArrayList&lt;String&gt;(){}).getClass()            //方式1，通过临时类形（最终都是产生Class）
+//(new TypeRef&lt;List&lt;String&gt;&gt;(){}).getClass()    //方式2，通过TypeRef（最终都是产生Class）</code></pre>
+<p>泛型的引入还可以减少无关的代码：　</p>
+<pre class="json　"><code>{&quot;code&quot;:&quot;0&quot;,&quot;message&quot;:&quot;success&quot;,&quot;data&quot;:{}}
+{&quot;code&quot;:&quot;0&quot;,&quot;message&quot;:&quot;success&quot;,&quot;data&quot;:[]}</code></pre>
+<p>像上面这段代码，code只使用一次，message则几乎不用；我们真正需要的data所包含的数据，但它可能对象也可能是数组。如果Snack3不支持泛型或不知道Snack3支持泛型的同学一定会这么定义POJO：</p>
+<pre class="java"><code>public class UserResponse {
+    public int code;
+    public String message;
+    public User data;
+}</code></pre>
+<p>当设计其它接口的时候又重新定义一个XxxResponse将data的类型改成Xxx，很明显code，和message被重复定义了多次，会产大量的POJO。。。通过泛型可以将code和message字段抽取到一个Result的类中，这样只需要编写data字段所对应的POJO即可：</p>
+<pre class="java"><code>public class Result&lt;T&gt; {
+    public int code;
+    public String message;
+    public T data;
+} </code></pre>
+<h3 id="四snack3的序列化与反序列化">四、Snack3的序列化与反序列化</h3>
+<h4 id="自动方式">（1）自动方式</h4>
+<p>Snack3提供了<code>serialize(obj)</code>和<code>deserialize(str,clz)</code> 前者实现序列化，后者实现了反序列化。</p>
+<pre class="java"><code>ONode.serialize(obj);       //序列化
+ONode.deserialize(str,clz); //反序列化</code></pre>
+<h4 id="手动方式">(2)手动方式：</h4>
+<p>手动的方式使用<code>load(obj)</code>,<code>toObject(clz)</code>,<code>toJson()</code> 来手动实现序列化和反序列化：</p>
+<pre class="java"><code>String json = &quot;{\&quot;name\&quot;:\&quot;张三\&quot;,\&quot;age\&quot;:\&quot;24\&quot;}&quot;;
+
+//反序列化
+User user = ONode.load(json,Constants.serialize()).toObject(User.class);
+
+//序列化
+ONode.load(user,Constants.serialize()).toJson();</code></pre>
+<p>自动方式最终都是通过<code>load(obj)</code>,<code>toObject(clz)</code>,<code>toJson()</code> 进行操作。</p>
+<p>内部代码：</p>
+<pre class="java"><code>/**
+ * 序列化为 string（由序列化器决定格式）
+ *
+ * @param source java object
+ * @throws Exception
+ */
+public static String serialize(Object source) {
+    //加载java object，须指定Fromer
+    return load(source, Constants.serialize(), DEFAULTS.DEF_OBJECT_FROMER).toJson();
+}
+
+
+/**
+ * 反序列化为 java object（由返序列化器决定格式）
+ *
+ * @param source string
+ * @throws Exception
+ */
+public static &lt;T&gt; T deserialize(String source, Class&lt;?&gt; clz) {
+    //加载String，不需指定Fromer
+    return load(source,  Constants.serialize(), null).toObject(clz);
+}</code></pre>
+<h3 id="五使用snack3导出null值格式化输出日期时间">五、使用Snack3导出null值、格式化输出、日期时间</h3>
+<p>一般情况下ONode类提供的 API已经能满足大部分的使用场景，但有时需要更多特殊、强大的功能时，这时候就引入一个新的类 Constants。</p>
+<p>Constants从名字上看它是一个提供配置的类，要想改变ONode默认的设置必须使用该类进行配置。用法：　</p>
+<pre class="java"><code>Constants.of(..)                      //全新定义一份配置
+Constants.def().add(..).sub(..)       //在默认配置基础上，添加或减少特性
+Constants.serialize().add(..).sub(..) //在序列化配置基础上，添加或减少特性</code></pre>
+<h4 id="snack3在默认情况下是不动导出值null的键的如">（1）Snack3在默认情况下是不动导出值null的键的，如：</h4>
+<pre class="java"><code>User user = new User(&quot;张三&quot;, 24);
+System.out.println(ONode.stringify(user)); //{&quot;name&quot;:&quot;张三&quot;,&quot;age&quot;:24}
+
+
+Constants cfg = Constants.def().add(Feature.SerializeNulls); //导出null
+System.out.println(ONode.load(user, cfg).toJson()); //{&quot;name&quot;:&quot;张三&quot;,&quot;age&quot;:24,&quot;emailAddress&quot;:null}</code></pre>
+<h4 id="格式化输出日期时间及其它">（2）格式化输出、日期时间及其它：</h4>
+<pre class="java"><code>Date date = new Date();
+
+Constants cfg = Constants.of(Feature.WriteDateUseFormat) //使用格式化特性
+        .build(c-&gt; c.date_format = new SimpleDateFormat(&quot;yyyy-MM-dd&quot;,c.locale)); //设置格式符（默认为：&quot;yyyy-MM-dd&#39;T&#39;HH:mm:ss&quot;）
+
+System.out.println(ONode.load(date, cfg).toJson()); //2019-12-06</code></pre>
+<h3 id="六使用snack3进行jsonpath查询">六、使用Snack3进行JSONPath查询</h3>
+<p>在网上找了一份经典的JSON样本：</p>
+<pre class="json"><code>{
+    &quot;store&quot;: {
+        &quot;bicycle&quot;: {
+            &quot;color&quot;: &quot;red&quot;,
+            &quot;price&quot;: 19.95
+        },
+        &quot;book&quot;: [
+            {
+                &quot;author&quot;: &quot;刘慈欣&quot;,
+                &quot;price&quot;: 8.95,
+                &quot;category&quot;: &quot;科幻&quot;,
+                &quot;title&quot;: &quot;三体&quot;
+            },
+            {
+                &quot;author&quot;: &quot;itguang&quot;,
+                &quot;price&quot;: 12.99,
+                &quot;category&quot;: &quot;编程语言&quot;,
+                &quot;title&quot;: &quot;go语言实战&quot;
+            }
+        ]
+    }
+}</code></pre>
+<p>Snack3可以提供高速的JSONPath查询，JSONPath更给日常的查询节省了大量代码：</p>
+<pre class="java"><code>ONode o = ONode.load(jsonStr);
+
+//得到所有的书
+ONode books = o.select(&quot;$.store.book&quot;);
+System.out.println(&quot;books=::&quot; + books);
+
+//得到所有的书名
+ONode titles = o.select(&quot;$.store.book.title&quot;);
+System.out.println(&quot;titles=::&quot; + titles);
+
+//第一本书title
+ONode title = o.select(&quot;$.store.book[0].title&quot;);
+System.out.println(&quot;title=::&quot; + title);
+
+//price大于10元的book
+ONode list = o.select(&quot;$.store.book[?(price &gt; 10)]&quot;);
+System.out.println(&quot;price大于10元的book=::&quot; + list);
+
+//price大于10元的title
+ONode list2 = o.select(&quot;$.store.book[?(price &gt; 10)].title&quot;);
+System.out.println(&quot;price大于10元的title=::&quot; + list2);
+
+//category(类别)为科幻的book
+ONode list3 = o.select(&quot;$.store.book[?(category == &#39;科幻&#39;)]&quot;);
+System.out.println(&quot;category(类别)为科幻的book=::&quot; + list3);
+
+
+//bicycle的所有属性值
+ONode values = o.select(&quot;$.store.bicycle.*&quot;);
+System.out.println(&quot;bicycle的所有属性值=::&quot; + values);
+
+
+//bicycle的color和price属性值
+ONode read = o.select(&quot;$.store.bicycle[&#39;color&#39;,&#39;price&#39;]&quot;);
+System.out.println(&quot;bicycle的color和price属性值=::&quot; + read);</code></pre>
+<h4 id="支持的jsonpath语法">（1）支持的JSONPath语法</h4>
+<ul>
+<li>字符串使用单引号，例：['name']</li>
+<li>过滤操作用空隔号隔开，例：[?(@.type == 1)]</li>
+</ul>
+<table>
+<thead>
+<tr class="header">
+<th>支持操作</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>$</code></td>
+<td>表示根元素</td>
+</tr>
+<tr class="even">
+<td><code>@</code></td>
+<td>当前节点（做为过滤表达式的谓词使用）</td>
+</tr>
+<tr class="odd">
+<td><code>*</code></td>
+<td>通用配配符，可以表示一个名字或数字。</td>
+</tr>
+<tr class="even">
+<td><code>..</code></td>
+<td>深层扫描。 可以理解为递归搜索。</td>
+</tr>
+<tr class="odd">
+<td><code>.&lt;name&gt;</code></td>
+<td>表示一个子节点</td>
+</tr>
+<tr class="even">
+<td><code>['&lt;name&gt;' (, '&lt;name&gt;')]</code></td>
+<td>表示一个或多个子节点</td>
+</tr>
+<tr class="odd">
+<td><code>[&lt;number&gt; (, &lt;number&gt;)]</code></td>
+<td>表示一个或多个数组下标（负号为倒数）</td>
+</tr>
+<tr class="even">
+<td><code>[start:end]</code></td>
+<td>数组片段，区间为[start,end),不包含end（负号为倒数）</td>
+</tr>
+<tr class="odd">
+<td><code>[?(&lt;expression&gt;)]</code></td>
+<td>过滤表达式。 表达式结果必须是一个布尔值。</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th>支持过滤操作符</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>==</code></td>
+<td>left等于right（注意1不等于'1'）</td>
+</tr>
+<tr class="even">
+<td><code>!=</code></td>
+<td>不等于</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;</code></td>
+<td>小于</td>
+</tr>
+<tr class="even">
+<td><code>&lt;=</code></td>
+<td>小于等于</td>
+</tr>
+<tr class="odd">
+<td><code>&gt;</code></td>
+<td>大于</td>
+</tr>
+<tr class="even">
+<td><code>&gt;=</code></td>
+<td>大于等于</td>
+</tr>
+<tr class="odd">
+<td><code>=~</code></td>
+<td>匹配正则表达式[?(@.name =~ /foo.*?/i)]</td>
+</tr>
+<tr class="even">
+<td><code>in</code></td>
+<td>左边存在于右边 [?(@.size in ['S', 'M'])]</td>
+</tr>
+<tr class="odd">
+<td><code>nin</code></td>
+<td>左边不存在于右边</td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr class="header">
+<th>支持尾部函数</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>min()</code></td>
+<td>计算数字数组的最小值</td>
+</tr>
+<tr class="even">
+<td><code>max()</code></td>
+<td>计算数字数组的最大值</td>
+</tr>
+<tr class="odd">
+<td><code>avg()</code></td>
+<td>计算数字数组的平均值</td>
+</tr>
+<tr class="even">
+<td><code>sum()</code></td>
+<td>计算数字数组的汇总值（新加的）</td>
+</tr>
+</tbody>
+</table>
+<p>像这两种写法的语义是差不多：</p>
+<pre class="java"><code>$.store.book[0].title //建议使用这种</code></pre>
+<pre class="java"><code>$[&#39;store&#39;][&#39;book&#39;][0][&#39;title&#39;]</code></pre>
+<h4 id="语法示例说明">（2）语法示例说明</h4>
+<table>
+<thead>
+<tr class="header">
+<th>JSONPath</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>$</code></td>
+<td>根对象</td>
+</tr>
+<tr class="even">
+<td><code>$[-1]</code></td>
+<td>最后元素</td>
+</tr>
+<tr class="odd">
+<td><code>$[:-2]</code></td>
+<td>第0个至倒数第2个</td>
+</tr>
+<tr class="even">
+<td><code>$[1:]</code></td>
+<td>第1个之后所有元素（0为首个）</td>
+</tr>
+<tr class="odd">
+<td><code>$[1,2,3]</code></td>
+<td>集合中1,2,3个元素（0为首个）</td>
+</tr>
+</tbody>
+</table>
+<h3 id="七数据格式互转">七、数据格式互转</h3>
+<p>Snack3是采用<code>(Fromer)</code>-&gt;<code>(ONode)</code>-&gt;<code>(Toer)</code>的架构。非常适合格式的转换，开发时只需要完成与ONode的对接即可：</p>
+<h4 id="将xml转为ymal">（1）将Xml转为Ymal</h4>
+<pre class="java"><code>String xml = &quot;&lt;xml&gt;....&lt;/xml&gt;&quot;;
+XmlFromer xmlFromer = new XmlFromer();
+YmalToer  ymalToer  = new YmalToer();
+
+//加载xml，输出ymal
+String ymal = ONode.load(xml,Constants.def(),xmlFromer).to(ymalToer);</code></pre>
+<h4 id="加载xml去掉手机号转为java-object">（2）加载Xml，去掉手机号，转为java object</h4>
+<pre class="java"><code>ONode tmp =ONode.load(xml,Constants.def(),xmlFromer);
+
+//找到有手机号的，然后移除手机号
+tmp.select(&quot;$..[?(@.mobile)]&quot;).forEach(n-&gt;n.remove(&quot;mobile&quot;));
+
+XxxModel m =tmp.toObject(XxxModel.class);</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

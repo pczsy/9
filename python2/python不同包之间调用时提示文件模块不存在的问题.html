@@ -1,0 +1,75 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python不同包之间调用时提示文件模块不存在的问题' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python不同包之间调用时提示文件模块不存在的问题</center></div><div class='banquan'>原文出处:本文由博客园博主ppliupeng提供。<br/>
+原文连接:https://www.cnblogs.com/Qliupeng/p/11717417.html</div><br>
+    <div>python对于跨包调用函数时，经常会提示模块不存在的问题，主要是python程序执行时，搜索路径导致的，python程序执行的路径依次是：</div>
+<div>（1）程序根目录<br />（2）环境变量<br />（3）标准库目标（D:\Python27\Lib&nbsp; 标准库是在lib文件下）<br />（4）第三方库的目录（D:\Python27\Lib\site-packages&nbsp; 第三方库在site-packages文件下）</div>
+<div>&nbsp;</div>
+<div>如下图所示，明明test1文件是存在的，但是跨包调用时，就出现test1不存在的问题，原因是当test2模块去调用test1中的模块时，会先去pack2目录下查找，pack2下没有要调用的模块和函数，所以很可能就停止了查找，弹出错误提示；
+<div>&nbsp;</div>
+
+</div>
+<div><img src="./images/python不同包之间调用时提示文件模块不存在的问题0.png" alt="" /><br />
+<div>解决的办法是，可以把调用文件的主目录加到环境变量中</div>
+<div>操作步骤：</div>
+<div>
+<div class="cnblogs_Highlighter">
+<pre><code>import os
+import sys
+
+#步骤1：当前处于pack2d的test2文件目录，路径为dir1
+dir1=os.path.dirname(__file__)
+print '当前文件目录：',dir1
+
+#步骤2：pack2的主目录是day6，路径为：dir2
+dir2=os.path.dirname(os.path.dirname(__file__))
+print '当前文件的主目录：',dir2
+
+#步骤3：把day6目录加到环境变量中
+sys.path.append(dir2)
+for item in sys.path:
+   print item
+
+#步骤4:直接导入test1文件，然后再次调用test1里面的函数，不会再报错了
+import test1
+test1.testfun()
+</pre>
+</div>
+<p>执行结果如下：</p>
+<p><img src="./images/python不同包之间调用时提示文件模块不存在的问题1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;test1中函数内容是：</p>
+<p><img src="./images/python不同包之间调用时提示文件模块不存在的问题2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</div>
+<div>&nbsp;如果，上面的方法不管用的话，可以在file-setting-project-project Sources，把包放入到Sources中，就OK了，有时候第一种方法不管用，就用第二种，有时候第二种不管用，就用第一种</div>
+<div><img src="./images/python不同包之间调用时提示文件模块不存在的问题3.png" alt="" />
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+</div>
+<p><!--5f39ae17-8c62-4a45-bc43-b32064c9388a:W3siYmxvY2tJZCI6Ijk3MjgtMTU3MTY3NDg2MDkxMyIsImJsb2NrVHlwZSI6InBhcmFncmFwaCIsInN0eWxlcyI6eyJhbGlnbiI6ImxlZnQiLCJpbmRlbnQiOjAsInRleHQtaW5kZW50IjowLCJsaW5lLWhlaWdodCI6MS43NSwiYmFjay1jb2xvciI6IiIsInBhZGRpbmciOiIifSwidHlwZSI6InBhcmFncmFwaCIsInJpY2hUZXh0Ijp7ImRhdGEiOlt7ImNoYXIiOiLop6MifSx7ImNoYXIiOiLlhrMifSx7ImNoYXIiOiLnmoQifSx7ImNoYXIiOiLlip4ifSx7ImNoYXIiOiLms5UifSx7ImNoYXIiOiLmmK8ifSx7ImNoYXIiOiLvvIwifSx7ImNoYXIiOiLlj68ifSx7ImNoYXIiOiLku6UifSx7ImNoYXIiOiLmiooifSx7ImNoYXIiOiLosIMifSx7ImNoYXIiOiLnlKgifSx7ImNoYXIiOiLmlocifSx7ImNoYXIiOiLku7YifSx7ImNoYXIiOiLnmoQifSx7ImNoYXIiOiLkuLsifSx7ImNoYXIiOiLnm64ifSx7ImNoYXIiOiLlvZUifSx7ImNoYXIiOiLliqAifSx7ImNoYXIiOiLliLAifSx7ImNoYXIiOiLnjq8ifSx7ImNoYXIiOiLlooMifSx7ImNoYXIiOiLlj5gifSx7ImNoYXIiOiLph48ifSx7ImNoYXIiOiLkuK0ifV0sImlzUmljaFRleHQiOnRydWUsImtlZXBMaW5lQnJlYWsiOnRydWV9fSx7ImJsb2NrSWQiOiI3ODI1LTE1NzE2NzM4NjQ4MDUiLCJibG9ja1R5cGUiOiJwYXJhZ3JhcGgiLCJzdHlsZXMiOnsiYWxpZ24iOiJsZWZ0IiwiaW5kZW50IjowLCJ0ZXh0LWluZGVudCI6MCwibGluZS1oZWlnaHQiOjEuNzUsImJhY2stY29sb3IiOiIiLCJwYWRkaW5nIjoiIn0sInR5cGUiOiJwYXJhZ3JhcGgiLCJyaWNoVGV4dCI6eyJkYXRhIjpbeyJjaGFyIjoi5pONIn0seyJjaGFyIjoi5L2cIn0seyJjaGFyIjoi5q2lIn0seyJjaGFyIjoi6aqkIn0seyJjaGFyIjoi77yaIn1dLCJpc1JpY2hUZXh0Ijp0cnVlLCJrZWVwTGluZUJyZWFrIjp0cnVlfX0seyJibG9ja0lkIjoiOTk5OS0xNTcxNjczODcxNTg0IiwiYmxvY2tUeXBlIjoicGFyYWdyYXBoIiwic3R5bGVzIjp7ImFsaWduIjoibGVmdCIsImluZGVudCI6MCwidGV4dC1pbmRlbnQiOjAsImxpbmUtaGVpZ2h0IjoxLjc1LCJiYWNrLWNvbG9yIjoiIiwicGFkZGluZyI6IiJ9LCJ0eXBlIjoicGFyYWdyYXBoIiwicmljaFRleHQiOnsiZGF0YSI6W3siY2hhciI6IjEifSx7ImNoYXIiOiIuIn0seyJjaGFyIjoi5q+UIn0seyJjaGFyIjoi5aaCIn0seyJjaGFyIjoi5pyJIn0seyJjaGFyIjoi5LikIn0seyJjaGFyIjoi5LiqIn0seyJjaGFyIjoi5YyFIn0seyJjaGFyIjoi77yaIn0seyJjaGFyIjoicCJ9LHsiY2hhciI6ImEifSx7ImNoYXIiOiJjIn0seyJjaGFyIjoiayJ9LHsiY2hhciI6IjEifSx7ImNoYXIiOiLlkowifSx7ImNoYXIiOiJwIn0seyJjaGFyIjoiYSJ9LHsiY2hhciI6ImMifSx7ImNoYXIiOiJrIn0seyJjaGFyIjoiMiJ9LHsiY2hhciI6Iu+8jCJ9LHsiY2hhciI6InAifSx7ImNoYXIiOiJhIn0seyJjaGFyIjoiYyJ9LHsiY2hhciI6ImsifSx7ImNoYXIiOiIyIn0seyJjaGFyIjoi5LiLIn0seyJjaGFyIjoi6Z2iIn0seyJjaGFyIjoi55qEIn0seyJjaGFyIjoi5paHIn0seyJjaGFyIjoi5Lu2In0seyJjaGFyIjoi5oOzIn0seyJjaGFyIjoi6LCDIn0seyJjaGFyIjoi55SoIn0seyJjaGFyIjoicCJ9LHsiY2hhciI6ImEifSx7ImNoYXIiOiJjIn0seyJjaGFyIjoiayJ9LHsiY2hhciI6IjEifSx7ImNoYXIiOiLkuIsifSx7ImNoYXIiOiLpnaIifSx7ImNoYXIiOiLmn5AifSx7ImNoYXIiOiLkuKoifSx7ImNoYXIiOiLmlocifSx7ImNoYXIiOiLku7YifSx7ImNoYXIiOiLkuIsifSx7ImNoYXIiOiLpnaIifSx7ImNoYXIiOiLnmoQifSx7ImNoYXIiOiLlh70ifSx7ImNoYXIiOiLmlbAifSx7ImNoYXIiOiLvvJoifSx7ImNoYXIiOiJ0In0seyJjaGFyIjoiZSJ9LHsiY2hhciI6InMifSx7ImNoYXIiOiJ0In0seyJjaGFyIjoiMSJ9LHsiY2hhciI6Ii4ifSx7ImNoYXIiOiJ0In0seyJjaGFyIjoiZSJ9LHsiY2hhciI6InMifSx7ImNoYXIiOiJ0In0seyJjaGFyIjoiZiJ9LHsiY2hhciI6InUifSx7ImNoYXIiOiJuIn0seyJjaGFyIjoiKCJ9LHsiY2hhciI6IikifV0sImlzUmljaFRleHQiOnRydWUsImtlZXBMaW5lQnJlYWsiOnRydWV9fSx7ImJsb2NrSWQiOiIxOTUzLTE1NzE2NzM5MzQ4MDIiLCJibG9ja1R5cGUiOiJwYXJhZ3JhcGgiLCJzdHlsZXMiOnsiYWxpZ24iOiJsZWZ0IiwiaW5kZW50IjowLCJ0ZXh0LWluZGVudCI6MSwibGluZS1oZWlnaHQiOjEuNzUsImJhY2stY29sb3IiOiIiLCJwYWRkaW5nIjoiIn0sInR5cGUiOiJwYXJhZ3JhcGgiLCJyaWNoVGV4dCI6eyJkYXRhIjpbeyJjaGFyIjoicCJ9LHsiY2hhciI6ImEifSx7ImNoYXIiOiJjIn0seyJjaGFyIjoiayJ9LHsiY2hhciI6IjEifSx7ImNoYXIiOiLmlocifSx7ImNoYXIiOiLku7YifSx7ImNoYXIiOiLot68ifSx7ImNoYXIiOiLlvoQifSx7ImNoYXIiOiLvvJoifSx7ImNoYXIiOiJkIn0seyJjaGFyIjoiYSJ9LHsiY2hhciI6InkifSx7ImNoYXIiOiI2In0seyJjaGFyIjoiLyJ9LHsiY2hhciI6InAifSx7ImNoYXIiOiJhIn0seyJjaGFyIjoiYyJ9LHsiY2hhciI6ImsifSx7ImNoYXIiOiIxIn0seyJjaGFyIjoiLyJ9LHsiY2hhciI6InQifSx7ImNoYXIiOiJlIn0seyJjaGFyIjoicyJ9LHsiY2hhciI6InQifSx7ImNoYXIiOiIxIn1dLCJpc1JpY2hUZXh0Ijp0cnVlLCJrZWVwTGluZUJyZWFrIjp0cnVlfX0seyJibG9ja0lkIjoiOTA2Ny0xNTcxNjczOTk5Mzg5IiwiYmxvY2tUeXBlIjoicGFyYWdyYXBoIiwic3R5bGVzIjp7ImFsaWduIjoibGVmdCIsImluZGVudCI6MCwidGV4dC1pbmRlbnQiOjEsImxpbmUtaGVpZ2h0IjoxLjc1LCJiYWNrLWNvbG9yIjoiIiwicGFkZGluZyI6IiJ9LCJ0eXBlIjoicGFyYWdyYXBoIiwicmljaFRleHQiOnsiZGF0YSI6W3siY2hhciI6InAifSx7ImNoYXIiOiJhIn0seyJjaGFyIjoiYyJ9LHsiY2hhciI6ImsifSx7ImNoYXIiOiIyIn0seyJjaGFyIjoi5paHIn0seyJjaGFyIjoi5Lu2In0seyJjaGFyIjoi6LevIn0seyJjaGFyIjoi5b6EIn0seyJjaGFyIjoi77yaIn0seyJjaGFyIjoiZCJ9LHsiY2hhciI6ImEifSx7ImNoYXIiOiJ5In0seyJjaGFyIjoiNiJ9LHsiY2hhciI6Ii8ifSx7ImNoYXIiOiJ0In0seyJjaGFyIjoiZSJ9LHsiY2hhciI6InMifSx7ImNoYXIiOiJ0In0seyJjaGFyIjoiMiJ9LHsiY2hhciI6Ii8ifV0sImlzUmljaFRleHQiOnRydWUsImtlZXBMaW5lQnJlYWsiOnRydWV9fV0=--></p>
+</div>
+<p><!--5f39ae17-8c62-4a45-bc43-b32064c9388a:W3siYmxvY2tJZCI6IjE1OTAtMTU3MTY3MzgwMjE4NiIsImJsb2NrVHlwZSI6InBhcmFncmFwaCIsInN0eWxlcyI6eyJhbGlnbiI6ImxlZnQiLCJpbmRlbnQiOjAsInRleHQtaW5kZW50IjowLCJsaW5lLWhlaWdodCI6MS43NSwiYmFjay1jb2xvciI6IiIsInBhZGRpbmciOiIifSwidHlwZSI6InBhcmFncmFwaCIsInJpY2hUZXh0Ijp7ImRhdGEiOlt7ImNoYXIiOiLlr7kifSx7ImNoYXIiOiLkuo4ifSx7ImNoYXIiOiLmjI4ifSx7ImNoYXIiOiLljIUifSx7ImNoYXIiOiLosIMifSx7ImNoYXIiOiLnlKgifSx7ImNoYXIiOiLlh70ifSx7ImNoYXIiOiLmlbAifSx7ImNoYXIiOiLml7YifSx7ImNoYXIiOiLvvIwifSx7ImNoYXIiOiLnu48ifSx7ImNoYXIiOiLluLgifSx7ImNoYXIiOiLkvJoifSx7ImNoYXIiOiLmj5AifSx7ImNoYXIiOiLnpLoifSx7ImNoYXIiOiLmqKEifSx7ImNoYXIiOiLlnZcifSx7ImNoYXIiOiLkuI0ifSx7ImNoYXIiOiLlrZgifSx7ImNoYXIiOiLlnKgifSx7ImNoYXIiOiLnmoQifSx7ImNoYXIiOiLpl64ifSx7ImNoYXIiOiLpopgifSx7ImNoYXIiOiLvvIwifSx7ImNoYXIiOiLlpoIifSx7ImNoYXIiOiLkuIsifSx7ImNoYXIiOiLlm74ifSx7ImNoYXIiOiLmiYAifSx7ImNoYXIiOiLnpLoifSx7ImNoYXIiOiLvvJoifV0sImlzUmljaFRleHQiOnRydWUsImtlZXBMaW5lQnJlYWsiOnRydWV9fV0=--></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

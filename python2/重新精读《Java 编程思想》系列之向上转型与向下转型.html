@@ -1,0 +1,228 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修重新精读《Java 编程思想》系列之向上转型与向下转型' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>重新精读《Java 编程思想》系列之向上转型与向下转型</center></div><div class='banquan'>原文出处:本文由博客园博主经典鸡翅提供。<br/>
+原文连接:https://www.cnblogs.com/jichi/p/12064038.html</div><br>
+    <h3 id="前言">前言</h3>
+<p>今天重读了一下向上转型与向下转型，有些新的体会，了解了向上转型的好处，及如何向下转型。在此分享给大家。</p>
+<h3 id="向上转型">向上转型</h3>
+<p>向上转型是用来表现新类和基类之间的关系。在传统中，由导出类转型成基类，在继承图中是向上移动的。因此称作向上转型。由于向上转型是从一个较专用类型向较通用类型转换，所以总是安全的。也就是说，导出类是基类的一个超集。它可能比基类含有更多的方法。但他必须具备基类中所含有的方法。<br />
+我们来看一个例子。</p>
+<pre><code><code>class Car {
+    public void run() {
+        System.out.println(&quot;这是父类run()方法&quot;);
+    }
+}
+
+public class Benz extends Car {
+    public void run() {
+        System.out.println(&quot;这是Benz的run()方法&quot;);
+
+    }
+
+    public void price() {
+        System.out.println(&quot;Benz:800000$&quot;);
+    }
+
+    public static void main(String[] args) {
+        Car car = new Benz();
+        car.run();
+       //car.price();程序报错
+    }
+}
+</code></pre>
+<p>运行后输出。这是Benz的run()方法。<br />
+但是当我们用car这个对象去调用Benz类中price这个方法时，就会报错。<br />
+这就是因为我们此处进行的向上转型，car这个对象虽然指向子类，但是子类由于进行了向上转型，就失去了使用父类中所没有的方法的“权利”，在此处就是不能调用price()这个方法。<br />
+那么向上转型到底有什么用呢，到目前为止我们不仅看不到它的好处，反而发现使用了向上转型后反而不能调用子类所特有的方法了。那么向上转型的作用到底是什么呢，我们一起来看下面的代码：</p>
+<pre><code><code>class Car {
+    public void run() {
+        System.out.println(&quot;这是父类run()方法&quot;);
+    }
+
+    public void speed() {
+        System.out.println(&quot;speed:0&quot;);
+    }
+
+}
+
+class BMW extends Car {
+    public void run() {
+        System.out.println(&quot;这是BMW的run()方法&quot;);
+    }
+
+    public void speed() {
+        System.out.println(&quot;speed:80&quot;);
+    }
+}
+
+public class Benz extends Car {
+    public void run() {
+        System.out.println(&quot;这是Benz的run()方法&quot;);
+
+    }
+
+    public void speed() {
+        System.out.println(&quot;speed:100&quot;);
+    }
+
+    public void price() {
+        System.out.println(&quot;Benz:800000$&quot;);
+    }
+
+    public static void main(String[] args) {
+        show(new Benz());//向上转型实现
+        show(new BMW());
+    }
+
+    public static void show(Car car) {//父类实例作为参数
+        car.run();
+        car.speed();
+    }
+}</code></pre>
+<p>上面代码中</p>
+<pre><code><code>    public static void main(String[] args) {
+        show(new Benz());
+        show(new BMW());
+    }
+
+    public static void show(Car car) {
+        car.run();
+        car.speed();
+    }</code></pre>
+<p>就体现了向上转型的优点，这也体现了Java抽象编程的思想。如果此处没有向上转型，要实现show每个子类的功能，那么有几个子类就要写多少函数。代码如下：</p>
+<pre><code><code>    public static void main(String[] args) {
+        show(new Benz());
+        show(new BMW());
+    }
+
+    public static void show(Benz benz) {
+        benz.run();
+        benz.speed();
+    }
+    public static void show(BMW bmw) {
+        bmw.run();
+        bmw.speed();
+    }</code></pre>
+<p>试想一下，一旦有很多子类，那么这个工作量将会比没有使用向上转型大很多。这也表明向上转型还有个优点就是提高了代码的简洁性。<br />
+我们再来一种带着static的特殊调用情况。</p>
+<pre><code><code>public class Animal {
+    
+        String name = &quot;我是动物&quot;;
+        static int age = 20;
+        public void eat() {
+            System.out.println(&quot;动物可以吃饭&quot;);
+        }
+        public static void sleep() {
+            System.out.println(&quot;动物可以睡觉&quot;);
+        }
+
+        public void run(){
+            System.out.println(&quot;动物可以奔跑&quot;);
+        }
+
+        public static void main(String[] args) {
+            Animal am = new Dog();
+            am.eat();
+            am.sleep();
+            am.run();
+            //am.watchdog();这里会报错
+            System.out.println(am.name);
+            System.out.println(am.age);
+        }
+
+}
+class Dog extends Animal {
+    String name = &quot;小狗&quot;;
+    static int age = 60;
+    public void eat() {
+        System.out.println(&quot;小狗可以吃饭&quot;);
+    }
+    public static void sleep() {
+        System.out.println(&quot;小狗可以睡觉&quot;);
+    }
+    public void watchdog() {
+        System.out.println(&quot;小狗可以看门&quot;);
+    }
+
+}</code></pre>
+<p>运行结果：<br />
+<img src="./images/重新精读《Java 编程思想》系列之向上转型与向下转型0.png" /></p>
+<p>但是可以看到代码块中，直接调用Dog的watchdog()方法会报错。<br />
+<img src="./images/重新精读《Java 编程思想》系列之向上转型与向下转型1.png" /></p>
+<p>这就是因为我们此处进行的向上转型，am这个对象虽然指向子类，但是子类由于进行了向上转型，就失去了使用父类中所没有的方法的“权利”，在此处就是不能调用watchdog()这个方法。<br />
+而且结果里也可以看到，睡觉是引用的父类“Animal”的睡觉方法，这是因为Animal的睡觉方法为静态方法，可以总结如下：<br />
+如果是访问成员变量，编译的话就是看父类，运行同样是看父类。<br />
+如果访问的方法，编译就看父类，运行则看子类。<br />
+如果是静态方法，编译和运行都是看父类。</p>
+<h3 id="向下转型">向下转型</h3>
+<p>先看一个错误的例子</p>
+<pre><code><code>public class Animal {
+    public void eat(){
+        System.out.println(&quot;Animal eat()&quot;);
+    }
+}
+
+public class Dog extends Animal {
+    @Override
+    public void eat(){
+        System.out.println(&quot;Dog eat&quot;);
+    }
+}
+
+public class Test {
+    public static void main(String[] args) {
+        //向下转型
+        Animal animal = new Animal();
+        ((Dog)animal).eat();
+    }
+}
+</code></pre>
+<p>运行结果：<br />
+Exception in thread &quot;main&quot; java.lang.ClassCastException: com.hello.test.Animal cannot be cast to com.hello.test.Dog<br />
+at com.hello.test.Test.main(Test.java:7)<br />
+从上述例子来看，Java似乎并不支持向下转型，真是如此吗？其实不然，Java同样支持向下转型，只是向下转型是有条件的——只有引用子类对象的父类引用才能被向下转型为子类对象。也就是说，向下转型之前，必须先向上转型。</p>
+<pre><code><code>public class Animal {
+    public void eat(){
+        System.out.println(&quot;Animal eat()&quot;);
+    }
+}
+
+public class Dog extends Animal {
+    @Override
+    public void eat(){
+        System.out.println(&quot;Dog eat&quot;);
+    }
+}
+
+public class Test {
+    public static void main(String[] args) {
+        //向上转型
+        Animal animal = new Dog();
+        //向下转型
+        ((Dog)animal).eat();
+    }
+}</code></pre>
+<p>运行结果：<br />
+Dog eat</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

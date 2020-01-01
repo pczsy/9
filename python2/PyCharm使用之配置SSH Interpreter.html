@@ -1,0 +1,163 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修PyCharm使用之配置SSH Interpreter' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>PyCharm使用之配置SSH Interpreter</center></div><div class='banquan'>原文出处:本文由博客园博主山阴少年提供。<br/>
+原文连接:https://www.cnblogs.com/jclian91/p/12099549.html</div><br>
+    <p>  在文章<a href="https://www.cnblogs.com/jclian91/p/12099239.html">PyCharm使用之利用Docker镜像搭建Python开发环境</a>中，该文章介绍了在PyCharm中如何利用Docker镜像搭建Python开发环境。在本文中，将会介绍如何使用PyCharm来配置SSH Interpreter，本文中的SSH Interpreter用Docker镜像来实现。<br />
+  演示项目的结构如下图所示：</p>
+<p><img src="./images/PyCharm使用之配置SSH Interpreter0.png" alt="项目截图" /></p>
+<h3 id="制作带ssh服务的docker镜像">制作带SSH服务的Docker镜像</h3>
+<p>  首先，我们先制作带SSH服务的Docker镜像，里面含有Python开发环境，Dockerfile文件为python_env.build，内容如下：</p>
+<pre><code><code>FROM centos:7.2.1511
+
+# author label
+LABEL maintainer=&quot;jclian&quot;
+
+# install related packages
+ENV ENVIRONMENT DOCKER_PROD
+RUN cd / &amp;&amp; ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
+    &amp;&amp; yum makecache \
+    &amp;&amp; yum install -y wget aclocal automake autoconf make gcc gcc-c++ python-devel mysql-devel bzip2 libffi-devel epel-release \
+    &amp;&amp; yum clean all
+
+# install python 3.7.0
+RUN wget https://npm.taobao.org/mirrors/python/3.7.0/Python-3.7.0.tar.xz \
+    &amp;&amp; tar -xvf Python-3.7.0.tar.xz -C /usr/local/ \
+    &amp;&amp; rm -rf Python-3.7.0.tar.xz \
+    &amp;&amp; cd /usr/local/Python-3.7.0 \
+    &amp;&amp; ./configure &amp;&amp; make &amp;&amp; make install
+
+# 创建src目录
+COPY src /root/src
+WORKDIR /root/src
+
+# install related packages
+RUN pip3 install -i https://pypi.doubanio.com/simple/ -r requirements.txt
+
+# expose port
+EXPOSE 15731
+
+# install ssh
+RUN yum -y update; yum clean all
+RUN yum -y install openssh-server passwd; yum clean all
+ADD ./start.sh /start.sh
+RUN mkdir /var/run/sshd
+
+RUN ssh-keygen -t rsa -f /etc/ssh/ssh_host_rsa_key -N &#39;&#39;
+
+RUN chmod 755 /start.sh
+RUN /start.sh
+ENTRYPOINT [&quot;/usr/sbin/sshd&quot;, &quot;-D&quot;]</code></pre>
+<p>在这个CentOS系统中，我们配置了SSH服务，其中start.sh中含有账号名和密码，同时又配置了Python开发环境，start.sh文件的内容如下：</p>
+<pre><code><code>#!/bin/bash
+
+__create_user() {
+# Create a user to SSH into as.
+useradd user
+SSH_USERPASS=newpass
+echo -e &quot;$SSH_USERPASS\n$SSH_USERPASS&quot; | (passwd --stdin user)
+echo ssh user password: $SSH_USERPASS
+}
+
+# Call all functions
+__create_user</code></pre>
+<p>requirements.txt的内容如下：</p>
+<pre><code><code>tornado==5.1.1
+jieba==0.39</code></pre>
+<p>安装的第三方模块为tornado和jieba。制作镜像的脚本为build.sh，内容如下：</p>
+<pre><code><code>#!/usr/bin/env bash
+
+TIMENOW=`date +%y.%m.%d.%H%M`
+
+# 进行docker镜像打包
+docker build -f python_dev.build -t ssh_docker_python_dev:${TIMENOW} .</code></pre>
+<p>运行该镜像，生成的docker镜像为ssh_docker_python_dev:19.12.25.1346， 如下所示：</p>
+<pre><code><code>$ docker images | grep ssh_docker
+ssh_docker_python_dev   19.12.25.1346   cca5b78c199c    9 hours ago 988MB</code></pre>
+<p>到此，制作docker镜像完成。</p>
+<h3 id="测试镜像的ssh服务">测试镜像的SSH服务</h3>
+<p>  接着，我们在本地启动该docker镜像，命令如下：</p>
+<pre><code><code>$ docker run -d -p 49154:22 ssh_docker_python_dev:19.12.25.1346</code></pre>
+<p>接着输入:</p>
+<pre><code><code>$ ssh -p 49154 user@127.0.0.1</code></pre>
+<p>在接受凭证时选择yes，并输入密码“newpass”，就能顺利进入该容器内部了，尝试Python使用，如下：</p>
+<pre><code><code>$ ssh -p 49154 user@127.0.0.1
+user@127.0.0.1&#39;s password:
+[user@4718f33bc470 ~]$ python3
+Python 3.7.0 (default, Dec 24 2019, 23:58:12)
+[GCC 4.8.5 20150623 (Red Hat 4.8.5-39)] on linux
+Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.
+&gt;&gt;&gt; import jieba
+&gt;&gt;&gt; list(jieba.cut(&quot;三亚的风景很不错&quot;))
+Building prefix dict from the default dictionary ...
+Dumping model to file cache /tmp/jieba.cache
+Loading model cost 1.197 seconds.
+Prefix dict has been built succesfully.
+[&#39;三亚&#39;, &#39;的&#39;, &#39;风景&#39;, &#39;很&#39;, &#39;不错&#39;]</code></pre>
+<h3 id="在pycharm中配置ssh-interpreter">在PyCharm中配置SSH Interpreter</h3>
+<p>  在PyCharm的系统配置中，在“Project Interpreter”选择中可以看到右侧的“Project Inter”中没有interpreter，我们点击有变动的小齿轮，选择“Add”，如下图：</p>
+<p><img src="./images/PyCharm使用之配置SSH Interpreter1.png" alt="新增interpreter" /><br />
+在弹出来的界面中，我们选择interpreter的类型为“SSH Interpreter”，同时设置连接信息如下图：<br />
+<img src="./images/PyCharm使用之配置SSH Interpreter2.png" alt="SSH Interpreter配置" /></p>
+<p>点击“Next”，输入密码“newpass”，再点击“Next”，选择Interpreter的路径为“/usr/local/Python-3.7.0/python”，如下图：</p>
+<p><img src="./images/PyCharm使用之配置SSH Interpreter3.png" alt="配置容器内的Python路径" /><br />
+需要注意的是，在这里我们能够看到本地项目路径对应于容器内的/tmp/pycharm_project_951路径，同时会把该项目中的文件自动上传至容器内对应的项目路径。最后点击“Finish”即可完成SSH Interpreter的配置。</p>
+<h3 id="测试ssh-interpreter">测试SSH Interpreter</h3>
+<p>  配置好Python环境后，我们用jieba_test.py作为测试文件，来验证Python环境是否配置好。jieba_test.py的代码如下：</p>
+<pre class="python"><code># -*- coding: utf-8 -*-
+# author: Jclian91
+# place: Pudong Shanghai
+# time: 2:09 下午
+import os, re, json, traceback
+import jieba
+
+if __name__ == &#39;__main__&#39;:
+    sent = &#39;最近这几天，我都在三亚上班，看着海开发的感觉还不错。&#39;
+    print(list(jieba.cut(sent)))</code></pre>
+<p>输出结果如下：</p>
+<pre><code><code>ssh://user@127.0.0.1:49154/usr/local/Python-3.7.0/python -u /tmp/pycharm_project_58/jieba_test.py
+Building prefix dict from the default dictionary ...
+Loading model from cache /tmp/jieba.cache
+Loading model cost 0.775 seconds.
+Prefix dict has been built succesfully.
+[&#39;最近&#39;, &#39;这&#39;, &#39;几天&#39;, &#39;，&#39;, &#39;我&#39;, &#39;都&#39;, &#39;在&#39;, &#39;三亚&#39;, &#39;上班&#39;, &#39;，&#39;, &#39;看着&#39;, &#39;海&#39;, &#39;开发&#39;, &#39;的&#39;, &#39;感觉&#39;, &#39;还&#39;, &#39;不错&#39;, &#39;。&#39;]</code></pre>
+<p>太好了，Docker容器内的Python开发环境是可以使用的。这时候，我们在进入Docker容器内去查看下，如下：</p>
+<pre><code><code>$ docker ps
+CONTAINER ID        IMAGE                                 COMMAND               CREATED             STATUS              PORTS                              NAMES
+4718f33bc470        ssh_docker_python_dev:19.12.25.1346   &quot;/usr/sbin/sshd -D&quot;   20 minutes ago      Up 20 minutes       15731/tcp, 0.0.0.0:49154-&gt;22/tcp   brave_nobel
+$ docker exec -it 4718f33bc470 bash
+[root@4718f33bc470 src]# cd /tmp/pycharm_project_58/
+[root@4718f33bc470 pycharm_project_58]# ls -l
+total 24
+-rw-rw-r-- 1 user user  960 Dec 25 14:12 README.md
+-rw-rw-r-- 1 user user  150 Dec 25 13:21 build.sh
+-rw-rw-r-- 1 user user  284 Dec 25 14:10 jieba_test.py
+-rw-rw-r-- 1 user user 1100 Dec 25 13:46 python_dev.build
+drwxrwxr-x 2 user user 4096 Dec 25 22:48 src
+-rw-rw-r-- 1 user user  235 Dec 25 13:21 start.sh
+[root@4718f33bc470 pycharm_project_58]#</code></pre>
+<p>可以看到，容器中的/tmp/pycharm_project_58路径下确实包含了本地项目的所有文件。</p>
+<p>  关于如何制作带SSH服务和Python开发环境的Docker镜像以及如何在PyCharm中配置SSH Interpreter的讲述到此结束，感谢大家的阅读~<br />
+  该演示项目已上传至Github，网址为：https://github.com/percent4/Python_docker 。</p>
+<p><code>注意</code>：不妨了解下笔者的微信公众号： Python爬虫与算法（微信号为：easy_web_scrape）， 欢迎大家关注~</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

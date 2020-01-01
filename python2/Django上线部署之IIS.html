@@ -1,0 +1,92 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Django上线部署之IIS' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Django上线部署之IIS</center></div><div class='banquan'>原文出处:本文由博客园博主Siriusmath提供。<br/>
+原文连接:https://www.cnblogs.com/Siriusmath/p/11392625.html</div><br>
+    <p><span style="font-family: 'courier new', courier; font-size: 16px;"><strong>环境：</strong></span><br /><span style="font-family: 'courier new', courier;">    　　<strong>1</strong>.Windows Server 2016 Datacenter 64位</span><br /><span style="font-family: 'courier new', courier;">    　　<strong>2</strong>.SQL Server 2016 Enterprise 64位</span><br /><span style="font-family: 'courier new', courier;">    　　<strong>3</strong>.Python 3.6.0 64位</span><br /><span style="font-family: 'courier new', courier;">    　　<strong>4</strong>.administrator用户，无域环境，最高权限</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong><span style="font-size: 16px;">要求：</span></strong></span><br /><span style="font-family: 'courier new', courier;">    　　<span style="font-size: 14px;"><strong><span style="background-color: #ffffff; color: #ff0000;">按照顺序部署</span></strong></span></span></p>
+<p><span style="font-family: 'courier new', courier;">&nbsp;</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong>1</strong>.安装数据库</span><br /><span style="font-family: 'courier new', courier;"><strong>2</strong>.安装数据库客户端【SSMS】</span><br /><span style="font-family: 'courier new', courier;"><strong>3</strong>.安装Python</span><br /><span style="font-family: 'courier new', courier;"><strong>4</strong>.安装IIS</span><br /><span style="font-family: 'courier new', courier;"><strong>5</strong>.安装CGI</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong>6</strong>.将源码拷贝至【C:\inetpub\wwwroot\MySite】</span></p>
+<p><span style="font-family: 'courier new', courier;">　　（</span><span style="font-family: 'courier new', courier;">MySite是自定义文件夹，wwwroot是IIS默认网站存放的文件夹，为避免权限问题，不建议变动）</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong>7</strong>.cmd 执行：pip install -r requirements（安装依赖包）</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong>8</strong>.cmd 执行：pip install wfastcgi</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong>9</strong>.cmd 执行：wfastcgi-enable（获取脚本处理器信息，第8步需要使用）</span><br /><span style="font-family: 'courier new', courier;">    　　【scriptProcessor】</span><br /><span style="font-family: 'courier new', courier;">        　　　　结构：&lt;Python安装路径&gt;\python.exe|&lt;Python安装路径&gt;\lib\site-packages\wfastcgi.py</span><br /><span style="font-family: 'courier new', courier;">        　　　　例如：【d:\programs\python\python.exe|d:\programs\python\lib\site-packages\wfastcgi.py】</span><br />        <br /><span style="font-family: 'courier new', courier;"><strong>7</strong>.打开IIS管理器添加网站，网站名称为【MySite】，物理路径为【C:\inetpub\wwwroot\MySite】，选择IP和端口</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong>8</strong>.在【C:\inetpub\wwwroot\MySite】文件夹下添加文件【web.config】，内容如下（【】内是需要替换的部分）：</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('e9f7237e-56e3-4b05-a201-b097723e6591')"><img id="code_img_closed_e9f7237e-56e3-4b05-a201-b097723e6591" class="code_img_closed" src="./images/Django上线部署之IIS0.png" alt="" /><img id="code_img_opened_e9f7237e-56e3-4b05-a201-b097723e6591" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('e9f7237e-56e3-4b05-a201-b097723e6591',event)" src="./images/Django上线部署之IIS1.png" alt="" />
+<div id="cnblogs_code_open_e9f7237e-56e3-4b05-a201-b097723e6591" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">&lt;?</span><span style="color: #ff00ff;">xml version="1.0" encoding="UTF-8"</span><span style="color: #0000ff;">?&gt;</span>
+<span style="color: #008080;"> 2</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 4</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 5</span>             <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="Python FastCGI"</span> 
+<span style="color: #008080;"> 6</span> <span style="color: #ff0000;">                    path</span><span style="color: #0000ff;">="*"</span> 
+<span style="color: #008080;"> 7</span> <span style="color: #ff0000;">                    verb</span><span style="color: #0000ff;">="*"</span> 
+<span style="color: #008080;"> 8</span> <span style="color: #ff0000;">                    modules</span><span style="color: #0000ff;">="FastCgiModule"</span> 
+<span style="color: #008080;"> 9</span> <span style="color: #ff0000;">                    scriptProcessor</span><span style="color: #0000ff;">="【d:\programs\python\python.exe|d:\programs\python\lib\site-packages\wfastcgi.py】"</span> 
+<span style="color: #008080;">10</span> <span style="color: #ff0000;">                    resourceType</span><span style="color: #0000ff;">="Unspecified"</span> 
+<span style="color: #008080;">11</span> <span style="color: #ff0000;">                    requireAccess</span><span style="color: #0000ff;">="Script"</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">12</span>         <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">13</span>     <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">14</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">appSettings</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">15</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="WSGI_HANDLER"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="django.core.wsgi.get_wsgi_application()"</span> <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">16</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="PYTHONPATH"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="【C:\inetpub\wwwroot\MySite】"</span> <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">17</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="DJANGO_SETTINGS_MODULE"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="【项目名.settings】"</span> <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;">18</span>     <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">appSettings</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">19</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p><span style="font-family: 'courier new', courier;"><strong>9</strong>.在网站【MySite】添加【static】虚拟目录</span></p>
+<p><span style="font-family: 'courier new', courier;"><strong>10</strong>.在【C:\inetpub\wwwroot\MySite\static】文件夹下添加文件【web.config】，内容如下：</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('4855d068-d1fd-4338-a1c1-234c7e2c176d')"><img id="code_img_closed_4855d068-d1fd-4338-a1c1-234c7e2c176d" class="code_img_closed" src="./images/Django上线部署之IIS0.png" alt="" /><img id="code_img_opened_4855d068-d1fd-4338-a1c1-234c7e2c176d" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('4855d068-d1fd-4338-a1c1-234c7e2c176d',event)" src="./images/Django上线部署之IIS1.png" alt="" />
+<div id="cnblogs_code_open_4855d068-d1fd-4338-a1c1-234c7e2c176d" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">&lt;?</span><span style="color: #ff00ff;">xml version="1.0" encoding="UTF-8"</span><span style="color: #0000ff;">?&gt;</span>
+<span style="color: #008080;"> 2</span> 
+<span style="color: #008080;"> 3</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 4</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 5</span>         <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> this configuration overrides the FastCGI handler to let IIS serve the static files </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #008080;"> 6</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 7</span>             <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">clear</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;"> 8</span>             <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="StaticFile"</span><span style="color: #ff0000;"> path</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> verb</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> modules</span><span style="color: #0000ff;">="StaticFileModule"</span><span style="color: #ff0000;"> resourceType</span><span style="color: #0000ff;">="File"</span><span style="color: #ff0000;"> requireAccess</span><span style="color: #0000ff;">="Read"</span> <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;"> 9</span>         <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">10</span>     <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">11</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p><span style="font-family: 'courier new', courier;"><strong>11</strong>.在网站【MySite】添加【media】虚拟目录</span><br /><span style="font-family: 'courier new', courier;"><strong>12</strong>.在【C:\inetpub\wwwroot\MySite\media】文件夹下添加文件【web.config】，内容如下：</span></p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('ee5c7ff8-357b-4fbc-8e9d-634848ddcb0a')"><img id="code_img_closed_ee5c7ff8-357b-4fbc-8e9d-634848ddcb0a" class="code_img_closed" src="./images/Django上线部署之IIS0.png" alt="" /><img id="code_img_opened_ee5c7ff8-357b-4fbc-8e9d-634848ddcb0a" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('ee5c7ff8-357b-4fbc-8e9d-634848ddcb0a',event)" src="./images/Django上线部署之IIS1.png" alt="" />
+<div id="cnblogs_code_open_ee5c7ff8-357b-4fbc-8e9d-634848ddcb0a" class="cnblogs_code_hide">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">&lt;?</span><span style="color: #ff00ff;">xml version="1.0" encoding="UTF-8"</span><span style="color: #0000ff;">?&gt;</span>
+<span style="color: #008080;"> 2</span> <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 3</span>     <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 4</span>         <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> this configuration overrides the FastCGI handler to let IIS serve the static files </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #008080;"> 5</span>         <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 6</span>             <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">clear</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;"> 7</span>             <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="MediaFile"</span><span style="color: #ff0000;"> path</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> verb</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> modules</span><span style="color: #0000ff;">="StaticFileModule"</span><span style="color: #ff0000;"> resourceType</span><span style="color: #0000ff;">="File"</span><span style="color: #ff0000;"> requireAccess</span><span style="color: #0000ff;">="Read"</span> <span style="color: #0000ff;">/&gt;</span>
+<span style="color: #008080;"> 8</span>         <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;"> 9</span>     <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #008080;">10</span> <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<span class="cnblogs_code_collapse">View Code</span></div>
+<p>&nbsp;</p>
+<p><span style="font-size: 16px;"><strong><span style="font-family: 'courier new', courier;">权限相关的报错，执行如下三步：</span></strong></span><br /><span style="font-family: 'courier new', courier;"><strong>13</strong>.cmd 执行：%windir%\system32\inetsrv\appcmd unlock config -section:system.webServer/handlers</span><br /><span style="font-family: 'courier new', courier;"><strong>14</strong>.cmd 执行：%windir%\system32\inetsrv\appcmd unlock config -section:system.webServer/modules</span><br /><span style="font-family: 'courier new', courier;"><strong>15</strong>.右键点击【MySite】，点击【编辑权限】，在【安全】选项卡里给IIS_IUSERS赋予【完全控制】的权限</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

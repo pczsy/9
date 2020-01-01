@@ -1,0 +1,242 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修【如何让代码变“高级”(二)】-这样操作值得一波666（Java Stream）（这么有趣）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>【如何让代码变“高级”(二)】-这样操作值得一波666（Java Stream）（这么有趣）</center></div><div class='banquan'>原文出处:本文由博客园博主Ccww笔记提供。<br/>
+原文连接:https://www.cnblogs.com/Ccwwlx/p/12021066.html</div><br>
+    <h1 class="md-end-block md-heading"><span class="md-plain md-expand">【如何让代码变&ldquo;高级&rdquo;(二)】-这样操作值得一波666（Java Stream）（这么有趣）</span></h1>
+<h2 class="md-end-block md-heading"><span class="md-plain">开发中的代码</span></h2>
+<p class="md-end-block md-p"><span class="md-plain"> 在开发中的代码是不是很常见这样的代码：</span></p>
+<h3 class="md-end-block md-heading"><span class="md-plain">这样的?</span></h3>
+<p class="md-end-block md-p md-focus"><span class="md-expand"><strong>for循环取元素取值</strong></span></p>
+<div class="cnblogs_code">
+<pre><code>List&lt;User&gt; szUserList = <span style="color: #0000ff;">new</span> ArrayList&lt;&gt;<span style="color: #000000;">();
+ </span><span style="color: #0000ff;">for</span><span style="color: #000000;"> (User user : userList) {
+   </span><span style="color: #0000ff;">if</span> (user.getAddress().equals("shenzhen"<span style="color: #000000;">)) {
+    szUserList.add(user);
+   }
+ }</span></pre>
+</div>
+<h3 class="md-end-block md-heading"><span class="md-plain">或者这样的?</span></h3>
+<p class="md-end-block md-p"><span><strong>for循环去重</strong></span></p>
+<div class="cnblogs_code">
+<pre><code> <span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> i = 0; i &lt; list.size() - 1; i++<span style="color: #000000;">) {
+            </span><span style="color: #0000ff;">for</span> (<span style="color: #0000ff;">int</span> j = list.size() - 1; j &gt; i; j--<span style="color: #000000;">) {
+                </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (list.get(j).equals(list.get(i))) {
+                    list.remove(j);
+                }
+            }
+        }</span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>Set set = <span style="color: #0000ff;">new</span><span style="color: #000000;"> HashSet();
+        List</span>&lt;String&gt; newList = <span style="color: #0000ff;">new</span><span style="color: #000000;"> ArrayList();
+        </span><span style="color: #0000ff;">for</span> (Iterator iter =<span style="color: #000000;"> list.iterator(); iter.hasNext();) {
+            Object element </span>=<span style="color: #000000;"> iter.next();
+            </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> (set.add(element))
+                newList.add(element);
+        }
+        list.clear();
+        list.addAll(newList);
+      
+  }</span></pre>
+</div>
+<p>&nbsp;</p>
+<p class="md-end-block md-p"><span style="font-size: 16px;"><strong><span class="md-plain">&ldquo;普通&rdquo;CV族 VS "高级"CV族</span></strong></span></p>
+<p class="md-end-block md-p"><span class="md-plain">对于&ldquo;普通&rdquo;的CV族来说,这样就差不多了,功能实现了,又可以收拾包袱准备下班了.完美!!!</span></p>
+<p class="md-end-block md-p"><span class="md-plain">但对于我们"高级"CV族来,这不够,这远远的不够,我们需要保持一颗折腾的心💗,这样的代码彰显不出我们这段位的价值(<span><strong>青铜😀王者</strong><span class="md-plain">).</span></span></span></p>
+<p class="md-end-block md-p"><span class="md-plain">所以我们需要一种方式去提升我们代码的维度,让我们的代码变得更"高级", 使代码更加简洁并且更加语义化 .</span></p>
+<p class="md-end-block md-p"><span class="md-plain">由于"高级"CV"族保持这样的心态:</span></p>
+<blockquote>
+<p class="md-end-block md-p"><span class="md-plain">平凡的人,平凡的生活,平凡的工作</span></p>
+<p class="md-end-block md-p"><span class="md-plain">该有一颗不平凡的心💗</span></p>
+</blockquote>
+<p class="md-end-block md-p"><span class="md-plain">找出一种方式可以很好的升级这种代码问题:------</span><strong>Java 8 新提供给开发者的一组操作集合的 API----Stream流</strong></p>
+<p class="md-end-block md-p">&nbsp;</p>
+<h2 class="md-end-block md-heading"><span class="md-plain">我们如何看待Stream流</span></h2>
+<h3 class="md-end-block md-heading"><span class="md-plain">那Stream流是如何来提升代码维度?</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">首先我们来看看Stream流处理<span><strong>for循环取元素取值</strong><span class="md-plain">:</span></span></span></p>
+<div class="cnblogs_code">
+<pre><code>List&lt;User&gt; szUserList=<span style="color: #000000;">userList.stream()                              
+                              .filter(user</span>-&gt; user.getAddress().equals("shenzhen"<span style="color: #000000;">))                                     
+　　　　　　　　　　　　　　　　　　.collect(Collectors.toList());</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">其实, stream流会把需要处理的元素集合看作一种流， 流在管道中传输， 并且可以在管道的节点上进行处理， 比如筛选、排序、聚合等。Stream 流可以极大的提高开发效率，也可以使用它写出更加简洁明了的代码。 </span></p>
+<p class="md-end-block md-p"><span class="md-plain">那么Stream流可以分几种:</span></p>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">顺序流 : 按照顺序对集合中的元素进行处理 </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">并行流 : 使用多线程同时对集合中多个元素进行处理 </span></p>
+</li>
+</ul>
+<blockquote>
+<p class="md-end-block md-p"><span class="md-plain">在使用并行流的时候就要注意线程安全的问题 </span></p>
+</blockquote>
+<p class="md-end-block md-p"><span class="md-plain">元素流在管道中经过中间操作（intermediate operation）的处理，最后由终端操作 (terminal operation) 得到前面处理的结果。</span></p>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">中间操作(intermediate operation): 中间操作会产生另一个流 ,( 流是一种惰性操作，所有对源数据的计算只在终止操作被初始化的时候才会执行), 而且中间操作还分无状态操作和有状态操作两种 .</span></p>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">无状态操作 : 在处理流中的元素时，会对当前的元素进行单独处理。 (例如:过滤操作).</span></p>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">有状态操作 : 某个元素的处理可能依赖于其他元素.( 例如:查找最小值，最大值，和排序 ).</span></p>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">终止操作 (terminal operation):消费 Stream 流，并且会产生一个结果 . 如果一个 Stream 流被消费过了，那它就不能被重用的。 </span></p>
+<p class="md-end-block md-p">&nbsp;</p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><span class="md-plain">Stream流一般的执行过程可概括为:</span></h3>
+<ol class="ol-list" start="">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">源(Stream)</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">零个或多个中间操作(intermediate operation)</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">终止操作 （到这一步才会执行整个stream pipeline计算） (terminal operation)</span></p>
+</li>
+</ol>
+<h4 class="md-end-block md-heading"><span class="md-plain">源的创建方式</span></h4>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">使用Collection下的 stream() 和 parallelStream() 方法 </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">使用Stream中的静态方法：of()</span></p>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>List&lt; String&gt; createStream = <span style="color: #0000ff;">new</span> ArrayList&lt; String&gt;<span style="color: #000000;">();
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 顺序流</span>
+Stream&lt; String&gt; stream =<span style="color: #000000;"> createStream.stream();
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 并行流</span>
+Stream&lt; String&gt; parallelStream =<span style="color: #000000;"> createStream.parallelStream();
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> of()方法创建</span>
+Stream&lt; String&gt; stringStream =<span style="color: #000000;"> Stream.of(
+    createStream.toArray(</span><span style="color: #0000ff;">new</span> String[createStream.size()]));</pre>
+</div>
+<h4 class="md-end-block md-heading"><span class="md-plain">Intermediate操作</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">中间操作包括map (mapToInt, flatMap 等)、 filter、 distinct、 sorted、 peek、 limit、 skip、 parallel、 sequential、 unordered等.</span></p>
+<p class="md-end-block md-p"><span><strong>常用操作解析:</strong></span></p>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">filter : 筛选符合条件的元素后重新生成一个新的流。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">map : 接收一个函数作为参数，该函数会被应用到每个元素上，并将其映射成一个新的元素。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">flatMap: 接收一个函数作为参数，将流中的每个值都换成另一个流，然后把所有流连接成一个流。 </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">distinct: 去重操作，将 <span><code>Stream</code><span class="md-plain"> 流中的元素去重后，返回一个新的流。</span></span></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">sorted: 产生一个自然顺序排序或者指定排序条件的新流。</span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">skip:跳过n元素，配合limit(n)可实现分页 </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">peek: 生成一个包含原Stream的所有元素的新Stream，同时会提供一个消费函数（Consumer实例），新Stream每个元素被消费的时候都会执行给定的消费函数(一般用于重赋值那些)； </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">limit: 对一个Stream进行截断操作，获取其前N个元素，如果原Stream中包含的元素个数小于N，那就获取其所有的元素； </span></p>
+</li>
+</ul>
+<h4 class="md-end-block md-heading"><span class="md-plain">Terminal操作</span></h4>
+<p class="md-end-block md-p"><span class="md-plain">终止操作包括:forEach、 forEachOrdered、 toArray、 reduce、 collect、 min、 max、 count、 anyMatch、 allMatch、 noneMatch、 findFirst、 findAny、 iterator等</span></p>
+<p class="md-end-block md-p"><span><strong>常用操作解析:</strong></span></p>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">forEach: 遍历了流中的元素。(终端操作) </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">collect: 接收一个Collector实例，将流中元素收集成另外一个数据结构 </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">max:获得流中最大值，比较器可以由自己定义。(终端操作) </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">min: 获得流中最小值，比较器可以由自己定义。(终端操作) </span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">anyMatch : 判断 <span><code>Stream</code><span class="md-plain"> 流中是否有任何符合要求的元素，如果有则返回 <span><code>ture</code><span class="md-plain">,没有返回 <span><code>false</code><span class="md-plain">。（终端操作） </span></span></span></span></span></span></span></p>
+</li>
+</ul>
+<h3 class="md-end-block md-heading"><span class="md-plain">该如何操作呢?</span></h3>
+<p class="md-end-block md-p"><span class="md-plain">Stream操作都可以按照一般步骤进行.</span></p>
+<p class="md-end-block md-p"><span class="md-plain">比如上面的去重操作:</span></p>
+<p class="md-end-block md-p"><span class="md-plain">distinct操作:</span></p>
+<div class="cnblogs_code">
+<pre><code> list=<span style="color: #000000;">list.stream()
+          .distinct()
+          .collect(Collectors.toList()); </span></pre>
+</div>
+<blockquote>
+<p class="md-end-block md-p"><span><strong>NOTE:</strong><span class="md-plain"> <span><code>distinct()</code><span class="md-plain">使用 <span><code>hashCode()</code><span class="md-plain"> 和 <span><code>eqauls()</code><span class="md-plain"> 方法来获取不同的元素。因此，需要去重的类必须实现 <span><code>hashCode()</code><span class="md-plain"> 和 <span><code>equals()</code><span class="md-plain"> 方法 </span></span></span></span></span></span></span></span></span></span></span></span></p>
+</blockquote>
+<p class="md-end-block md-p">&nbsp;</p>
+<p class="md-end-block md-p"><span class="md-plain">结合filter,distinct,peek,skip,limit,collect例子:</span></p>
+<div class="cnblogs_code">
+<pre><code>List arrList = userList.stream().filter(user -&gt; user.getName().equals("ccww"))<span style="color: #008000;">//</span><span style="color: #008000;">过滤</span>
+                .distinct()<span style="color: #008000;">//</span><span style="color: #008000;">去重</span>
+                .peek(user -&gt; user.setAddress("shenzhen"))<span style="color: #008000;">//</span><span style="color: #008000;">重新赋值</span>
+                .skip(2)<span style="color: #008000;">//</span><span style="color: #008000;">跳读</span>
+                .limit(2)<span style="color: #008000;">//</span><span style="color: #008000;">读取2个元素</span>
+                .collect(Collectors.toList());</pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">map的例子:</span></p>
+<div class="cnblogs_code">
+<pre><code> List arrList1=<span style="color: #000000;">userList.stream()
+                .map(user</span>-&gt;<span style="color: #000000;">{
+                     </span><span style="color: #008000;">//</span><span style="color: #008000;">todo 处理函数</span>
+<span style="color: #000000;">                    user.setAddress(cityService.getCity());
+                }).collect(Collectors.toList());
+    }</span></pre>
+</div>
+<p class="md-end-block md-p"><span class="md-plain">现在我们主要了解了 Java 8 Stream 流的基础知识及使用，涵盖 Stream 流的分类、接口、相关 API 操作使用, 在实际开发中,一定还会有更多的应用,更多Stream详细内容,会在接下来好好文章中..</span></p>
+<p class="md-end-block md-p"><span class="md-plain">往期文章:</span></p>
+<ul class="ul-list" data-mark="+">
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class=" md-link"><a href="https://www.cnblogs.com/Ccwwlx/p/11957325.html"><span class="md-plain">【如何让代码变&ldquo;高级&rdquo;(一)】-Spring组合注解提升代码维度（这么有趣）</span></a></span></p>
+</li>
+<li class="md-list-item">
+<p class="md-end-block md-p"><span class="md-plain">...</span></p>
+</li>
+</ul>
+<blockquote>
+<p class="md-end-block md-p"><span class="md-plain">各位看官还可以吗？喜欢的话，动动手指点个赞💗，点个关注呗！！谢谢支持！ </span></p>
+<p class="md-end-block md-p"><span class="md-plain">也欢迎关注公众号【<span><strong>Ccww笔记</strong><span class="md-plain">】，原创技术文章第一时间推出</span></span></span></p>
+<p><span class="md-image md-img-loaded" data-src="https://user-gold-cdn.xitu.io/2019/11/29/16eb4f89cb5be063?w=258&amp;h=258&amp;f=png&amp;s=30412">&nbsp;</span></p>
+</blockquote>
+<p class="md-end-block md-p">&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

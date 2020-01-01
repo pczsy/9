@@ -1,0 +1,181 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python day1-requests' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python day1-requests</center></div><div class='banquan'>原文出处:本文由博客园博主达标提供。<br/>
+原文连接:https://www.cnblogs.com/interpreter/p/python_requests.html</div><br>
+    <h1><strong><span style="font-family: 宋体; background-color: #c0c0c0; color: #000000;">一、什么是requests</span></strong></h1>
+<p><span style="background-color: #ffffff; font-size: 18pt;"><strong><span style="font-family: 宋体; color: #000000;">Requests是用python语言基于urllib编写的，采用的是Apache2 Licensed开源协议的HTTP库。</span></strong></span></p>
+<p><span style="background-color: #ffffff; font-size: 18pt;"><strong><span style="font-family: 宋体; color: #000000;">相对于urllib库<strong>(自带，无需手动安装)</strong>而言，requests库的使用显得简单便捷(本质就是封装了urllib3)。</span></strong></span></p>
+<p><span style="background-color: #ffffff; font-size: 18pt;"><strong><span style="font-family: 宋体; color: #000000;">官方文档：<a href="http://cn.python-requests.org/zh_CN/latest/">http://cn.python-requests.org/zh_CN/latest/</a></span></strong></span></p>
+<h1><span style="background-color: #c0c0c0;"><strong><span style="font-family: 宋体; color: #000000;">二、requests的安装</span></strong></span></h1>
+<p><span style="background-color: #ffffff; font-size: 18pt;"><strong><span style="font-family: 宋体; color: #000000;">1.电脑运行ctrl+R输入cmd(命令提示符)</span></strong></span></p>
+<p><span style="background-color: #ffffff; font-size: 18pt;"><strong><span style="font-family: 宋体; color: #000000;">2.运行pip install requests安装&nbsp;</span></strong></span></p>
+<p><span style="background-color: #ffffff; font-size: 18pt;"><strong><span style="font-family: 宋体; color: #000000;"><img src="./images/python day1-requests0.png" alt="" /></span></strong></span></p>
+<p>&nbsp;</p>
+<h1><span style="font-family: 宋体; background-color: #c0c0c0;">三、requests库的使用</span></h1>
+<p><span style="font-family: 宋体; font-size: 18pt;">在requests库中，我们常用的是requests.get()和requests.post()</span></p>
+<p><span style="font-family: 宋体; font-size: 18pt;">post请求与get请求区别：</span></p>
+<p><span style="font-family: 宋体; font-size: 14pt;">1.在客户端，Get方式在通过URL提交数据，数据在URL中可以看到；POST方式，数据放置在HTML HEADER内提交。</span></p>
+<p><span style="font-family: 宋体; font-size: 14pt;">2.GET方式提交的数据最多只能有1024 Byte，而POST则没有此限制。</span></p>
+<p><span style="font-family: 宋体; font-size: 14pt;">3.安全性问题。正如在（1）中提到，使用Get的时候，参数会显示在地址栏上，而Post不会。所以，如果这些数据是中文数据而且是非敏感数据，那么使用get；如果用户输入的数据不是中文字符而且包含敏感数据，那么还是使用post为好。</span></p>
+<p><span style="font-size: 18pt;">requests.get()</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+response </span>= requests.get(<span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com</span><span style="color: #800000;">'</span>)   <span style="color: #008000;">#</span><span style="color: #008000;">获取百度的源码</span>
+response.encoding = response.apparent_encoding   <span style="color: #008000;">#</span><span style="color: #008000;">程序分析源码采用的编码格式</span>
+<span style="color: #0000ff;">print</span>(response.text)  <span style="color: #008000;">#</span><span style="color: #008000;">打印源码</span></pre>
+</div>
+<p><img src="./images/python day1-requests1.png" alt="" /></p>
+<p><span style="font-family: 宋体; font-size: 18pt;">其实，我们在使用过程中经常需要传递一些参数，如百度搜索python，这时我们就可以通过拼接构造URL的方式实现，那么数据会以键/值对的形式置于 URL 中，跟在一个问号的后面。</span></p>
+<p><span style="font-family: 宋体; font-size: 18pt;">例如：http://www.baidu.com/s?wd=python中Requests 允许你使用&nbsp;<strong>params</strong>&nbsp;关键字参数，以一个字典来提供这些参数。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com/s</span><span style="color: #800000;">'</span><span style="color: #000000;">
+params </span>=<span style="color: #000000;"> {
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wd</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">python</span><span style="color: #800000;">'</span><span style="color: #000000;">
+}
+response </span>= requests.get(url,params=params)  <span style="color: #008000;">#</span><span style="color: #008000;">传入参数</span>
+response.encoding =<span style="color: #000000;"> response.apparent_encoding
+</span><span style="color: #0000ff;">print</span>(response.url)   <span style="color: #008000;">#</span><span style="color: #008000;">返回http://www.baidu.com/s?wd=python</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18pt;">当然，你也可以使用最简单的拼接</span></p>
+<div class="cnblogs_code">
+<pre><code>url = <span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com/s?wd=</span><span style="color: #800000;">'</span> + <span style="color: #800000;">'</span><span style="color: #800000;">python</span><span style="color: #800000;">'</span><span style="color: #000000;">
+response </span>=<span style="color: #000000;"> requests.get(url)
+</span><span style="color: #0000ff;">print</span>(response.url)     <span style="color: #008000;">#</span><span style="color: #008000;">返回http://www.baidu.com/s?wd=python</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18pt;"><strong>拓展知识：</strong></span></p>
+<p><span style="font-family: 宋体; font-size: 18pt;">你还可以将一个列表作为值传入：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+params </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">key1</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">value1</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">key2</span><span style="color: #800000;">'</span>: [<span style="color: #800000;">'</span><span style="color: #800000;">value2</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">value3</span><span style="color: #800000;">'</span><span style="color: #000000;">]}
+r </span>= requests.get(<span style="color: #800000;">'</span><span style="color: #800000;">http://httpbin.org/get</span><span style="color: #800000;">'</span>, params=<span style="color: #000000;">params)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(r.url)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 打印的结果是</span><span style="color: #008000;">
+#</span><span style="color: #008000;">http://httpbin.org/get?key1=value1&amp;key2=value2&amp;key2=value3</span></pre>
+</div>
+<p><strong><span style="font-family: 宋体; font-size: 18pt;">requests.post()</span></strong></p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+data </span>=<span style="color: #000000;"> {
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>:<span style="color: #800000;">"</span><span style="color: #800000;">zhaofan</span><span style="color: #800000;">"</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">"</span><span style="color: #800000;">age</span><span style="color: #800000;">"</span>:23<span style="color: #000000;">
+}
+response </span>= requests.post(<span style="color: #800000;">"</span><span style="color: #800000;">http://httpbin.org/post</span><span style="color: #800000;">"</span>,data=<span style="color: #000000;">data)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(response.text)
+</span><span style="color: #800000;">'''<br />返回<br /></span><span style="color: #800000;">
+{
+  "args": {}, 
+  "data": "", 
+  "files": {}, 
+  "form": {
+    "age": "23", 
+    "name": "zhaofan"
+  }, 
+  "headers": {
+    "Accept": "*/*", 
+    "Accept-Encoding": "gzip, deflate", 
+    "Content-Length": "19", 
+    "Content-Type": "application/x-www-form-urlencoded", 
+    "Host": "httpbin.org", 
+    "User-Agent": "python-requests/2.20.0"
+  }, 
+  "json": null, 
+  "origin":, 
+  "url": "https://httpbin.org/post"
+}
+
+</span><span style="color: #800000;">'''</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18pt;">其他HTTP请求类型：PUT，DELETE，HEAD 以及 OPTIONS其实都是差不多的用法</span></p>
+<div class="cnblogs_code">
+<pre><code>r = requests.put(<span style="color: #800000;">'</span><span style="color: #800000;">http://httpbin.org/put</span><span style="color: #800000;">'</span>, data = {<span style="color: #800000;">'</span><span style="color: #800000;">key</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">value</span><span style="color: #800000;">'</span><span style="color: #000000;">})
+r </span>= requests.delete(<span style="color: #800000;">'</span><span style="color: #800000;">http://httpbin.org/delete</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+r </span>= requests.head(<span style="color: #800000;">'</span><span style="color: #800000;">http://httpbin.org/get</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+r </span>= requests.options(<span style="color: #800000;">'</span><span style="color: #800000;">http://httpbin.org/get</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<h1><span style="font-family: 宋体; background-color: #c0c0c0;">四、定制请求头</span></h1>
+<p><span style="font-family: 宋体; font-size: 18pt;">网站建立的最终目的是让人来访问的，其实几乎每个网站都是拒绝爬虫的，因此引出各种各样的反爬手段，那么网站是靠什么来判定我们是爬虫的？</span></p>
+<p><span style="font-family: 宋体; font-size: 18pt;">方法有很多，其中最普遍的是通过请求头来判断。</span></p>
+<p><span style="font-family: 宋体; font-size: 18pt;">在发送HTTP请求的时候<strong>浏览器都会带上请求头信息</strong>等，如果我们的程序没有带上，或者带上的请求头信息是错误的，也就是不被服务器认可的，那么就会遭到服务器的拒绝！</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com/s</span><span style="color: #800000;">'</span><span style="color: #000000;">
+params </span>=<span style="color: #000000;"> {
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">wd</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">python</span><span style="color: #800000;">'</span><span style="color: #000000;">
+}
+</span><span style="color: #008000;">#</span><span style="color: #008000;">请求头</span>
+headers =<span style="color: #000000;"> {
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.86 Safari/537.36</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+}
+response </span>= requests.get(url,params=params,headers=headers)</pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18pt;">此外，我们也可以通过fake_useragent来随机生成一个请求头</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> fake_useragent <span style="color: #0000ff;">import</span><span style="color: #000000;"> UserAgent
+
+us </span>=<span style="color: #000000;"> UserAgent()
+</span><span style="color: #0000ff;">print</span>(us.random)  <span style="color: #008000;">#</span><span style="color: #008000;">打印随机生成的请求头</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18pt;"><strong>注意：我们只是加上了User-Agent信息就可以正常访问了，但是浏览器是发送了比我们更多的信息的。如果遇到加上请求头User-Agent信息也不成功的网站，可以尝试添加其他请求头信息。</strong></span></p>
+<h1><span style="font-family: 宋体; background-color: #c0c0c0;"><strong>五、响应状态码</strong></span></h1>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> requests
+
+url </span>= <span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com/</span><span style="color: #800000;">'</span><span style="color: #000000;">
+response </span>=<span style="color: #000000;"> requests.get(url)
+</span><span style="color: #0000ff;">print</span>(response.status_code)    <span style="color: #008000;">#</span><span style="color: #008000;">返回200</span></pre>
+</div>
+<p><span style="font-family: 宋体; font-size: 18pt;">相关的响应状态码请访问网友的博客：<a href="https://www.cnblogs.com/dekui/p/7801289.html">https://www.cnblogs.com/dekui/p/7801289.html</a></span></p>
+<h1><span style="font-family: 宋体; background-color: #c0c0c0;">六、cookie</span></h1>
+<p><span style="font-family: 宋体; font-size: 14pt;">现在的网站中有这样的一种网站类型，也就是需要用户注册以后，并且登陆才能访问的网站，或者说在不登录的情况下不能访问自己的私有数据，例如微博，微信等。</span></p>
+<p><span style="font-family: 宋体; font-size: 14pt;">网站记录用户信息的方式就是通过客户端的Cookie值。例如：当我们在浏览器中保存账号和密码的同时，浏览器在我们的电脑上保存了我们的用户信息，并且在下次访问这个页面的时候就会自动的为我们加载Cookie信息。</span></p>
+<p><span style="font-family: 宋体; font-size: 14pt;">在需要登陆的网站中，浏览器将Cookie中的信息发送出去，服务器验证Cookie信息，确认登录。既然浏览器在发送请求的时候带有Cookie信息，那么我们的程序同样也要携带Cookie信息。</span></p>
+<p><span style="font-family: 宋体; font-size: 14pt;"><strong>Cookie是当你访问某个站点或者特定页面的时候，留存在电脑里的一段文本，它用于跟踪记录网站访问者的相关数据信息，比如：搜索偏好、行为点击，账号，密码等内容。</strong></span></p>
+<p><span style="font-family: 宋体; font-size: 14pt;">通常Cookie值信息可以在浏览器中复制过来，放到headers中：</span></p>
+<div class="cnblogs_code">
+<pre><code>headers =<span style="color: #000000;"> {
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Accept</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">application/json, text/javascript, */*; q=0.01</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Accept-Encoding</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">gzip, deflate, br</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Accept-Language</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">zh-CN,zh;q=0.9</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Connection</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">keep-alive</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Content-Length</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">26</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Content-Type</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">application/x-www-form-urlencoded; charset=UTF-8</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Cookie</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span><span style="color: #800000;">'</span>, <span style="color: #008000;">#</span><span style="color: #008000;"> 浏览器中复制</span>
+    <span style="color: #800000;">'</span><span style="color: #800000;">Host</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">www.lagou.com</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Origin</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">https://www.lagou.com</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">Referer</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">https://www.lagou.com/jobs/list_Python?labelWords=&amp;fromSearch=true&amp;suginput=</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">User-Agent</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/74.0.3729.157 Safari/537.36</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">X-Anit-Forge-Code</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">0</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">X-Anit-Forge-Token</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">None</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+    </span><span style="color: #800000;">'</span><span style="color: #800000;">X-Requested-With</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">XMLHttpRequest</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+}</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><span style="background-color: #ffffff; font-size: 18pt;"><strong><span style="font-family: 宋体; color: #000000;"><img src="D:\python_text\cnblogs-达标interpreter\images\request安装.PNG" alt="" /></span></strong></span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,85 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 截屏' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 截屏</center></div><div class='banquan'>原文出处:本文由博客园博主danvy617提供。<br/>
+原文连接:https://www.cnblogs.com/danvy/p/11721087.html</div><br>
+    <p>最近项目中想实现截屏功能，使用的笔记本是高清屏，实际屏幕设置成了150%，所以在截屏的时候遇到个各种问题。</p>
+<p>最开始使用PIL ImageGrab来截取屏幕，如果本来是100%的设置没有问题，能截取到全屏，但是150%或者其他设置的就会有问题，只能截取到屏幕的左上部分，无法截取到全屏。</p>
+<div class="highlight">
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> PIL <span style="color: #0000ff;">import</span><span style="color: #000000;"> ImageGrab
+
+pic </span>=<span style="color: #000000;"> ImageGrab.grab()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> print(pic.size)</span>
+pic.save(r<span style="color: #800000;">'</span><span style="color: #800000;">C:\Users\test\Desktop\Automation\python\pic.jpg</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>但是这个问题很奇怪，也有的机器150%设置，但是执行后没有问题。</p>
+</div>
+<p>遇到这个问题后看到网上有个解决方法：在注册表中Computer\HKEY_CURRENT_USER\Software\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers添加python.exe和pythonw.exe路径信息进去，再次执行程序就能截取到全屏，用python代码添加注册表的话，要重新再次运行程序才能截取到全屏：</p>
+<div class="highlight">
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> PIL <span style="color: #0000ff;">import</span><span style="color: #000000;"> ImageGrab
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> winreg
+
+reg </span>=<span style="color: #000000;"> winreg.ConnectRegistry(None, winreg.HKEY_CURRENT_USER)
+key </span>= winreg.OpenKey(reg, r<span style="color: #800000;">'</span><span style="color: #800000;">Control Panel\Desktop\WindowMetrics</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> print(winreg.QueryValueEx(key, 'AppliedDPI'))</span>
+<span style="color: #0000ff;">if</span> winreg.QueryValueEx(key, <span style="color: #800000;">'</span><span style="color: #800000;">AppliedDPI</span><span style="color: #800000;">'</span>)[0] != 96<span style="color: #000000;">:
+    key.Close()
+    key </span>= winreg.OpenKey(reg, r<span style="color: #800000;">'</span><span style="color: #800000;">SOFTWARE\Microsoft\Windows NT\CurrentVersion\AppCompatFlags\Layers</span><span style="color: #800000;">'</span><span style="color: #000000;">, 0, winreg.KEY_ALL_ACCESS)
+
+    winreg.SetValueEx(key, r</span><span style="color: #800000;">'</span><span style="color: #800000;">C:\Users\test\AppData\Local\Continuum\anaconda3\pythonw.exe</span><span style="color: #800000;">'</span>, 0, winreg.REG_SZ, <span style="color: #800000;">'</span><span style="color: #800000;">HIGHDPIAWARE</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    winreg.SetValueEx(key, r</span><span style="color: #800000;">'</span><span style="color: #800000;">C:\Users\test\AppData\Local\Continuum\anaconda3\python.exe</span><span style="color: #800000;">'</span>, 0, winreg.REG_SZ, <span style="color: #800000;">'</span><span style="color: #800000;">HIGHDPIAWARE</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+key.Close()
+reg.Close()
+
+pic </span>=<span style="color: #000000;"> ImageGrab.grab()
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> print(pic.size)</span>
+pic.save(r<span style="color: #800000;">'</span><span style="color: #800000;">C:\Users\test\Desktop\Automation\python\pic.jpg</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+<p>考虑到以后会用到其他机器上，每次都需要执行2次才能截取到全屏，就弃用了此方法。</p>
+<p>后来使用pyautogui来截取全屏，一般没有安装pyautogui，需要先安装：<br />pip install pyautogui</p>
+<div class="highlight">
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> pyautogui
+
+img </span>=<span style="color: #000000;"> pyautogui.screenshot()
+img.save(r</span><span style="color: #800000;">'</span><span style="color: #800000;">C:\Users\test\Desktop\Automation\python\pic_pyautogui.jpg</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+<p>但是如果笔记本还有连接外接显示器，是截取不到外显上内容的，只能截取笔记本显示器上的内容。如果要截取到外显上内容，想到使用win32方法来实现按键盘上的截屏功能，从而来实现抓取全屏带外显内容：</p>
+<div class="highlight">
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> win32api
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> win32con
+</span><span style="color: #0000ff;">from</span> PIL <span style="color: #0000ff;">import</span><span style="color: #000000;"> ImageGrab
+
+win32api.keybd_event(win32con.VK_SNAPSHOT, 0)
+im </span>=<span style="color: #000000;"> ImageGrab.grabclipboard()
+im.save(r</span><span style="color: #800000;">'</span><span style="color: #800000;">C:\Users\test\Desktop\Automation\python\pic_screenshot.jpg</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

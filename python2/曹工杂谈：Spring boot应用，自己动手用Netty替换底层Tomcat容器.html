@@ -1,0 +1,364 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修曹工杂谈：Spring boot应用，自己动手用Netty替换底层Tomcat容器' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>曹工杂谈：Spring boot应用，自己动手用Netty替换底层Tomcat容器</center></div><div class='banquan'>原文出处:本文由博客园博主三国梦回提供。<br/>
+原文连接:https://www.cnblogs.com/grey-wolf/p/12017818.html</div><br>
+    <h1 id="前言">前言</h1>
+<p>问：标题说的什么意思？</p>
+<p>答：简单说，一个spring boot应用（我这里，版本升到2.1.7.Release了，没什么问题），默认使用了tomcat作为底层容器来接收和处理连接。 我这里，在依赖中排除了tomcat，使用Netty作为了替代品。优势在于，启动飞快，线程数量完全可控（多少个netty的boss、worker线程，多少个业务线程），如果能优化得好，效率会很高（我这个还有很多优化空间，见文末总结）</p>
+<p>流程图如下（中间的三个handler是自定义的）：</p>
+<p><img src="./images/曹工杂谈：Spring boot应用，自己动手用Netty替换底层Tomcat容器0.png" /></p>
+<p>这个东西，年初我就弄出来了，然后用在了某个我负责的微服务里，之前一直想写，但是一直没把demo代码从微服务里抽出来，然后就一直拖着。前一阵吧，把代码抽出来了，然后又觉得要优化下，不然有些低级问题怎么办？</p>
+<p>前一阵抽了代码出来，然后想着优化下，结果忙起来搞忘了，而且优化无底洞啊，所以先不优化了，略微补了些注释，就发上来了，希望大家看到后，多多批评指正。</p>
+<p>先附上代码地址：<a href="https://gitee.com/ckl111/Netty_Spring_MVC_Sample/" class="uri">https://gitee.com/ckl111/Netty_Spring_MVC_Sample/</a></p>
+<p>启动后，访问：<a href="http://localhost:8081/test.do" class="uri">http://localhost:8081/test.do</a>即可。</p>
+<h1 id="实现大体思路">实现大体思路</h1>
+<ol>
+<li>排除掉<code>tomcat</code>依赖</li>
+<li>解决掉报错，保证<code>spring mvc</code>的上下文正常启动</li>
+<li>启动<code>netty</code>容器，最后一个<code>handler</code>负责将<code>servlet request</code>交给<code>dispatcherServlet</code>处理</li>
+</ol>
+<h1 id="具体实现">具体实现</h1>
+<p>解决dispatcherServlet不能正常工作的问题</p>
+<h2 id="问题1缺少servletcontext报错">问题1：缺少<code>servletContext</code>报错</h2>
+<p><img src="./images/曹工杂谈：Spring boot应用，自己动手用Netty替换底层Tomcat容器1.png" /></p>
+<p>经过追踪发现，这个<code>servletContext</code>来源于：<code>org.springframework.web.context.support.GenericWebApplicationContext</code>中的<code>servletContext</code>字段</p>
+<p>解决办法：</p>
+<p>在<code>META-INF/spring.factories</code>中，定义了一个listener，来参与spring boot启动时的生命周期：</p>
+<pre><code><code>org.springframework.boot.SpringApplicationRunListener=com.ceiec.router.config.MyListener</code></pre>
+<p>在我的自定义listener中，实现<code>org.springframework.boot.SpringApplicationRunListener</code>，然后重写如下方法：</p>
+<pre><code><code>package com.ceiec.router.config;
+
+import com.ceiec.router.config.servletconfig.MyServletContext;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.SpringApplicationRunListener;
+import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
+import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.MapPropertySource;
+import org.springframework.core.env.MutablePropertySources;
+import org.springframework.core.env.PropertySource;
+
+import javax.servlet.ServletContext;
+import java.util.Map;
+
+@Data
+@Slf4j
+public class MyListener implements SpringApplicationRunListener {
+
+
+    public MyListener(SpringApplication application, String[] args) {
+        super();
+    }
+    ...
+    
+    @Override
+    public void contextPrepared(ConfigurableApplicationContext context) {
+        // 这里手动new一个servletContext，然后设置给spring上下文
+        ServletContext servletContext = new MyServletContext();
+        ServletWebServerApplicationContext applicationContext = (ServletWebServerApplicationContext) context;
+        applicationContext.setServletContext(servletContext);
+    }
+  
+  ...
+
+}
+</code></pre>
+<p>自定义实现了<code>com.ceiec.router.config.servletconfig.MyServletContext</code>，这个很简单，继承spring test包中的<code>org.springframework.mock.web.MockServletContext</code>即可。</p>
+<pre><code><code>package com.ceiec.router.config.servletconfig;
+
+import org.springframework.mock.web.MockServletContext;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterRegistration;
+import javax.servlet.Servlet;
+import javax.servlet.ServletRegistration;
+
+public class MyServletContext extends MockServletContext{
+
+    @Override
+    public ServletRegistration.Dynamic addServlet(String servletName, Servlet servlet) {
+        return null;
+    }
+
+    @Override
+    public FilterRegistration.Dynamic addFilter(String filterName, Filter filter){
+        return null;
+    }
+}
+</code></pre>
+<h2 id="问题2">问题2：</h2>
+<p>暂时没有。之前的版本本来有一个问题，升到spring boot 2.1.7后，好像不需要了，先不管。</p>
+<h2 id="问题3">问题3：</h2>
+<p>怎么保证少了tomcat后，<code>dispatcherServlet</code>还能用？准确地说，<code>dispatcherServlet</code>这个东西和tomcat是两回事，以前写struts 2的时候，也没<code>dispatcherServlet</code>这个类，不是吗？</p>
+<p>所以，在spring boot启动时，并不强依赖底层容器，<code>dispatcherServlet</code> 这个bean会自动装配，装配代码在</p>
+<p><code>org.springframework.boot.autoconfigure.web.servlet.DispatcherServletAutoConfiguration.DispatcherServletConfiguration</code></p>
+<pre><code><code>    @Configuration
+    @Conditional(DefaultDispatcherServletCondition.class)
+    @ConditionalOnClass(ServletRegistration.class)
+    @EnableConfigurationProperties({ HttpProperties.class, WebMvcProperties.class })
+    protected static class DispatcherServletConfiguration {
+
+        private final HttpProperties httpProperties;
+
+        private final WebMvcProperties webMvcProperties;
+
+        //这里自动装配DispatcherServlet
+        @Bean(name = DEFAULT_DISPATCHER_SERVLET_BEAN_NAME)
+        public DispatcherServlet dispatcherServlet() {
+            DispatcherServlet dispatcherServlet = new DispatcherServlet();
+            dispatcherServlet.setDispatchOptionsRequest(
+                                this.webMvcProperties.isDispatchOptionsRequest());
+            dispatcherServlet.setDispatchTraceRequest(
+              this.webMvcProperties.isDispatchTraceRequest());
+            return dispatcherServlet;
+        }</code></pre>
+<h2 id="问题4">问题4：</h2>
+<p>自动装配<code>DispatcherServlet</code>后，处理请求时报错：</p>
+<p><img src="./images/曹工杂谈：Spring boot应用，自己动手用Netty替换底层Tomcat容器2.png" /></p>
+<p>解决方式是，启动完成后，给<code>dispatcherServlet</code>设置这个field的值，同时，初始化我们的servlet（这里提一句，还记得<code>servlet</code>的生命周期吗，就是那个东西）：</p>
+<pre><code><code>import org.springframework.mock.web.MockServletConfig;
+/**
+ * 从spring上下文获取 DispatcherServlet，设置其字段config为mockServletConfig
+ */
+DispatcherServlet dispatcherServlet = applicationContext.getBean(DispatcherServlet.class);
+MockServletConfig myServletConfig = new MockServletConfig();
+MyReflectionUtils.setFieldValue(dispatcherServlet,&quot;config&quot;,myServletConfig);
+
+/**
+ * 初始化servlet
+ */
+try {
+  dispatcherServlet.init();
+} catch (ServletException e) {
+  log.error(&quot;e:{}&quot;,e);
+}</code></pre>
+<h1 id="netty处理过程">netty处理过程</h1>
+<h2 id="大致流程">大致流程</h2>
+<p>这里，我们再将总共流程图贴一下：</p>
+<p><img src="./images/曹工杂谈：Spring boot应用，自己动手用Netty替换底层Tomcat容器0.png" /></p>
+<p>中间的三个handler，是我们自定义的。每个handler具体做的事情，写得比较清楚了。具体看下面的<code>com.ceiec.router.netty.DispatcherServletChannelInitializer</code>:</p>
+<pre><code><code>    public class DispatcherServletChannelInitializer extends ChannelInitializer&lt;SocketChannel&gt; {
+
+    //可以使用单独的线程池，来处理业务请求
+    private static DefaultEventLoopGroup eventExecutors = new DefaultEventLoopGroup(4,new NamedThreadFactory(&quot;business_servlet&quot;));
+
+    @Override
+    public void initChannel(SocketChannel channel) throws Exception {
+        ChannelPipeline pipeline = channel.pipeline();
+
+        // 对通信数据进行编解码
+        pipeline.addLast(new HttpServerCodec());
+
+        // 把多个HTTP请求中的数据组装成一个
+        pipeline.addLast(new HttpObjectAggregator(65536));
+
+        // 用于处理大的数据流
+        pipeline.addLast(new ChunkedWriteHandler());
+
+        /**
+         * 生成servlet使用的request
+         */
+        pipeline.addLast(&quot;GenerateServletRequestHandler&quot;, new GenerateServletRequestHandler());
+
+        /**
+         * 过滤器处理器，模拟servlet中的 filter 链
+         */
+        FilterNettyHandler filterNettyHandler = SpringContextUtils.getApplicationContext().getBean(FilterNettyHandler.class);
+        pipeline.addLast(&quot;FilterNettyHandler&quot;, filterNettyHandler);
+
+        /**
+         * 真正的业务handler，转交给：spring mvc的dispatcherServlet 处理
+         */
+        DispatcherServletHandler dispatcherServletHandler = SpringContextUtils.getApplicationContext().getBean(DispatcherServletHandler.class);
+        //pipeline.addLast(&quot;dispatcherServletHandler&quot;, dispatcherServletHandler);
+        // 使用下面的重载方法，第一个参数为线程池，则这里会异步执行我们的业务逻辑，正常也应该这样，避免长时间阻塞io线程
+        pipeline.addLast(eventExecutors,&quot;handler&quot;, new ServletNettyHandler(dispatcherServlet));
+    }
+
+
+}</code></pre>
+<h2 id="原始netty的http请求转成servlet-http请求">原始netty的http请求，转成servlet http请求</h2>
+<p>其中，<code>GenerateServletRequestHandler</code>完成这部分工作，传递给下一个handler的，就是<code>MockHttpServletRequest</code>类型：</p>
+<pre><code><code> @Override
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, FullHttpRequest fullHttpRequest) throws Exception {
+        if (!fullHttpRequest.decoderResult().isSuccess()) {
+            sendError(channelHandlerContext, BAD_REQUEST);
+            return;
+        }
+
+        // 设置请求的会话id
+        String token = UUID.randomUUID().toString().replace(&quot;-&quot;, &quot;&quot;);
+        MDC.put(SESSION_KEY, token);
+
+        String remoteIP = getRemoteIP(fullHttpRequest, channelHandlerContext);
+        MockHttpServletRequest servletRequest = createServletRequest(fullHttpRequest);
+        String s = fullHttpRequest.content().toString(CharsetUtil.UTF_8);
+
+        log.info(&quot;{},request:{},param:{}&quot;, remoteIP, fullHttpRequest.uri(), s);
+        try {
+            channelHandlerContext.fireChannelRead(servletRequest);
+        } finally {
+            // 删除SessionId
+            MDC.remove(SESSION_KEY);
+        }
+
+    }</code></pre>
+<h2 id="模拟servlet-filter-chain对请求进行处理">模拟servlet filter chain对请求进行处理</h2>
+<p>这里说下，为什么要使用spring来管理它，且类型为prototype，因为：每次请求进来，都会去调用</p>
+<p><code>com.ceiec.router.netty.DispatcherServletChannelInitializer#initChannel</code>，在那里面是如下的从spring上下文获取的方式来拿到<code>FilterNettyHandler</code>的。</p>
+<pre><code><code>@Override
+    public void initChannel(SocketChannel channel) throws Exception {
+        ChannelPipeline pipeline = channel.pipeline();
+        ... 
+        /**
+         * 过滤器处理器，模拟servlet中的 filter 链
+         */
+        FilterNettyHandler filterNettyHandler = SpringContextUtils.getApplicationContext().getBean(FilterNettyHandler.class);
+        pipeline.addLast(&quot;FilterNettyHandler&quot;, filterNettyHandler);
+    }</code></pre>
+<pre><code><code>package com.ceiec.router.netty.handler;
+
+import com.ceiec.router.netty.DispatcherServletChannelInitializer;
+import com.ceiec.router.netty.filter.ApplicationFilterChain;
+import com.ceiec.router.netty.filter.ApplicationFilterFactory;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Scope;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.stereotype.Component;
+
+/**
+ * desc: 模拟servlet的filter链
+ * netty handler链的初始化在{@link DispatcherServletChannelInitializer#initChannel(io.netty.channel.socket.SocketChannel)}
+ * @author: ckl
+ * creat_date: 2019/12/10 0010
+ * creat_time: 10:14
+ **/
+@Slf4j
+@Component
+@Scope(scopeName = &quot;prototype&quot;)
+public class FilterNettyHandler extends SimpleChannelInboundHandler&lt;MockHttpServletRequest&gt; {
+
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext ctx, MockHttpServletRequest httpServletRequest) throws Exception {
+        MockHttpServletResponse httpServletResponse = new MockHttpServletResponse();
+        ApplicationFilterChain filterChain = ApplicationFilterFactory.createFilterChain(ctx,httpServletRequest);
+        if (filterChain == null) {
+            return;
+        }
+
+        filterChain.doFilter(httpServletRequest, httpServletResponse);
+    }
+}
+</code></pre>
+<h2 id="handler最后一棒将请求交给dispatcherservlet处理">handler最后一棒：将请求交给dispatcherServlet处理</h2>
+<pre><code><code>package com.ceiec.router.netty.handler;
+
+import com.ceiec.router.netty.DispatcherServletChannelInitializer;
+import com.ceiec.router.netty.filter.RequestResponseWrapper;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.codec.http.DefaultHttpResponse;
+import io.netty.handler.codec.http.HttpResponse;
+import io.netty.handler.codec.http.HttpResponseStatus;
+import io.netty.handler.stream.ChunkedStream;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Scope;
+import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.stereotype.Component;
+import org.springframework.web.servlet.DispatcherServlet;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+
+import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
+
+/**
+ *
+ * desc:
+ * 请求交给，Spring的dispatcherServlet处理
+ * netty handler链的初始化在{@link DispatcherServletChannelInitializer#initChannel(io.netty.channel.socket.SocketChannel)}
+ * @author: caokunliang
+ * creat_date: 2019/8/21 0021
+ * creat_time: 15:46
+ **/
+@Slf4j
+@Component
+@Scope(scopeName = &quot;prototype&quot;)
+public class DispatcherServletHandler extends SimpleChannelInboundHandler&lt;RequestResponseWrapper&gt; {
+
+    @Autowired
+    private DispatcherServlet dispatcherServlet;
+
+
+    @Override
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, RequestResponseWrapper requestResponseWrapper) throws Exception {
+        MockHttpServletRequest servletRequest = (MockHttpServletRequest) requestResponseWrapper.getServletRequest();
+        MockHttpServletResponse servletResponse = (MockHttpServletResponse) requestResponseWrapper.getServletResponse();
+        //这里调用dispatcherServlet的service，最终会调用controller的方法，响应流会写入到servletResponse中
+        dispatcherServlet.service(servletRequest, servletResponse);
+
+        HttpResponseStatus status = HttpResponseStatus.valueOf(servletResponse.getStatus());
+        HttpResponse response = new DefaultHttpResponse(HTTP_1_1, status);
+
+        for (String name : servletResponse.getHeaderNames()) {
+            response.headers().add(name, servletResponse.getHeader(name));
+        }
+
+        response.headers().add(&quot;Content-Type&quot;,&quot;application/json;charset=UTF-8&quot;);
+
+        // Write the initial line and the header.
+        channelHandlerContext.write(response);
+
+        InputStream contentStream = new ByteArrayInputStream(servletResponse.getContentAsByteArray());
+
+        ChunkedStream stream = new ChunkedStream(contentStream);
+        ChannelFuture writeFuture = channelHandlerContext.writeAndFlush(stream);
+        writeFuture.addListener(ChannelFutureListener.CLOSE);
+    }
+
+
+}
+</code></pre>
+<h1 id="总结">总结</h1>
+<p>大概就上面这些东西了，整体来说，有很多需要优化的东西。但我本身对netty的使用，只能算相对勉强，很多细节性的东西没考虑。</p>
+<p>比如：</p>
+<ol>
+<li>我这里，是很粗暴地每次请求后，关闭了连接；</li>
+<li>请求id在从worker线程，传给dispatcherServlet的业务线程时，丢失了（主要是直接使用了netty的api，来生成线程池，难以控制）；</li>
+<li>我使用了这个技术的微服务，qps不算高，高了之后，会不会有大问题，暂时未知，需要进一步测试，但最近也忙，时间有限。</li>
+<li>channel的handler这里，现在用的prototype的bean，如果换成单例bean，在高并发下会不会有问题呢，待验证。</li>
+</ol>
+<p>虽然问题很多，但是我觉得很难等到我全部完善了再分享，因为我个人能力有限（<code>netty</code>功力不行，哈哈）。我能做的是，先分享，抛砖引玉，后续有时间了我也会慢慢优化。<br />
+代码地址：https://gitee.com/ckl111/Netty_Spring_MVC_Sample</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

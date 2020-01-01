@@ -1,0 +1,638 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python基础（十）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python基础（十）</center></div><div class='banquan'>原文出处:本文由博客园博主天狼大大提供。<br/>
+原文连接:https://www.cnblogs.com/tianlangdada/p/11558965.html</div><br>
+    <h1 id="今日主要内容">今日主要内容</h1>
+<ul>
+<li>补充：传参与参数分配区别</li>
+<li>动态传参</li>
+<li>函数注释</li>
+<li>名称空间</li>
+<li>函数名的使用</li>
+<li>函数嵌套</li>
+<li>global和nonlocal</li>
+</ul>
+<h1 id="补充传参与参数分配区分">补充：传参与参数分配区分</h1>
+<ul>
+<li><p>先看一个函数定义和函数调用</p>
+<pre><code><code>def func(a, b):
+  print(b, a)
+
+a = 5
+b = 10    
+func(b, a)  # 5 10</code></pre>
+<p><img src="./images/Python基础（十）0.png" /></p>
+<ul>
+<li>粉色箭头是传参的过程</li>
+<li>青色箭头是分配参数的过程</li>
+</ul></li>
+<li><p>传参的过程按照参数类型进行，位置参数按顺序一一对应传参，与变量名是什么无关</p></li>
+<li><p>而参数分配是函数自己的事，函数体属于函数，分配参数的过程要按照变量名分配</p></li>
+</ul>
+<h1 id="一动态传参">一、动态传参</h1>
+<h2 id="一-为什么要用动态传参">（一） 为什么要用动态传参</h2>
+<ul>
+<li><p>先来看一个例子：</p>
+<ul>
+<li>定义一个吃饭的函数，每次调用时传入要吃的东西，打印菜单</li>
+</ul>
+<pre><code><code>def eat(zhushi, huncai, sucai, tang, tiandian):
+  print(&quot;我要吃:&quot;, zhushi, huncai, sucai, tang, tiandian)
+
+eat(&quot;大米饭&quot;, &quot;红烧肉&quot;, &quot;烧茄子&quot;, &quot;番茄汤&quot;, &quot;慕斯&quot;)
+# 我要吃: 米饭 红烧肉 烧茄子 番茄汤 慕斯</code></pre>
+<ul>
+<li>这可能是我的饭量，但是这时来了一个女生，女生吃不了这么多啊，只选了一个小花卷，一盘黄瓜炒鸡蛋</li>
+</ul>
+<pre><code><code>def eat(zhushi, huncai, sucai, tang, tiandian):
+  print(&quot;我要吃:&quot;, zhushi, huncai, sucai, tang, tiandian)
+
+eat(&quot;小花卷&quot;, &quot;黄瓜炒鸡蛋&quot;)
+# TypeError: eat() missing 3 required positional arguments: &#39;sucai&#39;, &#39;tang&#39;, and &#39;tiandian&#39;</code></pre>
+<ul>
+<li>由于我填入的参数与定义的参数数量不对应，调用时就会报错，怎么解决这个事情呢，这就要用到了我们的动态传参。</li>
+</ul></li>
+<li><p>动态传参可以给函数传入不定量的参数，以元组、字典的方式打包起来，这就解决了我们填入参数是数量不定引发的error，下面我们来看看动态传参具体的方法</p></li>
+</ul>
+<h2 id="二两类动态传参">（二）两类动态传参</h2>
+<ul>
+<li>动态位置参数</li>
+<li>动态关键字参数</li>
+</ul>
+<ol>
+<li><p>动态位置参数（动态接收位置参数）</p>
+<ul>
+<li>先来回忆一下位置参数，按照一一对应的位置来传参</li>
+</ul>
+<pre><code><code>def eat(zhushi, tang):  # 按照位置接收参数(形参)
+ print(f&quot;主食:{zhushi} 汤:{tang}&quot;)
+
+eat(&quot;米饭&quot;, &quot;番茄蛋花汤&quot;)  # 位置参数(实参)
+# 主食:米饭 汤:番茄蛋花汤</code></pre>
+<ul>
+<li>动态接收位置参数，在形参前加一个星号<code>*</code>，表示可接收任意数量的形参，以元组存储</li>
+</ul>
+<pre><code><code>def eat(*food):  # 参数前加一个星号，表示动态接收位置参数
+ print(food)
+
+eat(&quot;米饭&quot;, &quot;番茄蛋花汤&quot;)  # 可以填写任意数量参数
+# (&#39;米饭&#39;, &#39;番茄蛋花汤&#39;)</code></pre>
+<ul>
+<li>动态位置参数在python中一般用<code>*args</code>来表示，只是一个行业内的规范，也可以用其他变量名定义但不建议使用</li>
+</ul>
+<pre><code><code>def eat(*args):  # 一般用*args表示动态位置参数
+ print(args)
+
+eat(&quot;米饭&quot;, &quot;番茄蛋花汤&quot;)  # 可以填写任意数量参数
+# (&#39;米饭&#39;, &#39;番茄蛋花汤&#39;)</code></pre></li>
+<li><p>结合之前两种形参（位置参数、默认值参数）共同分析</p>
+<ul>
+<li><p>位置参数 + 动态位置参数</p>
+<ul>
+<li><strong>位置参数必须在动态位置参数前</strong>（位置参数 &gt; 动态位置参数）</li>
+</ul>
+<pre><code><code>def eat(zhushi, *food):
+   print(zhushi, food)
+
+eat(&quot;米饭&quot;, &quot;红烧肉&quot;, &quot;排骨&quot;, &quot;烧鸡&quot;)
+# 米饭 (&#39;红烧肉&#39;, &#39;排骨&#39;, &#39;烧鸡&#39;)</code></pre>
+<ul>
+<li><strong>原因</strong>：如果动态位置参数（带星的）在前，那么<strong>所有实参全部都传给了动态位置参数（带星的）</strong>，后面的位置参数（不带星的）是接收不到任何实参的，导致报错</li>
+</ul>
+<pre><code><code>def eat(*food, zhushi):
+   print(food, zhushi)
+
+eat(&quot;米饭&quot;, &quot;    红烧肉&quot;, &quot;排骨&quot;, &quot;烧鸡&quot;)
+# TypeError: eat() missing 1 required keyword-only argument: &#39;zhushi&#39;</code></pre></li>
+<li><p>默认值参数 + 动态位置参数</p>
+<ul>
+<li><strong>默认参数必须在动态位置参数后</strong>（ 动态位置参数 &gt; 默认值参数）</li>
+</ul>
+<pre><code><code>def eat(*food, zhushi=&quot;米饭&quot;):
+   print(food, zhushi)
+
+eat(&quot;回锅肉&quot;, &quot;红烧肉&quot;, &quot;翡翠白玉汤&quot;)
+# (&#39;回锅肉&#39;, &#39;红烧肉&#39;, &#39;翡翠白玉汤&#39;) 米饭
+</code></pre>
+<ul>
+<li><strong>原因</strong>：默认值参数的目的就是为了在重复输入情况下使用默认值，省去每次输入一样的参数，若默认值参数在前，则每次调用都需要填入参数，默认值参数就没有意义了</li>
+</ul>
+<pre><code><code>def eat(zhushi=&quot;米饭&quot;, *food):
+   print(zhushi, food)
+
+eat(&quot;米饭&quot;, &quot;回锅肉&quot;, &quot;红烧肉&quot;, &quot;翡翠白玉汤&quot;)  # 默认值参数没有意义
+# 米饭 (&#39;回锅肉&#39;, &#39;红烧肉&#39;, &#39;翡翠白玉汤&#39;)
+</code></pre></li>
+<li><p>位置参数 + 默认值参数 + 动态位置参数</p>
+<ul>
+<li>参数顺序：位置参数 &gt; 动态位置参数 &gt; 默认值参数</li>
+</ul>
+<pre><code><code>def eat(zhushi, *food, tang=&quot;番茄蛋花汤&quot;):
+   print(zhushi, food, tang)
+
+eat(&quot;米饭&quot;, &quot;红烧肉&quot;, &quot;排骨&quot;, &quot;烧鸡&quot;)
+# 米饭 (&#39;红烧肉&#39;, &#39;排骨&#39;, &#39;烧鸡&#39;) 番茄蛋花汤
+</code></pre></li>
+</ul></li>
+<li><p>动态关键字参数（动态接收关键字参数）</p>
+<ul>
+<li>星号<code>*</code>可以接收任意数量的位置参数，但是无法接收任意数量的关键字参数，在形参前加两个星号<code>**</code>就可以接受任意数量的关键字参数，以字典存储</li>
+</ul>
+<pre><code><code>def eat(zhushi, **cai):  
+ print(f&quot;主食:{zhushi} 菜:{cai}&quot;)
+
+eat(&quot;米饭&quot;, cai1=&quot;红烧肉&quot;, cai2=&quot;可乐鸡翅&quot;)
+主食:米饭 菜:{&#39;cai1&#39;: &#39;红烧肉&#39;, &#39;cai2&#39;: &#39;可乐鸡翅&#39;}
+</code></pre>
+<ul>
+<li>动态关键字参数在python中一般用<code>**kwargs</code>来表示，只是一个行业内的规范，也可以用其他变量名定义但不建议使用</li>
+</ul>
+<pre><code><code>def eat(zhushi, **kwargs):  
+ print(f&quot;主食:{zhushi} 菜:{kwargs}&quot;)
+
+eat(&quot;米饭&quot;, cai1=&quot;红烧肉&quot;, cai2=&quot;可乐鸡翅&quot;)
+主食:米饭 菜:{&#39;cai1&#39;: &#39;红烧肉&#39;, &#39;cai2&#39;: &#39;可乐鸡翅&#39;}
+</code></pre></li>
+<li><p>结合之前三种形参（位置参数、动态位置参数、默认值参数）共同分析</p>
+<ul>
+<li>回想一下实参的顺序，给入实参时，位置参数必须要在关键字参数前，否则会报错</li>
+</ul>
+<pre><code><code>def func(a, b, c):
+ print(a, b, c)
+
+func(1, b=2, 3)
+# SyntaxError: positional argument follows keyword argument
+</code></pre>
+<ul>
+<li>所以关键字参数必须要在位置参数后，由于实参是这个顺序，所以形参在接收的时候也必须是这个顺序，所以动态关键字参数也必须在动态位置参数后</li>
+</ul>
+<pre><code><code>def eat(zhushi, *args, tang=&quot;番茄蛋花汤&quot;, **kwargs):  
+ print(f&quot;主食:{zhushi} 甜品:{args} 汤:{tang} 菜:{kwargs}&quot;)
+
+eat(&quot;米饭&quot;, &quot;慕斯&quot;, &quot;布丁&quot;, recai=&quot;可乐鸡翅&quot;, liangcai=&quot;大拌菜&quot;)
+# 主食:米饭 甜品:(&#39;慕斯&#39;, &#39;布丁&#39;) 汤:番茄蛋花汤 菜:{&#39;recai&#39;: &#39;可乐鸡翅&#39;, &#39;liangcai&#39;: &#39;大拌菜&#39;} 
+</code></pre></li>
+<li><p>形参的最终顺序：(重要)</p></li>
+</ol>
+<ul>
+<li><strong>位置参数 &gt; 动态位置参数 &gt; 默认值参数 &gt; 动态关键字参数</strong></li>
+</ul>
+<ol>
+<li><p>星号<code>*</code>的作用</p>
+<ul>
+<li>在函数定义的时候：<strong>聚合</strong></li>
+<li>动态位置参数聚合成<strong>元组</strong></li>
+<li>动态关键字参数聚合成<strong>字典</strong></li>
+</ul>
+<pre><code><code>def func(a, b, *args):  # 将我传入的3，4，5聚合成一个元组
+ print(a, b, args)
+
+func(1, 2, 3, 4, 5)  # 1 2 (3, 4, 5)  
+</code></pre>
+<ul>
+<li>在函数调用的时候：<strong>打散</strong></li>
+<li>动态位置参数打散获取的是<strong>单个元素</strong></li>
+<li>动态关键字参数打散获取的是<strong>字典的键</strong></li>
+</ul>
+<pre><code><code>def func(a, b, *args):  # 将我传入的3，4，5聚合成一个元组
+ print(a, b, *args)  # 将元组打散成元素输出
+
+func(1, 2, 3, 4, 5)  # 1 2 3 4 5  
+</code></pre></li>
+<li><p>无敌传参</p>
+<ul>
+<li>可以传入任意类型参数、任意数量参数，无敌</li>
+</ul>
+<pre><code><code>def func(*args, **kwargs):
+ print(args, kwargs)
+
+func(1, 2, 3, k1=v1, k2=v2)
+# (1, 2, 3) {&#39;k1&#39;: &#39;v1&#39;, &#39;k2&#39;: &#39;v2&#39;}
+</code></pre></li>
+</ol>
+<h1 id="二函数注释">二、函数注释</h1>
+<h2 id="一函数注释的好处">（一）函数注释的好处</h2>
+<ul>
+<li>代码永远是写给人看的，在函数中添加注释可以让人清楚明了的了解函数的作用以及函数的用法</li>
+<li>防止自己遗忘自己写的函数是干什么用的，当忘记的时候看注释就好了</li>
+<li>可以在注释中明确变量以及返回值建议的数据类型</li>
+</ul>
+<h2 id="二注释用法">（二）注释用法</h2>
+<ol>
+<li><p>在函数体的第一行用多行注释<code>&quot;&quot;&quot; &quot;&quot;&quot;</code>，pycharm在函数中添加注释默认出现函数所用到的所有变量</p>
+<pre><code><code>def func(args1, args2):
+    &quot;&quot;&quot;
+
+    :param args1: int
+    :param args2: int
+    :return: int
+    &quot;&quot;&quot;
+    print(args1)
+    print(args2)
+    return args1, args2
+</code></pre>
+<p><img src="./images/Python基础（十）1.png" /></p></li>
+<li><p>在函数定义的时候，形参后面可以加冒号并写出建议传入的数据类型</p>
+<pre><code><code>def func(args1: int, args2: int):
+    &quot;&quot;&quot;
+    此处添加注释内容
+    :param args1: int
+    :param args2: int
+    :return: int
+    &quot;&quot;&quot;
+    print(args1)
+    print(args2)
+    return args1, args2
+</code></pre>
+<p><img src="./images/Python基础（十）2.png" /></p></li>
+</ol>
+<h2 id="三关于函数的两个查看方法">（三）关于函数的两个查看方法</h2>
+<ol>
+<li><p>查看函数的注释</p>
+<ul>
+<li><code>函数名.__doc__</code>，若无注释返回None</li>
+</ul>
+<pre><code><code>def func(args1, args2):
+    &quot;&quot;&quot;
+    进行加法运算
+    :param args1: int
+    :param args2: int
+    :return: int
+    &quot;&quot;&quot;
+    return args1 + args2
+
+
+print(func.__doc__)
+</code></pre>
+<pre><code><code>运行结果：
+
+    进行加法运算
+    :param args1: int
+    :param args2: int
+    :return: int
+
+</code></pre></li>
+<li><p>查看函数的名字</p>
+<ul>
+<li><code>函数名.__name__</code></li>
+</ul>
+<pre><code><code>def func(args1, args2):
+    &quot;&quot;&quot;
+    进行加法运算
+    :param args1: int
+    :param args2: int
+    :return: int
+    &quot;&quot;&quot;
+    return args1 + args2
+
+
+add = func
+print(add.__name__)  # 运行结果：func
+</code></pre></li>
+</ol>
+<h1 id="三名称空间命名空间">三、名称空间（命名空间）</h1>
+<h2 id="一什么是名称空间">（一）什么是名称空间</h2>
+<ul>
+<li>Python解释器开始执行之后，就会在内存中开辟了一个空间，每当遇到一个变量的时候，就会把变量名（内存地址）和值之间的关系记录下来，但是当遇到函数定义的时候，解释器只是把函数名（函数的内存地址）读入内存，表示这个函数存在了，而函数内部的变量和逻辑，解释器是不关心的，也就是说一开始的时候函数只是加载进来了，仅此而已，只有当函数被调用和访问的时候，解释器才会根据函数内部声明的变量开进行开辟变量的内部空间，随着函数执行完毕，这些函数内部变量占用的空间也会随着函数执行完毕被清空，我们给存放名字和值的关系的空间起一个名字叫：<strong>名称空间（命名空间）</strong>，我们的变量在存储的时候就是存储在这片空间中的。（出自邱彦涛老师，我的偶像）</li>
+</ul>
+<h2 id="二名称空间的分类">（二）名称空间的分类</h2>
+<ul>
+<li>在python中名称空间分为三部分：
+<ul>
+<li>内置空间</li>
+<li>全局空间</li>
+<li>局部空间</li>
+</ul></li>
+</ul>
+<ol>
+<li><p>内置空间：存放python解释器为我们提供的名字，len、print、global等等</p></li>
+<li><p>全局空间：用来存放py文件顶格运行时声明的变量</p></li>
+<li><p>局部空间：用来存放在函数运行时声明的变量</p></li>
+<li><p>名称空间加载顺序：</p>
+<ul>
+<li>内置名称空间 &gt; 全局名称空间 &gt; 局部名称空间</li>
+</ul>
+<p><img src="./images/Python基础（十）3.png" /></p></li>
+<li><p>变量取值顺序：</p>
+<ul>
+<li>局部名称空间 &gt; 全局名称空间 &gt; 内置名称空间</li>
+</ul>
+<p><img src="./images/Python基础（十）4.png" /></p></li>
+</ol>
+<h2 id="三作用域">（三）作用域</h2>
+<ul>
+<li>作用域就是作用范围，作用域分为两类：
+<ul>
+<li>全局作用域</li>
+<li>局部作用域</li>
+</ul></li>
+</ul>
+<ol>
+<li><p>全局作用域：整个文件的任何位置都可以使用</p>
+<ul>
+<li>包含：内置名称空间 + 全局名称空间</li>
+<li><code>globals()</code>函数可以查看全局作用域中的变量和函数信息</li>
+</ul>
+<pre><code><code>a = 10
+b = 20
+
+
+def func(args1, args2):
+    print(args1)
+    print(args2)
+    print(globals())
+    return None
+
+
+func(30, 40)
+</code></pre>
+<pre><code><code>运行结果：
+{&#39;__name__&#39;: &#39;__main__&#39;, &#39;__doc__&#39;: None, &#39;__package__&#39;: None, &#39;__loader__&#39;: &lt;_frozen_importlib_external.SourceFileLoader object at 0x000001B61F2786D8&gt;, &#39;__spec__&#39;: None, &#39;__annotations__&#39;: {}, &#39;__builtins__&#39;: &lt;module &#39;builtins&#39; (built-in)&gt;, &#39;__file__&#39;: &#39;D:/python_S26/day10/exercise.py&#39;, &#39;__cached__&#39;: None, &#39;a&#39;: 10, &#39;b&#39;: 20, &#39;func&#39;: &lt;function func at 0x000001B61D671EA0&gt;}
+</code></pre></li>
+<li><p>局部作用域：在函数内部可以使用</p>
+<ul>
+<li>包含：局部名称空间</li>
+<li><code>locals()</code>函数可以查看当前作用域中的变量和函数信息（建议查看局部）</li>
+</ul>
+<pre><code><code>a = 10
+b = 20
+
+
+def func(args1, args2):
+    print(args1)
+    print(args2)
+    print(locals())
+    return None
+
+
+func(30, 40)
+</code></pre>
+<pre><code><code>运行结果：
+30
+40
+{&#39;args2&#39;: 40, &#39;args1&#39;: 30}
+</code></pre></li>
+</ol>
+<h1 id="四函数名的使用">四、函数名的使用</h1>
+<h2 id="一作为值">（一）作为值</h2>
+<ul>
+<li><p>函数名可以当作值，赋值给另一个变量</p>
+<pre><code><code>def func():
+    print(&quot;zxd&quot;)
+
+
+name = func  # 函数名赋值给另一个变量
+print(func)
+print(name)
+name()
+
+运行结果：
+&lt;function func at 0x000002161A261EA0&gt;
+&lt;function func at 0x000002161A261EA0&gt;
+zxd
+</code></pre></li>
+</ul>
+<h2 id="二作为参数">（二）作为参数</h2>
+<ul>
+<li><p>函数名可以当作另一个函数的参数来使用</p>
+<pre><code><code>def func():
+    print(&quot;zxd&quot;)
+
+
+def name(args):
+    print(args)  # &lt;function func at 0x00000299B5811EA0&gt;
+    args()
+
+
+name(func)
+
+运行结果：
+&lt;function func at 0x00000299B5811EA0&gt;
+zxd
+</code></pre></li>
+</ul>
+<h2 id="三作为返回值">（三）作为返回值</h2>
+<ul>
+<li><p>函数名可以当作另一个函数的返回值来使用</p>
+<pre><code><code>def name():
+    print(&quot;zxd&quot;)
+
+
+def func():
+    return name
+
+
+func()()
+
+运行结果：
+zxd
+</code></pre></li>
+</ul>
+<h2 id="四作为容器中的元素">（四）作为容器中的元素</h2>
+<ul>
+<li><p>函数名可以当作元素存储在容器中</p>
+<pre><code><code>def login():
+    print(&quot;登录&quot;)
+
+def register():
+    print(&quot;注册&quot;)
+
+def look():
+    print(&quot;浏览商品&quot;)
+
+def buy():
+    print(&quot;购买商品&quot;)
+
+msg = &quot;&quot;&quot;
+1.注册
+2.登录
+3.浏览商品
+4.购买商品
+请选择序号:&quot;&quot;&quot;
+
+dic_func = {
+    &quot;1&quot;: register,
+    &quot;2&quot;: login,
+    &quot;3&quot;: look,
+    &quot;4&quot;: buy,
+}
+while True:
+    num = input(msg)
+    if num in dic_func.keys():
+        dic_func[num]()
+    else:
+        print(&quot;输入错误！&quot;)
+</code></pre></li>
+</ul>
+<h1 id="五函数嵌套">五、函数嵌套</h1>
+<h2 id="一交叉嵌套">（一）交叉嵌套</h2>
+<ul>
+<li><p>函数参数作为另一个函数的参数，从而插入另一个函数中</p></li>
+<li><p>看一个例子：</p>
+<pre><code><code>def func1(a):
+    print(1)
+    a()
+    print(2)
+
+def func2():
+    print(3)
+    re = func3()
+    print(re)
+    print(4)
+
+def func3():
+    print(5)
+
+func1(func2)
+
+运行结果：
+1 3 5 None 4 2
+</code></pre></li>
+<li><p>运行顺序</p>
+<p><img src="./images/Python基础（十）5.png" /></p></li>
+</ul>
+<h2 id="二内部嵌套">（二）内部嵌套</h2>
+<ul>
+<li><p>函数内部嵌套函数</p></li>
+<li><p>看一个例子</p>
+<pre><code><code>def func1():
+    print(1)
+    def func2():
+        print(2)
+        def func3():
+            print(3)
+        func3()
+        print(4)
+    func2()
+    print(5)
+
+func1()
+
+运行结果：
+1 2 3 4 5
+</code></pre></li>
+<li><p>运行顺序</p>
+<p><img src="./images/Python基础（十）6.png" /></p></li>
+</ul>
+<h1 id="六global和nonlocal">六、global和nonlocal</h1>
+<h2 id="一global">（一）global</h2>
+<ul>
+<li><p>全局中的变量在函数内部只有使用权，可以拿来用，但是不能更改</p>
+<pre><code><code>num = 10
+def func():
+    num = num + 1
+    print(num)
+
+func()
+print(num)
+# UnboundLocalError: local variable &#39;num&#39; referenced before assignment
+</code></pre></li>
+<li><p>如果想在局部中修改全局变量，必须先用global声明要修改的全局变量</p>
+<pre><code><code>num = 10
+def func():
+    global num
+    num = num + 1
+    print(num)  # 11
+
+func()
+print(num)  # 11
+</code></pre></li>
+<li><p>在函数中使用了global声明了变量，但全局空间中并没有这个变量时，global会在全局空间中开辟这个变量</p>
+<pre><code><code>def func():
+    global num
+    num = 10
+    print(num)  # 10
+
+func()
+print(num)  # 10
+</code></pre></li>
+<li><p>总结：</p>
+<ul>
+<li>可以在局部空间修改全局空间的是变量</li>
+<li>若全局空间无声明的变量则创建该变量</li>
+<li>global有效的控制因误操作在局部空间修改全局空间的变量</li>
+</ul></li>
+</ul>
+<h2 id="二nonlocal">（二）nonlocal</h2>
+<ul>
+<li><p>nonlocal修改离nonlocal最近的上一层名称空间的变量，但只修改局部空间中的变量</p>
+<pre><code><code>num = 10
+def func1():
+    num = 20
+    def func2():
+        num = 30
+        def func3():
+            nonlocal num
+            num += 1
+            print(num)
+        func3()
+        print(num)
+    func2()
+    print(num)
+
+func1()
+print(num)
+
+运行结果：
+31 31 20 10
+</code></pre></li>
+<li><p>nonlocal声明的变量如果是全局空间中的变量就会报错，并且nonlocal不会创建变量</p>
+<pre><code><code>num = 10
+def func1():
+    def func2():
+        def func3():
+            nonlocal num  # 局部空间内没有变量num
+            print(num)
+        func3()
+        print(num)
+    func2()
+    print(num)
+
+func1()
+print(num)
+
+运行结果：
+SyntaxError: no binding for nonlocal &#39;num&#39; found
+</code></pre></li>
+<li><p>当前空间如果有变量，在去用nonlocal声明该变量，会报错，nonlocal只能声明上一层名称空间的变量</p>
+<pre><code><code>num = 10
+def func1():
+    def func2():
+        def func3():
+          num = 10
+            nonlocal num  # 
+            print(num)
+        func3()
+        print(num)
+    func2()
+    print(num)
+
+func1()
+print(num)
+
+运行结果：
+SyntaxError: name &#39;num&#39; is assigned to before nonlocal declaration
+</code></pre></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

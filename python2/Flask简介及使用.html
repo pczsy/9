@@ -1,0 +1,192 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Flask简介及使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Flask简介及使用</center></div><div class='banquan'>原文出处:本文由博客园博主蔚蓝的爱提供。<br/>
+原文连接:https://www.cnblogs.com/Hades123/p/11761327.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#flask简介">Flask简介</a><ul>
+        <li><a href="#wsgiref">wsgiref</a><ul>
+        <li><a href="#wsgiref简单应用">wsgiref简单应用</a></li>
+        <li><a href="#section"></a></li>
+        </ul></li>
+        </ul></li>
+        <li><a href="#两个依赖">两个依赖</a><ul>
+        <li><a href="#werkzeug"><span>werkzeug</span></a><ul>
+        <li><a href="#jinja2"><span>Jinja2</span></a></li>
+        </ul></li>
+        </ul></li>
+        <li><a href="#简单使用">简单使用</a><ul>
+        <li><a href="#安装">安装</a></li>
+        <li><a href="#flask快速使用">flask快速使用</a></li>
+        <li><a href="#django与flask返回值的对比">Django与Flask返回值的对比</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="flask简介">Flask简介</h1>
+<p>​ Flask是一个基于Python开发并且依赖jinja2模板和Werkzeug WSGI服务的一个微型框架，对于Werkzeug本质是Socket服务端，其用于接收http请求并对请求进行预处理，然后触发Flask框架，开发人员基于Flask框架提供的功能对请求进行相应的处理，并返回给用户，如果要返回给用户复杂的内容时，需要借助jinja2模板来实现对模板的处理，即：将模板和数据进行渲染，将渲染后的字符串返回给用户浏览器。</p>
+<p>​ “微”(micro) 并不表示你需要把整个 Web 应用塞进单个 Python 文件（虽然确实可以 ），也不意味着 Flask 在功能上有所欠缺。微框架中的“微”意味着 Flask 旨在保持核心简单而易于扩展。Flask 不会替你做出太多决策——比如使用何种数据库。而那些 Flask 所选择的——比如使用何种模板引擎——则很容易替换。除此之外的一切都由可由你掌握。如此，Flask 可以与您珠联璧合。</p>
+<p>​ 默认情况下，Flask 不包含数据库抽象层、表单验证，或是其它任何已有多种库可以胜任的功能。然而，Flask 支持用扩展来给应用添加这些功能，如同是 Flask 本身实现的一样。众多的扩展提供了数据库集成、表单验证、上传处理、各种各样的开放认证技术等功能。Flask 也许是“微小”的，但它已准备好在需求繁杂的生产环境中投入使用</p>
+<h2 id="wsgiref">wsgiref</h2>
+<p>最简单的Web应用就是先把HTML用文件保存好，用一个现成的HTTP服务器软件，接收用户请求，从文件中读取HTML，返回。</p>
+<p>如果要动态生成HTML，就需要把上述步骤自己来实现。不过，接受HTTP请求、解析HTTP请求、发送HTTP响应都是苦力活，如果我们自己来写这些底层代码，还没开始写动态HTML呢，就得花个把月去读HTTP规范。</p>
+<p>正确的做法是底层代码由专门的服务器软件实现，我们用Python专注于生成HTML文档。因为我们不希望接触到TCP连接、HTTP原始请求和响应格式，所以，需要一个统一的接口协议来实现这样的服务器软件，让我们专心用Python编写Web业务。这个接口就是WSGI：Web Server Gateway Interface。而wsgiref模块就是python基于wsgi协议开发的服务模块</p>
+<h3 id="wsgiref简单应用">wsgiref简单应用</h3>
+<pre><code><code>from wsgiref.simple_server import make_server
+
+def mya(environ, start_response):
+    print(environ)
+    start_response(&#39;200 OK&#39;, [(&#39;Content-Type&#39;, &#39;text/html&#39;)])
+    if environ.get(&#39;PATH_INFO&#39;) == &#39;/index&#39;:
+        with open(&#39;index.html&#39;, &#39;rb&#39;) as f:
+            data = f.read()
+
+    elif environ.get(&#39;PATH_INFO&#39;) == &#39;/login&#39;:
+        with open(&#39;login.html&#39;, &#39;rb&#39;) as f:
+            data = f.read()
+
+    else:
+        data = b&#39;&lt;h1&gt;Hello, web!&lt;/h1&gt;&#39;
+    return [data]
+
+
+if __name__ == &#39;__main__&#39;:
+    myserver = make_server(&#39;127.0.0.1&#39;, 8011, mya)
+    print(&#39;监听8011&#39;)
+    myserver.serve_forever()</code></pre>
+<pre class="html"><code>&lt;!--index.html--&gt;
+
+&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+&lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;title&gt;Title&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;主页&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<h3 id="section"></h3>
+<h1 id="两个依赖">两个依赖</h1>
+<p>flask 有两个核心依赖库：<code>werkzeug</code> 和 <code>jinja</code>，而 <code>werkzeug</code> 又是两者中更核心的。</p>
+<p><code>werkzeug</code> 负责核心的逻辑模块，比如路由、请求和应答的封装、WSGI 相关的函数等；<code>jinja</code>负责模板的渲染，主要用来渲染返回给用户的 html 文件内容。</p>
+<p>模板（template）是和 web 框架相对独立的内容，比如 jinja 不是只能用在 web 应用中，而 web 应用也可以不处理模板（比如返回 raw text 或者 json/xml 结构数据，而不是 html 页面）。<code>flask</code> 直接使用 <code>jinja2</code> 而不是把这部分也做成可扩展的看起来有悖它的设计原则，我个人的理解是：flask 是个写网页的 web 框架，不像 <code>flask-restful</code> 可以专门做 <code>json/xml</code> 数据接口，必须提供模板功能，不然用户就无法使用。而如果不绑定一个模板库的话，有三种方法：自己写一个模板引擎、封装一个可扩展的模板层，用户可以自己选择具体的模板引擎、或者让用户自己处理模板。但是这些方法要么增加实现的复杂度，要么增加了使用的复杂度。</p>
+<h2 id="werkzeug"><a href="http://werkzeug.pocoo.org/">werkzeug</a></h2>
+<p><code>werkzeug</code> 的定位并不是一个 web 框架，而是 HTTP 和 WSGI 相关的工具集，可以用来编写 web 框架，也可以直接使用它提供的一些帮助函数。</p>
+<p><code>werkzeug</code> 提供了 python web WSGI 开发相关的功能：</p>
+<ul>
+<li>路由处理：怎么根据请求中的 url 找到它的处理函数</li>
+<li>request 和 response 封装：可以更好地读取 request 的数据，也容易生成响应</li>
+<li>一个自带的 WSGI server，可以用来测试环境运行自己的应用</li>
+</ul>
+<p>比如，我们可以使用 <code>werkzeug</code> 编写一个简单的 hello world 的 WSGI app：</p>
+<pre><code><code>from werkzeug.wrappers import Request, Response
+
+def application(environ, start_response):
+    request = Request(environ)
+    text = &#39;Hello %s!&#39; % request.args.get(&#39;name&#39;, &#39;World&#39;)
+    response = Response(text, mimetype=&#39;text/plain&#39;)
+    return response(environ, start_response)</code></pre>
+<p>除了和 web WSGI 相关的功能，werkzeug 还实现了很多非常有用的数据结构和函数。比如用来处理一个 key 对应多个值的 <code>MultiDict</code>，不支持修改的字典 <code>ImmutableDict</code> ，可以缓存类属性的 <code>cache_property</code> 等等。</p>
+<h3 id="jinja2"><a href="http://jinja.pocoo.org/docs/2.9/">Jinja2</a></h3>
+<p>官网上，对 <code>Jinja</code> 的 介绍已经很清晰，它就是一个 python 实现的模板引擎，功能非常丰富。</p>
+<p><code>Jinja</code> 功能比较丰富，支持 unicode 解析、自动 HTML escape 防止 XSS 攻击、继承、变量、过滤器、流程逻辑支持、python 代码逻辑集成等等。具体的功能和使用请参考官网的文档，这里就不介绍了。</p>
+<h1 id="简单使用">简单使用</h1>
+<h2 id="安装">安装</h2>
+<pre><code><code>pip install flask</code></pre>
+<h2 id="flask快速使用">flask快速使用</h2>
+<pre><code><code>from flask import Flask
+
+# 实例化产生一个Flask对象
+app = Flask(__name__)
+
+# 将 &#39;/&#39;和视图函数hello_workd的对应关系添加到路由中
+@app.route(&#39;/&#39;) # 1. v=app.route(&#39;/&#39;) 2. v(hello_world)
+def hello_world():
+    return &#39;Hello World!&#39;
+
+if __name__ == &#39;__main__&#39;:
+    app.run() # 最终调用了run_simple()，本质是执行wsgi_app(environ, response)</code></pre>
+<h2 id="django与flask返回值的对比">Django与Flask返回值的对比</h2>
+<table>
+<thead>
+<tr class="header">
+<th>返回类型</th>
+<th>Django</th>
+<th>Flask</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>重定向</td>
+<td>redirect</td>
+<td>redirect</td>
+</tr>
+<tr class="even">
+<td>字符串</td>
+<td>HttpResponse</td>
+<td>&quot;&quot;</td>
+</tr>
+<tr class="odd">
+<td>渲染模板</td>
+<td>render</td>
+<td>render_template（<strong>传值必须是关键字传值</strong>）</td>
+</tr>
+<tr class="even">
+<td>json</td>
+<td>JsonResponse</td>
+<td>jsonify</td>
+</tr>
+</tbody>
+</table>
+<pre><code><code>from flask import Flask,redirect,render_template,jsonify
+app=Flask(__name__)
+
+&#39;&#39;&#39;
+redirect
+HttpResponse
+render
+JsonResponse
+&#39;&#39;&#39;
+
+@app.route(&quot;/index&quot;)
+def index():
+    # return &quot;12354543&quot;  # 返回字符串
+    print(&quot;123&quot;)
+    return redirect(&quot;/login&quot;)  # 重定向
+
+@app.route(&quot;/test&quot;)
+def test():
+    data={&quot;name&quot;:&quot;ada&quot;,&quot;age&quot;:30}
+    return render_template(&quot;index.html&quot;,**data)  # 渲染模板，打散字典传值
+
+@app.route(&quot;/login&quot;)
+def login():
+    data = {&quot;name&quot;: &quot;ada&quot;, &quot;age&quot;: 30}
+    return jsonify(data)  # 返回json格式数据
+
+if __name__ == &#39;__main__&#39;:
+    app.run()</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

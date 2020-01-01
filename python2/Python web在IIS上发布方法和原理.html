@@ -1,0 +1,124 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python web在IIS上发布方法和原理' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python web在IIS上发布方法和原理</center></div><div class='banquan'>原文出处:本文由博客园博主学习虾提供。<br/>
+原文连接:https://www.cnblogs.com/junshijie/p/12105095.html</div><br>
+    <p><span style="font-family: Microsoft YaHei; font-size: 16px;">Python web应用想要发布使用iis发布有两种方式，这篇文章就为大家介绍一下这两种方式的具体实现：</span></p>
+<h2><span style="font-family: Microsoft YaHei; font-size: 16px;">1.配置HttpPlatform程序</span></h2>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">HttpPlatform 模块将套接字连接直接传递到独立的 Python 进程。 借助此传递可根据需要运行任何 Web 服务器，但需要用于运行本地 Web 服务器的启动脚本。 在 web.config 的 &lt;httpPlatform&gt; 元素中指定脚本，其中 processPath 属性指向站点扩展的 Python 解释器，arguments 属性指向脚本和希望提供的任何参数：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;?</span><span style="color: #ff00ff;">xml version="1.0" encoding="utf-8"</span><span style="color: #0000ff;">?&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="PythonHandler"</span><span style="color: #ff0000;"> path</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> verb</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> modules</span><span style="color: #0000ff;">="httpPlatformHandler"</span><span style="color: #ff0000;"> resourceType</span><span style="color: #0000ff;">="Unspecified"</span><span style="color: #0000ff;">/&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">httpPlatform </span><span style="color: #ff0000;">processPath</span><span style="color: #0000ff;">="c:\python36-32\python.exe"</span><span style="color: #ff0000;">
+                  arguments</span><span style="color: #0000ff;">="c:\home\site\wwwroot\runserver.py --port %HTTP_PLATFORM_PORT%"</span><span style="color: #ff0000;">
+                  stdoutLogEnabled</span><span style="color: #0000ff;">="true"</span><span style="color: #ff0000;">
+                  stdoutLogFile</span><span style="color: #0000ff;">="c:\home\LogFiles\python.log"</span><span style="color: #ff0000;">
+                  startupTimeLimit</span><span style="color: #0000ff;">="60"</span><span style="color: #ff0000;">
+                  processesPerApplication</span><span style="color: #0000ff;">="16"</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">environmentVariables</span><span style="color: #0000ff;">&gt;</span>
+        <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">environmentVariable </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="SERVER_PORT"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="%HTTP_PLATFORM_PORT%"</span> <span style="color: #0000ff;">/&gt;</span>
+      <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">environmentVariables</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">httpPlatform</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">此处显示的 HTTP_PLATFORM_PORT 环境变量包含端口，本地服务器使用该端口侦听来自 localhost 的连接。 此示例还演示如何根据需要创建其他环境变量，本示例中为 SERVER_PORT。</span><br /><br /></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">关于httplplatform的更多描述可以参考https://docs.microsoft.com/en-us/iis/extensions/httpplatformhandler/httpplatformhandler-configuration-reference </span></p>
+<h2><span style="font-family: Microsoft YaHei; font-size: 16px;">2.配置 FastCGI 处理程序</span></h2>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">FastCGI 是在请求级别工作的接口。 IIS 接收传入的连接，并将每个请求转发到在一个或多个持久 Python 进程中运行的 WSGI 应用。<br /><br />若要使用 wfastcgi 包，请先安装并配置它，如 pypi.org/project/wfastcgi/ 所述。<br /><br />接下来，将应用的 web.config 文件修改为，在 PythonHandler 键中添加 python.exe 和 wfastcgi.py 的完整路径。</span></p>
+<ul>
+<li><span style="font-family: Microsoft YaHei; font-size: 16px;">修改 web.config 中的 PythonHandler 条目，让路径与 Python 安装位置一致（有关确切的详细信息，请参阅 IIS 配置参考 (iis.net)）。</span></li>
+
+</ul>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">name</span><span style="color: #0000ff;">="PythonHandler"</span><span style="color: #ff0000;"> path</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> verb</span><span style="color: #0000ff;">="*"</span><span style="color: #ff0000;"> modules</span><span style="color: #0000ff;">="FastCgiModule"</span><span style="color: #ff0000;">
+        scriptProcessor</span><span style="color: #0000ff;">="c:\python36-32\python.exe|c:\python36-32\wfastcgi.py"</span><span style="color: #ff0000;">
+        resourceType</span><span style="color: #0000ff;">="Unspecified"</span><span style="color: #ff0000;"> requireAccess</span><span style="color: #0000ff;">="Script"</span><span style="color: #0000ff;">/&gt;</span>
+  <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">handlers</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<ul>
+<li><span style="font-family: Microsoft YaHei; font-size: 16px;">在 web.config 的 &lt;appSettings&gt; 部分中，为 WSGI_HANDLER、WSGI_LOG（可选）和 PYTHONPATH 添加键：</span></li>
+</ul>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">appSettings</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="PYTHONPATH"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="c:\home\site\wwwroot"</span><span style="color: #0000ff;">/&gt;</span>
+  <span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> The handler here is specific to Bottle; see the next section. </span><span style="color: #008000;">--&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="WSGI_HANDLER"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="app.wsgi_app()"</span><span style="color: #0000ff;">/&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="WSGI_LOG"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="c:\home\LogFiles\wfastcgi.log"</span><span style="color: #0000ff;">/&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">appSettings</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">PYTHONPATH 的值可以自由扩展，但必须包括你的应用的根目录，他扩展了sys.path，可以在这个路径下找到import的包。<br />WSGI_HANDLER 必须指向可从你的应用导入的 WSGI 应用，针对不同的框架，这个值也有一些区别，下面是一些例子。</span></p>
+<h3><span style="font-family: Microsoft YaHei; font-size: 16px;">1.Bottle：确保 app.wsgi_app 后面有括号，如下所示。 此操作是必需的，因为该对象是函数（请参阅 app.py)）而非变量：</span></h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> Bottle apps only </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="WSGI_HANDLER"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="app.wsgi_app()"</span><span style="color: #0000ff;">/&gt;</span></pre>
+</div>
+<h3><span style="font-family: Microsoft YaHei; font-size: 16px;">2.Flask：将 WSGI_HANDLER 值更改为 &lt;project_name&gt;.app，其中 &lt;project_name&gt; 与项目名称匹配。 可通过查看 runserver.py 中的 from &lt;project_name&gt; import app 语句，找到准确的标识符。 例如，如果项目命名为&ldquo;FlaskAzurePublishExample&rdquo;，则该条目如下所示：</span></h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> Flask apps only: change the project name to match your app </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="WSGI_HANDLER"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="flask_iis_example.app"</span><span style="color: #0000ff;">/&gt;</span></pre>
+</div>
+<h3><span style="font-family: Microsoft YaHei; font-size: 16px;">3.Django：对于 Django 项目，需要对&ldquo;web.config&rdquo;进行两项更改。 首先，将 WSGI_HANDLER 值更改为 django.core.wsgi.get_wsgi_application()（该对象位于 wsgi.py 文件中）：</span></h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">&lt;!--</span><span style="color: #008000;"> Django apps only </span><span style="color: #008000;">--&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="WSGI_HANDLER"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="django.core.wsgi.get_wsgi_application()"</span><span style="color: #0000ff;">/&gt;</span></pre>
+</div>
+<h3><span style="font-family: Microsoft YaHei; font-size: 16px;" data-ttu-id="66bfb-147">其次，在 <code>WSGI_HANDLER</code> 条目下添加以下条目，并将 <code>DjangoAzurePublishExample</code> 替换为项目名称：</span></h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;</span><span style="color: #800000;">add </span><span style="color: #ff0000;">key</span><span style="color: #0000ff;">="DJANGO_SETTINGS_MODULE"</span><span style="color: #ff0000;"> value</span><span style="color: #0000ff;">="django_iis_example.settings"</span> <span style="color: #0000ff;">/&gt;</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">WSGI_LOG 为可选，但建议在调试应用时使用，记录日志。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">以上就是这两种方式，但是作为补充我还是想跟大家分享一下第二种方式，使用fastcgi时，我们在安装完wfastcgi后输入命令wfastcgi-enable之后程序做了什么。</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;"><img src="./images/Python web在IIS上发布方法和原理0.png" alt="" /></span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">我们可以根据IIS文档中对于FastCGI节的描述了解到。如果我们想要在web.config使用fastCGI时，必须先定义了该模块：</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;"><img src="./images/Python web在IIS上发布方法和原理1.png" alt="" /></span></p>
+<p>&nbsp;</p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">而这个定义方法呢，就是在IIS全局配置ApplicationHost.config中添加下面的配置，而这个也是我们在输入<span style="font-family: Microsoft YaHei; font-size: 16px;">wfastcgi-enable</span>之后做的事情：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">&lt;?</span><span style="color: #ff00ff;">xml version="1.0"</span><span style="color: #0000ff;">?&gt;</span>
+<span style="color: #0000ff;">&lt;</span><span style="color: #800000;">configuration </span><span style="color: #ff0000;">xmlns:xdt</span><span style="color: #0000ff;">="http://schemas.microsoft.com/XML-Document-Transform"</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+    <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">fastCgi</span><span style="color: #0000ff;">&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">application </span><span style="color: #ff0000;">fullPath</span><span style="color: #0000ff;">="d:\home\site\wwwroot\Python34\python.exe"</span><span style="color: #ff0000;"> xdt:Locator</span><span style="color: #0000ff;">="Match(fullPath)"</span><span style="color: #ff0000;"> xdt:Transform</span><span style="color: #0000ff;">="Remove"</span> <span style="color: #0000ff;">/&gt;</span>
+      <span style="color: #0000ff;">&lt;</span><span style="color: #800000;">application </span><span style="color: #ff0000;">fullPath</span><span style="color: #0000ff;">="d:\home\site\wwwroot\Python34\python.exe"</span><span style="color: #ff0000;"> arguments</span><span style="color: #0000ff;">="D:\Python34\Scripts\wfastcgi.py"</span><span style="color: #ff0000;">  maxInstances</span><span style="color: #0000ff;">="0"</span><span style="color: #ff0000;"> xdt:Transform</span><span style="color: #0000ff;">="Insert"</span><span style="color: #0000ff;">/&gt;</span>
+    <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">fastCgi</span><span style="color: #0000ff;">&gt;</span>
+  <span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">system.webServer</span><span style="color: #0000ff;">&gt;</span>
+<span style="color: #0000ff;">&lt;/</span><span style="color: #800000;">configuration</span><span style="color: #0000ff;">&gt;</span></pre>
+</div>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">如果您遇到了无法使用wfastcgi-enable这个命令的情况，比如Azure web app的windows环境，那么你可以使用这种方式使用自定义的python版本。</span></p>
+<p>&nbsp;</p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">参考文档：</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">https://docs.microsoft.com/en-us/iis/extensions/httpplatformhandler/httpplatformhandler-configuration-reference</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">https://docs.microsoft.com/zh-cn/visualstudio/python/configure-web-apps-for-iis-windows?view=vs-2019</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">https://pypi.org/project/wfastcgi/</span></p>
+<p><span style="font-family: Microsoft YaHei; font-size: 16px;">https://docs.microsoft.com/en-us/iis/configuration/system.webserver/fastcgi/</span></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,428 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python — 函数基础知识(一)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python — 函数基础知识(一)</center></div><div class='banquan'>原文出处:本文由博客园博主一直努力的小羊提供。<br/>
+原文连接:https://www.cnblogs.com/yangjie0906/p/11215734.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#面向过程编程与函数式编程">1 面向过程编程与函数式编程</a></li>
+        <li><a href="#函数的基本结构">2 函数的基本结构</a></li>
+        <li><a href="#函数的参数">3 函数的参数</a></li>
+        </ul>
+    </div>
+</div>
+<h3 id="面向过程编程与函数式编程">1 面向过程编程与函数式编程</h3>
+<p>截至目前我们所接触、所写的编程为：面向过程式编程【可读性差/可重用性差】</p>
+<pre><code><code># 面向过程编程
+user_input = input(&#39;请输入角色：&#39;)
+
+if user_input == &#39;管理员&#39;:
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.utils import formataddr
+
+    msg = MIMEText(&#39;管理员，我想演男一号，你想怎么着都行。&#39;, &#39;plain&#39;, &#39;utf-8&#39;)
+    msg[&#39;From&#39;] = formataddr([&quot;李邵奇&quot;, &#39;15776556369@163.com&#39;])
+    msg[&#39;To&#39;] = formataddr([&quot;管理员&quot;, &#39;344522251@qq.com&#39;])
+    msg[&#39;Subject&#39;] = &quot;情爱的导演&quot;
+
+    server = smtplib.SMTP(&quot;smtp.163.com&quot;, 25)
+    server.login(&quot;15776556369@163.com&quot;, &quot;qq1105400511&quot;)
+    server.sendmail(&#39;15776556369@163.com&#39;, [&#39;管理员&#39;, ], msg.as_string())
+    server.quit()
+elif user_input == &#39;业务员&#39;:
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.utils import formataddr
+
+    msg = MIMEText(&#39;业务员，我想演男一号，你想怎么着都行。&#39;, &#39;plain&#39;, &#39;utf-8&#39;)
+    msg[&#39;From&#39;] = formataddr([&quot;李邵奇&quot;, &#39;15776556369@163.com&#39;])
+    msg[&#39;To&#39;] = formataddr([&quot;业务员&quot;, &#39;业务员&#39;])
+    msg[&#39;Subject&#39;] = &quot;情爱的导演&quot;
+
+    server = smtplib.SMTP(&quot;smtp.163.com&quot;, 25)
+    server.login(&quot;15776556369@163.com&quot;, &quot;qq1105400511&quot;)
+    server.sendmail(&#39;15776556369@163.com&#39;, [&#39;业务员&#39;, ], msg.as_string())
+    server.quit()
+elif user_input == &#39;老板&#39;:
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.utils import formataddr
+
+    msg = MIMEText(&#39;老板，我想演男一号，你想怎么着都行。&#39;, &#39;plain&#39;, &#39;utf-8&#39;)
+    msg[&#39;From&#39;] = formataddr([&quot;李邵奇&quot;, &#39;15776556369@163.com&#39;])
+    msg[&#39;To&#39;] = formataddr([&quot;老板&quot;, &#39;老板邮箱&#39;])
+    msg[&#39;Subject&#39;] = &quot;情爱的导演&quot;
+
+    server = smtplib.SMTP(&quot;smtp.163.com&quot;, 25)
+    server.login(&quot;15776556369@163.com&quot;, &quot;qq1105400511&quot;)
+    server.sendmail(&#39;15776556369@163.com&#39;, [&#39;老板邮箱&#39;, ], msg.as_string())
+    server.quit()</code></pre>
+<pre><code><code># 函数式编程
+def send_email():
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.utils import formataddr
+
+    msg = MIMEText(&#39;老板，我想演男一号，你想怎么着都行。&#39;, &#39;plain&#39;, &#39;utf-8&#39;)
+    msg[&#39;From&#39;] = formataddr([&quot;李邵奇&quot;, &#39;15776556369@163.com&#39;])
+    msg[&#39;To&#39;] = formataddr([&quot;老板&quot;, &#39;老板邮箱&#39;])
+    msg[&#39;Subject&#39;] = &quot;情爱的导演&quot;
+
+    server = smtplib.SMTP(&quot;smtp.163.com&quot;, 25)
+    server.login(&quot;15776556369@163.com&quot;, &quot;qq1105400511&quot;)
+    server.sendmail(&#39;15776556369@163.com&#39;, [&#39;老板邮箱&#39;, ], msg.as_string())
+    server.quit()
+
+
+user_input = input(&#39;请输入角色：&#39;)
+
+if user_input == &#39;管理员&#39;:
+    send_email()
+elif user_input == &#39;业务员&#39;:
+    send_email()
+elif user_input == &#39;老板&#39;:
+    send_email()</code></pre>
+<p>对于函数编程：</p>
+<ul>
+<li>本质：将N行代码拿到别处并给他起个名字，以后通过名字就可以找到这段代码并执行。</li>
+<li>场景：
+<ul>
+<li>代码重复执行</li>
+<li>代码特别多超过一屏，可以选择通过函数进行代码的分割</li>
+</ul></li>
+</ul>
+<h3 id="函数的基本结构">2 函数的基本结构</h3>
+<pre><code><code># 函数的定义
+def 函数名():   # 函数名的命名规范、建议与变量的一样
+    # 函数内容 （缩进）
+    pass
+
+# 函数的执行
+函数名()</code></pre>
+<pre><code><code>def get_list_first_data():
+    v = [11,22,33,44]
+    print(v[0])
+
+get_list_first_data()
+
+# 注意：函数如果不被调用，则内部代码永远不会被执行。</code></pre>
+<pre><code><code># 假如：管理员/业务员/老板用的是同一个邮箱。
+def send_email():
+    print(&#39;发送邮件成功，假设有10含代码&#39;)
+
+
+user_input = input(&#39;请输入角色：&#39;)
+
+if user_input == &#39;管理员&#39;:
+    send_email()
+elif user_input == &#39;业务员&#39;:
+    send_email()
+elif user_input == &#39;老板&#39;:
+    send_email()</code></pre>
+<p>总结：</p>
+<pre><code><code># 情况1
+def f1():
+    pass 
+f1()
+
+# 情况2
+def f2(a1):
+    pass 
+f2(123)
+
+# 情况3
+def f3():
+    return 1 
+v1 = f3()
+
+# 情况4
+def f4(a1,a2):
+    # ... 
+    return 999
+v2 = f4(1,7)</code></pre>
+<pre><code><code>def show(name,age):
+    &quot;&quot;&quot;
+    函数是干什么的...    # 必须注明函数
+    :param name: 
+    :param age: 
+    :return: 
+    &quot;&quot;&quot;
+    return None</code></pre>
+<p>函数内部的数据是否会混乱：（函数与函数之间的执行互不影响）</p>
+<ul>
+<li>1.函数执行完毕</li>
+<li>2.内部元素不被其他人使用 ----&gt;销毁函数执行的内存数</li>
+</ul>
+<h3 id="函数的参数">3 函数的参数</h3>
+<pre><code><code>def get_list_first_data(aaa): # aaa叫形式参数(形参)
+    v = [11,22,33,44]
+    print(v[aaa])
+    
+get_list_first_data(1) # 2/2/1调用函数时传递叫：实际参数（实参）
+get_list_first_data(2)
+get_list_first_data(3)
+get_list_first_data(0)</code></pre>
+<p>严格按照顺序传参数：位置方式传参</p>
+<p>实际参数可以是任意类型</p>
+<pre><code><code># 假如：管理员/业务员/老板用的是同一个邮箱。
+&quot;&quot;&quot;
+def send_email(to):
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.utils import formataddr
+
+    msg = MIMEText(&#39;导演，我想演男一号，你想怎么着都行。&#39;, &#39;plain&#39;, &#39;utf-8&#39;)
+    msg[&#39;From&#39;] = formataddr([&quot;李邵奇&quot;, &#39;15776556369@163.com&#39;])
+    msg[&#39;To&#39;] = formataddr([&quot;导演&quot;, to])
+    msg[&#39;Subject&#39;] = &quot;情爱的导演&quot;
+
+    server = smtplib.SMTP(&quot;smtp.163.com&quot;, 25)
+    server.login(&quot;15776556369@163.com&quot;, &quot;qq1105400511&quot;)
+    server.sendmail(&#39;15776556369@163.com&#39;, [to, ], msg.as_string())
+    server.quit()
+&quot;&quot;&quot;
+def send_email(to):
+    template = &quot;要给%s发送邮件&quot; %(to,)
+    print(template)
+ 
+
+user_input = input(&#39;请输入角色：&#39;)
+
+if user_input == &#39;管理员&#39;:
+    send_email(&#39;xxxx@qq.com&#39;)
+elif user_input == &#39;业务员&#39;:
+    send_email(&#39;xxxxo@qq.com&#39;)
+elif user_input == &#39;老板&#39;:
+    send_email(&#39;xoxox@qq.com&#39;)</code></pre>
+<p>练习题</p>
+<pre><code><code># 1. 请写一个函数，函数计算列表 info = [11,22,33,44,55] 中所有元素的和。
+
+def get_sum():
+    info = [11,22,33,44,55]
+    data = 0
+    for item in info:
+        data += item
+    print(data)
+
+get_sum()
+
+# 2. 请写一个函数，函数计算列表中所有元素的和。
+
+def get_list_sum(a1):
+    data = 0
+    for item in a1:
+        data += item
+    print(data)
+    
+get_list_sum([11,22,33])
+get_list_sum([99,77,66])
+v1 = [8712,123,123]
+get_list_sum(v1)
+
+# 3. 请写一个函数，函数将两个列表拼接起来。
+def join_list(a1,a2):
+    result = []
+    result.extend(a1)
+    result.extend(a2)
+    print(result)
+    
+join_list([11,22,33],[55,66,77]
+
+# 4. 计算一个列表的长度
+def my_len(arg):
+    count = 0
+    for item in arg:
+          count += 1
+    print(count)
+
+v = [11,22,33]
+my_len(v)
+len(v)
+
+# 5. 发邮件的示例
+          
+def send_email(role,to):
+    template = &quot;要给%s%s发送邮件&quot; %(role,to,)
+    print(template)
+ 
+
+user_input = input(&#39;请输入角色：&#39;)
+
+if user_input == &#39;管理员&#39;:
+    send_email(&#39;管理员&#39;,&#39;xxxx@qq.com&#39;)
+elif user_input == &#39;业务员&#39;:
+    send_email(&#39;业务员&#39;,&#39;xxxxo@qq.com&#39;)
+elif user_input == &#39;老板&#39;:
+    send_email(&#39;老板&#39;,&#39;xoxox@qq.com&#39;)
+</code></pre>
+<h4 id="形参">3.1 形参</h4>
+<h5 id="基本参数知识">3.1.1 基本参数知识</h5>
+<ul>
+<li><p>参数可以是任意个数</p></li>
+<li><p>可以是任意类型</p>
+<pre><code><code>def func(a1,a2,a3,a4):
+  print(a1,a2,a3,a4)
+
+func(2,&#39;name&#39;,[1,2,3],False)</code></pre></li>
+</ul>
+<h5 id="默认参数">3.1.2默认参数</h5>
+<pre><code><code>def func(a1,a2,a3=9,a4=10):   # 默认参数a3=9,a4=10
+    print(a1,a2,a3,a4)
+
+func(11,22)       # 不给a3,a4传值，则a3,a4等于默认参数
+func(11,22,10)
+func(11,22,10,100)
+func(11,22,10,a4=100)
+func(11,22,a3=10,a4=100)
+func(11,a2=22,a3=10,a4=100)
+func(a1=11,a2=22,a3=10,a4=100)</code></pre>
+<h5 id="万能参数用于打散">3.1.3 万能参数（用于打散）</h5>
+<ul>
+<li><p>*args</p>
+<p>可以接受任意个数的位置参数，并将参数转换成元组。</p>
+<p>1.调用函数无*</p>
+<pre><code><code>def func(*args):
+  print(*args)
+
+func(1,2)   ==&gt; (1,2)
+func(1,2,[12,3,4])   ==&gt; (1,2,[12,3,4])
+func((11,22,33))   ==&gt; ((11,22,33))  # 参数是一个元组，打印出来的效果是元组套元组。</code></pre>
+<p>2.调用函数有*</p>
+<pre><code><code>def func(*args):
+  print(args)
+
+func(*(11,22,33))   ==&gt;(11,22,33)    # *是用来打散元组的，将元组中的每个元素作为参数。
+func(*[11,22,33])   ==&gt;(11,22,33)    # *可以用来打散列表/元组 /字典/集合，只是循环内部元素</code></pre>
+<p>3.只能用位置传参</p>
+<pre><code><code>def func(*args):
+    print(args)
+
+func(1)
+func(1,2)   # args=(1, 2)
+func((11,22,33,44,55))    # args=((11,22,33,44,55),)
+func(*(11,22,33,44,55))   # args=(11,22,33,44,55)</code></pre></li>
+<li><p>**kwargs</p>
+<p>可以接受任意个数的关键字参数，并见参数转换成字典</p>
+<p>1.调用函数无*</p>
+<pre><code><code>def func(**kwargs):
+  print(***kwargs)
+
+func(k=1)    **kwargs = {&#39;k&#39;:1}
+func(k1=1,k2=3)   **kwargs = {&#39;k1&#39;:1,&#39;k2&#39;:3}</code></pre>
+<p>2.调用函数有*</p>
+<pre><code><code>def func(**kwargs):
+  print(kwargs)
+
+func(**{&#39;k1&#39;:1,&#39;k2&#39;:4,&#39;k3&#39;:9})   **kwargs = {&#39;k1&#39;:1,&#39;k2&#39;:4,&#39;k3&#39;:9}</code></pre>
+<p>3.只能用关键字传参</p></li>
+<li><p>*args/**kwargs综合使用：无敌 + 无敌 =&gt; 真无敌</p>
+<pre><code><code>def func(*args,**kwargs):
+    print(args,kwargs)
+
+func(1,2,3,4,5,k1=2,k5=9,k19=999)     *arg = (1,2,3,4,5) **kwargs = {&#39;k1&#39;:2,&#39;k5&#39;:9,&#39;k19&#39;:999}
+func(*[1,2,3],k1=2,k5=9,k19=999)      *arg = (1,2,3) **kwargs = {&#39;k1&#39;:2,&#39;k5&#39;:9,&#39;k19&#39;:999}
+func(*[1,2,3],**{&#39;k1&#39;:1,&#39;k2&#39;:3})      *arg = (1,2,3) **kwargs = {&#39;k1&#39;:1,&#39;k2&#39;:3}
+func(111,222,*[1,2,3],k11=&#39;alex&#39;,**{&#39;k1&#39;:1,&#39;k2&#39;:3})  
+*arg = (111,222,1,2,3)   **kwargs = {&#39;k11&#39;:&#39;alex&#39;,&#39;k1&#39;:1,&#39;k2&#39;:3}</code></pre></li>
+</ul>
+<h4 id="实参">3.2 实参</h4>
+<h5 id="位置传参调用函数并传入参数执行">3.2.1 位置传参(调用函数并传入参数)（执行）</h5>
+<p>调用/执行函数的时候严格按照位置的顺序传入参数</p>
+<pre><code><code>def func(a1,a2,a3):
+    print(a1,a2,a3)
+    
+func(66,&#39;alex&#39;,3)</code></pre>
+<h5 id="关键字传参执行">3.2.2 关键字传参（执行）</h5>
+<p>关键字传参就是将形参放入到实参中去使用</p>
+<pre><code><code>def func(a1,a2):
+    print(a1,a2)
+    
+func(a1=22,a2=8)</code></pre>
+<p>关键字传参与位置传参是可以混合使用的：位置传入的参数要放在前面，关键字传参要放在后面，最后等于总参数个数</p>
+<pre><code><code>def func(a1,a2,a3):
+    print(a1,a2,a3)
+    
+func(1,2,a3=3)
+func(1,a2=2,a3=3)
+func(a1=1,a2=2,a3=3)
+func(a1=1,2,3)  # 是错误的</code></pre>
+<p>def func() : 自定义函数 open() 这两个为python的内置函数</p>
+<p>​ pass len()</p>
+<h4 id="参数相关的重点">3.3 参数相关的重点</h4>
+<ul>
+<li><p>定义函数</p>
+<pre><code><code>def func(a1,a2):
+  pass
+
+def func(a1,a2=None):  # 对于默认值，不可变类型随便写，如果是可变类型（有坑）。
+  pass
+
+def func(*args,**kwargs):
+  pass</code></pre>
+<p>对于函数的默认值一般使用不可变类型，慎用可变类型：</p>
+<p>如果要想给value设置默认值是空列表：</p>
+<pre><code><code># 不推荐使用（会有坑）：
+def func(data,value = [])
+pass
+
+推荐使用：
+def func(data ,value = None)
+  if not value:
+        value = []</code></pre>
+<pre><code><code># 示例：
+def func（data,value = []
+  value.append(data)
+    return value
+
+v1 = func(1)   # v1 = [1]
+v2 = func(2,[11,22,33])   # v2 = [11,22,33,2]
+v3 = func(3)   # v3 = [1,3]</code></pre>
+<p>练习题：</p>
+<ul>
+<li><p>def func(a,b=[]) 有什么陷阱？</p>
+<p>如果不给b传参数，则默认的都是同一个地址</p></li>
+<li><p>看代码写结果</p>
+<pre><code><code>def func(a,b=[]):
+    b.append(a)
+    return b
+
+l1 = func(1)
+l2 = func(2,[11,22])
+l3 = func(3)
+
+print(l1,l2,l3)   # [1,3]   [11,22,2]   [1,3]</code></pre></li>
+<li><p>看代码写结果</p>
+<pre><code><code>def func(a,b=[]):
+    b.append(a)
+    print(b)
+
+func(1)    # [1]
+func(2,[11,22,33])   # [11,22,33,2]
+func(3)   # [1,3]</code></pre></li>
+</ul></li>
+<li><p>调用函数</p>
+<p>位置参数在前，关键字参数在后。</p></li>
+</ul>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

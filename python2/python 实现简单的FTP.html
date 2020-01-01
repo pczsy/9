@@ -1,0 +1,352 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python 实现简单的FTP' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python 实现简单的FTP</center></div><div class='banquan'>原文出处:本文由博客园博主id_iot提供。<br/>
+原文连接:https://www.cnblogs.com/caesar-id/p/12105321.html</div><br>
+    <h2>一、开发环境</h2>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>server端：</strong>centos 7&nbsp; python-3.6.2</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>客户端：</strong>Windows 7 python-3.6.2 pycharm-2018</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>程序目的：</strong>1、学习使用socketserver实现并发处理多个客户端。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">　　&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;2、了解使用struct解决TCP粘包。</span></p>
+<h2>二、程序设计</h2>
+<p><span style="color: #ff0000; font-family: 'Microsoft YaHei'; font-size: 15px;">（本人菜鸟一枚，对于开发规范，接口设计完全不懂，完全是随心所欲，自娱自乐。写博客主要是记录自己学习的点点滴滴，如有不足之处还请见谅。）</span></p>
+<h3>1、server端</h3>
+<p><strong><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">1.1 目录结构如下：</span></strong></p>
+<p><img src="./images/python 实现简单的FTP0.png" alt="" /></p>
+<p><strong><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">&nbsp;1.2 目录简介：</span></strong></p>
+<p><strong>FTP_SERVER：</strong>程序主目录</p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>app：</strong>程序主逻辑目录，目录下有四个模块：</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>FTPserver.py：</strong>FTP&nbsp; Server端启动入口。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<strong> login.py：</strong>认证注册模块，用于处理用户注册，登录认证。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>dataAnalysis.py：</strong>命令解析模块，负责解析，执行客户端命令。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;<strong> FileOpertion.py：</strong>负责文件读，写。数据发送，数据接收。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>db：</strong>存放user_pwd.db文件，用于存放用户信息（用户名，密码，FTP目录总空间，已使用空间等）</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>lib：</strong>存放公共数据。</span></p>
+<p><strong><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">1.3 模块中类的继承关系</span></strong></p>
+<p><img src="./images/python 实现简单的FTP1.png" alt="" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 16px;"><strong>1.4 执行流程</strong></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">1.4.1 程序启动文件FTPserver.py，程序启动后进入监听状态。核心代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> MyFtpServer(socketserver.BaseRequestHandler):
+    
+    </span><span style="color: #0000ff;">def</span> handle(self):  <span style="color: #008000;">#</span><span style="color: #008000;"> 重写handle方法,处理socket请求</span>
+        <span style="color: #0000ff;">print</span>(f<span style="color: #800000;">"</span><span style="color: #800000;">连接来自{self.client_address}的客户端</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        commom_obj </span>=<span style="color: #000000;"> Commom()
+        data_analy </span>=<span style="color: #000000;"> DataAnalysis()
+        login_obj </span>=<span style="color: #000000;"> Login()
+        </span><span style="color: #0000ff;">while</span> 1<span style="color: #000000;">:
+            </span><span style="color: #008000;">#</span><span style="color: #008000;"> 执行用户选项：1、登陆系统 2、注册账号。并返回一个结果</span>
+            status_id =<span style="color: #000000;"> login_obj.run_client_choice(self.request, commom_obj)
+            </span><span style="color: #0000ff;">if</span> status_id == <span style="color: #800000;">"</span><span style="color: #800000;">01</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 登陆成功</span>
+                <span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> self.run_ftp_server(data_analy,commom_obj):  <span style="color: #008000;">#</span><span style="color: #008000;"> 执行ftpserver主功能</span>
+                    <span style="color: #0000ff;">break</span>
+            <span style="color: #0000ff;">elif</span> int(status_id) == -1: <span style="color: #008000;">#</span><span style="color: #008000;"> client断开连接了</span>
+                <span style="color: #0000ff;">break</span>
+        <span style="color: #0000ff;">print</span>(f<span style="color: #800000;">"</span><span style="color: #800000;">客户端{self.client_address}断开了连接</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> run_ftp_server(self,data_analy,commom_obj):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">"
+        登陆成功后，接收客户端发来的命令，并进行处理
+        :param data_analy:负责解析，执行客户端命令的对象
+        :param commom_obj:程序执行时所需的数据对象
+        :return 返回false代表客户端断开连接了
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+            </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+                cmd_len_pack </span>= self.request.recv(4<span style="color: #000000;">)  
+                cmd_len </span>= struct.unpack(<span style="color: #800000;">'</span><span style="color: #800000;">i</span><span style="color: #800000;">'</span><span style="color: #000000;">,cmd_len_pack)[0] <span style="color: #008000;"># 获取命令长度，防止粘包  
+            </span></span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception:
+                </span><span style="color: #0000ff;">break</span>
+            recv_data = self.request.recv(cmd_len).decode(<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;"> 接收客户端数据</span>
+            <span style="color: #0000ff;">if</span> recv_data.upper() == <span style="color: #800000;">"</span><span style="color: #800000;">Q</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 客户端提出断开连接了</span>
+                <span style="color: #0000ff;">break</span>
+            <span style="color: #008000;">#</span><span style="color: #008000;"> 解析，处理客户端的命令</span>
+<span style="color: #000000;">            data_analy.syntax_analysis(recv_data, self.request, commom_obj)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">运行FTP服务</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    ip_port </span>= (<span style="color: #800000;">'</span><span style="color: #800000;">192.168.10.10</span><span style="color: #800000;">'</span>,9000<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 创建并发服务端对象</span>
+    server =<span style="color: #000000;"> socketserver.ThreadingTCPServer(ip_port, MyFtpServer)</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 开启服务</span>
+    server.serve_forever()</pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp;1.4.2 服务端进入监听状态后，客户端发起连接请求，服务端接收连接请求后会等待客户单发来状态码，1表示请求登录FTP服务器，2表示客户端要注册用户，注册用户需要服务端手动反馈状态码1才可注册。处理用户登录，注册模块login.py核心代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Login(FileOperation):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    登陆注册类。主要负责用户的登陆认证，和用户注册。
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> run_client_choice(self,socket_obj,commom):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        获取客户端的请求，1是登陆，2是注册用户
+        :param socket_obj: socket对象
+        :param commom: ftpserver运行时所需要的数据对象
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        recv_choice </span>= socket_obj.recv(1).decode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>)  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取用户选项：1是登陆，2是注册用户</span>
+        <span style="color: #0000ff;">if</span> recv_choice == <span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> client请求登陆</span>
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> self.login_authen(socket_obj,commom)
+        </span><span style="color: #0000ff;">elif</span> recv_choice == <span style="color: #800000;">"</span><span style="color: #800000;">2</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> client请求注册账号</span>
+            <span style="color: #0000ff;">return</span><span style="color: #000000;"> self.register_user(socket_obj,commom)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span> -1  <span style="color: #008000;">#</span><span style="color: #008000;"> client断开连接了</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 用户登陆认证</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> login_authen(self,socket_obj,commom):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        客户端登陆认证
+        :param socket_obj:  socket对象
+        :param commom:  ftpserver运行时需要的数据对象
+        :return:返回1代表登陆成功
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 接收client发来的用户名，密码</span>
+        recv_userPwd = self.recv_data(socket_obj).decode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>).split(<span style="color: #800000;">"</span><span style="color: #800000;">|</span><span style="color: #800000;">"</span><span style="color: #000000;">)  
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 效验用户名密码</span>
+        check_ret =<span style="color: #000000;"> self.check_user_pwd(recv_userPwd, socket_obj,commom)
+        </span><span style="color: #0000ff;">if</span> check_ret:  <span style="color: #008000;">#</span><span style="color: #008000;"> 用户名密码正确</span>
+            self.check_user_home_dir(commom,recv_userPwd[0]) <span style="color: #008000;">#</span><span style="color: #008000;"> 检测用户家目录</span>
+            <span style="color: #0000ff;">return</span> commom.status_info[<span style="color: #800000;">"</span><span style="color: #800000;">login_success</span><span style="color: #800000;">"</span><span style="color: #000000;">]
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span> commom.status_info[<span style="color: #800000;">"</span><span style="color: #800000;">login_fail</span><span style="color: #800000;">"</span><span style="color: #000000;">]
+
+   ...</span>
+
+    <span style="color: #008000;">#</span><span style="color: #008000;"> 注册用户</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> register_user(self,socket_obj,commom):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        :param socket_obj:
+        :param commom:
+        :return: 返回是否允许注册的结果，1允许客户端注册，2拒绝客户端注册
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+            choice_id </span>= input(<span style="color: #800000;">"</span><span style="color: #800000;">请输入回应码：1是允许注册，2是不允许注册:</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            </span><span style="color: #0000ff;">if</span> choice_id.isdigit() <span style="color: #0000ff;">and</span> 3 &gt; int(choice_id) &gt;<span style="color: #000000;"> 0:
+                socket_obj.send(choice_id.encode(</span><span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>))  <span style="color: #008000;">#</span><span style="color: #008000;"> 发通知告知客户端，处理结果</span>
+                <span style="color: #0000ff;">if</span> choice_id == <span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 注册用户</span>
+                    <span style="color: #0000ff;">return</span><span style="color: #000000;"> self.client_register(socket_obj, commom)
+                </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> choice_id
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">您输入的信息有误，请重新输入。</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+
+   ...</span></pre>
+</div>
+<p>&nbsp;<span style="font-family: 'Microsoft YaHei'; font-size: 15px;">1.4.3 客户端登录成功后，服务端会等待接收客户端发来的命令，命令的解析，执行由dataAnalysis.py模块执行，核心代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> DataAnalysis(FileOperation):
+    </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+    数据分析处理类，主要负责解析client发送过来的指令。
+    </span><span style="color: #800000;">"""</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> syntax_analysis(self,recv_data, socket_obj, commom):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        负责解析客户端传来的数据。
+        :param recv_data:接收到的客户端用户数据
+        :param socket_obj:socket对象
+        :param commom:数据对象
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        clientData </span>= recv_data.split(<span style="color: #800000;">"</span> <span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> hasattr(self,clientData[0]):  <span style="color: #008000;">#</span><span style="color: #008000;"> 判断对象方法是否存在</span>
+            get_fun = getattr(self,clientData[0])<span style="color: #008000;">#</span><span style="color: #008000;">获取对象方法</span>
+            get_fun(clientData,socket_obj,commom)  <span style="color: #008000;">#</span><span style="color: #008000;"> 运行对象方法</span>
+        <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">pass</span><span style="color: #000000;">
+    ...</span></pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">执行客户端命令后，继续等待接收客户端发来的命令，如此循环...。</span></p>
+<h3>2、客户端</h3>
+<p><strong><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">2.1 目录结构如下：</span></strong></p>
+<p><img src="./images/python 实现简单的FTP2.png" alt="" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">2.2 目录简介：</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>client：</strong>程序主目录。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>bin：</strong>程序入口，程序启动文件main.py用于建立socket连接，然后调用FTPclient.py模块下的run_ftp_client方法运行程序。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>app：</strong>程序主逻辑，目录下有四个模块如下：</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>FTPclient.py：</strong>FTP客户端，根据用户选项，执行用户指令。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>login.py：</strong>认证注册模块，用于处理用户注册，登录认证。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>dataAnalysis.py：</strong>命令解析模块，解析用户输入的命令，发给服务端获取结果。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; <strong>FileOpertion.py：</strong>负责文件读，写。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><strong>lib：</strong>存放公共数据，有两个文件：</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp;<strong>commom.py：</strong>主要存放的是公共变量。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp; &nbsp; &nbsp; &nbsp;<strong>help.txt：</strong>存放的是帮助文档，当用户执行help命令时会调用该文件。</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">2.3 模块中类的继承关系</span></p>
+<p><img src="./images/python 实现简单的FTP3.png" alt="" /></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">2.4 执行流程</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">2.4.1 程序入口main.py，启动后会与FTP服务端建立连接，与服务端连接成功后会调用FTPclient.py模块下的run_ftp_client方法，执行用户功能。核心代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code>socket_obj =<span style="color: #000000;"> socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+socket_obj.connect((</span><span style="color: #800000;">"</span><span style="color: #800000;">192.168.10.10</span><span style="color: #800000;">"</span>,9000<span style="color: #000000;">))
+
+client_obj </span>=<span style="color: #000000;"> Client()
+client_obj.run_ftp_client(socket_obj)  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 接收用户输入的选项，执行对应的功能</span></pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">2.4.2&nbsp;FTPclient.py模块下的run_ftp_client方法会打印菜单，并等待用户输入选项，执行相应功能，核心代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Client(Login,DataAnalysis):
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> run_ftp_client(self,socket_obj):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        运行用户输入的选项：1、是登陆  2、是注册账号
+        :return:
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+            self.login_menu()  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 打印系统菜单</span>
+            choice_id = self.get_user_choice()  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取用户输入的选项</span>
+            <span style="color: #0000ff;">if</span><span style="color: #000000;"> choice_id:
+                </span><span style="color: #0000ff;">if</span><span style="color: #000000;"> self.run_user_choice(choice_id,socket_obj):
+                    </span><span style="color: #0000ff;">break</span>
+            <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">您输入的有误</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get_user_choice(self):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        获取用户输入的选项
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        choice_id </span>= input(<span style="color: #800000;">"</span><span style="color: #800000;">请输入选项：</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> choice_id.isdigit() <span style="color: #0000ff;">and</span> 4 &gt; int(choice_id) &gt; 0 <span style="color: #0000ff;">or</span> choice_id.upper() == <span style="color: #800000;">"</span><span style="color: #800000;">Q</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> choice_id
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> run_user_choice(self,choice_id,socket_obj):
+        </span><span style="color: #0000ff;">if</span> choice_id == <span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 登陆系统</span>
+            socket_obj.send(choice_id.encode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>))  <span style="color: #008000;">#</span><span style="color: #008000;"> 发通知告知服务器准备登陆</span>
+            <span style="color: #0000ff;">if</span> self.run_login(socket_obj) == True:  <span style="color: #008000;">#</span><span style="color: #008000;"> 执行登陆</span>
+                <span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+        </span><span style="color: #0000ff;">elif</span> choice_id == <span style="color: #800000;">"</span><span style="color: #800000;">2</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 注册用户</span>
+            socket_obj.send(choice_id.encode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>))  <span style="color: #008000;">#</span><span style="color: #008000;"> 请求服务器，注册用户</span>
+            self.register_user(socket_obj)  <span style="color: #008000;">#</span><span style="color: #008000;"> 执行注册</span>
+        <span style="color: #0000ff;">elif</span> choice_id.upper() == <span style="color: #800000;">"</span><span style="color: #800000;">Q</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 退出程序</span>
+            socket_obj.send(choice_id.encode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>))  <span style="color: #008000;">#</span><span style="color: #008000;"> 通知服务器，准备退出程序</span>
+<span style="color: #000000;">            socket_obj.close()
+            </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">程序正常退出</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> run_login(self,socket_obj,):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        运行登陆认证模块，如果登陆成功执行程序主逻辑，否则重新登陆。
+        :param socket_obj:
+        :return:
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #0000ff;">if</span><span style="color: #000000;"> self.login_authention(socket_obj):
+            </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> True:
+                send_data </span>= input(<span style="color: #800000;">"</span><span style="color: #800000;">&gt;&gt;&gt;</span><span style="color: #800000;">"</span>).strip(<span style="color: #800000;">"</span> <span style="color: #800000;">"</span>)  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取发送数据（用户执行的命令）</span>
+                <span style="color: #0000ff;">if</span> send_data.upper() == <span style="color: #800000;">"</span><span style="color: #800000;">Q</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 正常退出程序</span>
+                    socket_obj.send(send_data.encode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>))  <span style="color: #008000;">#</span><span style="color: #008000;"> 通知服务区断开连接</span>
+<span style="color: #000000;">                    socket_obj.close()
+                    </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">程序正常退出</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+                    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+                </span><span style="color: #0000ff;">if</span> self.syntax_analysis(send_data, socket_obj):  <span style="color: #008000;">#</span><span style="color: #008000;"> 解析用户数据并处理数据</span>
+                    <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">异常退出</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+                    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> login_menu(self):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">-</span><span style="color: #800000;">"*41</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">          欢迎登陆迷你FTPv1.0</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">-</span><span style="color: #800000;">"*41</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">1、登陆系统</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">2、用户注册</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">Q、退出程序</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">2.4.3 login.py模块主要用于处理注册和登录的功能，核心代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> Login(Commom):
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> login_authention(self,socket_obj):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        登陆认证
+        :param socket_obj:socket 对象
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        user_pwd </span>= self.get_user_pwd()  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取用户名密码</span>
+        self.send_data(socket_obj,user_pwd)  <span style="color: #008000;">#</span><span style="color: #008000;"> 将用户名和密码发给服务器</span>
+        recv_status = socket_obj.recv(2).decode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span>)  <span style="color: #008000;">#</span><span style="color: #008000;"> 等待接收状态码</span>
+        <span style="color: #0000ff;">print</span>(self.status_info[recv_status])  <span style="color: #008000;">#</span><span style="color: #008000;"> 打印状态码对应的结果</span>
+        <span style="color: #0000ff;">if</span> self.status_info[recv_status] == <span style="color: #800000;">'</span><span style="color: #800000;">登录成功</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> True
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+    ...
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> register_user(self,socket_obj):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        等待服务端反馈是否允许注册用户。
+        :param socket_obj:
+        :return:
+        </span><span style="color: #800000;">"""</span>
+        <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">请等待服务端回应.....</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        recv_status </span>= socket_obj.recv(1).decode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> recv_status == <span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 服务端同意申请账号</span>
+            user_pwd = self.get_regist_user_pwd()  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取注册用户名和密码</span>
+            <span style="color: #0000ff;">if</span><span style="color: #000000;"> user_pwd:
+                self.send_data(socket_obj,user_pwd)
+                result </span>= socket_obj.recv(2).decode(<span style="color: #800000;">"</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+                </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(self.status_info[result])
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">用户名密码有误</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span>:  <span style="color: #008000;">#</span><span style="color: #008000;"> 客户端拒绝申请账号的请求</span>
+            <span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">服务端拒绝了您申请账号的请求，请与管理员取得联系。</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+    ...</span></pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">2.4.4 用户登录成功后，会等待接收用户输入命令，由dataAnalysis.py模块负责解析用户输入的命令，并将命令发给FTP服务器，然后接收服务器的反馈。核心代码如下：</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> DataAnalysis(FileOperation):
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> syntax_analysis(self,cmd,socket_obj):
+        </span><span style="color: #800000;">"""</span><span style="color: #800000;">
+        解析用户输入的命令。
+        :param cmd:用户执行的命令，如：put 上传的文件
+        :param socket_obj:socket对象发送和接收数据
+        :return:
+        </span><span style="color: #800000;">"""</span><span style="color: #000000;">
+        cmd_split </span>= cmd.split(<span style="color: #800000;">"</span> <span style="color: #800000;">"</span>)  <span style="color: #008000;">#</span><span style="color: #008000;"> 将字符串命令分割成列表，用于验证命令是否存在</span>
+        <span style="color: #0000ff;">if</span><span style="color: #000000;"> hasattr(self,cmd_split[0]):
+            run_fun </span>=<span style="color: #000000;"> getattr(self,cmd_split[0])
+            run_fun(cmd_split,socket_obj)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">"</span><span style="color: #800000;">无效的命令</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+    ...</span></pre>
+</div>
+<h2>三、功能演示</h2>
+<p><strong>测试环境：</strong>FTP服务器：虚拟机 centos 7&nbsp; 192.168.10.10</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; FTP客户端：本机 Windows 7 192.168.1.103</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; FTP客户端：虚拟机 Windows 7&nbsp; 192.168.10.102</p>
+<h3>&nbsp;1、注册登录</h3>
+<p><img src="./images/python 实现简单的FTP4.png" alt="" /></p>
+<h3>&nbsp;2、使用help查看帮助</h3>
+<p>&nbsp;<img src="./images/python 实现简单的FTP5.png" alt="" /></p>
+<h3>&nbsp;3、文件夹操作（mkdir，rmdir，cd，list）</h3>
+<p>&nbsp;<span style="font-family: 'Microsoft YaHei'; font-size: 15px;">用户被锁定在FTP家目录（/home/FTP_HOME/用户名）中，无法查看其它用户的文件。</span></p>
+<p><img src="./images/python 实现简单的FTP6.png" alt="" /></p>
+<h3>&nbsp;4、上传文件put</h3>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">文件传输是经过MD5加密的，传输完成后客户端和服务端需要对MD5进行效验。传输完成后可以使用free查看用户空间。</span></p>
+<p><img src="./images/python 实现简单的FTP7.png" alt="" /></p>
+<h3>4.1 上传文件（断点续传）</h3>
+<p><img src="./images/python 实现简单的FTP8.png" alt="" /></p>
+<h3>&nbsp;5、文件下载get</h3>
+<p><img src="./images/python 实现简单的FTP9.png" alt="" /></p>
+<h3>&nbsp;5.1 文件下载（断点续传）</h3>
+<p>&nbsp;<span style="font-family: 'Microsoft YaHei'; font-size: 15px;">将上面下载好的2.exe更名为3.exe。一会和断点续传的2.exe对比大小，两个文件大小一致才对。</span></p>
+<p><img src="./images/python 实现简单的FTP10.png" alt="" /></p>
+<h3>6、rmfile 删除文件</h3>
+<p><img src="./images/python 实现简单的FTP11.png" alt="" /></p>
+<h3>7、执行远程命令</h3>
+<p><img src="./images/python 实现简单的FTP12.png" alt="" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

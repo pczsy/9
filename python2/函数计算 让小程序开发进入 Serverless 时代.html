@@ -1,0 +1,109 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修函数计算 让小程序开发进入 Serverless 时代' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>函数计算 让小程序开发进入 Serverless 时代</center></div><div class='banquan'>原文出处:本文由博客园博主阿里巴巴云原生提供。<br/>
+原文连接:https://www.cnblogs.com/alisystemsoftware/p/12058575.html</div><br>
+    <p><a href="https://developer.aliyun.com/article/728327">点击下载《不一样的 双11 技术：阿里巴巴经济体云原生实践》</a><br />
+<a href="https://developer.aliyun.com/article/728327"><img src="./images/函数计算 让小程序开发进入 Serverless 时代0.png" alt="ban.jpg" /></a></p>
+<p><strong>本文节选自《不一样的 双11 技术：阿里巴巴经济体云原生实践》一书，点击上方图片即可下载！</strong></p>
+<p>作者 | 吴天龙（木吴）阿里云函数计算技术专家</p>
+<blockquote>
+<p><strong>导读</strong>：小程序是轻量级的快速迭代的移动应用，对开发者从开发到上线的效率提出了更高的要求。使用函数计算，开发者无需关心后端服务的搭建运维，只需要编写函数就能够为小程序提供稳定可靠并且弹性伸缩的服务。并且随着小程序访问量增加，函数计算能够自动快速地弹性伸缩，即使应对 双11 活动高峰也能够如丝般顺滑。</p>
+</blockquote>
+<p>自 2017 年第一批小程序上线以来，越来越多的移动端应用以小程序的形式呈现。小程序拥有触手可及、用完即走的优点，这大大降低了用户的使用负担，使小程序得到了广泛的传播。在阿里巴巴，小程序也被广泛地应用在淘宝/支付宝/钉钉/高德等平台上，例如今年 双11，大家在淘宝/天猫上参加的活动，大部分都是通过小程序提供的。</p>
+<p>一个小程序可以分为客户端和服务端：客户端包括界面的展示和交互逻辑；服务端则包括数据的处理和分析。</p>
+<p>为了支撑大量的小程序，平台在服务端面临的挑战有：</p>
+<ul>
+<li>大量的小程序是不活跃的，传统的至少一台服务器的方式会造成资源浪费；</li>
+<li>在活动高峰期小程序的调用量激增，要求服务端能够快速进行弹性伸缩。</li>
+</ul>
+<p>针对小程序场景，阿里云提供了完整的小程序解决方案：<a href="https://www.aliyun.com/product/miniappdev">小程序云</a>。资源的有效利用和弹性伸缩，是小程序云提供的核心能力之一，而这背后依托的，就是阿里云<a href="https://www.aliyun.com/product/fc">函数计算</a>服务。函数计算是一个全托管 Serverless 计算服务，让开发者无需管理服务器等基础设施，只需编写和上传代码，就能够构建可靠、弹性、安全的服务。下面就以 双11 小程序场景为例，解析函数计算在弹性伸缩上的核心技术。</p>
+<h3 id="小程序架构">小程序架构</h3>
+<p>让我们先来看一下淘宝小程序的技术架构是什么样的：</p>
+<p><img src="./images/函数计算 让小程序开发进入 Serverless 时代1.png" alt="1.png" /></p>
+<ul>
+<li>用户在手机淘宝点击店铺活动，就进入了小程序。界面及交互由小程序客户端提供；</li>
+<li>在用户参与活动过程中，需要向服务端请求或者发送数据时，由客户端发起函数调用；</li>
+<li>函数调用先经过淘宝接入网关，进行必要的鉴权认证，然后调用到小程序云；</li>
+<li>用户的函数代码执行在小程序云中，用户可以实现自定义的业务逻辑。</li>
+</ul>
+<p>利用小程序云提供的丰富的扩展能力，用户可以方便地构建完整的电商应用：</p>
+<ul>
+<li>数据存储：存储结构化的数据；</li>
+<li>文件存储：存储文本/图片/视频等文件；</li>
+<li>电商服务：获取用户信息/创建支付交易；</li>
+<li>统计分析：自动统计小程序的使用信息及用户分析，支撑商业决策。</li>
+</ul>
+<p>可以看到，函数是整个小程序的业务逻辑的核心，它将云端的基础能力组合串联起来，对客户端提供服务能力。如果函数能力成为瓶颈，将影响整个小程序的运行。</p>
+<p>在这样的架构下，要支撑大量的小程序，需要函数能够做到：</p>
+<ul>
+<li>一是随时在线以支持小程序即开即用；</li>
+<li>二是弹性伸缩以应对小程序访问突增。为了做到以上两点，让我们看一下函数计算的技术架构：</li>
+</ul>
+<h3 id="函数计算架构">函数计算架构</h3>
+<p><img src="./images/函数计算 让小程序开发进入 Serverless 时代2.png" alt="2.png" /></p>
+<p>其中几个核心组件的功能如下：</p>
+<ul>
+<li>API 服务：函数计算的网关，实现鉴权/流控等功能；</li>
+<li>资源调度：为函数调用分配管理计算资源，负责调度效率和性能；</li>
+<li>函数执行引擎：执行函数代码的环境，做到安全和隔离。</li>
+</ul>
+<p>基于这个架构，函数计算是如何解决上面提到的小程序平台的挑战呢？接下来我们逐一分析。</p>
+<h4 id="冷启动">1. 冷启动</h4>
+<p>当用户创建函数上传代码时，函数计算只是将代码包保存到 OSS，并没有分配计算资源，因此函数计算可以支撑海量的小程序。</p>
+<p>当函数第一次被调用时，函数计算会分配计算资源、下载函数代码、加载并执行代码。这一过程称为冷启动，函数计算通过<a href="https://yq.aliyun.com/articles/672416">大量的优化</a>，将系统侧的冷启动时间优化到 200ms 以内。因此即使是冷的小程序，在初次调用时也能够做到快速的即开即用。</p>
+<p><img src="./images/函数计算 让小程序开发进入 Serverless 时代3.png" alt="3.png" /></p>
+<h4 id="弹性伸缩">2. 弹性伸缩</h4>
+<p>当小程序持续调用过程中，负载逐渐上升或者突然升高的情况下，函数计算是如何应对的呢？</p>
+<p>函数计算的“资源调度”模块，会精确管理每个实例的状态，当请求到来时，它首先检查是否有空闲的实例可以服务，如果没有请求就会进入等待队列，当有空闲的实例释放出来时，请求就能够被及时处理。</p>
+<p>同时，调度器还会在后台创建新的实例，当新的实例准备好后，也能够服务请求。在这种策略下，能够做到在负载以 2 倍的速度增长情况下，请求的 P95 延时是稳定的。优化细节可以参考我们的<a href="https://yq.aliyun.com/articles/625148">博客文章</a>。</p>
+<p><img src="./images/函数计算 让小程序开发进入 Serverless 时代4.png" alt="4.png" /></p>
+<p>上面是某个淘宝小程序的调用量和延时监控数据。</p>
+<p>可以看到，在整点活动时，TPS 出现了瞬间的高峰，但是 P95 延时却没有明显的波动。这是因为函数计算在请求高峰来临时，能够快速地弹性伸缩创建新的实例，同时利用已有资源做一定的缓冲，使得整个攀升的过程能够比较平滑。</p>
+<h4 id="预留实例">3. 预留实例</h4>
+<p>对于一些“秒杀”的场景，要求瞬间提供大量的计算资源。此时靠实时的弹性伸缩是不够的：</p>
+<ul>
+<li>一是冷启动的时间即使是 200ms，对于秒杀场景也太慢了；</li>
+<li>二是底层的计算资源在扩容时也会有流控。</li>
+</ul>
+<p>针对这种场景，函数计算提供了<a href="https://help.aliyun.com/document_detail/138103.html">预留实例</a>的功能。使用预留实例，用户可以为一些可预测的活动提前预留好资源，彻底消除冷启动。</p>
+<p><img src="./images/函数计算 让小程序开发进入 Serverless 时代5.png" alt="5.png" /></p>
+<p>和传统的基于服务器的做法不同，用户不需要按峰值来预留资源，而是可以结合预留实例和按量实例的<a href="https://help.aliyun.com/document_detail/140338.html#h2-u4F7Fu7528u9884u7559u5B9Eu4F8Bu4F18u5316u51FDu6570u6027u80FD2">混合模式</a>：请求先被预留实例处理，当预留实例用满时，会自动弹性伸缩出更多的按量实例来处理请求。</p>
+<p>由于有一定的资源基础，结合调度优化，按量实例的冷启动所产生的影响就被大大减小了。这就是利用函数计算的弹性伸缩能力，在性能和成本之间达到很好的平衡。</p>
+<h3 id="总结">总结</h3>
+<p>小程序是轻量级的快速迭代的移动应用，对小程序开发者的开发效率有很高的要求。</p>
+<p>小程序上线后随着访问量的增加或者活动期间的访问突增，对后端服务的稳定和弹性也是一个很大的考验。函数计算上传代码即可运行，极大地提高了后端服务的开发效率；混合模式的弹性伸缩，轻松应对负载变化。这些特点使得函数计算成为支撑小程序平台的很好的选择。</p>
+<h3 id="欢迎加入钉钉交流群">欢迎加入钉钉交流群</h3>
+<p><img src="./images/函数计算 让小程序开发进入 Serverless 时代6.png" alt="函数计算二维码.png" /></p>
+<p>对函数计算感兴趣的开发者，可以<a href="http://statistics.cn-shanghai.1221968287646227.cname-test.fc.aliyun-inc.com/?title=fc_support_miniapp_at_double11&amp;author=dGlh&amp;src=article&amp;url=http://fc.console.aliyun.com/">点此免费试用</a>)！</p>
+<p><img src="./images/函数计算 让小程序开发进入 Serverless 时代7.png" alt="ban.jpg" /></p>
+<p><strong>本书亮点</strong></p>
+<ul>
+<li>双11 超大规模 K8s 集群实践中，遇到的问题及解决方法详述</li>
+<li>云原生化最佳组合：Kubernetes+容器+神龙，实现核心系统 100% 上云的技术细节</li>
+<li>双 11 Service Mesh 超大规模落地解决方案</li>
+</ul>
+<blockquote>
+<p>“<a href="https://developer.aliyun.com/group/alisoftwaretech/">阿里巴巴云原生</a>关注微服务、Serverless、容器、Service Mesh 等技术领域、聚焦云原生流行技术趋势、云原生大规模的落地实践，做最懂云原生开发者的技术圈。”</p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

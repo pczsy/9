@@ -1,0 +1,441 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python基础 — 面向对象编程进阶' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python基础 — 面向对象编程进阶</center></div><div class='banquan'>原文出处:本文由博客园博主丁可乐提供。<br/>
+原文连接:https://www.cnblogs.com/dwlovelife/p/11593365.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#property装饰器">1. @property装饰器</a></li>
+        <li><a href="#魔法方法">2. 魔法方法</a></li>
+        <li><a href="#类属性和实例属性">3. 类属性和实例属性</a></li>
+        <li><a href="#静态方法和类方法">4.静态方法和类方法</a></li>
+        <li><a href="#单继承和多继承">5. 单继承和多继承</a></li>
+        <li><a href="#多态">6. 多态</a></li>
+        <li><a href="#del-方法">7. del 方法</a></li>
+        </ul>
+    </div>
+</div>
+<blockquote>
+<p>序言：上个章节我们了解了面向对象的基础知识，这个章节我们将对面向对象的知识体系进行进一步的探究</p>
+</blockquote>
+<h2 id="property装饰器">1. @property装饰器</h2>
+<p>​ 上一章，我们在说属性的访问权限时，虽然我们不建议将属性设置为私有的，但是如果直接将属性直接暴露给外界也是有问题的，比如我们没办法检查赋给属性的值是否有效。我们之前的建议是将属性命名以单下划线开头，通过这种方式来暗示属性是受保护的， 但是 校验属性的逻辑是在方法里的，我们没办法让其通过 <code>实例.属性</code> 进行赋值的时候 也去走我们 校验属性的那一套逻辑。如果我们想做到这一点，我们则需要使用 <code>@property</code> 装饰器来包装 getter 和 setter方法</p>
+<pre><code><code># -*- coding:utf-8 -*-
+&quot;&quot;&quot;
+@Property 装饰器
+version:0.1
+author:coke
+&quot;&quot;&quot;
+class Person(object):
+
+    def __init__(self,name,age):
+        self.__name = name
+        self.__age = age
+    
+    #访问器
+    @property
+    def name(self):
+        return self.__name 
+    
+    #访问器 - getter方法
+    @property
+    def age(self):
+        return self.__age
+    
+    @age.setter
+    def age(self,age):
+        if age &lt; 0 or age &gt; 150:
+            print(&quot;年龄参数不正确&quot;)
+            return
+        self.__age = age
+    
+    def play(self):
+        if self.__age &lt;= 16:
+            print(&quot;%s正在玩飞行棋.&quot;%self.__name)
+        else:
+            print(&quot;%s正在玩斗地主.&quot;%self.__name)
+
+def main():
+    person = Person(&quot;Jack&quot;,12)
+    person.age = -1
+    person.play()
+
+if __name__ == &quot;__main__&quot;:
+    main()
+
+</code></pre>
+<p><strong>输出结果</strong></p>
+<p><img src="./images/Python基础 — 面向对象编程进阶0.png" /></p>
+<p> </p>
+<p><strong>总结：</strong><code>@property</code>广泛应用在类的定义中，可以让调用者写出简短的代码，同时保证对参数进行必要的检查，这样，程序运行时就减少了出错的可能性</p>
+<p> </p>
+<h2 id="魔法方法">2. 魔法方法</h2>
+<p>Python是一门<a href="https://zh.wikipedia.org/wiki/%E5%8A%A8%E6%80%81%E8%AF%AD%E8%A8%80">动态语言</a>。通常，动态语言允许我们在程序运行时给对象绑定新的属性或方法，当然也可以对已经绑定的属性和方法进行解绑定。但是<strong>如果我们需要限定自定义类型的对象只能绑定某些属性，可以通过在类中定义<code>__slots__</code>变量来进行限定。需要注意的是<code>__slots__</code>的限定只对当前类的对象生效，对子类并不起任何作用。</strong></p>
+<pre><code><code># -*- coding:utf-8
+&quot;&quot;&quot;
+slots
+version:0.1
+author:coke
+&quot;&quot;&quot;
+
+
+class Person(object):
+   # 限定Person对象只能绑定_name,_age 和 _gender属性
+   __slots__ = (&#39;_name&#39;, &#39;_age&#39;, &#39;_gender&#39;)
+
+   def __init__(self, name, age):
+       self._name = name
+       self._age = age
+
+   @property
+   def name(self):
+       return self._name
+
+   @property
+   def age(self):
+       return self._age
+
+   @age.setter
+   def age(self, age):
+       self._age = age
+
+   def play(self):
+       if self._age &lt;= 16:
+           print(&quot;%s正在玩飞行棋，年龄%d&quot; % (self._name, self._age))
+       else:
+           print(&quot;%s正在玩斗地主，年龄%d&quot; % (self._name, self._age))
+
+def main():
+   person = Person(&quot;Jack&quot;,18)
+   person.play()
+
+if __name__ == &quot;__main__&quot;:
+   main()
+</code></pre>
+<p><strong>总结：</strong><code>__slots__</code>变量，可以来限制该class实例能添加的属性.</p>
+<p> </p>
+<h2 id="类属性和实例属性">3. 类属性和实例属性</h2>
+<p>在前面的例子中我们接触到的就是实例属性（对象属性），顾名思义，类属性就是 类对象 所拥有的属性， 它被所有 类对象 的 实例对象 所共有，在内存中只存在一个副本 ，对于公有的类属性，在类外可以通过 类对象 和 实例对象 访问<br />
+ <br />
+<strong>类属性</strong></p>
+<pre><code><code>class People(object):
+    address = &quot;山东&quot;
+    def __init__(self):
+        self.name = &quot;xiaowang&quot; #实例属性
+        self.age = 20
+
+p = People()
+p.age = 12
+print(p.address) #正确
+print(People.address) #正确
+print(p.name) #正确
+print(p.age) #正确
+
+print(People.address)#正确
+#print(People.age) #错误
+#print(People.name) #错误
+</code></pre>
+<p><strong>总结：</strong>实例属性，不能通过<code>类对象.实例属性</code>获取，类属性 既可以通过 <code>类对象.类属性</code>获取，也可以通过<code>实例对象.类属性</code>获取</p>
+<p> </p>
+<p><strong>通过实例(对象)去修改类属性</strong></p>
+<pre><code><code>class People(object):
+    country = &#39;china&#39; #类属性
+
+print(People.country) #china
+p = People()
+print(p.country)  #china
+p.country = &quot;japan&quot;
+print(p.country) #japan
+print(People.country) #china
+del p.country
+print(p.country) #china</code></pre>
+<p><strong>总结：</strong>类属性 虽然可以通过 <code>实例对象.类属性</code>访问，但是实例对象 无法对类属性进行修改和删除，若实例对象声明同名属性 则该属性属于 实例属性</p>
+<p> </p>
+<h2 id="静态方法和类方法">4.静态方法和类方法</h2>
+<p>之前，我们在类中定义的方法都是对象方法，也就是说这些方法都是发送给对象的消息。实际上，我们写在类中的方法并不需要都是对象方法， 我们也可以根据需要创建 静态方法 和 类方法</p>
+<p> <br />
+<strong>静态方法</strong></p>
+<pre><code><code>&quot;&quot;&quot;
+静态方法
+version:0.1
+author:coke
+&quot;&quot;&quot;
+from math import sqrt
+
+class Triangle(object):
+    def __init__(self,a,b,c):
+        self._a = a
+        self._b = b
+        self._c = c
+    
+    @staticmethod
+    def is_valid(a,b,c):
+        return a + b &gt; c and b + c &gt; a and a + c &gt; b
+    
+    def perimeter(self):
+        return self._a + self._b + self._c
+    
+    def area(self):
+        half = self.perimeter() / 2
+        return sqrt(half * (half - self._a) * (half - self._b) * (half - self._c))
+    
+def main():
+    a,b,c = 3,4,5
+    if Triangle.is_valid(a,b,c):
+        t = Triangle(a,b,c)
+        print(t.perimeter())
+        print(t.area())
+    else:
+        print(&quot;无法构成三角形&quot;)
+
+if __name__ == &#39;__main__&#39;:
+    main()
+        </code></pre>
+<p><strong>总结：</strong>通过修饰器<code>@staticmethod</code>来进行修饰 的方法，我们称其为静态方法，且静态方法可以通过类对象直接进行调用</p>
+<p> </p>
+<p><strong>类方法</strong></p>
+<pre><code><code>&quot;&quot;&quot;
+类方法
+version:0.1
+author:coke
+&quot;&quot;&quot;
+from time import time, localtime, sleep
+
+class Clock(object):
+    def __init__(self, hour=0, minute=0, second=0):
+        self._hour = hour
+        self._minute = minute
+        self._second = second
+
+    @classmethod
+    def now(cls):
+        ctimes = localtime(time())
+        return cls(ctimes.tm_hour, ctimes.tm_min, ctimes.tm_sec)
+
+    def run(self):
+        self._second += 1
+        if self._second == 60:
+            self._second = 0
+            self._minute += 1
+            if self._minute == 60:
+                self._hour += 1
+                self._minute = 0
+                if self._hour == 24:
+                    self._hour = 0
+    
+    def show(self):
+        return &quot;%02d:%02d:%02d&quot; % \
+        (self._hour,self._minute,self._second)
+            
+    
+def main():
+    clock = Clock.now()
+    while True:
+        print(clock.show())
+        sleep(1)
+        clock.run()
+
+if __name__ == &quot;__main__&quot;:
+    main()
+</code></pre>
+<p><strong>总结：</strong>用修饰器<code>@classmethod</code>来标识其为类方法，对于类方法，第一个参数必须是类对象，一般以<code>cls</code>作为第一个参数 ，能够通过实例对象和类对象去访问 ，并且 由于已经获得 cls参数 等于间接获得了 类信息，所以我们也可以通过类方法创建一个 类对象</p>
+<p> </p>
+<h2 id="单继承和多继承">5. 单继承和多继承</h2>
+<p>在程序中，继承描述的是事物之间的所属关系，例如猫和狗都属于动物，程序中便可以描述为猫和狗继承自动物；同理，波斯猫和巴厘猫都继承自猫，而沙皮狗和斑点狗都继承足够，如下如所示：</p>
+<p><img src="./images/Python基础 — 面向对象编程进阶1.png" /></p>
+<p><strong>单继承就是指 只继承一个父类信息，多继承则为 继承多个父类信息</strong>。要知道大部分程序语言 都只允许单继承，因为会出现钻石继承带来的问题。但是在python 中却意外的允许了 多继承的出现<br />
+ <br />
+<strong>单继承</strong></p>
+<pre><code><code>
+# 继承object类父类信息
+class Person(object):
+    &quot;&quot;&quot;人&quot;&quot;&quot;
+
+    def __init__(self,name,age):
+        self._name = name
+        self._age = age
+    
+    @property
+    def name(self):
+        return self._name
+    
+    @property
+    def age(self):
+        return self._age
+    
+    @age.setter
+    def age(self,age):
+        self._age = age
+    
+    def play(self):
+        print(&quot;%s正在愉快的玩耍.&quot;% self._name)
+
+    def watch_tv(self):
+        if self._age &gt;= 18:
+            print(&quot;%s 正在看刺激的电影&quot;%self._name)
+        else:
+            print(&quot;%s 正在看熊出没&quot;%self._name)
+    
+# (person) 继承person父类信息
+class Student(Person):
+    def __init__(self,name,age,grade):
+        super().__init__(name,age)
+        self._grade = grade
+    
+    @property
+    def grade(self):
+        return self._grade
+    
+    @grade.setter
+    def grade(self):
+        self._grade = grade
+    
+    def study(self,course):
+        print(&quot;%s的%s正在学习%s.&quot;%(self._grade,self._name,course))
+
+#继承 person父类信息
+class Teacher(Person):
+    &quot;&quot;&quot;老师&quot;&quot;&quot;
+    def __init__(self,name,age,title):
+        super().__init__(name,age)
+        self._title = title
+    
+    @property
+    def title(self):
+        return self._title
+    
+    @title.setter
+    def title(self,title):
+        self._title = title
+    
+    def teacher(self,course):
+        print(&quot;%s%s正在讲%s.&quot;%(self._name,self._title,course))
+    
+def main():
+    stu = Student(&quot;Jack&quot;,15,&quot;初二&quot;)
+    stu.study(&quot;数学&quot;)
+    stu.watch_tv()
+    t = Teacher(&quot;Marry&quot;,38,&quot;专家教授&quot;)
+    t.teacher(&quot;语文&quot;)
+    t.watch_tv()
+
+if __name__ == &quot;__main__&quot;:
+    main()    
+</code></pre>
+<p><strong>输出结果</strong></p>
+<p><img src="./images/Python基础 — 面向对象编程进阶2.png" /></p>
+<p> </p>
+<p><strong>多继承</strong></p>
+<pre><code><code>#coding=utf-8
+class base(object):
+    def test(self):
+        print(&#39;----base test----&#39;)
+class A(base):
+    def test(self):
+        print(&#39;----A test----&#39;)
+
+# 定义一个父类
+class B(base):
+    def test(self):
+        print(&#39;----B test----&#39;)
+
+# 定义一个子类，继承自A、B
+class C(A,B):
+    pass
+
+
+obj_C = C()
+obj_C.test()
+
+print(C.__mro__) #可以查看C类的对象搜索方法时的先后顺序</code></pre>
+<p><strong>输出结果</strong></p>
+<p><img src="./images/Python基础 — 面向对象编程进阶3.png" /></p>
+<p><strong>总结：</strong>在出现钻石继承的问题时，调用谁，取决于 解析顺序(<a href="https://blog.csdn.net/longwen_zhi/article/details/80037161">MRO</a>)</p>
+<p> </p>
+<h2 id="多态">6. 多态</h2>
+<p>子类在继承了父类的方法后，可以对父类已有的方法给出新的实现版本，这个动作称之为方法重写（override）。通过方法重写我们可以让父类的同一个行为在子类中拥有不同的实现版本，当我们调用这个经过子类重写的方法时，不同的子类对象会表现出不同的行为，这个就是多态（poly-morphism）。</p>
+<pre><code><code>&quot;&quot;&quot;
+多态
+version:0.1
+author:coke
+&quot;&quot;&quot;
+from abc import ABCMeta,abstractmethod
+
+class Pet(object,metaclass=ABCMeta):
+    &quot;&quot;&quot;
+        宠物
+    &quot;&quot;&quot;
+    def __init__(self, nickname):
+        self._nickname = nickname
+    
+    @abstractmethod
+    def make_voice(self):
+        &quot;&quot;&quot;发出声音&quot;&quot;&quot;
+        pass
+
+class Dog(Pet):
+    &quot;&quot;&quot;狗&quot;&quot;&quot;
+    def make_voice(self):
+        print(&#39;%s: 汪汪汪...&#39; %self._nickname)
+
+class Cat(Pet):
+    def make_voice(self):
+        print(&quot;%s：喵喵喵....&quot; %self._nickname)
+
+def main():
+    #利用多态性质进行不同的声音的输出
+    pets = [Dog(&#39;旺财&#39;),Cat(&#39;凯迪&#39;),Dog(&#39;索拉&#39;)]
+    for pet in pets:
+        pet.make_voice()
+
+if __name__ == &#39;__main__&#39;:
+    main()</code></pre>
+<p><strong>解析：</strong>利用abc模块实现抽象类，abc.ABCMeta是实现抽象类的一个基础类，<code>@abstractmethod</code>定义抽象方法，无需实现功能，子类继承抽象类必须重写 抽象类的抽象方法。抽象方法就像是个模板方法</p>
+<p> </p>
+<h2 id="del-方法">7. del 方法</h2>
+<p>创建对象后，python解释器默认调用<code>__init__()</code>方法；当删除一个对象时，python解释器也会默认调用一个方法，这个方法为<code>__del__()</code>方法</p>
+<pre><code><code>import time
+class Animal(object):
+    #初始化方法
+    #创建完对象后自动被调用
+    def __init__(self,name):
+        print(&quot;init方法被调用&quot;)
+        self.__name = name
+    
+    #析构方法
+    #当对象被删除时，会自动被调用
+    def __del__(self):
+        print(&quot;del方法被调用&quot;)
+        print(&quot;%s对象马上被干掉了...&quot;%self.__name)
+
+dog = Animal(&quot;田园犬&quot;)
+#删除对象
+del dog
+
+cat = Animal(&quot;波斯猫&quot;)
+print(&quot;准备删除波斯猫了....&quot;)
+del cat</code></pre>
+<p><strong>输出结果</strong></p>
+<p><img src="./images/Python基础 — 面向对象编程进阶4.png" /></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

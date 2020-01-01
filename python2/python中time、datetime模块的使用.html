@@ -1,0 +1,125 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python中time、datetime模块的使用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python中time、datetime模块的使用</center></div><div class='banquan'>原文出处:本文由博客园博主luyuze95提供。<br/>
+原文连接:https://www.cnblogs.com/luyuze95/p/11602807.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#python中timedatetime模块的使用">python中time、datetime模块的使用</a><ul>
+        <li><a href="#前言">1、前言</a></li>
+        <li><a href="#time模块">2、time模块</a><ul>
+        <li><a href="#时间格式转换图">1、时间格式转换图</a></li>
+        <li><a href="#常用方法">2、常用方法</a></li>
+        </ul></li>
+        <li><a href="#datetime模块">3、datetime模块</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="python中timedatetime模块的使用">python中time、datetime模块的使用</h1>
+<h2 id="前言">1、前言</h2>
+<p>如果您从事过python web的开发，那一定有过这样的经历，对于各种复杂繁琐的业务逻辑，掺杂着各种各样的时间约束，让人很容易搞的头晕眼花，比如展示出一天内用户进行过的所有操作记录，再比如进行验证码验证时获取当前时间与验证码生成时间进行比较，检查是否超过10分钟过期时间之类。这些关于时间的业务逻辑，要求我们必须能熟练掌握python中关于时间的两个模块，time和datetime，只有用好了这两个模块，我们才能在代码中轻松自如的应对。</p>
+<h2 id="time模块">2、time模块</h2>
+<p>time模块中时间表现的格式主要有三种：</p>
+<ul>
+<li><p>a、timestamp时间戳，时间戳表示的是从1970年1月1日00:00:00开始按秒计算的偏移量</p></li>
+<li><p>b、struct_time时间元组，共有九个元素组。</p></li>
+<li><p>c、format time 格式化时间，已格式化的结构使时间更具可读<br />
+性。包括自定义格式和固定格式。</p></li>
+</ul>
+<h3 id="时间格式转换图">1、时间格式转换图</h3>
+<p><img src="./images/python中time、datetime模块的使用0.png" /></p>
+<h3 id="常用方法">2、常用方法</h3>
+<pre><code><code>import time
+
+print(time.time())  # 当前时间戳
+&gt;&gt;&gt; 1569645479.6079931
+
+print(int(time.time()))
+&gt;&gt;&gt; 1569645479
+
+print(time.strftime(&#39;%Y-%m-%d %H:%M:%S&#39;))  # 格式化的时间
+&gt;&gt;&gt; 2019-09-28 12:37:59
+
+print(time.strftime(&#39;%Y-%m-%d&#39;))
+&gt;&gt;&gt; 2019-09-28
+
+print(time.strftime(&#39;%H:%M:%S&#39;))
+&gt;&gt;&gt; 12:37:59
+
+print(time.gmtime())  # 获取标准时区的时间元组，如果传入了时间戳，就是把时间戳转换成时间元组
+&gt;&gt;&gt; time.struct_time(tm_year=2019, tm_mon=9, tm_mday=28, tm_hour=4, tm_min=37, tm_sec=59, tm_wday=5, tm_yday=271, tm_isdst=0)
+
+print(time.gmtime(1569645453))
+&gt;&gt;&gt; time.struct_time(tm_year=2019, tm_mon=9, tm_mday=28, tm_hour=4, tm_min=37, tm_sec=33, tm_wday=5, tm_yday=271, tm_isdst=0)
+
+# 使用时间戳获取代码执行时间
+s_time = time.time()
+for i in range(0,10):
+    time.sleep(1)
+e_time = time.time()
+print(&#39;代码运行时间是：&#39;, e_time-s_time)
+&gt;&gt;&gt; 代码运行时间是： 10.003105163574219
+
+# 字符串格式化时间转换时间戳
+str_time = &#39;2019-9-28&#39;
+print(time.mktime(time.strptime(str_time, &#39;%Y-%m-%d&#39;)))
+&gt;&gt;&gt; 1569600000.0
+
+# 时间戳转换成格式化的时间字符串
+gsh_time = time.time()
+print(time.strftime(&#39;%Y-%m-%d&#39;, time.localtime(gsh_time)))
+&gt;&gt;&gt; 2019-09-28
+
+</code></pre>
+<h2 id="datetime模块">3、datetime模块</h2>
+<p>datatime模块重新封装了time模块，提供更多接口，提供的类有：date,time,datetime,timedelta,tzinfo。</p>
+<pre><code><code>import datetime
+
+now = datetime.datetime.now()
+print(now)
+&gt;&gt;&gt; 2019-09-28 12:45:59.927901
+
+now = datetime.datetime.now()
+d1 = now - datetime.timedelta(hours=1)  # 获取前一小时
+d2 = now - datetime.timedelta(days=1)  # 获取前一天
+print(now)
+&gt;&gt;&gt; 2019-09-28 12:47:56.662933
+print(d1)
+&gt;&gt;&gt; 2019-09-28 11:47:56.662933
+print(d2)
+&gt;&gt;&gt; 2019-09-27 12:47:56.662933
+
+# datetime对象转换成时间戳
+dt = datetime.datetime.now()
+print(time.mktime(dt.timetuple()))
+&gt;&gt;&gt; 1569646475.0
+
+# 时间戳转换成datetime对象
+sjc_time = time.time()
+print(datetime.datetime.fromtimestamp(sjc_time))
+&gt;&gt;&gt; 2019-09-28 12:55:05.500752
+
+</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

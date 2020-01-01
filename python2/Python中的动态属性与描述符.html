@@ -1,0 +1,115 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python中的动态属性与描述符' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python中的动态属性与描述符</center></div><div class='banquan'>原文出处:本文由博客园博主二进制的弗洛伊德提供。<br/>
+原文连接:https://www.cnblogs.com/levylovepage/p/11331280.html</div><br>
+    <h3 id="动态属性与属性描述符">动态属性与属性描述符</h3>
+<h4 id="属性描述符是什么">属性描述符是什么？</h4>
+<p>  在解释属性查找顺序之前我们需要了解Python中的属性描述符，属性描述符作为其他类对象的属性而存在，实现了特殊方法中的get、set、delete中的一种即可称作属性描述符。</p>
+<blockquote>
+<p>其中只实现了__get__()的称作非数据描述符，实现了__get__()和__set__()方法的称作数据描述符。</p>
+</blockquote>
+<ul>
+<li>Data.py</li>
+</ul>
+<pre><code><code>class Data():
+    def __get__(self, instance, owner):
+        pass
+    
+    def __set__(self, instance, value):
+        pass
+    
+    def __delete__(self, instance):
+        pass
+</code></pre>
+<ul>
+<li>NoData.py<br />
+</li>
+</ul>
+<pre><code><code>class NoneData():
+    def __get__(self, instance, owner):
+        pass</code></pre>
+<h4 id="动态属性">动态属性</h4>
+<p>  在实际项目的开发中我们有时候需要去将自己的逻辑（方法）变成属性来调用，也就是我们常说的@property动态属性。</p>
+<ul>
+<li>PropertyTest.py</li>
+</ul>
+<pre><code><code>import numbers
+class User:
+    def __init__(self):
+        pass
+    @property
+    def age (self):
+        return self.__userage
+    @age.setter
+    def age(self,value):
+        if isinstance(value,numbers.Integral):
+            self.__userage = value
+        else:
+            raise ValueError
+if __name__ == &#39;__main__&#39;:
+    user = User()
+    user.age = 30
+    print(user.age)
+</code></pre>
+<ul>
+<li>对用户信息的赋值中，我们需要对值进行判断是否合法，直接在初始化特殊方法中进行判断是无法实现的。因此需要引入动态属性，将判断和赋值在age方法中进行，同时添加@property装饰器，将方法转换为供我们调用的属性。当然我上述的代码合法性判断只写了整数判断，具体的读者可以自行实现。</li>
+</ul>
+<h4 id="属性描述符">属性描述符</h4>
+<p>  读到这，肯定很多人者都会有一个疑问，那属性描述符还有什么用呢？我们在设计User类的时候，肯定不只有age这一个属性，如果再加上其他信息属性，那么就会出现大量的@property修饰的方法在同一个类，这是不符合设计原则的，代码的分离性和可读性大大降低。这时候属性描述符就能起到很大的帮助了。</p>
+<ul>
+<li>Desc.py</li>
+</ul>
+<pre><code><code>class AgeAttr:
+    def __get__(self, instance, owner):
+        return self.__userage
+
+    def __set__(self, instance, value):
+        if isinstance(value,numbers.Integral):
+            self.__userage = value
+        else:
+            raise ValueError
+
+    def __delete__(self, instance):
+        pass
+
+class User:
+    age = AgeAttr()
+    def __init__(self):
+        pass
+
+
+import numbers
+
+if __name__ == &#39;__main__&#39;:
+    user = User()
+    user.age =25
+    print(user.age)
+</code></pre>
+<ul>
+<li>将代码使用属性描述符重新构造后，User类中的代码大大减少，我们能更好地提高代码的分离性</li>
+</ul>
+<blockquote>
+<p>关于属性的查找顺序请看这&gt;<a href="https://www.cnblogs.com/levylovepage/p/11331849.html">属性查找顺序</a></p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

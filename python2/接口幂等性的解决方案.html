@@ -1,0 +1,83 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修接口幂等性的解决方案' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>接口幂等性的解决方案</center></div><div class='banquan'>原文出处:本文由博客园博主杨冠标提供。<br/>
+原文连接:https://www.cnblogs.com/yanggb/p/11727533.html</div><br>
+    <p>在编程中，幂等操作的特点是其任意多次执行所产生的影响均与一次执行的影响相同。幂等函数指的是那些使用相同参数重复执行也能获得相同结果的函数。这些函数不会影响系统状态，也不用担心重复执行会对系统造成改变。比如说getIdCard()函数和setTrue()函数就是幂等函数。</p>
+<p>幂等在我的理解里就是，一个操作不论被执行多少次，产生的效果和返回的结果都是一样的。</p>
+<p>一个幂等的操作典型如：把编号为5的记录的A字段设置为0这种操作不管执行多少次都是幂等的。</p>
+<p>一个非幂等的操作典型如：把编号为5的记录的A字段增加1这种操作显然就不是幂等的。</p>
+<p><span style="background-color: #ccffcc;"><strong>幂等的方案</strong></span></p>
+<p><span style="background-color: #ffff99;">1.查询操作：Select是天然的幂等操作。</span></p>
+<p>查询一次和查询多次，在数据不变的情况下，查询的结果都是一样的。</p>
+<p><span style="background-color: #ffff99;">2.删除操作：删除操作也是幂等的，删除一次和删除多次都是把数据删除。</span></p>
+<p>因为删除操作通常是定向的，比如通过id去删除数据，如果该id在数据库中存在对应记录，则删除该记录；如果该id在数据库中不存在对应记录，也是执行的删除记录操作，只是没有实质性地删除到记录而已，却也不会有其他的副作用。</p>
+<p>但是如果删除操作具有返回值的话，可能返回的结果会不一样，比如删除一条记录之后返回这条记录中的某个值，如果删除的数据不存在（已经在第一次的删除请求中被删除了），返回的就是空值了。</p>
+<p><span style="background-color: #ffff99;">3.唯一索引：通过在数据库表的一个字段上建立唯一索引可以有效防止新增脏数据。</span></p>
+<p>比如有一个特殊订单表，这个特殊订单表关联了一个用户表，业务设置是每一个用户只能创建一个特殊订单，也就意味着在这个特殊订单表中只能有一条用户关联的记录。那么这时候就可以在这个特殊订单表上针对这个用户关联的字段做一个唯一索引，通过数据库的唯一约束来限制往特殊订单表中插入多条一个用户关联的记录。这样，当第二次请求往特殊订单表中插入一个用户关联的特殊订单记录的时候，数据库就会报错并回滚插入操作，也就保证了幂等。</p>
+<p><span style="background-color: #ffff99;">4.Token校验机制：操作前先校验Token，以防止页面重复提交。</span></p>
+<p>原理上是通过Session Token来实现的，当然也可以通过Redis来实现。当客户端请求页面时，服务器会先生成一个全局唯一的Token，然后将该Token放置到Session或Redis当中，然后将Token发送给客户端（一般通过构造Hidden表单或放在浏览器缓存中）。等下次客户端提交请求时，Token就会随着表单一起提交到服务器端。当服务器端第一次验证通过之后，就会将Session中的Token值更新或删除，若用户重复提交，第二次的验证判断就是失败，请求的操作也不会被重复执行。这是因为用户提交的表单中的Token没变，但服务器端的Session中的Token已经改变了或不存在了。</p>
+<p><span style="background-color: #ffff99;">5.悲观锁：获取数据的时候加锁获取。</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">select</span> <span style="color: #808080;">*</span> <span style="color: #0000ff;">from</span> yanggb <span style="color: #0000ff;">where</span> id <span style="color: #808080;">=</span> <span style="color: #ff0000;">'</span><span style="color: #ff0000;">huangq</span><span style="color: #ff0000;">'</span> <span style="color: #0000ff;">for</span> <span style="color: #0000ff;">update</span>;</pre>
+</div>
+<p>悲观锁使用时一般伴随事务一起使用，数据锁定时间可能会很长，需要根据实际情况选用。</p>
+<p>另外要注意的是，id字段一定是主键或者唯一索引，不然可能造成锁表的结果，处理起来会非常麻烦。</p>
+<p><span style="background-color: #ffff99;">6.乐观锁：通过版本号或其他状态字段做更新限制。</span></p>
+<p>与悲观锁长时间锁表不一样，乐观锁只是在更新数据那一刻锁表，其他时间不锁表。所以乐观锁相对于悲观锁，在大部分场景中效率会更高一些。乐观锁的实现方式多种多样，可以通过version或者其他状态条件。</p>
+<table border="0">
+<tbody>
+<tr>
+<td>id</td>
+<td>name</td>
+<td>age</td>
+<td>version</td>
+</tr>
+<tr>
+<td>1</td>
+<td>yanggb</td>
+<td>18</td>
+<td>1</td>
+</tr>
+</tbody>
+</table>
+<p>比如给业务表内添加一个版本号的字段，如果要调用一个接口去更新年龄之前，就需要先查一下他的版本号是多少，然后调用接口的时候带上版本号。</p>
+<p>在接口里保证分布式接口的幂等性（在更新的SQL中添加version的条件判断）：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">update</span> <span style="color: #ff00ff;">user</span> <span style="color: #0000ff;">set</span> age <span style="color: #808080;">=</span> <span style="color: #800000; font-weight: bold;">21</span>, version <span style="color: #808080;">=</span> version <span style="color: #808080;">+</span> <span style="color: #800000; font-weight: bold;">1</span> <span style="color: #0000ff;">where</span> id <span style="color: #808080;">=</span> <span style="color: #800000; font-weight: bold;">1</span> <span style="color: #808080;">and</span> version <span style="color: #808080;">=</span> <span style="color: #800000; font-weight: bold;">1</span>;</pre>
+</div>
+<p>这样，多次提交的请求，因为版本号（version）都一样，因为第一次请求执行成功之后version已经+1了，则后面的请求因为version对应不上，都不会被执行。</p>
+<p><span style="background-color: #ffff99;">7.分布式锁：另一个角度的Token校验。</span></p>
+<p>如果是分布式系统的话，构建全局唯一索引会比较困难，比如唯一性的字段就没有办法确定。这时候可以引入分布式锁，通过第三方的系统（Redis或Zookeeper），在业务系统插入数据或者更新数据前，需要先获取分布式锁，然后才能做操作，操作完成之后就释放锁。这样其实是把单机系统里面多线程并发锁的思路引入了多个系统的场景，也就是分布式系统中的解决思路。</p>
+<p>要点：某个长流程处理过程要求不能并发执行，可以在流程执行之前根据某个标志（用户ID+后缀等）获取分布式锁，其他流程执行时获取锁就会失败，也就是同一时间该流程只能有一个能执行成功，执行完成后，释放分布式锁（分布式锁要第三方系统提供）。</p>
+<p><span style="background-color: #ffff99;">8.select + insert：一种简单却比较笨的方式。</span></p>
+<p>对于一些并发不高的后台系统，或者一些任务JOB，为了支持幂等，支持重复执行，可以采取的一种简单处理方法是，先根据一些关键数据到表中查询记录，以此来判断是否已经执行过，判断后再进行业务处理就可以了。</p>
+<p>要注意的是，核心高并发流程不要用这种方法，因为要查询一遍数据（你想想为什么要会把数据放到Redis中），性能太低了。</p>
+<p><span style="background-color: #ffff99;">9.状态机幂等：另一个角度的乐观锁。</span></p>
+<p>在设计单据相关的业务，或者是任务相关的业务，肯定会涉及到状态机（状态变更图）。简单理解，就是业务单据上面有个状态的字段，状态在不同的情况下会发生变更，一般情况下存在有限状态机。这时候，如果状态机已经处于下一个状态，这时候来了一个上一个状态的变更，理论上是不能够变更的，这样的话，保证了有限状态机的幂等。注意：订单等单据类业务，存在很长的状态流转，一定要深刻理解状态机，对业务系统设计能力提高有很大帮助。</p>
+<p><span style="background-color: #ccffcc;"><strong>总结</strong></span></p>
+<p>幂等的概念与分布式、高并发或JavaEE的概念都没有关系，其只关心操作被多次执行产生的影响是否与一次执行是一致的。</p>
+<p>事实上，要做到幂等性，只要从接口的设计上出发，不设计出任何非幂等的操作即可。譬如说有一个需求是，当用户点击赞同时，将答案的赞同数量+1。直接修改用户点赞表（答案id，点赞数）的点赞数（+1）显然不是幂等的。这种场景就可以改为：当用户点击赞同时，往用户点赞表（答案id，用户id）中添加一条记录，然后通过在用户id字段上建立唯一索引来确保在答案赞同表中只存在一条一个用户点赞的记录，最后的赞同数量由答案赞同表通过count去统计出来。当然了，实际的系统也不会这么设计，这里只是我没有想到更好的例子。说起来简单，做起来真的太难了，哈哈哈。</p>
+<p>总之幂等性应该是合格程序员的一个基因，在设计系统时，是首要考虑的问题，尤其是在像支付宝，银行或互联网金融公司等涉及的都是金钱钱的系统，既要高效，也要保证数据准确，不能出现多扣款，多打款等问题，这样会很难处理，用户体验也不好。</p>
+<p>&nbsp;</p>
+<p>"他们就像星星一样那么亮，我永远都够不着。"</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

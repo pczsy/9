@@ -1,0 +1,85 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修TensorFlow实现简单线性回归示例代码' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>TensorFlow实现简单线性回归示例代码</center></div><div class='banquan'>原文出处:本文由博客园博主正态分个布提供。<br/>
+原文连接:https://www.cnblogs.com/zrmw/p/11572329.html</div><br>
+    <div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> -*- coding: utf-8 -*-</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> tensorflow as tf
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> numpy as np
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> matplotlib.pyplot as plt
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> real_func():
+    </span><span style="color: #0000ff;">return</span>
+
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> emperor():
+    num_points </span>= 1000<span style="color: #000000;">
+    vectors_set </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(num_points):
+        x1 </span>= np.random.normal(0.0, 0.55<span style="color: #000000;">)
+        y1 </span>= x1 * 0.1 + 0.3 + np.random.normal(0.0, 0.03<span style="color: #000000;">)
+        vectors_set.append([x1, y1])
+
+    x_data </span>= [v[0] <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span><span style="color: #000000;"> vectors_set]
+    y_data </span>= [v[1] <span style="color: #0000ff;">for</span> v <span style="color: #0000ff;">in</span><span style="color: #000000;"> vectors_set]
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> plt.scatter(x_data, y_data, c='r')</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;"> plt.show()</span>
+<span style="color: #000000;">
+    W </span>= tf.Variable(tf.random_uniform([1], -1.0, 1.0), name=<span style="color: #800000;">'</span><span style="color: #800000;">W</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    b </span>= tf.Variable(tf.zeros([1]), name=<span style="color: #800000;">'</span><span style="color: #800000;">b</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    y </span>= W * x_data +<span style="color: #000000;"> b
+
+    loss </span>= tf.reduce_mean(tf.square(y - y_data), name=<span style="color: #800000;">'</span><span style="color: #800000;">loss</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    optimizer </span>= tf.train.GradientDescentOptimizer(0.5<span style="color: #000000;">)
+    train </span>= optimizer.minimize(loss, name=<span style="color: #800000;">'</span><span style="color: #800000;">train</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    sess </span>=<span style="color: #000000;"> tf.Session()
+    init </span>=<span style="color: #000000;"> tf.global_variables_initializer()
+    sess.run(init)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> print('W=', sess.run(W), 'b=', sess.run(b), 'loss=', sess.run(loss))</span>
+
+
+
+    <span style="color: #0000ff;">for</span> step <span style="color: #0000ff;">in</span> range(20<span style="color: #000000;">):
+        sess.run(train)
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">W=</span><span style="color: #800000;">'</span>, sess.run(W), <span style="color: #800000;">'</span><span style="color: #800000;">b=</span><span style="color: #800000;">'</span>, sess.run(b), <span style="color: #800000;">'</span><span style="color: #800000;">loss=</span><span style="color: #800000;">'</span><span style="color: #000000;">, sess.run(loss))
+    writer </span>= tf.summary.FileWriter(r<span style="color: #800000;">'</span><span style="color: #800000;">C:\Users\Administrator\Desktop\meatwice\meatwice\01newCognition\reinforcement_learning\new_test_tensorflow/tmp</span><span style="color: #800000;">'</span><span style="color: #000000;">, sess.graph)
+
+
+
+    plt.scatter(x_data, y_data, c</span>=<span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    plt.plot(x_data, sess.run(W) </span>* x_data +<span style="color: #000000;"> sess.run(b))
+    plt.show()
+
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    emperor()</span></pre>
+</div>
+<p>运行结果：</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/TensorFlow实现简单线性回归示例代码0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/TensorFlow实现简单线性回归示例代码1.png" alt="" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

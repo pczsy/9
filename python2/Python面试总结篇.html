@@ -1,0 +1,457 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python面试总结篇' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python面试总结篇</center></div><div class='banquan'>原文出处:本文由博客园博主JoneyHsiao提供。<br/>
+原文连接:https://www.cnblogs.com/joneyhsiao/p/11316769.html</div><br>
+    <h2 id="python-coding-interview-questions-and-answers">Python Coding Interview Questions and Answers</h2>
+<hr />
+<h4 id="面试题一逻辑运算赋值">面试题一：逻辑运算赋值</h4>
+<pre><code><code>v1 = 1 or 9
+v2 = 0 or 9
+# print(v1, v2)会输出什么？</code></pre>
+<p>我们先举例理解 <code>数字/字符串</code> 和 <code>布尔值</code> 是如何转换的</p>
+<ul>
+<li><p>数字转布尔值</p>
+<pre><code><code>v1 = 0
+v2 = bool(v1)
+print(v2)       # ---&gt; False
+# 总结：只有0转换成布尔值是False，其它都是True。</code></pre></li>
+<li><p>字符串转布尔值</p>
+<pre><code><code>v1 = &quot;&quot;
+v2 = bool(v1)
+print(v2)       # ---&gt; False
+# 总结：只有空字符串转换成布尔值是False，其他都是True。</code></pre></li>
+<li><p>也可以把以下数据类型转换为布尔值</p>
+<pre><code><code>bool([]) # 空列表是False，非空列表是True。空集合也是False。
+bool(()) # 空元组是False，非空元组是True
+bool({}) # 空字典是False，非空字典是True
+bool(set()) # 空集合是False，非空集合是True
+bool(None) # False</code></pre></li>
+<li><p>布尔值转数字或者字符串使用非常少，了解即可。转换为数字只有0（False）和1（True），转换为字符串只有空字符串（&quot;&quot;）和字符串（&quot;True&quot;）。</p></li>
+</ul>
+<p>然后我们再来看这个面试题</p>
+<pre><code><code>v1 = 1 or 9
+v2 = 0 or 9
+# print(v1, v2)会输出什么？</code></pre>
+<blockquote>
+<p>解： 当和逻辑运算符一起存在时会自动转换为布尔值，根据上面的例子得知，1是True，9也是True，0是False，v1取到第一个值等式就成立了，v2中因为0是False所以还需要继续看后面的值，所以输出1 9 ，v1和v2都为整型。</p>
+</blockquote>
+<p>扩展</p>
+<pre><code><code>v1 = 3&gt;4 or 4&lt;3 and 1==1
+print(v1)     # ---&gt; False，有比较运算，先比较是True还是False，再做逻辑运算
+
+v2 = 1 and 9 or &quot;&quot; and 6
+print(v2)     # ---&gt; 9
+# 在没有()的情况下not优先级高于and，and优先级高于or，即优先级关系为( ) &gt; not &gt; and &gt; or，同一优先级从左往右计算。</code></pre>
+<p>参考如下：</p>
+<table>
+<thead>
+<tr class="header">
+<th>Operation</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>x or y</td>
+<td>if x is false, then y, else x</td>
+</tr>
+<tr class="even">
+<td>x and y</td>
+<td>if x is false, then x, else y</td>
+</tr>
+<tr class="odd">
+<td>not x</td>
+<td>if x is false, then <code>True</code>, else <code>False</code></td>
+</tr>
+</tbody>
+</table>
+<p>由此引出Python运算符优先级，以下表格列出了优先级从高到低的所有运算符。</p>
+<table>
+<thead>
+<tr class="header">
+<th>运算符</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>**</code></td>
+<td>指数（最高优先级）</td>
+</tr>
+<tr class="even">
+<td><code>~</code> <code>+</code> <code>-</code></td>
+<td>按位翻转，一元加号和减号（最后两个的方法名为 +@和 -@）</td>
+</tr>
+<tr class="odd">
+<td><code>*</code> <code>/</code> <code>%</code> <code>//</code></td>
+<td>乘，除，取模和取整数</td>
+</tr>
+<tr class="even">
+<td><code>+</code> <code>-</code></td>
+<td>加法、减法</td>
+</tr>
+<tr class="odd">
+<td><code>&gt;&gt;</code> <code>&lt;&lt;</code></td>
+<td>右移、左移运算符</td>
+</tr>
+<tr class="even">
+<td><code>&amp;</code></td>
+<td>位'AND'</td>
+</tr>
+<tr class="odd">
+<td><code>^</code> <code>|</code></td>
+<td>位运算符</td>
+</tr>
+<tr class="even">
+<td><code>&lt;=</code> <code>&lt;</code> <code>&gt;</code> <code>&gt;=</code></td>
+<td>比较运算符</td>
+</tr>
+<tr class="odd">
+<td><code>&lt;&gt;</code> <code>==</code> <code>!=</code></td>
+<td>等于（判断）运算符，其中<code>&lt;&gt;</code>为<code>不等于</code>，类似<code>!=</code>，在python 3中已剔除。</td>
+</tr>
+<tr class="even">
+<td><code>=</code> <code>%=</code> <code>/=</code> <code>//=</code> <code>-=</code> <code>+=</code> <code>*=</code> <code>**=</code></td>
+<td>赋值运算符</td>
+</tr>
+<tr class="odd">
+<td><code>is</code> <code>is not</code></td>
+<td>身份运算符</td>
+</tr>
+<tr class="even">
+<td><code>in</code> <code>not in</code></td>
+<td>成员运算符</td>
+</tr>
+<tr class="odd">
+<td><code>not</code> <code>and</code> <code>or</code></td>
+<td>逻辑运算符，其优先级从高到底依次为 <code>not</code> &gt; <code>and</code> &gt; <code>or</code></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h4 id="面试题二字符串反序">面试题二：字符串反序</h4>
+<pre><code><code>value = &#39;abcdefg&#39;
+# 把value的值反序，输出结果为&quot;gfedcba&quot;</code></pre>
+<p>这里涉及到的知识点是字符串的公共方法中<strong>切片</strong>和<strong>步长</strong>, 先举一个字符串切片的例子：</p>
+<pre><code><code>name = &quot;Joney&quot;
+print(name[0:3])   # 输出结果是 Jon，这就是字符串切片，获取字符串中一部分字符，更专业的说法是获取子序列。
+# 字符串是一个有序的字符集合，索引下标从0开始往右顺序访问。
+# 字符串切片其中一个特点是顾首不顾尾，获取方式是 0 =&lt; x &lt; 3，x为切片的结果。
+# name[:]输出结果是&quot;Joney&quot;，即表示为正无穷和负无穷。
+# name[-1]表示最后一个字符y，或者name[-1:]。</code></pre>
+<p>再来看一个字符串切片中步长的例子：</p>
+<pre><code><code>name = &quot;JoneyHsiao&quot;
+print(name[0:8:2])   # 输出结果是 Jnys， 后面的:2就是步长。
+# 意思就是下标值从0开始（ 0 =&lt; x &lt; 8），从左往右按顺序每取一个值下标就+2，即下标分别为0，0+2，2+2=4，4+2=6。
+# 默认步长是1，这里特别要注意是默认情况下是从左往右按顺序获取。
+# 那么能不能从右往左获取呢？答案是可以的。特例：name[-1:0]获取不到子序列，因为是从左往右，无集合。
+# 从右往左只需要把步长设置为负值（例如：-1）就可以。
+# 例如：name[-1:0:-2]，即从右往左（-1 =&lt; x &lt; 0），以步长2获取子序列，输出结果是&quot;oiHeo&quot;。</code></pre>
+<p>最后我们来分析面试题：</p>
+<pre><code><code># 我们已经知道可以用切片的方式输出整个字符串，这是从左往右取负无穷和正无穷
+name = &quot;abcdefg&quot;
+print(name[:])
+
+# 那么反过来，我们就可以从右往左取负无穷和正无穷
+print(name(::-1))   # 输出结果就是反序&quot;gfedcba&quot;</code></pre>
+<hr />
+<h4 id="面试题三git常用命令">面试题三：Git常用命令</h4>
+<pre class="shell"><code>git init
+git status
+git log
+git add .
+git commit -m &quot;commit&quot;
+git push origin master</code></pre>
+<h4 id="面试题四你是怎么用git做开发的">面试题四：你是怎么用git做开发的？</h4>
+<ol>
+<li><p>在码云、GitHub或GitLab等代码托管平台创建仓库，创建完之后得到一个仓库地址。</p></li>
+<li><p>编写代码中 .....</p></li>
+<li><p>将已编写好的代码提交到远程仓库。</p>
+<ul>
+<li><p>初始化</p>
+<ul>
+<li><p>进入一个任意文件夹，文件名最好和远程仓库名称一致</p></li>
+<li><p>git init</p></li>
+<li><p>git config --global user.name &quot;joneyhsiao&quot;</p></li>
+<li><p>git config --global user.email &quot;joneyhsiao@sina.com&quot;</p></li>
+<li><p>git remote add origin https://gitee.com/joneyhsiao/OxusLog.git</p>
+<p>注意：至此git已经将该文件夹管理起来，以后此文件夹有任何变化，git都会检测到（使用 git status 命令可以查看状态）</p></li>
+</ul></li>
+<li><p>代码收集并提交</p>
+<ul>
+<li>git status</li>
+<li>git add .</li>
+<li>git commit -m ''记录&quot;</li>
+<li>git push origin master # 将本地文件夹下的内容同步到远程仓库。</li>
+</ul></li>
+<li><p>修改代码或删除文件等对本地文件夹下任何文件做操作。</p>
+<ul>
+<li>git status</li>
+<li>git add .</li>
+<li>git commit -m ''记录&quot;</li>
+<li>git push origin master # 将本地文件夹下的内容同步到远程仓库。</li>
+</ul></li>
+<li><p>【避免】如果远程有本地没有的代码，必须先执行：【可能引发合并问题】</p>
+<ul>
+<li>git pull origin master</li>
+<li>git status</li>
+<li>git add .</li>
+<li>git commit -m ''记录&quot;</li>
+<li>git push origin master # 将本地文件夹下的内容同步到远程仓库。</li>
+</ul></li>
+</ul></li>
+</ol>
+<h4 id="面试题五元组书写规范---必须要有逗号">面试题五：元组书写规范 -&gt; 必须要有逗号</h4>
+<pre><code><code>v1 = 1
+v2 = (1)
+v3 = (1,)
+v4 = ()
+
+print(type(v1), type(v2), type(v3))
+# &lt;class &#39;int&#39;&gt; &lt;class &#39;int&#39;&gt; &lt;class &#39;tuple&#39;&gt;
+# (1) 是整型，如果最后不加逗号则括号内就是对应的数据类型，v1 等价于 v2
+# dialog = &quot;This is %s speaking.&quot; % (joney,) 最后加上逗号才是元组，如果不加逗号这里就是字符串
+print(type(v4))
+# &lt;class &#39;tuple&#39;&gt;
+
+# 附例：
+score = &#39;80 &#39;
+int(score)   # 可直接转换为整型
+score.isdigit()   # False 因为有空格
+score.strip().isdigit()   # True 移除空格</code></pre>
+<h4 id="面试题六集合的关系运算交集-合集-差集-对称差集-包含关系">面试题六：集合的关系运算（交集 / 合集 / 差集 / 对称差集 / 包含关系）</h4>
+<ul>
+<li><p>交集</p>
+<pre><code><code>a = {1, 2, 3, 4}
+b = {3, 4, 5, 6, 7}
+print(a.intersection(b)) # {3, 4}
+# 或
+print(a &amp; b) # {3, 4}</code></pre></li>
+<li><p>合集，也叫并集（合并去重）</p>
+<pre><code><code>a = {1, 2, 3, 4}
+b = {3, 4, 5, 6, 7}
+print(a.union(b)) # {1, 2, 3, 4, 5, 6, 7}
+# 或
+print(a | b) # {1, 2, 3, 4, 5, 6, 7}</code></pre></li>
+<li><p>差集</p>
+<pre><code><code>a = {1, 2, 3, 4}
+b = {3, 4, 5, 6, 7}
+# 只存在于 a ，但不存在于 b
+print(a.difference(b)) # {1, 2}
+# 或
+print(a - b) # {1, 2}
+
+# 只存在于 b ，但不存在于a
+print(b - a) # {5, 6, 7}</code></pre></li>
+<li><p>对称差集</p>
+<pre><code><code>a = {1, 2, 3, 4}
+b = {3, 4, 5, 6, 7}
+# 只存在于 a 或只存在于 b
+print(a.symmetric_difference(b)) # {1, 2, 5, 6, 7}
+print(a ^ b) # {1, 2, 5, 6, 7}</code></pre></li>
+<li><p>包含关系</p>
+<ul>
+<li><p>in / not in：判断某元素是否在集合内</p></li>
+<li><p>== / !=：判断两个集合是否相等</p></li>
+<li><p>两个集合之间一般有如下几种关系：</p>
+<ul>
+<li><p>相交 和 不相交</p>
+<pre><code><code>a = {1, 2, 3, 4}
+b = {3, 4, 5, 6, 7}
+print(a.isdisjoint(b)) # False。判断 a 和 b 两个集合是不是不相交</code></pre></li>
+<li><p>包含 和 不包含</p>
+<pre><code><code>a = {1, 2, 3, 4}
+b = {3, 4, 5, 6, 7}
+print(a.issuperset(b)) # False。判断 a 是否包含 b，等同于 a &gt;= b
+print(a.issubset(b)) # False。判断 a 是否被 b 包含，等同于 a &lt;= b</code></pre></li>
+</ul></li>
+</ul></li>
+</ul>
+<h4 id="面试题七-和-is-有什么区别">面试题七： <code>==</code> 和 <code>is</code> 有什么区别？</h4>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;">运算符</th>
+<th>类型</th>
+<th>描述</th>
+<th>实例</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">==</td>
+<td>比较运算</td>
+<td>等于， 比较（判断）对象是否相等</td>
+<td>a == b，如果两对象相等则返回True，否则返回False</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">is</td>
+<td>身份运算</td>
+<td>is 是判断两个标识符是不是引用自一个对象</td>
+<td>x is y，类似 id(x) == id(y)，如果引用的是同一个对象则返回True，否则返回False</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">is not</td>
+<td>身份运算</td>
+<td>is not 是判断两个标识符是不是引用自不同对象</td>
+<td>x is not y，类似id(a) != id(b)，如果引用的不是同一个对象则返回结果True，否则返回False</td>
+</tr>
+</tbody>
+</table>
+<pre><code><code>v1 = [1, 2, 3]
+v2 = [1, 2, 3, 4]
+v1 == v2 # False
+v1 is v2 # False
+
+v1 = [1, 2, 3]
+v2 = [1, 2, 3]
+v1 == v2 # True
+v1 is v2 # False
+
+v1  = [1, 2, 3]
+v2 = v1
+v1 == v2 # True
+v1 is v2 # True
+
+# 出于节省内存的角度思考，Python 对部分简单的字符串和数字（小数据池）（-5 =&lt; x &lt; 257）做了特殊的缓存内存地址优化机制，python解释器因要定义的新变量内容与之前定义过的变量内容相同而不会让新变量占用新的内存空间。
+v1 = &#39;joney&#39;
+v2 = &#39;joney&#39; # 按理 v1 和 v2 应该是不同的内存地址
+v1 == v2 # True
+v1 is v2 # True，内存地址相同</code></pre>
+<p>总结：</p>
+<ul>
+<li>== 比较值是否相等</li>
+<li>is 比较内存地址是否相等</li>
+</ul>
+<h4 id="todo-面试题八什么是深浅拷贝">TODO 面试题八：什么是深浅拷贝？</h4>
+<h4 id="todo-面试题九python-2-和-python-3-的区别">TODO 面试题九：Python 2 和 Python 3 的区别</h4>
+<p>以下这几点区别可以不说，因为是最基础的知识，并不是考察的知识点。</p>
+<ul>
+<li><p>默认解释器编码，python2 -&gt; ASCII，python3 -&gt; UTF-8</p></li>
+<li><p>输入输出，python2 -&gt; print &quot;&quot; / raw_input()，python3 -&gt; print() / input()</p></li>
+<li><p>整数的除法。python2只保留整数位，如果要保留小数位，需要导入一个模块。python3正常。</p>
+<pre><code><code>from __future__ import division
+value = 3 / 2</code></pre>
+<p>python2 -&gt; int / long，python3 -&gt; int</p></li>
+</ul>
+<h4 id="面试题十列举-python-的数据类型中都有哪些方法">面试题十：列举 Python 的数据类型中都有哪些方法？</h4>
+<ul>
+<li><p>整型 int</p>
+<ul>
+<li><p>python2 -&gt; int / long，python3 -&gt; int</p></li>
+<li><p>整数的除法。python2只保留整数位，如果要保留小数位，需要导入一个模块。python3正常。</p>
+<pre><code><code>from __future__ import division
+value = 3 / 2</code></pre></li>
+<li>强制转换：
+<ul>
+<li>int('字符串') 【重要】</li>
+<li>int(布尔值)</li>
+</ul></li>
+</ul></li>
+<li><p>布尔值 bool</p>
+<ul>
+<li><p>强制转换：</p>
+<pre><code><code>bool(0)  # 只有0转换成布尔值是False，其它都是True。
+bool(&quot;&quot;) # 只有空字符串转换成布尔值是False，其他都是True。
+bool([]) # 空列表是False，非空列表是True。空集合也是False。
+bool(()) # 空元组是False，非空元组是True
+bool({}) # 空字典是False，非空字典是True
+bool(set()) # 空集合是False，非空集合是True
+bool(None) # False</code></pre></li>
+</ul></li>
+<li><p>字符串 str</p>
+<ul>
+<li><p>独有方法：upper/lower/split/strip/replace/isdigit/startswith/endswith/format/join/encode</p></li>
+<li><p>公共方法：</p>
+<ul>
+<li>len / 索引 / 切片 / 步长 / for循环 / 删除【无】 / 更新【无】</li>
+</ul></li>
+<li><p>强制转换：</p>
+<pre><code><code>str(999) # &quot;999&quot;
+str(True) # &quot;True&quot;
+str([&quot;Joney&quot;,&#39;Hsiao&#39;]) # &quot;[&#39;Joney&#39;, &#39;Hsiao&#39;]&quot;
+&quot;,&quot;.join([&quot;Joney&quot;,&#39;Hsiao&#39;]) # &#39;Joney,Hsiao&#39; 循环每个元素，元素必须是字符串。
+
+# 如果元素是数字，可以使用列表推导，将 int 转换为 str
+v1 = [&quot;Joney&quot;,&#39;Hsiao&#39;, 18]
+v2 = [str(i) for i in v1] # [&#39;Joney&#39;, &#39;Hsiao&#39;, &#39;18&#39;]
+&quot;,&quot;.join(v2) # &#39;Joney,Hsiao,18&#39;
+
+# 或
+nums = [11, 22, 33, 44]
+for i in range(0, len(nums)):
+    nums[i] = str(nums[i])
+result = &#39;_&#39;.join(nums)
+print(result)</code></pre></li>
+</ul></li>
+<li><p>列表 list</p>
+<ul>
+<li><p>独有方法：append/insert/pop/remove/clear/extend/reverse/sort</p></li>
+<li><p>公共方法：</p>
+<ul>
+<li>len / 索引 / 切片 / 步长 / for循环 / 删除 / 更新</li>
+</ul></li>
+<li><p>强制转换：</p>
+<ul>
+<li><p>list(&quot;Joney&quot;)</p>
+<pre><code><code>v1 = list(&quot;Joney&quot;)
+print(v1) # [&#39;J&#39;, &#39;o&#39;, &#39;n&#39;, &#39;e&#39;, &#39;y&#39;]</code></pre></li>
+<li><p>list( (11,22,33,44,) )</p>
+<pre><code><code>v1 = list( (11,22,33,44,) )
+print(v1) # [11, 22, 33, 44]</code></pre></li>
+</ul></li>
+</ul></li>
+<li><p>元组 tuple</p>
+<ul>
+<li><p>独有方法【无】</p></li>
+<li><p>公共方法：</p>
+<ul>
+<li>len / 索引 / 切片 / 步长 / for循环 / 删除【无】 / 更新【无】</li>
+</ul></li>
+<li><p>强制转换：</p>
+<ul>
+<li><p>tuple('Joney')</p>
+<pre><code><code>v1 = tuple(&#39;Joney&#39;)
+print(v1) # (&#39;J&#39;, &#39;o&#39;, &#39;n&#39;, &#39;e&#39;, &#39;y&#39;)</code></pre></li>
+<li><p>tuple([11,22,33,44])</p>
+<pre><code><code>v1 = tuple([11,22,33,44])
+print(v1) # (11, 22, 33, 44)</code></pre></li>
+</ul></li>
+</ul></li>
+<li><p>字典 dict</p>
+<ul>
+<li>独有方法：keys/values/items/get/pop/update</li>
+<li>公共方法：
+<ul>
+<li>len / 索引 / 切片【无】 / 步长【无】 / for循环 / 修改（存在就修改/不存在就增加） / 删除</li>
+</ul></li>
+</ul></li>
+<li><p>集合 set</p>
+<ul>
+<li>独有方法：add / discard / update / intersection / union / difference / symmetric_difference</li>
+<li>公共方法：len / for循环 / 索引【无】 / 步长【无】 / 切片【无】 / 删除【无】 / 修改【无】</li>
+</ul></li>
+</ul>
+<h4 id="持续更新">持续更新</h4>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

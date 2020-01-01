@@ -1,0 +1,134 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修springcloud-eureka高可用集群搭建' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>springcloud-eureka高可用集群搭建</center></div><div class='banquan'>原文出处:本文由博客园博主知识追寻者提供。<br/>
+原文连接:https://www.cnblogs.com/zszxz/p/12079051.html</div><br>
+    <h1 id="一-前言">一 前言</h1>
+<p>eureka作为注册中心，其充当着服务注册与发现功能，加载负载均衡；若在项目运行中eureka挂了，那么整个服务整体都会暂停，所以为服务运行的安全性，有必要搭建eureka集群；当其中一个eureka节点挂了，我们还有另外的节点可用；本篇文章的核心是如何在idea上运行eureka集群，和项目部署；需注意的jdk版本是1.8，高于jdk1.8打包部署会出问题，需要引入其他依赖；</p>
+<h1 id="二-eureka-server配置文件改造">二 eureka-server配置文件改造</h1>
+<p>之前的配置文件如下，这是单个eureka-server的配置，并不能满足于我们实际项目需求，我们要将其改造成高可用的集群节点模式；</p>
+<pre><code><code>server:
+  port: 10086
+
+eureka:
+  instance:
+    hostname: localhost
+  client:
+    # 作为server，表示禁止向自己注册
+    register-with-eureka: false
+    fetch-registry: false
+    service-url:
+      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+</code></pre>
+<p>改造配置文件如下，之前的文章中我们了解了eureka的peer to peer 交流机制，我们现在就根据这个原理搭建高可用的eureka集群，在配置文件中可以看见知识追寻者配置了3个peer（peer1,peer2,peer3）； 它们的端口分别是10081,10082,10083; peer1,分别向 peer2,peer3注册，peer2则向 peer1,peer3注册，peer3同理；这样就构成了eureka简单的3个节点集群；</p>
+<pre><code><code>spring:
+  application:
+    name: eureka-server-cluster
+---
+spring:
+  profiles: peer1
+server:
+  port: 10081
+eureka:
+  instance:
+    hostname: peer1
+  client:
+    service-url:
+      # 向peer2 peer3节点注册自己
+      defaultZone: http://peer2:10082/eureka,http://peer3:10083/eureka
+
+---
+spring:
+  profiles: peer2
+server:
+  port: 10082
+eureka:
+  instance:
+    hostname: peer2
+  client:
+    service-url:
+      # 向peer1 pee3节点注册自己
+      defaultZone: http://peer1:10081/eureka,http://peer3:10083/eureka
+
+---
+spring:
+  profiles: peer3
+server:
+  port: 10083
+eureka:
+  instance:
+    hostname: peer3
+  client:
+    service-url:
+      # 向peer1 peer2节点注册自己
+      defaultZone: http://peer1:10081/eureka,http://peer2:10082/eureka</code></pre>
+<h1 id="三-eureka-client配置文件改造">三 eureka-client配置文件改造</h1>
+<p>在之前的基础上多添加了注册server节点 peer2,peer3</p>
+<pre><code><code>server:
+  port: 8090
+
+spring:
+  application:
+    name: eureka-client # 应用名称
+
+eureka:
+  client:
+    service-url:
+      # 服务注册地址
+      defaultZone: http://peer1:10081/eureka/,http://peer2:10082/eureka/,http://peer3:10083/eureka/</code></pre>
+<h1 id="四-host文件修改">四 host文件修改</h1>
+<p>修改host文件目的是peer对应ip地址，实际项目中 每个peer节点都是一个ip地址；</p>
+<pre><code><code>192.168.0.101 peer1
+192.168.0.101 peer2
+192.168.0.101 peer3</code></pre>
+<h1 id="五-复制启动配置">五 复制启动配置</h1>
+<p>复制配置如下：点击 cpoy configuration 选项；<br />
+<img src="./images/springcloud-eureka高可用集群搭建0.png" alt="在这里插入图片描述" /></p>
+<p>进入编辑状态，修改 name 为 EurekaServer(1), 激活的配置文件选项 填 peer1；以此类推，我们复制三个实例； 分别是 EurekaServer(1)，EurekaServer(2)，EurekaServer(3)；分别激活配置 peer2,peer2,peer3;<br />
+<img src="./images/springcloud-eureka高可用集群搭建1.png" alt="在这里插入图片描述" /></p>
+<h1 id="六-启动-eureka-server">六 启动 eureka-server</h1>
+<p>分别启动三个配置实例，图如下；</p>
+<p><img src="./images/springcloud-eureka高可用集群搭建2.png" alt="在这里插入图片描述" /><br />
+浏览器输入 <a href="http://localhost:10083/" class="uri">http://localhost:10083/</a> 或者 <a href="http://localhost:10082/" class="uri">http://localhost:10082/</a> 或者 <a href="http://localhost:10081/；结果如下，知识追寻者在浏览器输入的" class="uri">http://localhost:10081/；结果如下，知识追寻者在浏览器输入的</a> peer3地址，那么 对应的复制的Node 是 peer2,peer1；server有三个；</p>
+<p><img src="./images/springcloud-eureka高可用集群搭建3.png" alt="在这里插入图片描述" /></p>
+<h1 id="七-启动-eureka-client">七 启动 eureka-client</h1>
+<p>启动eureka client 图如下<br />
+<img src="./images/springcloud-eureka高可用集群搭建4.png" alt="在这里插入图片描述" /><br />
+刷新浏览器界面，可以看见 client 已经注册到 server；</p>
+<p><img src="./images/springcloud-eureka高可用集群搭建5.png" alt="在这里插入图片描述" /></p>
+<h1 id="八-打包部署">八 打包部署</h1>
+<p>进入 eureka-server 工程目录 执行 打包命令 mvn clean package</p>
+<p><img src="./images/springcloud-eureka高可用集群搭建6.png" alt="在这里插入图片描述" /></p>
+<p>打开三个命令行分别执行对应的命令，一个cmd一条；</p>
+<pre><code><code>java -jar eureka-server-1.0.0-SNAPSHOT.jar --spring.profiles.active=peer1 
+java -jar eureka-server-1.0.0-SNAPSHOT.jar --spring.profiles.active=peer2
+java -jar eureka-server-1.0.0-SNAPSHOT.jar --spring.profiles.active=peer3</code></pre>
+<p>pee3 如下<br />
+<img src="./images/springcloud-eureka高可用集群搭建7.png" alt="在这里插入图片描述" /></p>
+<p>浏览器页面如下：</p>
+<p><img src="./images/springcloud-eureka高可用集群搭建8.png" alt="在这里插入图片描述" /></p>
+<h1 id="九-多-profile运行注意事项">九 多 profile运行注意事项</h1>
+<p>如下 配置文件 不写在src/main/resources一个 application 中，而是分为 application-peer1.yml, application-peer2.yml, application-peer3.yml ; 在 idea 的虚拟机参数（VM Options）配置 是<br />
+-Dspring.profiles.active=peer1 ， -Dspring.profiles.active=peer2 ，-Dspring.profiles.active=peer3；部署方式相同；也可以通过 mvn spring-boot:run -Dspring.profiles.active=peer1 的形式运行；</p>
+<p><img src="./images/springcloud-eureka高可用集群搭建9.png" alt="在这里插入图片描述" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

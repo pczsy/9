@@ -1,0 +1,155 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python序列的深拷贝和浅拷贝' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python序列的深拷贝和浅拷贝</center></div><div class='banquan'>原文出处:本文由博客园博主BRYANT_2019提供。<br/>
+原文连接:https://www.cnblogs.com/bryant24/p/11425094.html</div><br>
+    <ul>
+<li><strong>python中的不可变类型</strong></li>
+</ul>
+<p>　　　　列举：数值，字符串、元组、字节串</p>
+<ul>
+<li style="list-style-type: none;">
+<ul>
+<li>数值及字符串&ldquo;可变&rdquo;'的假象</li>
+</ul>
+</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code>num = 123<span style="color: #000000;">
+mystr </span>= <span style="color: #800000;">'</span><span style="color: #800000;">abc</span><span style="color: #800000;">'</span>
+<span style="color: #0000ff;">print</span><span style="color: #000000;">(id(num), num)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(mystr), mystr)
+num </span>= 456<span style="color: #000000;">
+mystr </span>= <span style="color: #800000;">'</span><span style="color: #800000;">def</span><span style="color: #800000;">'</span>
+<span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">修改后...</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(num), num)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(mystr), mystr)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 结果：</span>
+140704113688128 123
+1853358409744<span style="color: #000000;"> abc
+修改...
+</span>1853359869712 456
+1853361326544 <span style="color: #0000ff;">def</span></pre>
+</div>
+<p>　　　　表面上是对变量的修改，其实质是重新建立了对象，将引用赋给了变量，原来的对象被系统回收。</p>
+<ul>
+<li><strong>python中的可变类型</strong></li>
+</ul>
+<p>　　　　列举: 列表、字典、字节数组、对象</p>
+<ul>
+<li><strong>浅拷贝</strong></li>
+</ul>
+<p>　　　　浅拷贝只拷贝可变类型的引用，在拷贝后的对象中对可变类型的修改会影响到原对象。</p>
+<p>　　　　有几种方式实现：</p>
+<p>　　　　1. 完全切片操作</p>
+<p>　　　　2. 利用系统函数list(), dict()</p>
+<p>　　　　3. 利用copy模块的copy函数</p>
+<div class="cnblogs_code">
+<pre><code>ll = [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+la </span>=<span style="color: #000000;"> copy(ll)
+lb </span>=<span style="color: #000000;"> copy(ll)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(ll), ll)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(la), la)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(lb), lb)
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">change...</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+la[0] </span>= <span style="color: #800000;">'</span><span style="color: #800000;">zhang</span><span style="color: #800000;">'</span><span style="color: #000000;">
+la[</span>1][0] = <span style="color: #800000;">'</span><span style="color: #800000;">usa</span><span style="color: #800000;">'</span><span style="color: #000000;">
+la[</span>1][1] = 40
+<span style="color: #0000ff;">print</span><span style="color: #000000;">(id(ll), ll)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(la), la)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(lb), lb)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 结果：</span>
+3006259174856 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+</span>3006259174536 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+</span>3006259174600 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+change...
+</span>3006259174856 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">usa</span><span style="color: #800000;">'</span>, 40<span style="color: #000000;">]]
+</span>3006259174536 [<span style="color: #800000;">'</span><span style="color: #800000;">zhang</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">usa</span><span style="color: #800000;">'</span>, 40<span style="color: #000000;">]]
+</span>3006259174600 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">usa</span><span style="color: #800000;">'</span>, 40<span style="color: #000000;">]]
+        </span></pre>
+</div>
+<ul>
+<li><strong>深拷贝</strong></li>
+</ul>
+<p>　　对比浅拷贝，深拷贝利用copy模块的deepcopy()函数会完全拷贝出独立的对象来。</p>
+<div class="cnblogs_code">
+<pre><code>ll = [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+la </span>=<span style="color: #000000;"> deepcopy(ll)
+lb </span>=<span style="color: #000000;"> deepcopy(ll)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(ll), ll)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(la), la)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(lb), lb)
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">change...</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+la[0] </span>= <span style="color: #800000;">'</span><span style="color: #800000;">zhang</span><span style="color: #800000;">'</span><span style="color: #000000;">
+la[</span>1][0] = <span style="color: #800000;">'</span><span style="color: #800000;">usa</span><span style="color: #800000;">'</span><span style="color: #000000;">
+la[</span>1][1] = 40<span style="color: #000000;">
+lb[0] </span>= <span style="color: #800000;">'</span><span style="color: #800000;">wang</span><span style="color: #800000;">'</span><span style="color: #000000;">
+lb[</span>1][0] = <span style="color: #800000;">'</span><span style="color: #800000;">japan</span><span style="color: #800000;">'</span><span style="color: #000000;">
+lb[</span>1][1] = 49
+<span style="color: #0000ff;">print</span><span style="color: #000000;">(id(ll), ll)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(la), la)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(id(lb), lb)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 结果：</span>
+1957762145864 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+</span>1957762145544 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+</span>1957762145672 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+change...
+</span>1957762145864 [<span style="color: #800000;">'</span><span style="color: #800000;">xiao</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">china</span><span style="color: #800000;">'</span>, 32<span style="color: #000000;">]]
+</span>1957762145544 [<span style="color: #800000;">'</span><span style="color: #800000;">zhang</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">usa</span><span style="color: #800000;">'</span>, 40<span style="color: #000000;">]]
+</span>1957762145672 [<span style="color: #800000;">'</span><span style="color: #800000;">wang</span><span style="color: #800000;">'</span>, [<span style="color: #800000;">'</span><span style="color: #800000;">japan</span><span style="color: #800000;">'</span>, 49]]</pre>
+</div>
+<p>&nbsp;</p>
+<ul>
+<li><strong>意外发现</strong></li>
+</ul>
+<p>　　　　元组中的列表不可以修改吗？</p>
+<div class="cnblogs_code">
+<pre><code>tt = (12, 33, [44, 55, 66<span style="color: #000000;">])
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(tt)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 修改</span>
+tt[2][0] =<span style="color: #000000;"> 0
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(tt)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 结果：</span>
+(12, 33, [44, 55, 66<span style="color: #000000;">])
+(</span>12, 33, [0, 55, 66<span style="color: #000000;">])
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"># 元组中的元素tt[2]不可更改为其他内容，单列表中的元素可以随意修改。</span></pre>
+</div>
+<p>　　　　列表中的元组可以修改吗？</p>
+<div class="cnblogs_code">
+<pre><code>dd = [1, 2, 3, 4, (7, 8, 9<span style="color: #000000;">)]
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(dd)
+dd[</span>4] =<span style="color: #000000;"> 0
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(dd)
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 结果：</span>
+[1, 2, 3, 4, (7, 8, 9<span style="color: #000000;">)]
+[</span>1, 2, 3, 4<span style="color: #000000;">, 0]
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"># 列表中元组内容不可修改，但dd[4]的值可修改。</span></pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

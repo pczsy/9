@@ -1,0 +1,125 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python+unittest框架第五天unittest之批量执行案例' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python+unittest框架第五天unittest之批量执行案例</center></div><div class='banquan'>原文出处:本文由博客园博主我是大刘啊提供。<br/>
+原文连接:https://www.cnblogs.com/woshidaliua/p/11397346.html</div><br>
+    <p>　　今天开始批量执行用例~，场景是这样的:</p>
+<p>工作中我们可能有多个模块文件（.py）这些文件根据不同的业务类型或功能，测试案例分布在不同的模块文件下。前面的小示例中，我们的测试用例都是在一个文件中，直接运行的测试套件~，开发阶段或者调试阶段这样做是没毛病的，但是如果是测试运行阶段，我们不可能这个模块文件下的用例执行完毕后，切换另一个模块中的用例继续执行。所以我们需要用的批量执行多个模块文件的测试用例。</p>
+<p>&nbsp;</p>
+<p>首先第一个用例模块的案例是这样的~</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">import</span> unittest               <span style="color: #008000;">#</span><span style="color: #008000;">导入unittest库</span>
+<span style="color: #008080;"> 2</span> <span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span> webdriver    <span style="color: #008000;">#</span><span style="color: #008000;">导入自动化测试selenium中的webdriver</span>
+<span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> <span style="color: #0000ff;">class</span> baidu_test_1(unittest.TestCase):   <span style="color: #008000;">#</span><span style="color: #008000;">写一个baidu_test_1 类，继承unittest中的TestCase类</span>
+<span style="color: #008080;"> 5</span> 
+<span style="color: #008080;"> 6</span>     @classmethod        <span style="color: #008000;">#</span><span style="color: #008000;">方便我们直接调用，不需要实例化类的对象直接调用</span>
+<span style="color: #008080;"> 7</span>     <span style="color: #0000ff;">def</span> setUp(cls):     <span style="color: #008000;">#</span><span style="color: #008000;">所有案例执行前，都先执行该方法，初始化</span>
+<span style="color: #008080;"> 8</span>         cls.driver = webdriver.Chrome()    <span style="color: #008000;">#</span><span style="color: #008000;">实例化一个webdriver对象</span>
+<span style="color: #008080;"> 9</span>         cls.driver.maximize_window()      <span style="color: #008000;">#</span><span style="color: #008000;">最大化浏览器窗口</span>
+<span style="color: #008080;">10</span>         cls.driver.implicitly_wait(15)    <span style="color: #008000;">#</span><span style="color: #008000;">页面加载慢的情况，我们设置等待时长15秒</span>
+<span style="color: #008080;">11</span>         cls.driver.get(r<span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com</span><span style="color: #800000;">'</span>)     <span style="color: #008000;">#</span><span style="color: #008000;">打开百度的首页</span>
+<span style="color: #008080;">12</span> 
+<span style="color: #008080;">13</span> <span style="color: #000000;">    @classmethod
+</span><span style="color: #008080;">14</span>     <span style="color: #0000ff;">def</span> tearDown(cls):     <span style="color: #008000;">#</span><span style="color: #008000;">所有案例执行后，执行该方法</span>
+<span style="color: #008080;">15</span>         cls.driver.quit()     <span style="color: #008000;">#</span><span style="color: #008000;">关闭浏览器</span>
+<span style="color: #008080;">16</span> 
+<span style="color: #008080;">17</span>     <span style="color: #800000;">'''</span><span style="color: #800000;">测试用例</span><span style="color: #800000;">'''</span>
+<span style="color: #008080;">18</span>     <span style="color: #0000ff;">def</span> test_baidu_lianjie(self):    <span style="color: #008000;">#</span><span style="color: #008000;">百度链接测试的用例</span>
+<span style="color: #008080;">19</span>         <span style="color: #800000;">'''</span><span style="color: #800000;">百度首页：测试新闻链接，跳转后的链接地址是否正确</span><span style="color: #800000;">'''</span>
+<span style="color: #008080;">20</span>         self.driver.find_element_by_link_text(<span style="color: #800000;">'</span><span style="color: #800000;">新闻</span><span style="color: #800000;">'</span>).click()  <span style="color: #008000;">#</span><span style="color: #008000;">点击新闻链接后，获取新闻链接：self.driver.current_url</span>
+<span style="color: #008080;">21</span>         self.assertEqual(self.driver.current_url,<span style="color: #800000;">'</span><span style="color: #800000;">http://news.baidu.com/</span><span style="color: #800000;">'</span>)   <span style="color: #008000;">#</span><span style="color: #008000;">用获取到的链接，和实际链接做对比，看是不是相等</span>
+<span style="color: #008080;">22</span> 
+<span style="color: #008080;">23</span> <span style="color: #800000;">'''</span><span style="color: #800000;">if __name__ == '__main__'的意思是：当.py文件被直接运行时，if __name__ == '__main__'之下的代码块将被运行；
+</span><span style="color: #008080;">24</span> <span style="color: #800000;">当.py文件以模块形式被导入时，if __name__ == '__main__'之下的代码块不被运行。</span><span style="color: #800000;">'''</span>
+<span style="color: #008080;">25</span> <span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+</span><span style="color: #008080;">26</span>     unittest.main(verbosity=2)</pre>
+</div>
+<p>接下来是第二个用例模块的代码：</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">import</span><span style="color: #000000;"> unittest
+</span><span style="color: #008080;"> 2</span> <span style="color: #0000ff;">from</span> selenium <span style="color: #0000ff;">import</span><span style="color: #000000;"> webdriver
+</span><span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> baidu_test_2(unittest.TestCase):
+</span><span style="color: #008080;"> 5</span> <span style="color: #000000;">    @classmethod
+</span><span style="color: #008080;"> 6</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> setUp(cls):
+</span><span style="color: #008080;"> 7</span>         cls.driver=<span style="color: #000000;">webdriver.Chrome()
+</span><span style="color: #008080;"> 8</span> <span style="color: #000000;">        cls.driver.maximize_window()
+</span><span style="color: #008080;"> 9</span>         cls.driver.implicitly_wait(15<span style="color: #000000;">)
+</span><span style="color: #008080;">10</span>         cls.driver.get(r<span style="color: #800000;">'</span><span style="color: #800000;">http://www.baidu.com</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">11</span> 
+<span style="color: #008080;">12</span> <span style="color: #000000;">    @classmethod
+</span><span style="color: #008080;">13</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> tearDown(cls):
+</span><span style="color: #008080;">14</span> <span style="color: #000000;">        cls.driver.quit()
+</span><span style="color: #008080;">15</span> 
+<span style="color: #008080;">16</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> test_baidu_enabled(self):
+</span><span style="color: #008080;">17</span>         so=self.driver.find_element_by_id(<span style="color: #800000;">'</span><span style="color: #800000;">kw</span><span style="color: #800000;">'</span>)    <span style="color: #008000;">#</span><span style="color: #008000;">检查元素是否可编辑用is_enabled()，可以编辑返回的是True</span>
+<span style="color: #008080;">18</span>         self.assertTrue(so.is_enabled())   <span style="color: #008000;">#</span><span style="color: #008000;">如果返回的是True，那么就是真真为真~通过</span>
+<span style="color: #008080;">19</span> 
+<span style="color: #008080;">20</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> test_baidu_sousuo(self):
+</span><span style="color: #008080;">21</span>         so = self.driver.find_element_by_id(<span style="color: #800000;">'</span><span style="color: #800000;">kw</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">22</span>         so.send_keys(<span style="color: #800000;">'</span><span style="color: #800000;">你好中国</span><span style="color: #800000;">'</span>)  <span style="color: #008000;">#</span><span style="color: #008000;">上面的代码选择了输入框，这是输入：send_keys()</span>
+<span style="color: #008080;">23</span>         self.driver.find_element_by_id(<span style="color: #800000;">'</span><span style="color: #800000;">su</span><span style="color: #800000;">'</span>).click()   <span style="color: #008000;">#</span><span style="color: #008000;">该方法是模拟点击操作click()</span>
+<span style="color: #008080;">24</span>         <span style="color: #0000ff;">print</span>(so.get_attribute(<span style="color: #800000;">'</span><span style="color: #800000;">value</span><span style="color: #800000;">'</span>))     <span style="color: #008000;">#</span><span style="color: #008000;">根据属性获取表单中的值get_attribute('value')</span>
+<span style="color: #008080;">25</span>         self.assertEqual(so.get_attribute(<span style="color: #800000;">'</span><span style="color: #800000;">value</span><span style="color: #800000;">'</span>),<span style="color: #800000;">'</span><span style="color: #800000;">你好中国</span><span style="color: #800000;">'</span>)       <span style="color: #008000;">#</span><span style="color: #008000;">我们用获取到的值，和我们预期的值做对比，看是否相等</span>
+<span style="color: #008080;">26</span> 
+<span style="color: #008080;">27</span> <span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+</span><span style="color: #008080;">28</span>     unittest.main(verbosity=2)</pre>
+</div>
+<p>&nbsp;</p>
+<p>注意：测试模块的名称，前面需要统一，看图：两个测试用例模块文件的名字前面都是test_&nbsp; 开头</p>
+<p><img src="./images/python+unittest框架第五天unittest之批量执行案例0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>接下来就是最后一个模块文件的代码，批量执行用例模块中的代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">import</span> unittest    <span style="color: #008000;">#</span><span style="color: #008000;">导入unittest</span>
+<span style="color: #008080;"> 2</span> <span style="color: #0000ff;">import</span> os       <span style="color: #008000;">#</span><span style="color: #008000;">导入前面学习的os库，方便获取文件路径</span>
+<span style="color: #008080;"> 3</span> 
+<span style="color: #008080;"> 4</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> allTests():
+</span><span style="color: #008080;"> 5</span>     suite=unittest.TestLoader().discover(            <span style="color: #008000;">#</span><span style="color: #008000;">实例化测试套件</span>
+<span style="color: #008080;"> 6</span>         start_dir=os.path.dirname(<span style="color: #800080;">__file__</span>),         <span style="color: #008000;">#</span><span style="color: #008000;">start_dir=该参数是discover()方法中的，后面的参数是需要批量执行的用例模块路径</span>
+<span style="color: #008080;"> 7</span>         pattern=<span style="color: #800000;">'</span><span style="color: #800000;">test_*.py</span><span style="color: #800000;">'</span>,                         <span style="color: #008000;">#</span><span style="color: #008000;">pattern=该参数是discover()方法中的，后面的参数是所有需要执行的用例前面是test_，后半部分用*号代替的.py文件</span>
+<span style="color: #008080;"> 8</span>         top_level_dir=None)                          <span style="color: #008000;">#</span><span style="color: #008000;">top_level_dir=该参数是discover()方法中的，固定格式：top_level_dir=None</span>
+<span style="color: #008080;"> 9</span>     <span style="color: #0000ff;">return</span> suite                                     <span style="color: #008000;">#</span><span style="color: #008000;">记住返回测试套件</span>
+<span style="color: #008080;">10</span> 
+<span style="color: #008080;">11</span> <span style="color: #0000ff;">def</span> run():                                           <span style="color: #008000;">#</span><span style="color: #008000;">运行</span>
+<span style="color: #008080;">12</span>     unittest.TextTestRunner(verbosity=2).run(allTests())           <span style="color: #008000;">#</span><span style="color: #008000;">测试报告</span>
+<span style="color: #008080;">13</span> 
+<span style="color: #008080;">14</span> <span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+</span><span style="color: #008080;">15</span>     run()</pre>
+</div>
+<p><img src="./images/python+unittest框架第五天unittest之批量执行案例1.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>批量执行就是这样的~~~~</p>
+<p>总结：</p>
+<pre><code>1、 #检查元素是否可编辑用is_enabled()，可以编辑返回的是True，否则是Flase<br />2、在编辑框中输入内容用：send_keys()<br />3、点击按钮的操作可以用：click()<br />4、根据属性获取表单中的值get_attribute('value')   比如搜索中的内容<br />5、获取当前页面的url链接地址： driver.current_url   来判断我们跳转的页面是否正确<br />6、批量执行用例用到的unitest库中的TestLoader()类，该类中的discover(start_dir, pattern=&rsquo;test*.py&rsquo;, top_level_dir=None)方法<br /><br />discover中可以看出有三个参数：以下是百度给大家的轮子~~~自行学习<br /><br /></pre>
+<div>start_dir ：要测试的模块名或测试用例目录。</div>
+<div>pattern='test*.py' ：表示用例文件名的匹配原则。星号&ldquo;*&rdquo;表示任意多个字符。（test*.py是以test开头）</div>
+<div>top_level_dir=None：测试模块的顶层目录。如果没顶层目录（也就是说测试用例不是放在多级目录中），默认为 None。<br />原文链接：https://blog.csdn.net/weixin_40569991/article/details/81155145</div>
+<pre><code>-------------来自自学的总结，希望对大家有帮助，不会的朋友可以留言，一起进步~~~~~秋天来了，注意季节转换，容易生病~~~~~~贴秋膘</pre>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

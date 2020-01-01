@@ -1,0 +1,227 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Jest前端测试框架入门' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Jest前端测试框架入门</center></div><div class='banquan'>原文出处:本文由博客园博主奔跑的瓜牛提供。<br/>
+原文连接:https://www.cnblogs.com/chenwenhao/p/12007184.html</div><br>
+    <p>近年来，随着前端工程化的发展，前端发生了翻天覆地的变化。jQuery已经慢慢淡出了我们的视野，React、Vue和anglur三驾马车急速驶来。从此，前端进入了数据驱动的时代，也有了清晰的模块化开发的方式。随之而来的就是如何去保证自己的代码的正确性。</p>
+<h3 id="为什么需要前端自动化测试">为什么需要前端自动化测试</h3>
+<p>编写测试代码要在正是写代码前进行的，它就相当于具体明确的需求文档。之后我们写的代码如果能通过测试代码就证明是符合预期的。</p>
+<p>除此之外，由于一个项目需要多人维护，也许别人不小心改动了你的代码就会导致新的问题。所以提交代码前需要跑一遍测试用例，确保自己没有改动别人的逻辑。如果有改动别人的代码，一定要弄清楚这样改动会不会产生新的问题，最后记得把测试用例代码也要改下。</p>
+<p>前端测试工具也和前端的框架一样纷繁复杂，其中常见的测试工具，大致可分为测试框架、断言库、测试覆盖率工具等几类。在正式开始本文之前，我们先来大致了解下它们：</p>
+<h4 id="测试框架">测试框架</h4>
+<p>测试框架的作用是提供一些方便的语法来描述测试用例，以及对用例进行分组。</p>
+<p>测试框架可分为两种： TDD （测试驱动开发）和 BDD （行为驱动开发），我理解两者间的区别主要是一些语法上的不同，其中 BDD 提供了提供了可读性更好的用例语法，至于详细的区别可参见 <a href="http://joshldavis.com/2013/05/27/difference-between-tdd-and-bdd/">The Difference Between TDD and BDD</a> 一文。</p>
+<p>常见的测试框架有 <a href="https://jasmine.github.io/">Jasmine</a>, <a href="https://mochajs.org/">Mocha</a> 以及本文要介绍的 <a href="http://facebook.github.io/jest/zh-Hans/">Jest</a> 。</p>
+<h4 id="断言库">断言库</h4>
+<p>断言库主要提供语义化方法，用于对参与测试的值做各种各样的判断。这些语义化方法会返回测试的结果，要么成功、要么失败。常见的断言库有 <a href="https://shouldjs.github.io/">Should.js</a>, <a href="http://chaijs.com/">Chai.js</a> 等。</p>
+<h4 id="测试覆盖率工具">测试覆盖率工具</h4>
+<p>用于统计测试用例对代码的测试情况，生成相应的报表，比如 <a href="https://github.com/gotwarlost/istanbul">istanbul</a> 。</p>
+<h3 id="jest">Jest</h3>
+<h4 id="为什么选择jest">为什么选择Jest？</h4>
+<p>Jest 是 Facebook 出品的一个测试框架，相对其他测试框架，其一大特点就是就是内置了常用的测试工具，比如自带断言、测试覆盖率工具，实现了开箱即用。</p>
+<p>而作为一个面向前端的测试框架， Jest 可以利用其特有的<a href="http://facebook.github.io/jest/docs/zh-Hans/snapshot-testing.html#content">快照测试</a>功能，通过比对 UI 代码生成的快照文件，实现对 React 等常见框架的自动测试。</p>
+<p>此外， Jest 的测试用例是并行执行的，而且只执行发生改变的文件所对应的测试，提升了测试速度。目前在 Github 上其 star 数已经破两万；而除了 Facebook 外，业内其他公司也开始从其它测试框架转向 Jest ，比如 <a href="https://medium.com/airbnb-engineering/unlocking-test-performance-migrating-from-mocha-to-jest-2796c508ec50">Airbnb 的尝试</a> ，相信未来 Jest 的发展趋势仍会比较迅猛。</p>
+<h4 id="安装">安装</h4>
+<p>Jest 可以通过 npm 或 yarn 进行安装。以 npm 为例，既可用<code>npm install -g jest</code>进行全局安装；也可以只局部安装、并在 package.json 中指定 test 脚本：</p>
+<pre><code><code>{
+  &quot;scripts&quot;: {
+    &quot;test&quot;: &quot;jest&quot;
+  }
+}</code></pre>
+<p>Jest 的测试脚本名形如<code>*.test.js</code>，不论 Jest 是全局运行还是通过<code>npm run test</code>运行，它都会<strong>执行当前目录下所有的<code>*.test.js</code> 或 <code>*.spec.js</code> 文件</strong>、完成测试。</p>
+<h4 id="用法">用法</h4>
+<p>具体用法参考<a href="https://jestjs.io/">JEST官网</a>，我们这里只是简单介绍几个常规用法。</p>
+<h5 id="用例的表示">用例的表示</h5>
+<p>表示测试用例是一个测试框架提供的最基本的 API ， Jest 内部使用了 Jasmine 2 来进行测试，故其用例语法与 Jasmine 相同。<code>test()</code>函数来描述一个测试用例，举个简单的例子：</p>
+<pre><code><code>// hello.js
+module.exports = () =&gt; &#39;Hello world&#39;</code></pre>
+<pre><code><code>// hello.test.js
+let hello = require(&#39;hello.js&#39;)
+
+test(&#39;should get &quot;Hello world&quot;&#39;, () =&gt; {
+    expect(hello()).toBe(&#39;Hello world&#39;) // 测试成功
+    // expect(hello()).toBe(&#39;Hello&#39;) // 测试失败
+})</code></pre>
+<p>其中<code>toBe('Hello world')</code>便是一句断言（ Jest 管它叫 “matcher” ，想了解更多 matcher 请参考<a href="https://jestjs.io/docs/en/using-matchers">文档</a>）。写完了用例，运行在项目目录下执行<code>npm test</code>，即可看到测试结果。</p>
+<h5 id="用例的预处理或后处理">用例的预处理或后处理</h5>
+<p>有时我们想在测试开始之前进行下环境的检查、或者在测试结束之后作一些清理操作，这就需要对用例进行预处理或后处理。对测试文件中所有的用例进行统一的预处理，可以使用 <code>beforeAll()</code> 函数；而如果想在每个用例开始前进行都预处理，则可使用 <code>beforeEach()</code> 函数。至于后处理，也有对应的 <code>afterAll()</code> 和 <code>afterEach()</code> 函数。</p>
+<p>如果只是想对某几个用例进行同样的预处理或后处理，可以将先将这几个用例归为一组。<strong>使用 <code>describe()</code> 函数即可表示一组用例</strong>，再将上面提到的四个处理函数置于 <code>describe()</code> 的处理回调内，就实现了对一组用例的预处理或后处理：</p>
+<pre><code><code>describe(&#39;test testObject&#39;, () =&gt; {
+    beforeAll(() =&gt; {
+        // 预处理操作
+    })
+
+    test(&#39;is foo&#39;, () =&gt; {
+       expect(testObject.foo).toBeTruthy()
+    })
+
+    test(&#39;is not bar&#39;, () =&gt; {
+        expect(testObject.bar).toBeFalsy()
+    })
+
+    afterAll(() =&gt; {
+        // 后处理操作
+    })
+})</code></pre>
+<h5 id="测试异步代码">测试异步代码</h5>
+<p>异步代码的测试，关键点在于<strong>告知测试框架测试何时完成</strong>，让其在恰当的时机进行断言。随着Babel的盛行，前端的异步写法很多都是用 Promise 的形式了，这使得我们可以用 async/await 类似同步的方式写异步。下面看下如何针对这种写法测试：</p>
+<pre><code><code>// promiseHello.js
+module.exports = (name) =&gt; {
+    return new Promise((resolve) =&gt; {
+        setTimeout(() =&gt; resolve(`Hello ${name}`), 1000)
+    })
+}</code></pre>
+<pre><code><code>// promiseHello.test.js
+let promiseHello = require(&#39;promiseHello.js&#39;)
+
+test(&#39;should get &quot;Hello World&quot;&#39;, async () =&gt; {
+  const data = await promiseHello(&#39;World&#39;);
+  expect(data).toBe(&#39;Hello World&#39;);
+});
+
+test(&#39;the fetch fails with an error&#39;, async () =&gt; {
+  expect.assertions(1);
+  try {
+    const data = await promiseHello(&#39;World&#39;);
+    expect(data).toBe(&#39;Hello World&#39;);
+  } catch (e) {
+    expect(e).toMatch(&#39;error&#39;);
+  }
+});</code></pre>
+<h5 id="mock-functions">Mock Functions</h5>
+<p>Mock 函数允许你测试代码之间的连接——实现方式包括：擦除函数的实际实现、捕获对函数的调用 ( 以及在这些调用中传递的参数) 、在使用 <code>new</code> 实例化时捕获构造函数的实例、允许测试时配置返回值。</p>
+<p><strong>使用 mock 函数</strong></p>
+<p>假设我们要测试函数 <code>forEach</code> 的内部实现，这个函数为传入的数组中的每个元素调用一次回调函数。</p>
+<pre><code><code>function forEach(items, callback) {
+  for (let index = 0; index &lt; items.length; index++) {
+    callback(items[index]);
+  }
+}</code></pre>
+<p>为了测试此函数，我们可以使用一个 mock 函数，然后检查 mock 函数的状态来确保回调函数如期调用。</p>
+<pre><code><code>const mockCallback = jest.fn(x =&gt; 42 + x);
+forEach([0, 1], mockCallback);
+
+// 此 mock 函数被调用了两次
+expect(mockCallback.mock.calls.length).toBe(2);
+
+// 第一次调用函数时的第一个参数是 0
+expect(mockCallback.mock.calls[0][0]).toBe(0);
+
+// 第二次调用函数时的第一个参数是 1
+expect(mockCallback.mock.calls[1][0]).toBe(1);
+
+// 第一次函数调用的返回值是 42
+expect(mockCallback.mock.results[0].value).toBe(42);</code></pre>
+<p><strong><code>.mock</code>属性</strong></p>
+<p>所有的 mock 函数都有这个特殊的 <code>.mock</code>属性，它保存了关于此函数如何被调用、调用时的返回值的信息。</p>
+<pre><code><code>// The function was called exactly once
+expect(someMockFunction.mock.calls.length).toBe(1);
+
+// The first arg of the first call to the function was &#39;first arg&#39;
+expect(someMockFunction.mock.calls[0][0]).toBe(&#39;first arg&#39;);
+
+// The second arg of the first call to the function was &#39;second arg&#39;
+expect(someMockFunction.mock.calls[0][1]).toBe(&#39;second arg&#39;);
+
+// The return value of the first call to the function was &#39;return value&#39;
+expect(someMockFunction.mock.results[0].value).toBe(&#39;return value&#39;);
+
+// This function was instantiated exactly twice
+expect(someMockFunction.mock.instances.length).toBe(2);
+
+// The object returned by the first instantiation of this function
+// had a `name` property whose value was set to &#39;test&#39;
+expect(someMockFunction.mock.instances[0].name).toEqual(&#39;test&#39;);</code></pre>
+<p><strong>Mock 的返回值</strong></p>
+<p>Mock 函数也可以用于在测试期间将测试值注入代码︰</p>
+<pre><code><code>const myMock = jest.fn();
+console.log(myMock());
+// &gt; undefined
+
+myMock
+  .mockReturnValueOnce(10)
+  .mockReturnValueOnce(&#39;x&#39;)
+  .mockReturnValue(true);
+
+console.log(myMock(), myMock(), myMock(), myMock());
+// &gt; 10, &#39;x&#39;, true, true</code></pre>
+<p>在函数连续传递风格（functional continuation-passing style）的代码中时，Mock 函数也非常有效。 以这种代码风格有助于避免复杂的中间操作，便于直观表现组件的真实意图，这有利于在它们被调用之前，将值直接注入到测试中。</p>
+<pre><code><code>const filterTestFn = jest.fn();
+
+// Make the mock return `true` for the first call,
+// and `false` for the second call
+filterTestFn.mockReturnValueOnce(true).mockReturnValueOnce(false);
+
+const result = [11, 12].filter(num =&gt; filterTestFn(num));
+
+console.log(result);
+// &gt; [11]
+console.log(filterTestFn.mock.calls);
+// &gt; [ [11], [12] ]</code></pre>
+<p>大多数现实世界例子中，实际是在依赖的组件上配一个模拟函数并配置它，但手法是相同的。 在这些情况下，尽量避免在非真正想要进行测试的任何函数内实现逻辑。</p>
+<h5 id="mock模拟模块">Mock模拟模块</h5>
+<p>假定有个从 API 获取用户的类。 该类用 <a href="https://github.com/axios/axios">axios</a> 调用 API 然后返回 <code>data</code>，其中包含所有用户的属性：</p>
+<pre><code><code>// users.js
+import axios from &#39;axios&#39;;
+
+class Users {
+  static all() {
+    return axios.get(&#39;/users.json&#39;).then(resp =&gt; resp.data);
+  }
+}
+
+export default Users;</code></pre>
+<p>现在，为测试该方法而不调用实际 API (使测试变的缓慢与不稳定)，我们可以用 <code>jest.mock(...)</code> 函数自动模拟 axios 模块。</p>
+<p>一旦模拟axios模块，axios的返回结果就可以被我们随意模拟值。我们可为 <code>.get</code> 提供一个 <code>mockResolvedValue</code> ，它会返回假数据用于测试。 实际上，我们想让 axios.get('/users.json') 有个假的 response。</p>
+<pre><code><code>// users.test.js
+import axios from &#39;axios&#39;;
+import Users from &#39;./users&#39;;
+
+jest.mock(&#39;axios&#39;);  // mock模拟模块
+
+test(&#39;should fetch users&#39;, () =&gt; {
+  const users = [{name: &#39;Bob&#39;}];
+  const resp = {data: users};
+  axios.get.mockResolvedValue(resp);  // 模拟实际调用axios后的返回值
+
+  // or you could use the following depending on your use case:
+  // axios.get.mockImplementation(() =&gt; Promise.resolve(resp))
+
+  return Users.all().then(data =&gt; expect(data).toEqual(users));
+});</code></pre>
+<h3 id="前端自动化测试的价值">前端自动化测试的价值</h3>
+<p>近几年前端工程化的发展风起云涌，但是前端自动化测试这块内容大家却似乎不太重视。虽然项目迭代过程中会有专门的测试人员进行测试，但等他们来进行测试时，代码已经开发完成的状态。与之相比，如果我们在开发过程中就进行了测试，会有如下的好处：</p>
+<ul>
+<li>保障代码质量和功能的实现的完整度</li>
+<li>提升开发效率，在开发过程中进行测试能让我们提前发现 bug ，此时进行问题定位和修复的速度自然比开发完再被叫去修 bug 要快许多</li>
+<li>便于项目维护，后续任何代码更新也必须跑通测试用例，即使进行重构或开发人员发生变化也能保障预期功能的实现</li>
+</ul>
+<p>当然，凡事都有两面性，好处虽然明显，却并不是所有的项目都值得引入测试框架，毕竟维护测试用例也是需要成本的。对于一些需求频繁变更、复用性较低的内容，比如活动页面，让开发专门抽出人力来写测试用例确实得不偿失。</p>
+<ul>
+<li><p>需要长期维护的项目。它们需要测试来保障代码可维护性、功能的稳定性</p></li>
+<li><p>较为稳定的项目、或项目中较为稳定的部分。给它们写测试用例，维护成本低</p></li>
+<li><p>被多次复用的部分，比如一些通用组件和库函数。因为多处复用，更要保障质量</p></li>
+</ul>
+<p>参考：</p>
+<p><a href="https://juejin.im/post/597aa518f265da3e345f3262">前端测试框架 Jest</a></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

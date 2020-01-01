@@ -1,0 +1,393 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修中间件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>中间件</center></div><div class='banquan'>原文出处:本文由博客园博主yangguang668提供。<br/>
+原文连接:https://www.cnblogs.com/yangguang666/p/11688509.html</div><br>
+    <h3 id="中间件-middleware">中间件 middleware</h3>
+<h4 id="中间件的五个方法">中间件的五个方法</h4>
+<pre><code><code>中间件可以定义五个方法，分别是：（主要的是process_request和process_response）
+
+process_request(self,request)
+process_view(self, request, view_func, view_args, view_kwargs)
+process_template_response(self,request,response)
+process_exception(self, request, exception)
+process_response(self, request, response)</code></pre>
+<h4 id="定义">定义</h4>
+<pre><code><code>　中间件顾名思义，是介于request与response处理之间的一道处理过程，相对比较轻量级，并且在全局上改变django的输入与输出。因为改变的是全局，所以需要谨慎实用，用不好会影响到性能。</code></pre>
+<h4 id="settings配置中">settings配置中</h4>
+<pre><code><code>MIDDLEWARE = [
+    &#39;django.middleware.security.SecurityMiddleware&#39;,
+    &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;,
+    &#39;django.middleware.common.CommonMiddleware&#39;,
+    &#39;django.middleware.csrf.CsrfViewMiddleware&#39;,
+    &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;,
+    &#39;django.contrib.messages.middleware.MessageMiddleware&#39;,
+    &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;,
+]
+配置的是一个个路径，封装一些功能，相当于
+from django.middleware.security import SecurityMiddleware</code></pre>
+<h4 id="登录验证">登录验证</h4>
+<p>条件：只有登录成功才能访问各个页面，也就是无论点击哪里都跳转到登录界面</p>
+<p>用session时会报一个错误<br />
+<img src="./images/中间件0.png" /></p>
+<h4 id="low版本-装饰器版">low版本 装饰器版</h4>
+<p>views.py</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+
+# Create your views here.
+
+def wrapper(f):
+    def inner(request,*args,**kwargs):
+        status = request.session.get(&quot;is_login&quot;)
+        # 获取session的值，
+        if status:
+            return f(request,*args,**kwargs)
+        else:
+            return redirect(&quot;login&quot;)
+    return inner
+
+@wrapper
+def home(request):
+
+    return render(request,&quot;home.html&quot;)
+
+def login(request):
+    if request.method == &quot;GET&quot;:
+        return render(request,&quot;login.html&quot;)
+    else:
+        user = request.POST.get(&quot;username&quot;)
+        pwd = request.POST.get(&quot;password&quot;)
+        if user == &quot;alex&quot; and pwd == &quot;123&quot;:
+            request.session[&quot;is_login&quot;] = True
+            return redirect(&quot;home&quot;)
+        else:
+            return redirect(&quot;login&quot;)
+
+@wrapper
+def index(request):
+    return render(request,&quot;index.html&quot;)</code></pre>
+<h4 id="高级版">高级版</h4>
+<p>1.设置自定义中间件</p>
+<p>在应用app01中</p>
+<p>在应用app01中创建一个包，随便起名字，一般都放在一个叫做utils的包里面，表示一个公用的组件，创建一个py文件，随便起名字，例如叫做：middlewares.py，内容如下</p>
+<pre><code><code>from django.utils.deprecation import MiddlewareMixin
+
+class LoginAuth(MiddlewareMixin):
+    #请求来了，自动执行
+    def process_request(self,request):
+        print(&quot;请求来了&quot;)</code></pre>
+<p><img src="./images/中间件1.png" /></p>
+<p>然后去settings中的MIDDLEWARE中设置中间件地址</p>
+<pre><code><code>MIDDLEWARE = [
+    &#39;django.middleware.security.SecurityMiddleware&#39;,
+    &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;,
+    &#39;django.middleware.common.CommonMiddleware&#39;,
+    &#39;django.middleware.csrf.CsrfViewMiddleware&#39;,
+    &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;,
+    &#39;django.contrib.messages.middleware.MessageMiddleware&#39;,
+    &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;,
+    &#39;app01.utils.mymiddleware.LoginAuth&#39;
+]</code></pre>
+<p><img src="./images/中间件2.png" /></p>
+<h4 id="django的请求生命周期">django的请求生命周期</h4>
+<p><img src="./images/中间件3.png" /></p>
+<p>具体解释</p>
+<ol>
+<li><p>浏览器请求，wsgi.py,它封装这socket，request对象，request对象给中间键，中间件根据middleware封装的中间件一层一层向下执行，自动执行每个中间件中的请求函数</p></li>
+<li><p>执行顺序从上到下，例如，我们把自定义的中间件放在session中间件的上边，那么session就不起作用了，所以自定义的中间件是放在最下边位置</p></li>
+<li><p>中间件加工完之后，给了url控制器，然后执行视图函数views，视图函数再通过orm与数据库进行交互，并且渲染页面</p>
+<p><strong>注意如果此处没有return值，默认返回的是None，表示正常，向下执行，如果return值是别的值，那么就不会向下执行了，直接执行响应中间件的response方法给浏览器了</strong></p></li>
+<li><p>执行完成后，页面需要间数据返还给浏览器，不需要经过url，但是还会经过中间件</p></li>
+<li><p>中间件中执行process_response方法</p></li>
+</ol>
+<p><img src="./images/中间件4.png" /></p>
+<p>所以由上引入白名单概念，就是让不需要session的函数先执行，例如login函数</p>
+<h4 id="白名单">白名单</h4>
+<p>中间件的py文件中</p>
+<pre><code><code>from django.utils.deprecation import MiddlewareMixin
+from django.shortcuts import render,HttpResponse,redirect
+class LoginAuth(MiddlewareMixin):
+    #白名单
+    white_list = [&quot;/login/&quot;,]
+    def process_request(self,request):
+        print(&quot;请求来了&quot;)
+        path = request.path
+        #获取请求路径
+        if path not in self.white_list:
+            status = request.session.get(&quot;is_login&quot;)
+            if not status:
+                return redirect(&quot;login&quot;)
+        
+
+    def process_response(self,request,response):
+        print(&quot;响应走了&quot;)
+        return response</code></pre>
+<p>views.py 应用了中间件就不用了装饰器了</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+
+# Create your views here.
+
+def home(request):
+    print(&quot;这是home函数&quot;)
+    return render(request,&quot;home.html&quot;)
+
+def login(request):
+    if request.method == &quot;GET&quot;:
+        print(&quot;这是login函数&quot;)
+        return render(request,&quot;login.html&quot;)
+    else:
+        user = request.POST.get(&quot;username&quot;)
+        pwd = request.POST.get(&quot;password&quot;)
+        if user == &quot;alex&quot; and pwd == &quot;123&quot;:
+            request.session[&quot;is_login&quot;] = True
+            return redirect(&quot;home&quot;)
+        else:
+            return redirect(&quot;login&quot;)
+
+def index(request):
+    print(&quot;这是index函数&quot;)
+    return render(request,&quot;index.html&quot;)</code></pre>
+<p><strong>在上述代码中，请求白名单中的数据时，根据请求路径判断下列条件的结果，当路径在白名单中的时候，if条件不成立，默认返回None，正常执行views函数，如果访问home函数等，以为没有在白名单中，执行if条件，如果已经有了session值，则默认返回None，正常执行函数，如果没有session，则执行下一个if判断，重定向到login路径，再次请求，执行同上</strong></p>
+<h4 id="中间件有多个方法时的执行顺序">中间件有多个方法时的执行顺序</h4>
+<p>settings中</p>
+<pre><code><code>MIDDLEWARE = [
+    &#39;django.middleware.security.SecurityMiddleware&#39;,
+    &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;,
+    &#39;django.middleware.common.CommonMiddleware&#39;,
+    &#39;django.middleware.csrf.CsrfViewMiddleware&#39;,
+    &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;,
+    &#39;django.contrib.messages.middleware.MessageMiddleware&#39;,
+    &#39;django.middleware.clickjacking.XFrameOptionsMiddleware&#39;,
+    # &#39;app01.utils.mymiddleware.LoginAuth&#39;
+    &#39;app01.utils.mymiddleware.MD1&#39;,  # 新增中间件
+    &quot;app01.utils.mymiddleware.MD2&quot;,  # 新增中加件
+]</code></pre>
+<p>views.py</p>
+<pre><code><code>from django.shortcuts import render,HttpResponse,redirect
+
+# Create your views here.
+
+def home(request):
+    print(&quot;这是home函数&quot;)
+    return render(request,&quot;home.html&quot;)
+
+def login(request):
+    if request.method == &quot;GET&quot;:
+        print(&quot;这是login函数&quot;)
+        return render(request,&quot;login.html&quot;)
+    else:
+        user = request.POST.get(&quot;username&quot;)
+        pwd = request.POST.get(&quot;password&quot;)
+        if user == &quot;alex&quot; and pwd == &quot;123&quot;:
+            request.session[&quot;is_login&quot;] = True
+            return redirect(&quot;home&quot;)
+        else:
+            return redirect(&quot;login&quot;)
+
+def index(request):
+    print(&quot;这是index函数&quot;)
+    return render(request,&quot;index.html&quot;)</code></pre>
+<p>process_resquest 和 process_response 方法顺序</p>
+<p>middleware.py 中间件中文件</p>
+<pre><code><code>class MD1(MiddlewareMixin):
+    def process_request(self,request):
+        #request是一个请求的对象
+        print(&quot;MD1的process_request方法&quot;,request)
+        #return HttpResponse(&quot;ok&quot;)   ---------------------- 第一知识点  第一执行
+
+    def process_response(self,request,response):
+        print(&quot;MD1的process_response方法&quot;,response)
+        return response
+        #return HttpResponse(&quot;ok&quot;)  ---------------------- 第二知识点  第四执行
+
+class MD2(MiddlewareMixin):
+    def process_request(self,request):
+        print(&quot;MD2的process_request方法&quot;,request)
+        #return HttpResponse(&quot;ok&quot;)  ----------------------- 第三知识点   第二执行
+
+    def process_response(self,request,response):
+        print(&quot;MD2的process_response方法&quot;,response)
+        #response 接收的是函数的返回值，是一个response对象
+        return response
+        #return HttpResponse(&quot;ok&quot;)  ---------------------- 第四知识点    第三执行</code></pre>
+<p><img src="./images/中间件5.png" /></p>
+<h4 id="有return自定义内容的时候">有return自定义内容的时候</h4>
+<p>都是get方法时验证</p>
+<p>第一知识点解释</p>
+<pre><code><code>MD1的process_request方法 &lt;WSGIRequest: GET &#39;/index/&#39;&gt;
+MD1的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+当我们在浏览器发送请求时，执行到中间件时就不再向后执行，只执行返回函数process_response</code></pre>
+<p>第二知识点解释</p>
+<pre><code><code>MD1的process_request方法 &lt;WSGIRequest: GET &#39;/index/&#39;&gt;
+MD2的process_request方法 &lt;WSGIRequest: GET &#39;/index/&#39;&gt;
+这是index函数
+MD2的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+MD1的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+当我们在浏览器发送请求时，由于返回值的位置是最后执行的，所以所有的函数都执行了，但是由于返回的是自定义的，而不是response对象，所以返回页面不是html文件，而是ok</code></pre>
+<p>第三知识点解释</p>
+<pre><code><code>MD1的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+MD2的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+MD2的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+MD1的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+当我们在浏览器发送请求时，执行到中间件时就不再向后执行，只执行返回函数process_response，依次向上执行（中间件顺序） 所以返回页面不是html文件，而是ok</code></pre>
+<p>第四知识点解释</p>
+<pre><code><code>MD1的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+MD2的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+这是login函数
+MD2的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+MD1的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+当我们在浏览器发送请求时，由于返回值的位置是最后执行的，所以所有的函数都执行了，但是由于返回的是自定义的，而不是response对象，所以返回页面不是html文件，而是ok</code></pre>
+<h4 id="process_view">process_view</h4>
+<p>middleware.py</p>
+<pre><code><code>class MD1(MiddlewareMixin):
+    def process_request(self,request):
+        #request是一个请求的对象
+        print(&quot;MD1的process_request方法&quot;,request)
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_response(self,request,response):
+        print(&quot;MD1的process_response方法&quot;,response)
+        return response
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        print(view_func)
+        print(&quot;MD1的process_view&quot;)
+
+class MD2(MiddlewareMixin):
+    def process_request(self,request):
+        print(&quot;MD2的process_request方法&quot;,request)
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_response(self,request,response):
+        print(&quot;MD2的process_response方法&quot;,response)
+        #response 接收的是函数的返回值，是一个response对象
+        return response
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        print(view_func)
+        print(&quot;MD2的process_view&quot;)</code></pre>
+<p>index请求结果</p>
+<pre><code><code>MD1的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+MD2的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+&lt;function login at 0x0000002B48EDA2F0&gt;
+MD1的process_view
+&lt;function login at 0x0000002B48EDA2F0&gt;
+MD2的process_view
+这是login函数
+MD2的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;
+MD1的process_response方法 &lt;HttpResponse status_code=200, &quot;text/html; charset=utf-8&quot;&gt;</code></pre>
+<p>执行顺序图</p>
+<p><img src="./images/中间件6.png" /></p>
+<h4 id="process_exception">process_exception</h4>
+<p>这个比较特殊，只有在有报错的情况下才执行，否则不执行</p>
+<p>middleware.py</p>
+<pre><code><code>class MD1(MiddlewareMixin):
+    def process_request(self,request):
+        #request是一个请求的对象
+        print(&quot;MD1的process_request方法&quot;,request)
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_response(self,request,response):
+        print(&quot;MD1的process_response方法&quot;,response)
+        return response
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        print(view_func)
+        print(&quot;MD1的process_view&quot;)
+
+    def process_exception(self, request, exception):
+        print(exception)
+        print(&quot;MD1的process_exception&quot;)
+
+class MD2(MiddlewareMixin):
+    def process_request(self,request):
+        print(&quot;MD2的process_request方法&quot;,request)
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_response(self,request,response):
+        print(&quot;MD2的process_response方法&quot;,response)
+        #response 接收的是函数的返回值，是一个response对象
+        return response
+        # return HttpResponse(&quot;ok&quot;)
+
+    def process_view(self,request,view_func,view_args,view_kwargs):
+        print(view_func)
+        print(&quot;MD2的process_view&quot;)
+
+    def process_exception(self, request, exception):
+        print(exception)    #打印的是抛出的错误信息
+        print(&quot;MD2的process_exception&quot;)</code></pre>
+<p>为了报错修改views.py代码</p>
+<pre><code><code>def home(request):
+    print(&quot;这是home函数&quot;)
+    return render(request,&quot;home.html&quot;)
+
+def login(request):
+    if request.method == &quot;GET&quot;:
+        print(&quot;这是login函数&quot;)
+        raise ValueError(&quot;抛出错误&quot;)   #------注意此处要抛错才能执行exception
+        return render(request,&quot;login.html&quot;)
+    else:
+        user = request.POST.get(&quot;username&quot;)
+        pwd = request.POST.get(&quot;password&quot;)
+        if user == &quot;alex&quot; and pwd == &quot;123&quot;:
+            request.session[&quot;is_login&quot;] = True
+            return redirect(&quot;home&quot;)
+        else:
+            return redirect(&quot;login&quot;)
+
+def index(request):
+    print(&quot;这是index函数&quot;)
+    return render(request,&quot;index.html&quot;)</code></pre>
+<p>执行结果</p>
+<pre><code><code>MD1的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+MD2的process_request方法 &lt;WSGIRequest: GET &#39;/login/&#39;&gt;
+&lt;function login at 0x0000000AD8F5A268&gt;
+MD1的process_view
+&lt;function login at 0x0000000AD8F5A268&gt;
+MD2的process_view
+这是login函数
+抛出错误
+MD2的process_exception
+抛出错误
+MD1的process_exception
+Internal Server Error: /login/
+Traceback (most recent call last):
+  File &quot;C:\Python36\lib\site-packages\django\core\handlers\exception.py&quot;, line 41, in inner
+    response = get_response(request)
+  File &quot;C:\Python36\lib\site-packages\django\core\handlers\base.py&quot;, line 187, in _get_response
+    response = self.process_exception_by_middleware(e, request)
+  File &quot;C:\Python36\lib\site-packages\django\core\handlers\base.py&quot;, line 185, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File &quot;D:\Django项目\day67\zhongjianjian\app01\views.py&quot;, line 23, in login
+    raise ValueError(&quot;抛出错误&quot;)
+ValueError: 抛出错误
+[16/Oct/2019 17:25:55] &quot;GET /login/ HTTP/1.1&quot; 500 65127
+MD2的process_response方法 &lt;HttpResponse status_code=500, &quot;text/html&quot;&gt;
+MD1的process_response方法 &lt;HttpResponse status_code=500, &quot;text/html&quot;&gt;
+</code></pre>
+<p><img src="./images/中间件7.png" /></p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

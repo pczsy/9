@@ -1,0 +1,251 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修【Python】Python实现Excel用例直接导入testlink-UI界面小工具' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>【Python】Python实现Excel用例直接导入testlink-UI界面小工具</center></div><div class='banquan'>原文出处:本文由博客园博主Patrick-Lindberg提供。<br/>
+原文连接:https://www.cnblogs.com/patrick92/p/11769563.html</div><br>
+    <h1><span style="font-family: arial, helvetica, sans-serif;">1.写在前面</span></h1>
+<p><span style="font-family: arial, helvetica, sans-serif;">testlink上传用例一种方法是excel转换为xml，然后再用xml上传，还有一种是调用api进行上传。</span><br /><span style="font-family: arial, helvetica, sans-serif;">最开始写了个转换工具，是将excel转换为xml，然后在testlink里上传，最后发现当模块变多以后xml太多，一个一个上传太麻烦，所以尝试用调用api的方式来上传用例，并且打包成exe小工具。</span></p>
+<p>&nbsp;</p>
+<h1><span style="font-family: arial, helvetica, sans-serif;">2.环境</span></h1>
+<p><span style="font-family: arial, helvetica, sans-serif;">python3.7.4</span><br /><span style="font-family: arial, helvetica, sans-serif;">testlink1.9.14 ( 1.9.14和19都测试通过 )</span></p>
+<p>&nbsp;</p>
+<h1><span style="font-family: arial, helvetica, sans-serif;">3.用到的库</span></h1>
+<p><span style="font-family: arial, helvetica, sans-serif;">tkinter ：python自带，用于编写简易的界面</span></p>
+<p><span style="font-family: arial, helvetica, sans-serif;">xlrd：第三方库，需要pip安装，读取excel的库，也可以使用pandas代替</span></p>
+<p><span style="font-family: arial, helvetica, sans-serif;"><span style="font-family: arial, helvetica, sans-serif;">TestLink-API-Python-client</span>：第三方库，需要pip安装，提供python和testlink交互的api</span></p>
+<p>&nbsp;</p>
+<h1><span style="font-family: arial, helvetica, sans-serif;">4.完成效果图</span></h1>
+<h2><span style="font-family: arial, helvetica, sans-serif;">4.1 用模板写好用例</span></h2>
+<p><span style="font-family: arial, helvetica, sans-serif;"><img src="./images/【Python】Python实现Excel用例直接导入testlink-UI界面小工具0.png" alt="excel用例模板" width="1412" height="241" /></span></p>
+<h2><span style="font-family: arial, helvetica, sans-serif;">4.2 选择好上传项目和根目录导入或者子目录导入（这里用的是testlink中文网的演示地址）</span></h2>
+<p><span style="font-family: arial, helvetica, sans-serif;"><img src="./images/【Python】Python实现Excel用例直接导入testlink-UI界面小工具1.png" alt="选择项目" width="516" height="359" /></span></p>
+<h2><span style="font-family: arial, helvetica, sans-serif;">4.3 点击导入后弹出导入进度条</span></h2>
+<p><span style="font-family: arial, helvetica, sans-serif;"><img src="./images/【Python】Python实现Excel用例直接导入testlink-UI界面小工具2.png" alt="上传用例" width="489" height="238" /></span></p>
+<h2><span style="font-family: arial, helvetica, sans-serif;">4.4 导入成功，查看testlink里的用例</span></h2>
+<p><span style="font-family: arial, helvetica, sans-serif;"><img src="./images/【Python】Python实现Excel用例直接导入testlink-UI界面小工具3.png" alt="testlink上传成功后的样子" width="324" height="308" /><br /><img src="./images/【Python】Python实现Excel用例直接导入testlink-UI界面小工具4.png" alt="同上" width="1322" height="549" /><br /></span></p>
+<p>&nbsp;</p>
+<h1><span style="font-family: arial, helvetica, sans-serif;">5.部分代码</span></h1>
+<h2><span style="font-family: arial, helvetica, sans-serif;">5.1 testlink方法二次封装</span></h2>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;">  1</span> <span style="color: #000000;">@dataclass
+</span><span style="color: #008080;">  2</span> <span style="color: #0000ff;">class</span><span style="color: #000000;"> ClientTestLink:
+</span><span style="color: #008080;">  3</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;">  4</span> <span style="color: #800000;">    testlink二次封装
+</span><span style="color: #008080;">  5</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;">  6</span> <span style="color: #000000;">    user_api_pwd: str
+</span><span style="color: #008080;">  7</span>     client_url: str = <span style="color: #800000;">"</span><span style="color: #800000;">http://你的testlink地址/testlink/lib/api/xmlrpc/v1/xmlrpc.php</span><span style="color: #800000;">"</span>
+<span style="color: #008080;">  8</span> 
+<span style="color: #008080;">  9</span>     <span style="color: #0000ff;">def</span> <span style="color: #800080;">__post_init__</span><span style="color: #000000;">(self):
+</span><span style="color: #008080;"> 10</span>         self.tlc =<span style="color: #000000;"> TestlinkAPIClient(self.client_url, self.user_api_pwd)
+</span><span style="color: #008080;"> 11</span> 
+<span style="color: #008080;"> 12</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_projects(self):
+</span><span style="color: #008080;"> 13</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">获取testLink内所有项目</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 14</span>         project_list =<span style="color: #000000;"> []
+</span><span style="color: #008080;"> 15</span>         <span style="color: #0000ff;">for</span> project <span style="color: #0000ff;">in</span><span style="color: #000000;"> self.tlc.getProjects():
+</span><span style="color: #008080;"> 16</span>             project_list.append([project.get(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span>), project.get(<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span><span style="color: #000000;">)])
+</span><span style="color: #008080;"> 17</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> project_list
+</span><span style="color: #008080;"> 18</span> 
+<span style="color: #008080;"> 19</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_project_id_by_name(self, project_name):
+</span><span style="color: #008080;"> 20</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">获取项目id根据项目名称</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 21</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> self.tlc.getProjectIDByName(project_name)
+</span><span style="color: #008080;"> 22</span> 
+<span style="color: #008080;"> 23</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_test_suites(self, project_id):
+</span><span style="color: #008080;"> 24</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">获取指定项目里(需要项目id)的测试用例集</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 25</span>         test_suite_list =<span style="color: #000000;"> []
+</span><span style="color: #008080;"> 26</span>         test_suites =<span style="color: #000000;"> self.tlc.getFirstLevelTestSuitesForTestProject(project_id)
+</span><span style="color: #008080;"> 27</span>         <span style="color: #0000ff;">for</span> test_suite <span style="color: #0000ff;">in</span><span style="color: #000000;"> test_suites:
+</span><span style="color: #008080;"> 28</span>             test_suite_list.append([test_suite.get(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span>), test_suite.get(<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span><span style="color: #000000;">)])
+</span><span style="color: #008080;"> 29</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> test_suite_list
+</span><span style="color: #008080;"> 30</span> 
+<span style="color: #008080;"> 31</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_test_suite_id(self, project_id, test_suite_name):
+</span><span style="color: #008080;"> 32</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">查询一级目录</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 33</span>         all_suites =<span style="color: #000000;"> self.get_test_suites(project_id)
+</span><span style="color: #008080;"> 34</span>         <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> all_suites:
+</span><span style="color: #008080;"> 35</span>             <span style="color: #0000ff;">if</span> i[1] ==<span style="color: #000000;"> test_suite_name:
+</span><span style="color: #008080;"> 36</span>                 <span style="color: #0000ff;">return</span><span style="color: #000000;"> i[0]
+</span><span style="color: #008080;"> 37</span>             <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 38</span>                 <span style="color: #0000ff;">pass</span>
+<span style="color: #008080;"> 39</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+</span><span style="color: #008080;"> 40</span> 
+<span style="color: #008080;"> 41</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> get_test_suite_for_test_suite(self, test_suite_id):
+</span><span style="color: #008080;"> 42</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">查询用例集下是否含有某用例集</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 43</span>         <span style="color: #0000ff;">try</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 44</span>             test_suite_id =<span style="color: #000000;"> self.tlc.getTestSuitesForTestSuite(test_suite_id)
+</span><span style="color: #008080;"> 45</span>             <span style="color: #0000ff;">return</span><span style="color: #000000;"> test_suite_id
+</span><span style="color: #008080;"> 46</span>         <span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception:
+</span><span style="color: #008080;"> 47</span>             <span style="color: #0000ff;">return</span><span style="color: #000000;"> False
+</span><span style="color: #008080;"> 48</span> 
+<span style="color: #008080;"> 49</span>     <span style="color: #0000ff;">def</span> create_test_suite(self, project_id: int, test_suite_name: str, parent_id: int =<span style="color: #000000;"> None):
+</span><span style="color: #008080;"> 50</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">判断是否拥有测试用例集，如果没有就创建测试用例集</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 51</span>         suite_data = self.tlc.createTestSuite(project_id, test_suite_name, test_suite_name, parentid=<span style="color: #000000;">parent_id)
+</span><span style="color: #008080;"> 52</span>         cheak_bool =<span style="color: #000000;"> isinstance(suite_data, list)
+</span><span style="color: #008080;"> 53</span>         <span style="color: #0000ff;">if</span><span style="color: #000000;"> cheak_bool:
+</span><span style="color: #008080;"> 54</span>             <span style="color: #0000ff;">return</span> suite_data[0].get(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 55</span>         <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 56</span>             <span style="color: #0000ff;">if</span> parent_id <span style="color: #0000ff;">is</span><span style="color: #000000;"> None:
+</span><span style="color: #008080;"> 57</span>                 <span style="color: #0000ff;">return</span> self.get_test_suite_id(project_id=project_id, test_suite_name=<span style="color: #000000;">test_suite_name)
+</span><span style="color: #008080;"> 58</span>             <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 59</span>                 <span style="color: #0000ff;">for</span> k, v <span style="color: #0000ff;">in</span><span style="color: #000000;"> self.get_test_suite_for_test_suite(parent_id).items():
+</span><span style="color: #008080;"> 60</span>                     <span style="color: #0000ff;">if</span><span style="color: #000000;"> isinstance(v, dict):
+</span><span style="color: #008080;"> 61</span>                         <span style="color: #0000ff;">if</span> v.get(<span style="color: #800000;">"</span><span style="color: #800000;">name</span><span style="color: #800000;">"</span>) ==<span style="color: #000000;"> test_suite_name:
+</span><span style="color: #008080;"> 62</span>                             <span style="color: #0000ff;">return</span> v.get(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 63</span>                         <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 64</span>                             <span style="color: #0000ff;">pass</span>
+<span style="color: #008080;"> 65</span>                     <span style="color: #0000ff;">else</span><span style="color: #000000;">:
+</span><span style="color: #008080;"> 66</span>                         <span style="color: #0000ff;">return</span> self.get_test_suite_for_test_suite(parent_id).get(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 67</span> 
+<span style="color: #008080;"> 68</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> create_test_case(self, project_id: int, test_suite_id: int, test_case_name, summary, preconditions,
+</span><span style="color: #008080;"> 69</span> <span style="color: #000000;">                         step, result, author_login):
+</span><span style="color: #008080;"> 70</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">创建测试用例</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 71</span>         self.tlc.initStep(step, result, 1<span style="color: #000000;">)
+</span><span style="color: #008080;"> 72</span>         <span style="color: #0000ff;">return</span> self.tlc.createTestCase(testprojectid=<span style="color: #000000;">project_id,
+</span><span style="color: #008080;"> 73</span>                                        testsuiteid=<span style="color: #000000;">test_suite_id,
+</span><span style="color: #008080;"> 74</span>                                        testcasename=<span style="color: #000000;">test_case_name,
+</span><span style="color: #008080;"> 75</span>                                        summary=<span style="color: #000000;">summary,
+</span><span style="color: #008080;"> 76</span>                                        preconditions=<span style="color: #000000;">preconditions,
+</span><span style="color: #008080;"> 77</span>                                        authorlogin=<span style="color: #000000;">author_login
+</span><span style="color: #008080;"> 78</span> <span style="color: #000000;">                                       )
+</span><span style="color: #008080;"> 79</span> 
+<span style="color: #008080;"> 80</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> update_project_keywords(self, project_id, test_case_id, keyword_value):
+</span><span style="color: #008080;"> 81</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">加关键字</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 82</span>         test_case = self.tlc.getTestCase(testcaseid=<span style="color: #000000;">test_case_id)[0]
+</span><span style="color: #008080;"> 83</span>         args =<span style="color: #000000;"> {
+</span><span style="color: #008080;"> 84</span>             <span style="color: #800000;">'</span><span style="color: #800000;">testprojectid</span><span style="color: #800000;">'</span><span style="color: #000000;">: project_id,
+</span><span style="color: #008080;"> 85</span>             <span style="color: #800000;">'</span><span style="color: #800000;">testcaseexternalid</span><span style="color: #800000;">'</span>: test_case[<span style="color: #800000;">'</span><span style="color: #800000;">full_tc_external_id</span><span style="color: #800000;">'</span><span style="color: #000000;">],
+</span><span style="color: #008080;"> 86</span>             <span style="color: #800000;">'</span><span style="color: #800000;">version</span><span style="color: #800000;">'</span>: int(test_case[<span style="color: #800000;">'</span><span style="color: #800000;">version</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008080;"> 87</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;"> 88</span>         keyword = self.tlc.addTestCaseKeywords({args[<span style="color: #800000;">'</span><span style="color: #800000;">testcaseexternalid</span><span style="color: #800000;">'</span><span style="color: #000000;">]: [keyword_value]})
+</span><span style="color: #008080;"> 89</span>         <span style="color: #0000ff;">return</span><span style="color: #000000;"> keyword
+</span><span style="color: #008080;"> 90</span> 
+<span style="color: #008080;"> 91</span>     <span style="color: #0000ff;">def</span><span style="color: #000000;"> update_custom_field(self, project_id, test_case_id, custom_fields: dict):
+</span><span style="color: #008080;"> 92</span>         <span style="color: #800000;">"""</span><span style="color: #800000;">更新自定义字段</span><span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 93</span>         test_case = self.tlc.getTestCase(testcaseid=<span style="color: #000000;">test_case_id)[0]
+</span><span style="color: #008080;"> 94</span>         args =<span style="color: #000000;"> {
+</span><span style="color: #008080;"> 95</span>             <span style="color: #800000;">'</span><span style="color: #800000;">testprojectid</span><span style="color: #800000;">'</span><span style="color: #000000;">: project_id,
+</span><span style="color: #008080;"> 96</span>             <span style="color: #800000;">'</span><span style="color: #800000;">testcaseexternalid</span><span style="color: #800000;">'</span>: test_case[<span style="color: #800000;">'</span><span style="color: #800000;">full_tc_external_id</span><span style="color: #800000;">'</span><span style="color: #000000;">],
+</span><span style="color: #008080;"> 97</span>             <span style="color: #800000;">'</span><span style="color: #800000;">version</span><span style="color: #800000;">'</span>: int(test_case[<span style="color: #800000;">'</span><span style="color: #800000;">version</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+</span><span style="color: #008080;"> 98</span> <span style="color: #000000;">        }
+</span><span style="color: #008080;"> 99</span>         custom =<span style="color: #000000;"> self.tlc.updateTestCaseCustomFieldDesignValue(
+</span><span style="color: #008080;">100</span>             args[<span style="color: #800000;">'</span><span style="color: #800000;">testcaseexternalid</span><span style="color: #800000;">'</span>], args[<span style="color: #800000;">'</span><span style="color: #800000;">version</span><span style="color: #800000;">'</span>], args[<span style="color: #800000;">'</span><span style="color: #800000;">testprojectid</span><span style="color: #800000;">'</span><span style="color: #000000;">], custom_fields)
+</span><span style="color: #008080;">101</span>         <span style="color: #0000ff;">return</span> custom</pre>
+</div>
+<h2><span style="font-family: arial, helvetica, sans-serif;">5.2 从根目录上传用例</span></h2>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008080;"> 1</span> <span style="color: #0000ff;">def</span><span style="color: #000000;"> run_root(excel_file_name, project_id, username, api_token):
+</span><span style="color: #008080;"> 2</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 3</span> <span style="color: #800000;">    创建用例
+</span><span style="color: #008080;"> 4</span>     <span style="color: #800000;">"""</span>
+<span style="color: #008080;"> 5</span>     case_num =<span style="color: #000000;"> get_all_case_num(excel_file_name)
+</span><span style="color: #008080;"> 6</span>     win2 =<span style="color: #000000;"> tk.Tk()
+</span><span style="color: #008080;"> 7</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 设置标题</span>
+<span style="color: #008080;"> 8</span>     win2.title(<span style="color: #800000;">"</span><span style="color: #800000;">导入任务</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;"> 9</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 设置大小和位置</span>
+<span style="color: #008080;">10</span>     win2.geometry(<span style="color: #800000;">"</span><span style="color: #800000;">220x100</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">11</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 禁止改变窗口大小</span>
+<span style="color: #008080;">12</span> <span style="color: #000000;">    win2.resizable(0, 0)
+</span><span style="color: #008080;">13</span>     mpb = ttk.Progressbar(win2, orient=<span style="color: #800000;">"</span><span style="color: #800000;">horizontal</span><span style="color: #800000;">"</span>, length=150, mode=<span style="color: #800000;">"</span><span style="color: #800000;">determinate</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">14</span>     mpb.place(x=<span style="color: #800000;">"</span><span style="color: #800000;">10</span><span style="color: #800000;">"</span>, y=<span style="color: #800000;">"</span><span style="color: #800000;">10</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">15</span>     mpb[<span style="color: #800000;">"</span><span style="color: #800000;">maximum</span><span style="color: #800000;">"</span>] =<span style="color: #000000;"> case_num
+</span><span style="color: #008080;">16</span>     mpb[<span style="color: #800000;">"</span><span style="color: #800000;">value</span><span style="color: #800000;">"</span>] =<span style="color: #000000;"> 0
+</span><span style="color: #008080;">17</span>     upload_label = tk.Label(win2, text=<span style="color: #800000;">'</span><span style="color: #800000;">正在导入用例...(切勿关闭)</span><span style="color: #800000;">'</span>, fg=<span style="color: #800000;">'</span><span style="color: #800000;">red</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">18</span>     upload_label.place(x=<span style="color: #800000;">"</span><span style="color: #800000;">10</span><span style="color: #800000;">"</span>, y=<span style="color: #800000;">"</span><span style="color: #800000;">40</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">19</span>     upload_label_text = tk.Label(win2, text=<span style="color: #800000;">''</span>, fg=<span style="color: #800000;">'</span><span style="color: #800000;">red</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">20</span>     upload_label_text.place(x=<span style="color: #800000;">"</span><span style="color: #800000;">160</span><span style="color: #800000;">"</span>, y=<span style="color: #800000;">"</span><span style="color: #800000;">40</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">21</span>     upload_per_label = tk.Label(win2, text=<span style="color: #800000;">''</span>, fg=<span style="color: #800000;">'</span><span style="color: #800000;">red</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+</span><span style="color: #008080;">22</span>     upload_per_label.place(x=<span style="color: #800000;">"</span><span style="color: #800000;">160</span><span style="color: #800000;">"</span>, y=<span style="color: #800000;">"</span><span style="color: #800000;">10</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">23</span>     <span style="color: #008000;">#</span><span style="color: #008000;"> 读取excel，获取数据</span>
+<span style="color: #008080;">24</span>     datacases =<span style="color: #000000;"> xlrd.open_workbook(excel_file_name)
+</span><span style="color: #008080;">25</span> 
+<span style="color: #008080;">26</span>     sheets =<span style="color: #000000;"> datacases.sheet_names()
+</span><span style="color: #008080;">27</span> 
+<span style="color: #008080;">28</span>     <span style="color: #0000ff;">for</span> sheet <span style="color: #0000ff;">in</span><span style="color: #000000;"> sheets:
+</span><span style="color: #008080;">29</span>         sheet_1 =<span style="color: #000000;"> datacases.sheet_by_name(sheet)
+</span><span style="color: #008080;">30</span> 
+<span style="color: #008080;">31</span>         <span style="color: #008000;">#</span><span style="color: #008000;"> ====================测试用例功能模块==============================</span>
+<span style="color: #008080;">32</span> 
+<span style="color: #008080;">33</span>         row_num =<span style="color: #000000;"> sheet_1.nrows
+</span><span style="color: #008080;">34</span>         <span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1<span style="color: #000000;">, row_num):
+</span><span style="color: #008080;">35</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 定义默认步骤编号第一步</span>
+<span style="color: #008080;">36</span>             catalog_1 = sheet_1.cell_value(i, 0)  <span style="color: #008000;">#</span><span style="color: #008000;"> 一级目录</span>
+<span style="color: #008080;">37</span>             catalog_2 = sheet_1.cell_value(i, 1)  <span style="color: #008000;">#</span><span style="color: #008000;"> 二级目录</span>
+<span style="color: #008080;">38</span>             catalog_3 = sheet_1.cell_value(i, 2)  <span style="color: #008000;">#</span><span style="color: #008000;"> 三级目录</span>
+<span style="color: #008080;">39</span>             test_case_name = sheet_1.cell_value(i, 3)  <span style="color: #008000;">#</span><span style="color: #008000;"> 用例名称</span>
+<span style="color: #008080;">40</span>             summary = sheet_1.cell_value(i, 4)  <span style="color: #008000;">#</span><span style="color: #008000;"> 摘要</span>
+<span style="color: #008080;">41</span>             key_words = sheet_1.cell_value(i, 5)  <span style="color: #008000;">#</span><span style="color: #008000;"> 关键字</span>
+<span style="color: #008080;">42</span>             test_case_level = sheet_1.cell_value(i, 6)  <span style="color: #008000;">#</span><span style="color: #008000;"> 用例级别</span>
+<span style="color: #008080;">43</span>             preconditions = sheet_1.cell_value(i, 7)  <span style="color: #008000;">#</span><span style="color: #008000;"> 预置条件</span>
+<span style="color: #008080;">44</span>             step = sheet_1.cell_value(i, 8)  <span style="color: #008000;">#</span><span style="color: #008000;"> 操作步骤</span>
+<span style="color: #008080;">45</span>             step_list =<span style="color: #000000;"> []
+</span><span style="color: #008080;">46</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 处理换行</span>
+<span style="color: #008080;">47</span>             <span style="color: #0000ff;">for</span> i_step <span style="color: #0000ff;">in</span> step.split(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+</span><span style="color: #008080;">48</span>                 step_list.append(<span style="color: #800000;">"</span><span style="color: #800000;">&lt;p&gt;</span><span style="color: #800000;">"</span> + i_step + <span style="color: #800000;">"</span><span style="color: #800000;">&lt;/p&gt;</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">49</span>             step = <span style="color: #800000;">''</span><span style="color: #000000;">.join(step_list)
+</span><span style="color: #008080;">50</span>             expected_results = sheet_1.cell_value(i, 9)  <span style="color: #008000;">#</span><span style="color: #008000;"> 预期结果</span>
+<span style="color: #008080;">51</span>             expected_results_list =<span style="color: #000000;"> []
+</span><span style="color: #008080;">52</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 处理换行</span>
+<span style="color: #008080;">53</span>             <span style="color: #0000ff;">for</span> i_expected_results <span style="color: #0000ff;">in</span> expected_results.split(<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+</span><span style="color: #008080;">54</span>                 expected_results_list.append(<span style="color: #800000;">"</span><span style="color: #800000;">&lt;p&gt;</span><span style="color: #800000;">"</span> + i_expected_results + <span style="color: #800000;">"</span><span style="color: #800000;">&lt;/p&gt;</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">55</span>             expected_results = <span style="color: #800000;">''</span><span style="color: #000000;">.join(expected_results_list)
+</span><span style="color: #008080;">56</span> 
+<span style="color: #008080;">57</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 创建一级目录</span>
+<span style="color: #008080;">58</span>             test_suite_id = ClientTestLink(api_token).create_test_suite(project_id=<span style="color: #000000;">project_id,
+</span><span style="color: #008080;">59</span>                                                                         test_suite_name=<span style="color: #000000;">catalog_1)
+</span><span style="color: #008080;">60</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 创建二级目录</span>
+<span style="color: #008080;">61</span>             <span style="color: #0000ff;">if</span><span style="color: #000000;"> catalog_2:
+</span><span style="color: #008080;">62</span>                 test_suite_id = ClientTestLink(api_token).create_test_suite(project_id=<span style="color: #000000;">project_id,
+</span><span style="color: #008080;">63</span>                                                                             test_suite_name=<span style="color: #000000;">catalog_2,
+</span><span style="color: #008080;">64</span>                                                                             parent_id=<span style="color: #000000;">test_suite_id)
+</span><span style="color: #008080;">65</span>                 <span style="color: #008000;">#</span><span style="color: #008000;"> 创建三级目录</span>
+<span style="color: #008080;">66</span>                 <span style="color: #0000ff;">if</span><span style="color: #000000;"> catalog_3:
+</span><span style="color: #008080;">67</span>                     test_suite_id = ClientTestLink(api_token).create_test_suite(project_id=<span style="color: #000000;">project_id,
+</span><span style="color: #008080;">68</span>                                                                                 test_suite_name=<span style="color: #000000;">catalog_3,
+</span><span style="color: #008080;">69</span>                                                                                 parent_id=<span style="color: #000000;">test_suite_id)
+</span><span style="color: #008080;">70</span>             result =<span style="color: #000000;"> ClientTestLink(api_token).create_test_case(
+</span><span style="color: #008080;">71</span>                 project_id=<span style="color: #000000;">project_id,
+</span><span style="color: #008080;">72</span>                 test_suite_id=<span style="color: #000000;">test_suite_id,
+</span><span style="color: #008080;">73</span>                 test_case_name=<span style="color: #000000;">test_case_name,
+</span><span style="color: #008080;">74</span>                 summary=<span style="color: #000000;">summary,
+</span><span style="color: #008080;">75</span>                 preconditions=<span style="color: #000000;">preconditions,
+</span><span style="color: #008080;">76</span>                 step=<span style="color: #000000;">step,
+</span><span style="color: #008080;">77</span>                 result=<span style="color: #000000;">expected_results,
+</span><span style="color: #008080;">78</span>                 author_login=<span style="color: #000000;">username)
+</span><span style="color: #008080;">79</span> 
+<span style="color: #008080;">80</span>             test_case_id = result[0].get(<span style="color: #800000;">"</span><span style="color: #800000;">id</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">81</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 添加关键字</span>
+<span style="color: #008080;">82</span>             ClientTestLink(api_token).update_project_keywords(project_id=<span style="color: #000000;">project_id,
+</span><span style="color: #008080;">83</span>                                                               test_case_id=<span style="color: #000000;">test_case_id,
+</span><span style="color: #008080;">84</span>                                                               keyword_value=<span style="color: #000000;">key_words)
+</span><span style="color: #008080;">85</span>             <span style="color: #008000;">#</span><span style="color: #008000;"> 添加自定义字段</span>
+<span style="color: #008080;">86</span>             ClientTestLink(api_token).update_custom_field(project_id=<span style="color: #000000;">project_id,
+</span><span style="color: #008080;">87</span>                                                           test_case_id=<span style="color: #000000;">test_case_id,
+</span><span style="color: #008080;">88</span>                                                           custom_fields={<span style="color: #800000;">"</span><span style="color: #800000;">优先级</span><span style="color: #800000;">"</span><span style="color: #000000;">: test_case_level})
+</span><span style="color: #008080;">89</span>             mpb[<span style="color: #800000;">"</span><span style="color: #800000;">value</span><span style="color: #800000;">"</span>] =<span style="color: #000000;"> i
+</span><span style="color: #008080;">90</span>             upload_label_text.config(text=f<span style="color: #800000;">"</span><span style="color: #800000;">&lt;{i}/{case_num}&gt;</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">91</span>             upload_per_label.config(text=f<span style="color: #800000;">"</span><span style="color: #800000;">{((i / case_num) * 100):.2f}%</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">92</span> <span style="color: #000000;">            win.update()
+</span><span style="color: #008080;">93</span>             <span style="color: #0000ff;">print</span>(f<span style="color: #800000;">"</span><span style="color: #800000;">{test_case_id}-上传用例成功</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+</span><span style="color: #008080;">94</span>     win2.destroy()</pre>
+</div>
+<h1>&nbsp;</h1>
+<h1><span style="font-family: arial, helvetica, sans-serif;">6.写在最后</span></h1>
+<p><span style="font-family: arial, helvetica, sans-serif;">等稍后整理好后会把整个源码放出来，因为写的比较着急，很多代码逻辑没考虑到，欢迎指出，指出必改。</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

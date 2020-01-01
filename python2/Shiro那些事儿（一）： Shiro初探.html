@@ -1,0 +1,56 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Shiro那些事儿（一）： Shiro初探' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Shiro那些事儿（一）： Shiro初探</center></div><div class='banquan'>原文出处:本文由博客园博主陈本布衣提供。<br/>
+原文连接:https://www.cnblogs.com/chenbenbuyi/p/11696033.html</div><br>
+    <h2>&nbsp;引言</h2>
+<p>　　权限，可以简单的理解成你能干什么，不能干什么。在管理系统中，对权限的设计可以很简单，也可以很复杂。简单点的，基本都是基于角色扮演的方式，比如系统管理员角色可以操作哪些菜单，普通用户角色可以操作哪些菜单等等，通过让不同用户扮演不同的角色，不同角色授予不同的菜单权限，来实现对访问用户的权限控制。当然，这种简单的设计其实是比较粗粒度的，仅仅是一种菜单权限的控制。如果系统比较大，对权限的控制粒度会有更加明细的需求，不仅菜单权限有可访问、可操作之分，角色之间还可能会有层级和群组的划分，如果再深入一点，还可能涉及到数据权限的控制等等。总之，系统权限，说简单其实也简单，但要想设计好也不容易，具体要根据自己的系统大小和业务来考量。不过，就我们一般的系统而言，简单的权限控制就足够满足需求了。这方面，除了你自己进行权限设计外，第三方也有很多优秀的权限框架可供选择，有名的比如 Spring 帝国中的 Security 模块， Apache 基金会的 Shiro 权限框架等等；不过相较于Spring Security，Apache Shiro 在易用性和适用广度方面，都是要稍微占优的。所以，本系列，博主从头开始，来讲讲 Shiro 的使用。</p>
+<p>　　在<a href="https://shiro.apache.org/" target="_blank">Shiro官网</a>，对 Shiro 的简介是：<strong>好用的 Java 安全框架，可执行身份验证、授权、密码和会话管理，它有三个核心组件：Subject, SecurityManager 和 Realm</strong>。</p>
+<p>　　这就是 Shiro 了。博主照搬得很简略，因为我知道在你真的进入Shiro的世界之前，给你解释再多你一样很懵逼，还不如不说！其实，结合实际项目中使用经验和搜罗一些网络教程，最多给你一天时间，你就可以在面试的时候说你会使用 Shiro 了，而且还很有经验；如果面试官要深究，怎么吹就看你本事了。博主最开始也是视频资料看了一天，加上几个项目中的使用，应对日常开发是没有压力了，但是总还是感觉没真正的认识 Shiro。一般什么时候你会发现你原来会用的东西其实你不一定懂呢，就是你假装自己很懂了装逼给人看的时候。这也就是为什么布衣博主要写技术博的原因吧&mdash;&mdash;通常情况下是，下笔的时候你对一个技能点还是一知半解，等你写完了，可能就了然于胸了。因为写技术博文需要构思，需要查阅很多资料以尽量减少错漏，需要认知的广度和深度，同时又要求能浅出；这种对知识的吸收、消化再输出的过程，远比看视频写 Hello Word 要痛苦得多，当然，成长也更显著。这种以教为学的方式，其实就是我们熟悉的费曼学习法。</p>
+<p>　　话归正题。关于Shiro，怎么来开篇呢？以程序员学技能的尿性，基本上都始于 Hello Word，而大多也就止于Hello Word，难得深入其理，吸其精，啖其髓。而博主又不太喜欢直入，将 Shiro 的模块组件一啪啦的罗列，然后再概念化的解释一通完事，这完全不是布衣博主的风格嘛！而且，基于费曼学习大法，博主知道，那些已有的概念，并不能让另一个小白似的自己真正的搞懂Shiro，反而会因为概念性的东西灌输太多而更加懵逼。所以，在看博文的你大可以省省心，博主不会过多的作概念定义，只是按照个人对 Shiro&nbsp;的有限认知看图说话；说不定一席唠叨下来，作为读者的你，稍微利用点<span style="font-family: 楷体;">带薪蹲坑</span>的时间，就搞懂 Shiro 了呢。</p>
+<p>　　关于 Shiro 系列，博主的整体思路是，先从整个框架的架构讲起，知其大略，然后分讲各个模块，最后将各部分综合成一个完整的 Hello Word 式的 Demo 项目；全系讲完，你还不懂，算我服你！</p>
+<h2>&nbsp;鸟瞰&nbsp;</h2>
+<p>　　既要知其大略，肯定是要搞懂Shiro的功能架构的。关于Shiro的架构，官网和各种教程中都有架构图，但博主觉得直接上图，有点突兀；至少，以自己小白的观点来看，你直接给我看 Shiro 的架构图，我的脑袋是凌乱的。所以博主换了个清新的思路，既然官网都是言简意赅的摆明了 Shiro 的功能主要由三个核心的组件来完成，那么我们就先来认识一下&nbsp;<strong>Subject，SecurityManager</strong>和<strong>Realm </strong>这三个核心组件到底在 Shiro 的功能实现中，都起着什么样的作用。</p>
+<p>　　<strong>Subject</strong><span style="font-family: 宋体;">，</span>主题，是&nbsp;<span style="font-family: Calibri;">Shiro&nbsp;</span>功能核心中相当重要的一环，那它到底是个什么玩意儿呢？你可以从两点来认识它<span style="font-family: 宋体;">：</span></p>
+<p>　　　　第一，从框架功能上来说，Subject 在 Shiro 中指当前&rdquo;用户&rdquo;。注意这个用户是打引号的，意味着它并不是我们通常以人为语境来理解的那个用户。按照官方文档的说法，这个用户是 "a security-specific view of the currently executing user"，是当前正在执行用户的特殊安全视图，可以是第三方服务，如守护进程，爬虫等。当然，官方解释就是很官方，小白一点的看了跟没看一样；博主觉得官方文档对Subject "非人" 概念的强调有点过了，其实在你使用的大多数场景中，你完全就可以理解成我们一般语境下的用户，因为我们系统的权限，基本都是基于人的用户权限。</p>
+<p>　　　　第二，从框架架构上来说，Subject 是框架执行认证、授权功能的门户，这也就意味着你的认证、授权都要通过它来进行的，这是Shiro中典型的门面（外观）模式的应用。</p>
+<blockquote>
+<p><span style="font-family: 楷体;">　　　　门面模式，是指提供一个统一的接口去访问多个子系统的多个不同的接口，它为子系统中的一组接口提供一个统一的高层接口</span><span style="font-family: 楷体;">，</span><span style="font-family: 楷体;">使得子系统更容易使用</span><span style="font-family: 楷体;">。</span></p>
+</blockquote>
+<p>　　　　下面是布衣博主对门面模式的图形化翻译：</p>
+<p>&nbsp;<img src="./images/Shiro那些事儿（一）： Shiro初探0.png" alt="" /></p>
+<p>　　如上图示，所有的秃顶程序员看病都是通过挂号窗口进行挂号后再被导诊到各自的病患区域，而不是自己满医院的乱找大夫。看得出来，充当门面的挂号窗口对外提供了统一的入院方式，统筹科室资源，屏蔽科室间的差异性&mdash;&mdash;你只要有病，不管什么病，去挂号就对了。有了这层认知，Subject&nbsp;理解起来就没什么难度了，因为在Shiro 中，Subject 的作用一样的，不管你是要登录认证，用户授权还是会话管理，都需要通过 Subject 这样一个门面对象。恰如看病挂号的简洁一样，你也不用担心 Subject 对象的创建会有多复杂。实际上，在应用程序的任何地方，你只需要大吼三声，"爷爷在此"，啊不，是来一句&nbsp;<span class="cnblogs_code">SecurityUtils.getSubject()</span>&nbsp;，Shiro 就把 Subject 对象构建好给你了，对使用者来说，API&nbsp;真的是非常简单易用的；而构建&nbsp;Subject&nbsp;门面对象的复杂性被 Shiro 采用建造者模式封装在框架内部，对调用者是无感的。Shiro 通过这种门面模式的设计，提供给调用者统一的门面接口，从而屏蔽掉了访问Shiro框架内部API的复杂性；同时，统一的对外接口，可以屏蔽跟当前跟软件交互的外部的不同语言系统、不同服务调用的差异性，极大的拓展了Shiro的使用场景。</p>
+<p>&nbsp;　　<strong>SecurityManager</strong>，安全管理器，所有与安全有关的操作都需要通过它，它是整个 Shiro 框架的功能核心。</p>
+<p>　　上文我们说到门面对象 Subject，它只是个门面对象，就像看病的挂号窗口一样，并不完成具体的看病功能，你要看病，还得去各科室找大夫。而&nbsp; SecurityManager&nbsp;对象，就是在幕后帮你完成具体功能的。当然，博主这样说还是有一定的误导性，让你觉得 Shiro 的认证、授权、会话管理等这些功能的完成都是 SecurityManager 自己在干&mdash;&mdash;有这样的想法，只能说你还太嫩了！哪怕你自己去设计框架，你会把所有的功能都揉成一团放到一个对象中去实现？实际上，基于责任分离的原则，SecurityManager&nbsp; 本身也并不完成具体的功能，它只负责需求调度，具体的功能完成都分配到具体的功能组件，比如登录认证就找登录认证组件（<strong>Authentication</strong>），授权找授权组件（<strong>Authorization</strong>），会话找会话组件（<strong>Session Manager</strong>），数据比对就找数据源组件（<strong>Realm</strong>）等等。是的，也许你已经明白过来了，这不就是Spring MVC中的核心调度器 DispatcherServlet 嘛。you are smart ！在Spring MVC 中，你除了确保 DipacherServlet 的启动创建以外，在使用过程中你并不会直接和 DispacherServlet 对象打交道，它的核心工作都在幕后（框架内部）完成；Shiro 中的 SecurityManager 也是一样，我们要做的，就是保证应用程序启动的时候，能够创建出全局唯一的安全管理器实例，让该实例在幕后帮我们完成安全有关的认证、授权和会话管理等工作。</p>
+<p>　　所以，在你的项目开发中，对 SecurityManager 对象的主要工作在于，根据不同的应用程序，完成适合&nbsp;<strong>SecurityManager&nbsp;</strong>对象创建的配置。基于前面的阐述你也知道了，安全管理器的创建是依赖于认证、授权，缓存、数据源等诸多组件的，你可以各自创建功能组件对象然后交给 SecurityManger ，但为了项目的灵活性，通常并不建议直接在代码中用 new 的方式来创建对象，而应该是在配置文件中来完成安全管理器构建所需的组件配置。配置的方式，选择很多，比如你可以通过 Spring XML 配置，也可以用 YAML 文件或者 Properties文件配置等，但就易用性和可读性来讲， ini 文件配置方式才是更通用的选择。</p>
+<p>　　&nbsp;<strong>Realm</strong>：领域对象，在 Shiro 和你的应用程序安全数据（比如登录的用户名、密码，用户的权限等）之间架起一座沟通的桥梁，不然 Shiro 怎么知道你界面提交的登录用户合不合法，有没有某种权限呢？ 结合上面介绍的安全管理器的功能表述，博主可以这样来给你进一步解释：安全管理器要验证用户身份，或者要获取用户对应的权限，是分别通过认证组件（<strong>Authentication</strong>）和授权组件（<strong>Authorization</strong>）来具体完成的，但是这两个组件要完成认证或授权的实际功能，又需要与安全有关的数据做支撑，这个时候，他们就要从 Realm&nbsp;那里获取相应的用户数据进行比较以确定登录用户身份是否合法，或者从 Realm&nbsp;那里得到用户相应的角色 / 权限以验证用户是否能进行某些操作操作。所以，通常在程序员的语境中，我们可以把 Realm 看成是我们熟悉的DataSource，即安全数据源。既然 Shiro 是关于安全的框架，那么 Realm 就必不可少，所以在实际使用中，你必须至少配置一个 Realm 才能保证框架的正常运行。这里着重强调至少，也就意味着你可以配置多个 Realm，这也是 Shiro&nbsp;很有意思的地方，让你可以自由的控制程序的安全认证级别。关于多Realm认证，后面的系列文章会详解。最后说明，在Shiro中，Realm 作为一种安全数据抽象，针对不同的安全数据来源，提供了很多开箱即用的具体实现，让你可以很方便的从诸如数据库系统，LDAP（轻量目录访问协议），配置文件等渠道获取安全数据。当然，在实际开发中，我们用得更多的还是自己定义 Realm 实现的方式来使用&nbsp;Realm。　　　　　　　　　　　　　　　　　　</p>
+<p><strong>　　</strong>自此，你搞懂Shiro中<strong>&nbsp;Subject</strong>,<strong>SecurityManager</strong>和 <strong>Realm</strong>&nbsp;这三个核心组件之间的三角关系了吗？由于布衣博主是个直男，特意将官网上已有的核心组件之间的关系图强行掰直了给你看以加深你的理解：</p>
+<p>&nbsp; &nbsp;　　　　　　　　　　<img src="./images/Shiro那些事儿（一）： Shiro初探1.png" alt="" />　　　　　　　　　　　　　　　　　　　　</p>
+<h2>&nbsp;图解</h2>
+<p>&nbsp;　　</p>
+<p>　　　　<img src="./images/Shiro那些事儿（一）： Shiro初探2.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>　　经过上面对Shiro的核心三组件的分析，现在博主再给你奉上 Shiro&nbsp;官网提供的框架架构图，你是不是有了自己更加清晰的认知了呢？</p>
+<p>　　还是简单的来看图说话。从架构图中我们可以看到，门面对象 Subject 和博主举例中的挂号窗口功能是一样一样的，通过&nbsp;Subject&nbsp;对象，不光&nbsp;Java 中的 Web 应用或普通的单体应用自己能够访问安全模块实现业务功能，其它语言如&nbsp;C/C++，Ruby，Python 等也能通过外部接口调用的方式访问 Shiro 的核心安全模块。而&nbsp;Shiro内部核心 SecurityManager&nbsp;的功能实现是由它内部管理的具体的功能组件如认证（<strong>Authentication</strong>），授权（<strong>Authorization</strong>），会话管理器（<strong>Session Manager</strong>），缓存管理器（<strong>Cache Manager</strong>），会话 DAO(Session DAO【将session保存到数据库、缓存等】)，各种 Realm 实现等来协作完成的。此外，由于是安全框架，Shiro 提供了额外的密码模块 Cryptography，这是一个独立的模块，所以你可以将该模块当成密码工具箱一样单独应用到你项目的业务逻辑中，为各种加解密相关的操作提供便利。</p>
+<p>　　上图看懂了，关于 Shiro 你至少已经懂了一大半了。剩下的工作其实已经很简单而清晰了，就是基于对 Shiro 功能架构的清晰认知，我们分模块的，从具体的代码层面来编写具体的业务实现，来解决<strong>&ldquo;应用程序安全的四大基石&rdquo;</strong>&mdash;&mdash;身份验证，授权，会话管理和加密的具体问题。</p>
+<p>　　OK，Talk is cheap，Show me the code！撸码去，下期见。</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

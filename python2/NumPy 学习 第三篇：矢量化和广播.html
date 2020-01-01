@@ -1,0 +1,80 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修NumPy 学习 第三篇：矢量化和广播' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>NumPy 学习 第三篇：矢量化和广播</center></div><div class='banquan'>原文出处:本文由博客园博主悦光阴提供。<br/>
+原文连接:https://www.cnblogs.com/ljhdo/p/10571719.html</div><br>
+    <h1>矢量化</h1>
+<p>矢量化是指用数组表达式替换显式的for循环，在Python中循环数组或其他跟数组类似的数据结构时，使用循环会涉及很多开销。NumPy中的矢量化操作把内部循环委托给高度优化的C和Fortran函数，从而实现更清晰，更快速的Python代码。</p>
+<p>矢量化是NumPy中的一种强大功能，可以把操作表达为&ldquo;<strong>在整个数组上而不是在各个元素上</strong>&rdquo;发生，Python内部隐式对数组的各个元素执行相同的操作。</p>
+<p><strong>矢量化对每个元素执行相同的操作，</strong>对于原生的Python代码，举一个简单的例子，考虑将1维数组中的每个元素与相同长度的另一个序列中的相应元素相乘的情况。如果数据存储在两个Python 列表&nbsp;<code>a</code>&nbsp;和&nbsp;<code>b</code>&nbsp;中，我们可以迭代每个元素，如下所示：</p>
+<div class="cnblogs_code">
+<pre><code>c =<span style="color: #000000;"> []
+</span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(len(a)):
+    c.append(a[i]</span>*b[i])</pre>
+</div>
+<p>当涉及到&nbsp;ndarray&nbsp;时，逐个元素的操作是&ldquo;默认模式&rdquo;：</p>
+<div class="cnblogs_code">
+<pre><code>c = a * b</pre>
+</div>
+<h1>广播</h1>
+<p>两个形状相同的NumPy数组之间的操作是按元素操作的，对于大小不同的数组，按照广播规则来进行。广播（Broadcasting）描述了 numpy 如何在算术运算期间处理具有不同形状的数组。</p>
+<p><strong>1，广播的原理</strong></p>
+<p>NumPy 通常在数组的每个元素上执行相同的操作，在最简单的情况下，两个数组具有完全相同的形状，如下例所示，a和b都是数组，对数组执行相乘操作，Python内部执行的操作是对位置相同的元素执行相乘操作：</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; a = np.array([1.0, 2.0, 3.0<span style="color: #000000;">])
+</span>&gt;&gt;&gt; b = np.array([2.0, 2.0, 2.0<span style="color: #000000;">])
+</span>&gt;&gt;&gt; a *<span style="color: #000000;"> b
+array([ </span>2.,  4.,  6.])</pre>
+</div>
+<p>当数组的形状满足某些约束时，NumPy的广播规则放宽了这种约束。当一个数组和一个标量值在一个操作中组合时，会发生最简单的广播示例，a是数组，b是标量：</p>
+<div class="cnblogs_code">
+<pre><code>&gt;&gt;&gt; a = np.array([1.0, 2.0, 3.0<span style="color: #000000;">])
+</span>&gt;&gt;&gt; b = 2.0
+&gt;&gt;&gt; a *<span style="color: #000000;"> b
+array([ </span>2.,  4.,  6.])</pre>
+</div>
+<p>结果等同于前面的示例，在算术运算期间，<code>想象b是被拉伸成跟</code>数组<code>a的形状相同的数组，数组b的每个元素都是2.0</code>。</p>
+<p><img src="./images/NumPy 学习 第三篇：矢量化和广播0.png" alt="" width="372" height="107" /></p>
+<p>拉伸类比只是概念性的，NumPy足够聪明，可以使用原始标量值而无需实际构造数组。</p>
+<p><strong>2，广播规则</strong></p>
+<p>为了进行广播，在操作中两个阵列的末尾维度的尺寸必须相同，或者必须有一个维度的尺寸是相同的。</p>
+<p>举个例子，数据a的shape是(4,3)，数组b的shape是(1,3)，两个数组的末尾维度是2，形状是兼容的：</p>
+<p><img src="./images/NumPy 学习 第三篇：矢量化和广播1.png" alt="" width="407" height="175" /></p>
+<p><strong>技术细节：较小的数组会在较大的数组中&ldquo;广播&rdquo;，以便它们具有兼容的形状。</strong></p>
+<p><strong>广播规则</strong>：广播使用以下2个规则处理具有不同形状的两个数组：</p>
+<ul>
+<li>让所有输入数组都向其中形状最长的数组看齐，形状中不足的部分都通过在前面加 1 补齐。</li>
+<li>当输入数组的某个维度的长度为 1 时，沿着此维度运算时都用此维度上的第一组值，也就是说，在任何一个维度上，如果一个数组的维度为1，另一个数组的维度大于1，那么在该维度上，就好像是对第一个数组进行了复制。</li>
+</ul>
+<p><strong>简单理解：</strong>对两个数组，分别比较它们的每一个维度（若其中一个数组没有当前维度则忽略），满足以下三个条件：</p>
+<ul>
+<li>数组拥有相同形状。</li>
+<li>当前维度的值相等。</li>
+<li>当前维度的值有一个是 1。</li>
+</ul>
+<p>若条件不满足，抛出&nbsp;<strong>"ValueError: frames are not aligned"</strong>&nbsp;异常。</p>
+<p>&nbsp;</p>
+<p>参考文档：</p>
+<p><a href="https://www.numpy.org.cn/article/advanced/numpy_array_programming.html#%E4%BB%80%E4%B9%88%E6%98%AF%E7%9F%A2%E9%87%8F%E5%8C%96%EF%BC%9F" target="_blank">NumPy 矢量化</a></p>
+<p><a href="https://www.numpy.org.cn/user/basics/broadcasting.html#%E5%B9%BF%E6%92%AD%EF%BC%88broadcasting%EF%BC%89" target="_blank">NumPy 广播</a></p>
+<p><a href="https://numpy.org/devdocs/user/theory.broadcasting.html" target="_blank">Array Broadcasting in Numpy</a></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

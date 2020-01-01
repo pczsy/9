@@ -1,0 +1,120 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修drf框架中所有视图及用法' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>drf框架中所有视图及用法</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11491625.html</div><br>
+    <h1 id="自我总结">0909自我总结</h1>
+<h1 id="drf框架中所有视图及用法">drf框架中所有视图及用法</h1>
+<h2 id="一.drf框架中的所有视图类">一.drf框架中的所有视图类</h2>
+<p><code>from django.views import View</code></p>
+<p><code>from rest_framework import views, generics, mixins, viewsets</code></p>
+<ul>
+<li><p><code>最基础</code>:django自带的views类</p></li>
+<li><p><code>drf框架中最基础的视图类</code>:views.APIView</p></li>
+<li><code>drf框架中工具视图</code>:generics
+<ul>
+<li>GenericAPIView:该视图类中的基类</li>
+</ul></li>
+<li>mixins视图工具集:
+<ul>
+<li>RetrieveModelMixin：retrieve 单取</li>
+<li>ListModelMixin：list 群取</li>
+<li>CreateModelMixin：create 单增</li>
+<li>UpdateModelMixin：update 单整体改</li>
+<li>UpdateModelMixin: partial_update 单局部改</li>
+<li>DestroyModelMixin：destroy 单删</li>
+</ul></li>
+<li><p>viewsets视图集</p></li>
+</ul>
+<p><code>上述视图都是基于django自带的views进行相关方法的分装</code></p>
+<h2 id="二.viewsets视图集">二.viewsets视图集</h2>
+<pre><code><code>ViewSetMixin：视图集工具 - 重写as_view - 将 请求方式 映射到视图类中的 指定方法
+我们在路由中 类名.as_view({&#39;get&#39;: &#39;retrieve&#39;, &#39;delete&#39;: &#39;remove_obj&#39;})
+GenericViewSet：与模型类有关的接口视图集 - 可以从mixins那继承功能，也可以自定义功能
+ViewSet：与模型类无关或不是标准模型类接口 - 一般都是自定义功能</code></pre>
+<h2 id="三.generics中genericapiview使用">三.generics中GenericAPIView使用</h2>
+<p>将 queryset 和 serializer_class 封装成类属性，提供了三个方法</p>
+<ul>
+<li><p>self.get_queryset() :获取所有</p></li>
+<li><p>self.get_object() :获取根据pk获取单个</p></li>
+<li><p>self.get_serializer(*args, **kwargs):获取指定</p>
+<p>常用的几个参数</p>
+<ul>
+<li><a href="data:用于返序列化传参" class="uri">data:用于返序列化传参</a></li>
+<li>many:获取多个序列化对象</li>
+<li>instance:如果有后面save执行更新方法,没有执行创建方法</li>
+<li>partial:为True可以进行局部字段修改,默认为<code>False</code>为所有字段修改</li>
+</ul></li>
+</ul>
+<p>使用这些方法的重要前提必须要</p>
+<ul>
+<li><code>queryset</code></li>
+<li><code>serializer_class</code></li>
+<li>如果我们要使用get_object()必须前端传给我们一个<code>pk</code></li>
+</ul>
+<h2 id="四.mixins使用">四.mixins使用</h2>
+<p>mixins是在generics再进行方法的分装成5个方法</p>
+<ul>
+<li>RetrieveModelMixin：retrieve 单取</li>
+<li>ListModelMixin：list 群取</li>
+<li>CreateModelMixin：create 单增</li>
+<li>UpdateModelMixin：update 单整体改</li>
+<li>UpdateModelMixin: partial_update 单局部改</li>
+<li>DestroyModelMixin：destroy 单删</li>
+</ul>
+<p>使用方法都是<code>self.方法名(request,*args,**kwargs)</code></p>
+<p>如单取</p>
+<p>首先我们要类进行继承class 类名(mixins.RetrieveModelMixin)</p>
+<p><code>self.retrieve(request,*args,**kwargs)</code></p>
+<p>不过再执行这些操作的时候依然要给与generics视图一样的两个参数,且创建的视图类必须继承其方法的类为父类</p>
+<h2 id="五.generics中继承genericapiview的子类使用">五.generics中继承GenericAPIView的子类使用</h2>
+<pre><code><code>class BookRetrieveUpdateAPIView(generics.RetrieveUpdateAPIView):
+    queryset = models.Book.objects.filter(is_delete=False).order_by(&#39;-id&#39;)
+    serializer_class = serializers.BookModelSerializer</code></pre>
+<p>其实再之前的基础再进行方法的分装</p>
+<p>居然有什么方法看源码即可ctrl+左键看源码</p>
+<h2 id="六自定制视图">六自定制视图</h2>
+<p><code>本来get他就只会找类中get方法我们可以对其设置让他找我们对于的名称</code></p>
+<p><code>路由层</code></p>
+<pre><code><code>from django.conf.urls import url
+from . import views
+urlpatterns = [
+    url(r&#39;^v4/books/(?P&lt;pk&gt;.*)/$&#39;, views.BookGenericViewSet.as_view({
+        &#39;delete&#39;: &#39;remove_book&#39;
+    })),
+]</code></pre>
+<p><code>视图层</code></p>
+<pre><code><code>class BookGenericViewSet(mixins.RetrieveModelMixin, mixins.ListModelMixin, mixins.CreateModelMixin, mixins.UpdateModelMixin, viewsets.GenericViewSet):
+    queryset = models.Book.objects.filter(is_delete=False).order_by(&#39;-id&#39;)
+    serializer_class = serializers.BookModelSerializer
+
+    def remove_book(self, request, *args, **kwargs):
+        pk = kwargs.get(&#39;pk&#39;)
+        try:
+            book_obj = models.Book.objects.get(is_delete=False, pk=pk)
+            book_obj.is_delete = True
+            book_obj.save()
+            return APIResponse(0, &#39;删除成功&#39;)
+        except:
+            return APIResponse(1, &#39;删除失败&#39;)</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

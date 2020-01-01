@@ -1,0 +1,377 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修JGit----将 Git 嵌入你的应用' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>JGit----将 Git 嵌入你的应用</center></div><div class='banquan'>原文出处:本文由博客园博主云天提供。<br/>
+原文连接:https://www.cnblogs.com/tqlin/p/12022682.html</div><br>
+    <p>如果你想在一个 Java 程序中使用 Git ，有一个功能齐全的 Git 库，那就是 JGit 。 JGit 是一个用 Java 写成的功能相对健全的 Git 的实现，它在 Java 社区中被广泛使用。 JGit 项目由 Eclipse 维护，<a href="http://www.eclipse.org/jgit">它的主页</a>。</p>
+<h2 id="依赖添加">依赖添加</h2>
+<p>有很多种方式可以将 JGit 依赖加入到你的项目，并依靠它去写代码。 最简单的方式也许就是使用 Maven 。你可以通过在你的 pom.xml 文件里的 <dependencies> 标签中增加像下面这样的片段来完成这个整合。</p>
+<pre><code><code>    &lt;dependency&gt;
+        &lt;groupId&gt;org.eclipse.jgit&lt;/groupId&gt;
+        &lt;artifactId&gt;org.eclipse.jgit&lt;/artifactId&gt;
+        &lt;version&gt;5.5.1.201910021850-r&lt;/version&gt;
+    &lt;/dependency&gt;</code></pre>
+<p>在你读到这段文字时 version 很可能已经更新了，所以请浏览 http://mvnrepository.com/artifact/org.eclipse.jgit/org.eclipse.jgit 以获取最新的仓库信息。 当这一步完成之后， Maven 就会自动获取并使用你所需要的 JGit 库。</p>
+<h2 id="项目实践">项目实践</h2>
+<p>在搭建<a href="https://tqlin.cn/">我的博客</a>的过程中，因为该博客是部署在自己的服务器上，需要在<a href="https://travis-ci.org/">ci</a>自动编译完成后，实现自动部署到我的服务器上（该步实现的方式很多，通过开放git接口，有编译部署的时候自动拉取到我的服务器就是其中的一个方法）</p>
+<p>以下主要使用了pull拉取方法</p>
+<pre class="java"><code>package com.easy.jGit.controller;
+
+import lombok.extern.slf4j.Slf4j;
+import org.eclipse.jgit.api.*;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.lib.Repository;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.File;
+
+@RestController
+@Slf4j
+public class JGitController {
+
+    /**
+     * git仓路径
+     */
+    final String patch = &quot;/opt/webapps/blog/.git&quot;;
+
+    /**
+     * 代码分支
+     */
+    final String branch = &quot;origin/gh-pages&quot;;
+
+    /**
+     * 拉取
+     *
+     * @return
+     */
+    @RequestMapping(&quot;/pull&quot;)
+    public String pull() {
+        String result;
+        Repository repo = null;
+        try {
+            repo = new FileRepository(new File(patch));
+            Git git = new Git(repo);
+
+            log.info(&quot;开始重置&quot;);
+            //重置
+            git.reset()
+                    .setMode(ResetCommand.ResetType.HARD)
+                    .setRef(branch).call();
+
+            log.info(&quot;开始拉取&quot;);
+
+            //拉取
+            git.pull()
+                    .setRemote(&quot;origin&quot;)
+                    .setRemoteBranchName(&quot;gh-pages&quot;)
+                    .call();
+            result = &quot;拉取成功!&quot;;
+            log.info(result);
+        } catch (Exception e) {
+            result = e.getMessage();
+        } finally {
+            if (repo != null) {
+                repo.close();
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 重置
+     *
+     * @return
+     */
+    @RequestMapping(&quot;/reset&quot;)
+    public String reset() {
+        String result;
+
+        Repository repo = null;
+        try {
+            repo = new FileRepository(new File(patch));
+            Git git = new Git(repo);
+            git.reset().setMode(ResetCommand.ResetType.HARD).setRef(branch).call();
+            result = &quot;重置成功!&quot;;
+
+        } catch (Exception e) {
+            result = e.getMessage();
+        } finally {
+            if (repo != null) {
+                repo.close();
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 恢复
+     */
+    @RequestMapping(&quot;/revert&quot;)
+    public String revert() {
+        String result;
+
+        Repository repo = null;
+        try {
+            repo = new FileRepository(new File(patch));
+            Git git = new Git(repo);
+            git.revert().call();
+            result = &quot;恢复成功!&quot;;
+
+        } catch (Exception e) {
+            result = e.getMessage();
+        } finally {
+            if (repo != null) {
+                repo.close();
+            }
+        }
+        return result;
+    }
+
+    /**
+     * 克隆
+     *
+     * @return
+     */
+    @RequestMapping(&quot;/clone&quot;)
+    public String clone() {
+        String result;
+        try {
+            Git.cloneRepository()
+                    .setURI(&quot;https://github.com/smltq/blog.git&quot;)
+                    .setDirectory(new File(&quot;/blog&quot;))
+                    .call();
+            result = &quot;克隆成功了!&quot;;
+        } catch (GitAPIException e) {
+            result = e.getMessage();
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    /**
+     * 状态
+     */
+    @RequestMapping(&quot;/status&quot;)
+    public static void status() {
+        File RepoGitDir = new File(&quot;/blog/.git&quot;);
+        Repository repo = null;
+        try {
+            repo = new FileRepository(RepoGitDir.getAbsolutePath());
+            Git git = new Git(repo);
+            Status status = git.status().call();
+            log.info(&quot;Git Change: &quot; + status.getChanged());
+            log.info(&quot;Git Modified: &quot; + status.getModified());
+            log.info(&quot;Git UncommittedChanges: &quot; + status.getUncommittedChanges());
+            log.info(&quot;Git Untracked: &quot; + status.getUntracked());
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        } finally {
+            if (repo != null) {
+                repo.close();
+            }
+        }
+    }
+}</code></pre>
+<p><a href="https://github.com/smltq/blog/blob/master/.travis.yml">.travis.yml 源文件</a></p>
+<pre class="yaml"><code>language: node_js # 设置语言
+node_js: stable   # 设置相应版本
+cache:
+  apt: true
+  directories:
+    - node_modules # 缓存不经常更改的内容
+before_install:
+  - export TZ=&#39;Asia/Shanghai&#39; # 更改时区
+  - npm install hexo-cli -g
+  #- chmod +x ./publish-to-gh-pages.sh  # 为shell文件添加可执行权限
+install:
+  - npm install # 安装hexo及插件
+script:
+  - hexo clean  # 清除
+  - hexo g      # 生成
+after_script:
+  - git clone https://${GH_REF} .deploy_git
+  - cd .deploy_git
+  - git checkout master:gh-pages
+  - cd ../
+  - mv .deploy_git/.git/ ./public/
+  - cd ./public
+  - git config user.name  &quot;tqlin&quot;
+  - git config user.email &quot;smltq@126.com&quot;
+  # add commit timestamp
+  - git add .
+  - git commit -m &quot;Travis CI Auto Builder at `date +&quot;%Y-%m-%d %H:%M&quot;`&quot;
+  - git push --force --quiet &quot;https://${GH_TOKEN}@${GH_REF}&quot; master:gh-pages &amp;&amp; curl http://49.235.170.100:8787/pull
+  - curl http://49.235.170.100:8787/pull   #这里调用上面实现的拉取接口
+branches:
+  only:
+    - master # 只监测master分支
+env:
+  global:
+    - GH_REF: github.com/smltq/blog.git #设置GH_REF</code></pre>
+<h2 id="基本概念">基本概念</h2>
+<ul>
+<li><p>Repository 包括所有的对象和引用，用来管理源码</p></li>
+<li><p>AnyObjectId 表示SHA1对象，可以获得SHA1的值，进而可以获得git对象</p></li>
+<li><p>Ref 引用对象，表示.git/refs下面的文件引用 Ref HEAD = repository.getRef(&quot;refs/heads/master&quot;);</p></li>
+<li><p>RevWalk 可以遍历提交对象，并按照顺序返回提交对象</p></li>
+<li><p>RevCommit 代表一个提交对象</p></li>
+<li><p>RevTag 代表标签对象</p></li>
+<li><p>RevTree 代表树对象</p></li>
+</ul>
+<h2 id="其它常用命令">其它常用命令</h2>
+<p>大多数 JGit 会话会以 Repository 类作为起点，你首先要做的事就是创建一个它的实例。 对于一个基于文件系统的仓库来说（JGit 允许其它的存储模型），用 FileRepositoryBuilder 完成它。</p>
+<pre class="java"><code>// 创建一个新仓库
+Repository newlyCreatedRepo = FileRepositoryBuilder.create(
+    new File(&quot;/tmp/new_repo/.git&quot;));
+newlyCreatedRepo.create();
+
+// 打开一个存在的仓库
+Repository existingRepo = new FileRepositoryBuilder()
+    .setGitDir(new File(&quot;my_repo/.git&quot;))
+    .build();</code></pre>
+<p>当你拥有一个 Repository 实例后，你就能对它做各种各样的事。比如：</p>
+<pre class="java"><code>// 获取引用
+Ref master = repo.getRef(&quot;master&quot;);
+
+// 获取该引用所指向的对象
+ObjectId masterTip = master.getObjectId();
+
+// Rev-parse
+ObjectId obj = repo.resolve(&quot;HEAD^{tree}&quot;);
+
+// 装载对象原始内容
+ObjectLoader loader = repo.open(masterTip);
+loader.copyTo(System.out);
+
+// 创建分支
+RefUpdate createBranch1 = repo.updateRef(&quot;refs/heads/branch1&quot;);
+createBranch1.setNewObjectId(masterTip);
+createBranch1.update();
+
+// 删除分支
+RefUpdate deleteBranch1 = repo.updateRef(&quot;refs/heads/branch1&quot;);
+deleteBranch1.setForceUpdate(true);
+deleteBranch1.delete();
+
+// 配置
+Config cfg = repo.getConfig();
+String name = cfg.getString(&quot;user&quot;, null, &quot;name&quot;);</code></pre>
+<h3 id="提交命令">提交命令</h3>
+<p>AddCommand可以把工作区的内容添加到暂存区。</p>
+<pre class="java"><code>Git git = Git.open(new File(&quot;D:\\source-code\\temp\\.git&quot;));
+git.add().addFilepattern(&quot;.&quot;).call(); // 相当与git add -A添加所有的变更文件git.add().addFilepattern(&quot;*.java&quot;)这种形式是不支持的
+git.add().addFilepattern(&quot;src/main/java/&quot;).call(); // 添加目录，可以把目录下的文件都添加到暂存区
+//jgit当前还不支持模式匹配的方式，例如*.java</code></pre>
+<p>CommitCommand用于提交操作</p>
+<pre class="java"><code>Git git =Git.open(new File(&quot;D:\\source-code\\temp\\user1\\.git&quot;));
+CommitCommand commitCommand = git.commit().setMessage(&quot;master 23 commit&quot;).setAllowEmpty(true);
+commitCommand.call();</code></pre>
+<h3 id="status命令">status命令</h3>
+<pre class="java"><code>    Git git = Git.open(new File(&quot;D:\\source-code\\temp-1\\.git&quot;));
+    Status status = git.status().call();        //返回的值都是相对工作区的路径，而不是绝对路径
+    status.getAdded().forEach(it -&gt; System.out.println(&quot;Add File :&quot; + it));      //git add命令后会看到变化
+    status.getRemoved().forEach(it -&gt; System.out.println(&quot;Remove File :&quot; + it));  ///git rm命令会看到变化，从暂存区删除的文件列表
+    status.getModified().forEach(it -&gt; System.out.println(&quot;Modified File :&quot; + it));  //修改的文件列表
+    status.getUntracked().forEach(it -&gt; System.out.println(&quot;Untracked File :&quot; + it)); //工作区新增的文件列表
+    status.getConflicting().forEach(it -&gt; System.out.println(&quot;Conflicting File :&quot; + it)); //冲突的文件列表
+    status.getMissing().forEach(it -&gt; System.out.println(&quot;Missing File :&quot; + it));    //工作区删除的文件列表</code></pre>
+<h3 id="log命令">log命令</h3>
+<p>LogCommand相当于git log命令</p>
+<pre class="java"><code>//提取某个作者的提交，并打印相关信息
+Git git = Git.open(new File(&quot;D:\\source-code\\temp-1\\.git&quot;));
+DateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+Iterable&lt;RevCommit&gt; results = git.log().setRevFilter(new RevFilter() {
+    @Override
+    public boolean include(RevWalk walker, RevCommit cmit)
+       throws StopWalkException, MissingObjectException, IncorrectObjectTypeException, IOException {
+        return cmit.getAuthorIdent().getName().equals(&quot;xxxxx dsd&quot;);
+    }
+
+    @Override
+    public RevFilter clone() {
+    return this;
+            }
+        }).call();
+results.forEach(commit -&gt; {
+    PersonIdent authoIdent = commit.getAuthorIdent();
+    System.out.println(&quot;提交人：  &quot; + authoIdent.getName() + &quot;     &lt;&quot; + authoIdent.getEmailAddress() + &quot;&gt;&quot;);
+    System.out.println(&quot;提交SHA1：  &quot; + commit.getId().name());
+    System.out.println(&quot;提交信息：  &quot; + commit.getShortMessage());
+    System.out.println(&quot;提交时间：  &quot; + format.format(authoIdent.getWhen()));
+});</code></pre>
+<h3 id="fetch命令">fetch命令</h3>
+<p>fetch命令</p>
+<pre class="java"><code>Repository rep = new FileRepository(&quot;D:\\source-code\\temp-1\\.git&quot;);
+Git git = new Git(rep);
+git.pull().setRemote(&quot;origin&quot;).call();
+//fetch命令提供了setRefSpecs方法，而pull命令并没有提供，所有pull命令只能fetch所有的分支
+git.fetch().setRefSpecs(&quot;refs/heads/*:refs/heads/*&quot;).call();</code></pre>
+<h3 id="push命令">push命令</h3>
+<p>而PushCommand和git push相同，一般都需要我们提供用户名和密码，需要用到CredentialsProvider类</p>
+<pre class="java"><code>Repository rep = new FileRepository(&quot;D:\\source-code\\temp-1\\.git&quot;);
+Git git = new Git(rep);
+git.push().setCredentialsProvider(new UsernamePasswordCredentialsProvider(&quot;myname&quot;, &quot;password&quot;)).call();</code></pre>
+<h3 id="clone命令">clone命令</h3>
+<p>CloneCommand等价与git clone命令</p>
+<pre class="java"><code>Git.cloneRepository().setURI(&quot;https://admin@localhost:8443/r/game-of-life.git&quot;)
+                .setDirectory(new File(&quot;D:\\source-code\\temp-1&quot;)).call();</code></pre>
+<h3 id="revwalk-api">RevWalk API</h3>
+<p>以下代码实现这样一个功能，查找某个文件的历史记录，并把每个提交的文件内容打印出来。</p>
+<pre class="java"><code> DateFormat format = new SimpleDateFormat(&quot;yyyy-MM-dd HH:mm:ss&quot;);
+ Repository repository = new RepositoryBuilder().setGitDir(new File(&quot;D:\\source-code\\temp-1\\.git&quot;)).build();
+ try (RevWalk walk = new RevWalk(repository)) {
+     Ref head = repository.findRef(&quot;HEAD&quot;);
+     walk.markStart(walk.parseCommit(head.getObjectId())); // 从HEAD开始遍历，
+     for (RevCommit commit : walk) {
+         RevTree tree = commit.getTree();
+
+         TreeWalk treeWalk = new TreeWalk(repository, repository.newObjectReader());
+         PathFilter f = PathFilter.create(&quot;pom.xml&quot;);
+         treeWalk.setFilter(f);
+         treeWalk.reset(tree);
+         treeWalk.setRecursive(false);
+         while (treeWalk.next()) {
+             PersonIdent authoIdent = commit.getAuthorIdent();
+             System.out.println(&quot;提交人： &quot; + authoIdent.getName() + &quot; &lt;&quot; + authoIdent.getEmailAddress() + &quot;&gt;&quot;);
+             System.out.println(&quot;提交SHA1： &quot; + commit.getId().name());
+             System.out.println(&quot;提交信息： &quot; + commit.getShortMessage());
+             System.out.println(&quot;提交时间： &quot; + format.format(authoIdent.getWhen()));
+
+             ObjectId objectId = treeWalk.getObjectId(0);
+             ObjectLoader loader = repository.open(objectId);
+             loader.copyTo(System.out);              //提取blob对象的内容
+         }
+     }
+ }</code></pre>
+<p>其它更多命令参考官网</p>
+<h2 id="资料">资料</h2>
+<ul>
+<li><a href="https://github.com/smltq/spring-boot-demo/blob/master/jGit">JGit 示例源码</a></li>
+<li><p><a href="https://wiki.eclipse.org/JGit/User_Guide">JGit官方文档</a></p>
+<blockquote>
+<p><a href="https://github.com/smltq/spring-boot-demo">Spring Boot、Cloud 学习项目</a></p>
+</blockquote></li>
+</ul>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

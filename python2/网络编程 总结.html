@@ -1,0 +1,777 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修网络编程 总结' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>网络编程 总结</center></div><div class='banquan'>原文出处:本文由博客园博主changxin7提供。<br/>
+原文连接:https://www.cnblogs.com/changxin7/p/11368908.html</div><br>
+    <h3 id="cs-bs架构">1.C/S B/S架构</h3>
+<pre><code><code>C/S B/S架构
+C: client端
+B: browse 浏览器
+S: server端
+C/S架构: 基于客户端与服务端之间的通信
+​   QQ, 游戏,皮皮虾, 快手,抖音.
+​   优点: 个性化设置,响应速度快,
+​   缺点: 开发成本,维护成本高,占用空间,用户固定.
+B/S架构: 基于浏览器与服务端之间的通信
+​   谷歌浏览器,360浏览器,火狐浏览器等等.
+​   优点: 开发维护成本低,占用空间相对低,用户不固定.
+​   缺点: 功能单一,没有个性化设置,响应速度相对慢一些.</code></pre>
+<h3 id="网络通信原理">2.网络通信原理</h3>
+<pre><code><code>80年代,固定电话联系,(还没有推广普通话)
+1. 两台电话之间一堆物理连接介质连接.
+2. 拨号,锁定对方电话的位置.
+由于当时没有统一普通话,所以你如果和河南,山西,广西,福建等朋友进行友好的沟通交流,你必须学当地的方言.
+
+推广普通话,统一交流方式.
+1. 两台电话之间一堆物理连接介质连接.
+2. 拨号,锁定对方电话的位置.
+3. 统一交流方式.
+
+全球范围内交流:
+1. 两台电话之间一堆物理连接介质连接.
+2. 拨号,锁定对方电话的位置.
+3. 统一交流方式.(英语)
+
+话题转回互联网通信:
+​  我现在想和美国的一个girl联系.你如何利用计算机联系???
+1. 两台计算机要有一堆物理连接介质连接.
+2. 找到对方计算机软件位置.
+3. 遵循一揽子互联网通信协议.</code></pre>
+<h3 id="osi七层协议">3.osi七层协议</h3>
+<ol>
+<li><p>简单串联五层协议以及作用</p>
+<ol>
+<li><p>物理层</p>
+<pre><code><code>物理层指的就是网线,光纤,双绞线等等物理连接介质
+
+物理层发送的是比特流: 01010101010101010101只是发送比特流有什么问题???
+
+数据应该有规律的分组,分组是数据链路层做的事情.</code></pre></li>
+<li><p>数据链路层</p>
+<pre><code><code>数据链路层对比特流进行分组.
+最开始从事互联网企业的就是美国的几家公司,各家有各家自定的分组标准.后来统一了标准: 对数据分组的标准.
+
+**以太网协议**: 对比特流进行合理的分组.
+一组数据01010101 叫做一帧,数据报.
+​ head  |  data(晚上约么)
+
+head是固定的长度:18个字节
+​ 源地址: 6个字节   
+​ 目标地址: 6个字节 
+​ 数据类型: 6个字节
+
+data: 最少是46个字节,最大1500字节.
+一帧数据: 最少64个字节,最大1518个字节.
+一帧数据|一帧数据......
+每个电脑上都有一个网卡,往卡上都记录一个独一无二的地址.
+
+**mac地址**: 就是你的计算机上网卡上标注的地址.
+12位16进制数组成 :前六位是厂商编号,后六位是流水线号.
+源mac地址 目标mac地址 数据类型 | data
+&#39;1C-1B-0D-A4-E6-44&#39;
+计算机的通信方式:
+同一个局域网内,通过广播的形式通信.
+
+消息一经广播发出,村里所有的人(局域网所有的计算机都能接收到消息,分析消息,是否是找我的,不是就丢弃),
+计算机只能在局域网内进行广播: 范围大了 广播风暴,效率极低.</code></pre>
+<pre><code><code>还有两个没有解决:
+1. 不同局域网如何通信?
+2. 软件与软件的通信,而不是计算机之间的通信.</code></pre>
+<pre><code><code>补充:
+    同一个局域网通过广播的形式发送数据.
+    交换机的mac地址学习功能:
+    一个交换机的5个接口: 5个计算机.
+     1: FF-FF-FF-FF-FF-FF
+     2: FF-FF-FF-FF-FF-FF
+     3: FF-FF-FF-FF-FF-FF
+     4: FF-FF-FF-FF-FF-FF
+     5: FF-FF-FF-FF-FF-FF
+    接口1:  源mac 1C-1B-0D-A4-E6-44 目标1C-1C-0D-A4-E5-44 |数据 以广播的形式发出
+    2,3,4,5口都会接收到消息,5口是最终的目标地址,交换机就会将5口与mac地址对应上.
+     1: 1C-1B-0D-A4-E6-44
+     2: FF-FF-FF-FF-FF-FF
+     3: FF-FF-FF-FF-FF-FF
+     4: FF-FF-FF-FF-FF-FF
+     5: 1C-1C-0D-A4-E5-44
+    当五个口都对应上具体的mac地址,2口再次发消息,就不会广播了,就会以单播发送.
+    **我们的前提是什么**? 你必须知道对方的mac地址你才可以以广播的形式发消息.实际上,网络通信中,你只要知道对方的IP与自己的IP即可.</code></pre></li>
+<li><p>网络层</p>
+<pre><code><code>**IP协议**: 确定局域网(子网)的位置
+找到具体软件的位置,上一层的事情</code></pre>
+<pre><code><code>    IP协议: 
+        ip地址:四段分十进制 192.168.0.12  
+        取值范围 0~255.0~255.0~255.0~255
+        子网掩码: C类子网掩码: 255.255.255.0
+        ip地址 + 子网掩码 按位与运算 计算出是否在统一局域网(子网,网段).
+        计算172.16.10.1 与 172.16.10.128
+        ​    172.16.10.1：10101100.00010000.00001010.00000001
+        255.255.255.0:   11111111.11111111.11111111.00000000
+        从属于的局域网: 172.16.10.0
+        172.16.10.128：10101100.00010000.00001010.10000000
+        255.255.255.0:   11111111.11111111.11111111.00000000
+        从属于的局域网: 172.16.10.0
+        172.16.10.1 ~172.16.10.255
+        C类子网掩码 一个网段最多可以承载多个IP地址?
+        172.16.10.0 被占用.
+        172.16.10.255 广播地址 被占用.
+        172.16.10.1 被占用.
+        253台计算机.
+        如果你要想给另一个计算机发数据, 你一定要知道对方的ip地址.
+        **ARP协议**:通过对方的ip地址获取到对方的mac地址.</code></pre>
+<pre><code><code>      源码mac  目标mac   源IP    目标IP    数据
+        1C-1B-0D-A4-E6-44  FF:FF:FF:FF:FF:FF 172.16.10.13 172.16.10.156    数据
+
+        第一次发消息: 发送到交换机 ---&gt; 路由器  广播的形式发出去
+        目标计算机收到消息:就要回消息:
+         源码mac  目标mac   源IP    目标IP    数据
+        1B-1B-0D-A4-E6-54  1C-1B-0D-A4-E6-44 172.16.10.156 172.16.10.13    数据</code></pre>
+<pre><code><code>总结:
+    前提:知道目标mac:
+    ​ 计算机A 发送一个消息给 计算机B 
+    ​     源码mac  目标mac   源IP    目标IP    数据
+    ​ 单播的形式发送到交换机,交换机会检测自己的对照表有没有目标mac,如果有,单播传.如果没有,交由上一层: 路由器:
+    路由器收到消息: 对消息进行分析: 
+    要确定目标计算机与本计算机是否在同一网段,
+    ​ 如果在同一网段,直接发送给对应的交换机,交换机在单播发给目标mac.
+    ​ 如果不是在同一网段: ?
+
+    前提:不知道目标mac:
+    ​ 计算机A 发送一个消息给 计算机B 
+    ​     源码mac  目标mac不知道   源IP    目标IP    数据
+    ​ 单播的形式发送到交换机,交换机交由上一层路由器:路由器收到消息: 对消息进行分析: 
+    要确定目标计算机与本计算机是否在同一网段,
+    ​ 如果在同一网段通过 IP以及ARP协议获取到对方的mac地址,然后在通信.
+    ​ 如果不是在同一网段: ?</code></pre></li>
+<li><p>传输层</p>
+<pre><code><code>端口协议:确定软件在计算机的位置</code></pre>
+<pre><code><code>端口协议:  UDP协议,TCP协议
+65535端口
+1~1024操作系统专门使用的端口
+举例: 3306 数据库
+自己开发软件都是8080以后的端口号</code></pre></li>
+<li><p>应用层</p>
+<pre><code><code>自己定义的协议
+
+广播(局域网内) + mac地址(计算机位置) + ip(局域网的位置) + 端口(软件在计算机的位置)
+有了以上四个参数:你就可以确定世界上任何一个计算机的软件的位置.</code></pre></li>
+</ol></li>
+<li><p>第二天回顾</p>
+<pre><code><code>单播:单独联系某一个人
+广播:给所有人发送消息(群发)
+比特流: bit就是 0101 跟水流一样的源源不断的发送010101001
+以太网协议: 将数据进行分组:一组称之为一帧,数据报.
+​    head | data
+head: 18个字节:  源mac地址 | 目标mac地址| 数据类型
+data: 最少46个字节, 最多是1500个字节
+mac地址: 就是计算机网卡上记录的地址,世界上所有的计算机独一无二的标识,用于局域网内广播(单播)时查找的计算机的位置
+交换机: 分流连接计算机的作用
+路由器: 家用路由器和企业版路由器
+
+
+交换机的mac学习功能:
+​    第一次发送消息广播的形式,当学习表记录上端口与mac地址对应关系之后,在发送消息: 单播的形式发送.
+​    端口1:  1C-5F-4B-3E-35-2C
+​    端口2:  1C-5F-4B-6E-35-2C
+
+广播风暴: 所有的计算机都在广播的形式发送消息.
+IP协议: 四段分十进制
+​    172.168.0.1
+
+子网掩码:
+​    A: 255.0.0.0
+​    B: 255.255.0.0
+​    C: 255.255.255.0
+
+路由器: 
+​    外网(公网)IP, 
+​    内网(局域网)IP 都是假的,DHCP协议: 路由器自动分发的IP地址,网关等等.
+
+
+端口: 0~1023系统的, 自己选取端口8080 以后都可以.
+ARP协议: 通过IP获取计算机mac地址.
+TCP协议:  面向链接的协议,流式协议.安全可靠效率低的协议, 传输文件,浏览器等.
+UDP协议: 用户数据报协议,效率高,不可靠的协议, 微信
+
+三次握手和四次挥手:</code></pre></li>
+</ol>
+<h3 id="udp-tcp-协议">4.UDP TCP 协议</h3>
+<pre><code><code>TCP（Transmission Control Protocol）可靠的、面向连接的协议（eg:打电话）、流式协议, 传输效率低全双工通信（发送缓存&amp;接收缓存）、面向字节流。使用TCP的应用：Web浏览器；文件传输程序。
+
+UDP（User Datagram Protocol）不可靠的、无连接的服务，传输效率高（发送前时延小），一对一、一对多、多对一、多对多、面向报文(数据包)，尽最大努力服务，无拥塞控制。使用UDP的应用：域名系统 (DNS)；视频流；IP语音(VoIP)。</code></pre>
+<h3 id="tcp协议的三次握手和四次挥手">5.TCP协议的三次握手和四次挥手</h3>
+<pre><code><code>syn洪水攻击:制造大量的假的无效的IP请求服务器.致使正常的IP访问不了服务器.</code></pre>
+<h3 id="socket套接字">6.socket套接字</h3>
+<pre><code><code>socket套接字:
+    1.socket是处于应用层与传输层之间的抽象层,他是一组操作起来非常简单的接口(接受数据)此接口接受数据之后,交由操作系统.
+    为什么存在socket抽象层?
+    如果直接与操作系统数据交互非常麻烦,繁琐,socket对这些繁琐的的操作高度的封装,简化.
+    2.socket在python中就是一个模块.</code></pre>
+<h3 id="基于tcp协议的socket简单通信">7.基于TCP协议的socket简单通信</h3>
+<pre><code><code># 服务端
+
+import socket
+
+phone = socket.socket()
+
+phone.bind((&#39;192.168.14.230&#39;, 8849))
+
+phone.listen(2)  # listen 允许几个人链接,剩下的链接等待
+
+conn, addr = phone.accept()  # 等待客户端连接我,阻塞的状态中
+print(f&#39;链接来了{conn,addr}&#39;)
+
+
+from_client_data = conn.recv(1024)
+print(f&#39;来自客户端{addr}消息:{from_client_data.decode(&quot;utf-8&quot;)}&#39;)
+
+to_client_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+conn.send(to_client_data)
+conn.close()
+phone.close()</code></pre>
+<pre><code><code># 客户端
+import socket
+phone = socket.socket()
+
+phone.connect((&#39;192.168.14.230&#39;, 8849))
+
+to_server_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+phone.send(to_server_data)
+
+from_server_data = phone.recv(1024)
+print(f&#39;来自服务器的消息:{from_server_data}&#39;)</code></pre>
+<h3 id="基于tcp协议的socket循环通信">8.基于TCP协议的socket循环通信</h3>
+<pre><code><code>总结:
+    服务端和客户端都加循环,如果正常退出双方都直接break,设置判断信息
+    服务端在客户等待连接的后面加while循环,客户端在链接地址之后加循环
+    服务端需要加一个异常退出的异常处理,提示异常退出</code></pre>
+<pre><code><code># 服务端
+import socket
+
+phone = socket.socket()
+
+phone.bind((&#39;192.168.14.230&#39;, 8849))
+
+phone.listen(2)  # listen 允许几个人链接,剩下的链接等待
+
+conn, addr = phone.accept()  # 等待客户端连接我,阻塞的状态中
+print(f&#39;链接来了{conn,addr}&#39;)
+
+while 1:
+    try:
+        from_client_data = conn.recv(1024)
+
+        if from_client_data.upper() == b&#39;Q&#39;:  # 正常退出 服务端跟着关闭
+            print(&#39;客户正常退出聊天了&#39;)
+            break
+
+        print(f&#39;来自客户端{addr}消息:{from_client_data.decode(&quot;utf-8&quot;)}&#39;)
+        to_client_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+        conn.send(to_client_data)
+    except ConnectionResetError:  # 异常退出 会报错 写提示内容
+        print(&#39;客户端链接中断了&#39;)
+        break
+
+conn.close()
+phone.close()</code></pre>
+<pre><code><code># 客户端
+import socket
+phone = socket.socket()
+
+phone.connect((&#39;192.168.14.230&#39;, 8849))
+
+while 1:
+    to_server_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+    if not to_server_data:  # 服务端如果收到了空的内容,服务端就会一直阻塞中.无论是那一端发送,都不能为空
+        print(&#39;发送内容不能为空&#39;)
+        continue
+
+    phone.send(to_server_data)
+    if to_server_data.upper() == b&#39;Q&#39;:  # 判断如果是Q的话就退出,正常退出
+        break
+
+    from_server_data = phone.recv(1024)
+    print(f&#39;来自服务器的消息:{from_server_data}&#39;)
+phone.close()</code></pre>
+<h3 id="基于tcp协议的socket-链接循环-通信">9.基于TCP协议的socket 链接+循环 通信</h3>
+<pre><code><code>总结:
+    服务端在客户端链接之前再加一层while循环,并且把关闭此次通话加到循环最下面
+    listen(2) 允许2个人链接,剩下的链接等待 (实际上三个人链接),超过就会报错
+    如果第一个链接时,第二个发了信息,当第一个关闭的时候自动接收第二个发送的信息</code></pre>
+<pre><code><code># 服务端
+import socket
+
+phone = socket.socket()  # 买电话
+
+phone.bind((&#39;192.168.14.230&#39;, 8849))  # 0-65535  1024之前系统分配好的端口 绑定电话卡
+
+phone.listen(2)  # listen 允许2个人链接,剩下的链接等待 (实际上三个人链接)
+
+while 1:
+    conn, addr = phone.accept()  # 等待客户端连接我,阻塞的状态中
+    print(f&#39;链接来了{conn,addr}&#39;)
+
+    while 1:
+        try:
+            from_client_data = conn.recv(1024)
+
+            if from_client_data.upper() == b&#39;Q&#39;:  # 正常退出 客户端通道跟着关闭
+                print(&#39;客户正常退出聊天了&#39;)
+                break
+
+            print(f&#39;来自客户端{addr}消息:{from_client_data.decode(&quot;utf-8&quot;)}&#39;)
+            to_client_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+            conn.send(to_client_data)
+        except ConnectionResetError:  # 异常退出 会报错 写提示内容
+            print(&#39;客户端链接中断了&#39;)
+            break
+    conn.close()
+phone.close()</code></pre>
+<pre><code><code># 客户端
+import socket
+
+phone = socket.socket()
+
+phone.connect((&#39;192.168.14.230&#39;, 8849))
+
+while 1:
+    to_server_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+    if not to_server_data:  # 服务端如果收到了空的内容,服务端就会一直阻塞中.无论是那一端发送,都不能为空
+        print(&#39;发送内容不能为空&#39;)
+        continue
+
+    phone.send(to_server_data)
+    if to_server_data.upper() == b&#39;Q&#39;:  # 判断如果是Q的话就退出,正常退出
+        break
+
+    from_server_data = phone.recv(1024)  # 最多接受的字节数量
+    print(f&#39;来自服务器的消息:{from_server_data}&#39;)
+
+phone.close()</code></pre>
+<h3 id="基于tcp协议的socket应用实例-执行远程命令">10.基于TCP协议的socket应用实例: 执行远程命令</h3>
+<pre><code><code>总结:
+    服务端先导入subprocess模块,作用是可以执行命令,
+    然后修改接收内容,改成操作命令的固定代码
+    客户端接收内容需要改成gbk编码,因为windows操作系统的默认编码是gbk编码,苹果系统不需要改
+    &quot;&quot;&quot;
+    shell: 命令解释器，相当于调用cmd 执行指定的命令。
+    stdout:正确结果丢到管道中。
+    stderr:错了丢到另一个管道中。
+    windows操作系统的默认编码是gbk编码。
+    &quot;&quot;&quot;</code></pre>
+<pre><code><code># 服务端
+import socket
+import subprocess
+
+phone = socket.socket()
+
+phone.bind((&#39;192.168.14.230&#39;, 8849))
+
+phone.listen(2)  # listen 允许2个人链接,剩下的链接等待
+
+while 1:
+    conn, addr = phone.accept()  # 等待客户端连接我,阻塞的状态中
+    print(f&#39;链接来了{conn,addr}&#39;)
+
+    while 1:
+        try:
+            from_client_data = conn.recv(1024)
+
+            if from_client_data.upper() == b&#39;Q&#39;:  # 正常退出 客户端通道跟着关闭
+                print(&#39;客户正常退出聊天了&#39;)
+                break
+
+            obj = subprocess.Popen(from_client_data.decode(&#39;utf-8&#39;),
+                                   shell=True,  # shell: 命令解释器，相当于调用cmd 执行指定的命令。
+                                   stdout=subprocess.PIPE,  # stdout:正确结果丢到管道中。
+                                   stderr=subprocess.PIPE,  # stderr:错了丢到另一个管道中。
+                                   )
+            result = obj.stdout.read() + obj.stderr.read()
+
+            conn.send(result)
+
+        except ConnectionResetError:  # 异常退出 会报错 写提示内容
+            print(&#39;客户端链接中断了&#39;)
+            break
+    conn.close()
+phone.close()</code></pre>
+<pre><code><code># 客户端
+import socket
+
+phone = socket.socket()
+
+phone.connect((&#39;192.168.14.230&#39;, 8849))
+
+while 1:
+    to_server_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+    if not to_server_data:  # 服务端如果收到了空的内容,服务端就会一直阻塞中.无论是那一端发送,都不能为空
+        print(&#39;发送内容不能为空&#39;)
+        continue
+
+    phone.send(to_server_data)
+    if to_server_data.upper() == b&#39;Q&#39;:  # 判断如果是Q的话就退出,正常退出
+        break
+
+    from_server_data = phone.recv(1024)  # 最多接受的字节数量
+    print(f&#39;来自服务器的消息:{from_server_data.decode(&quot;gbk&quot;)}&#39;)
+
+phone.close()</code></pre>
+<pre><code><code>操作系统的缓存区:
+    1. 为什么存在缓冲区??
+        1. 暂时存储一些数据.
+        2. 缓冲区存在如果你的网络波动,保证数据的收发稳定,匀速.
+        缺点: 造成了粘包现象之一.</code></pre>
+<h3 id="粘包现象">11.粘包现象</h3>
+<pre><code><code>第一个粘包现象:
+    同时多次接收send每次数据太少会形成粘包现象,因为太快多次合并成一次发送
+    连续短暂的send多次(数据量很小),你的数据会统一发送出去,
+第二个粘包现象:
+    一次接收send数据量太大,导致一次接收不完,第二次再次接收还是第一次剩余内容.
+    深入研究收发解决方法</code></pre>
+<pre><code><code>如何解决粘包现象:
+    解决粘包现象的思路:
+    服务端发一次数据 10000字节, 
+    客户端接收数据时,循环接收,每次(至多)接收1024个字节,直至将所有的字节全部接收完毕,将接收的数据拼接在一起,最后解码.
+    1. 遇到的问题: recv的次数无法确定
+        你发送总具体数据之前,先给我发一个总数据的长
+        度:5000个字节。然后在发送总数据。
+        客户端： 先接收一个长度。 5000个字节。
+        然后我再循环recv 控制循环的条件就是只要你接受的数据&lt; 5000 一直接收。
+        
+    2. 遇到的问题： 总数据的长度转化成的字节数不固定
+        &gt;&gt;&gt;服务端：
+        conn.send(total_size)
+        conn.send(result)
+        total_size int类型
+        &gt;&gt;&gt;客户端：
+        total_size_bytes = phone.recv(4)
+        total_size
+        data = b&#39;&#39;
+        while len(data) &lt; total_size:
+            data = data + phone.recv(1024)
+            
+            
+你要将total_size int类型转化成bytes类型才可以发送
+    387 ---- &gt; str(387) &#39;387&#39; ----&gt;bytes b&#39;387&#39; 长度 3bytes
+    4185 ----&gt; str(4185) &#39;4185&#39; ----&gt;bytes b&#39;4185&#39; 长度 4bytes
+    18000------------------------------------------------------&gt; 长度 5bytes
+我们要解决：
+    将不固定长度的int类型转化成固定长度的bytes并且还可以翻转回来。</code></pre>
+<pre><code><code>多次接收解决粘包现象,但不是根本解决:
+    
+    from_client_data = conn.recv(3)  # 最多接受1024字节
+    print(f&#39;来自客户端{addr}消息:{from_client_data.decode(&quot;utf-8&quot;)}&#39;)
+
+    from_client_data = conn.recv(3)  # 最多接受1024字节
+    print(f&#39;来自客户端{addr}消息:{from_client_data.decode(&quot;utf-8&quot;)}&#39;)
+
+    from_client_data = conn.recv(3)  # 最多接受1024字节
+    print(f&#39;来自客户端{addr}消息:{from_client_data.decode(&quot;utf-8&quot;)}&#39;)
+
+    from_client_data = conn.recv(3)  # 最多接受1024字节
+    print(f&#39;来自客户端{addr}消息:{from_client_data.decode(&quot;utf-8&quot;)}&#39;)</code></pre>
+<h3 id="low版解决粘包现象">12.low版解决粘包现象</h3>
+<ol>
+<li>粘包第一种： send的数据过大，大于对方recv的上限时，对方第二次recv时，会接收上一次没有recv完的剩余的数据。</li>
+</ol>
+<pre><code><code>导入struct模块:
+    服务端制作固定长度的报头使用
+    客户端反解报头使用
+代码实验有效作用:
+    服务端:
+        total_size = len(result)  # 查看字节
+        print(f&#39;总字节数:{total_size}&#39;)
+        head_bytes = struct.pack(&#39;i&#39;, total_size)  # 1. 制作固定长度的报头  &#39;i&#39;固定四个报头
+        conn.send(head_bytes)  # 2. 发送固定长度的报头
+        conn.send(result)  # 3. 发送总数据
+    客户端:
+        head_bytes = phone.recv(4)  # 1. 接收报头 
+        total_size = struct.unpack(&#39;i&#39;, head_bytes)[0]  # 2. 反解报头 &#39;i&#39;固定四个报头
+        total_data = b&#39;&#39;  # 接收内容,依次相加bytes类型,如果只是英文可以不加ASCII码
+        while len(total_data) &lt; total_size:  # 接收的内容长度不会超过反解包头的长度,所以用判断
+            total_data += phone.recv(1024)  # 本来就是反解报头,然后直接全部接收,然后每1024处理一次,直到结束</code></pre>
+<pre><code><code># 服务端
+import socket
+import subprocess
+import struct
+
+phone = socket.socket()
+
+phone.bind((&#39;192.168.14.230&#39;, 8849))
+
+phone.listen(2)  # listen 允许2个人链接,剩下的链接等待
+
+while 1:
+    conn, addr = phone.accept()  # 等待客户端连接我,阻塞的状态中
+    # print(f&#39;链接来了{conn,addr}&#39;)
+
+    while 1:
+        try:
+            from_client_data = conn.recv(1024)
+
+            if from_client_data.upper() == b&#39;Q&#39;:  # 正常退出 服务端跟着关闭
+                print(&#39;客户正常退出聊天了&#39;)
+                break
+
+            obj = subprocess.Popen(from_client_data.decode(&#39;utf-8&#39;),
+                                   shell=True,  # shell: 命令解释器，相当于调用cmd 执行指定的命令。
+                                   stdout=subprocess.PIPE,  # stdout:正确结果丢到管道中。
+                                   stderr=subprocess.PIPE,  # stderr:错了丢到另一个管道中。
+                                   )
+            result = obj.stdout.read() + obj.stderr.read()  # 接收正确或者错误的命令
+
+            total_size = len(result)  # 查看字节
+            print(f&#39;总字节数:{total_size}&#39;)
+
+            head_bytes = struct.pack(&#39;i&#39;, total_size)  # 1. 制作固定长度的报头  &#39;i&#39;固定四个报头
+
+            conn.send(head_bytes)  # 2. 发送固定长度的报头
+
+            conn.send(result)  # 3. 发送总数据
+
+        except ConnectionResetError:  # 异常退出 会报错 写提示内容
+            print(&#39;客户端链接中断了&#39;)
+            break
+    conn.close()
+phone.close()</code></pre>
+<pre><code><code># 客户端
+import socket
+import struct
+
+phone = socket.socket()
+
+phone.connect((&#39;192.168.14.230&#39;, 8849))
+
+while 1:
+    to_server_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+    if not to_server_data:  # 服务端如果收到了空的内容,服务端就会一直阻塞中.无论是那一端发送,都不能为空
+        print(&#39;发送内容不能为空&#39;)
+        continue
+
+    phone.send(to_server_data)
+    if to_server_data.upper() == b&#39;Q&#39;:  # 判断如果是Q的话就退出,正常退出
+        break
+
+    head_bytes = phone.recv(4)  # 1. 接收报头
+
+    total_size = struct.unpack(&#39;i&#39;, head_bytes)[0]  # 2. 反解报头 &#39;i&#39;固定四个报头
+
+    total_data = b&#39;&#39;  # 接收内容,依次相加bytes类型,如果只是英文可以不加ASCII码
+
+    while len(total_data) &lt; total_size:
+        total_data += phone.recv(1024)
+
+    print(len(total_data))
+    print(total_data.decode(&#39;gbk&#39;))
+
+phone.close()</code></pre>
+<h3 id="recv工作原理">13.recv工作原理</h3>
+<pre><code><code>源码解释：
+Receive up to buffersize bytes from the socket.接收来自socket缓冲区的字节数据，
+
+For the optional flags argument, see the Unix manual.对于这些设置的参数，可以查看Unix手册。
+
+When no data is available, block untilat least one byte is available or until the remote end is closed.当缓冲区没有数据可取时，recv会一直处于阻塞状态，直到缓冲区至少有一个字节数据可取，或者远程端关闭。
+
+When the remote end is closed and all data is read, return the empty string.关闭远程端并读取所有数据后，返回空字符串。</code></pre>
+<pre><code><code>理解:
+    recv空字符串: 对方客户端关闭了,且服务端的缓冲区没有数据了,我再recv取到空bytes.
+    1 验证服务端缓冲区数据没有取完，又执行了recv执行，recv会继续取值。
+    2 验证服务端缓冲区取完了，又执行了recv执行，此时客户端20秒内不关闭的前提下，recv处于阻塞状态。
+    3 验证服务端缓冲区取完了，又执行了recv执行，此时客户端处于关闭状态，则recv会取到空字符串。</code></pre>
+<h3 id="高大上版解决粘包方式自定制包头">14.高大上版解决粘包方式(自定制包头)</h3>
+<pre><code><code>服务端:
+    1.自定制报头
+        head_dic = {  
+        &#39;file_name&#39;: &#39;test1&#39;,  # 需要操作的文件名.使用变量
+        &#39;md5&#39;: 987654321,  # 文件字节的md5加密,校验使用.变量
+        &#39;total_size&#39;: total_size,  # 字节总长度
+        }
+    2.json形式的报头
+            head_dic_json = json.dumps(head_dic)
+    3.bytes形式报头
+            head_dic_json_bytes = head_dic_json.encode(&#39;utf-8&#39;)
+    4.获取bytes形式的报头的总字节数
+            len_head_dic_json_bytes = len(head_dic_json_bytes)
+    5.将不固定的int总字节数编程固定长度的4个字节
+            four_head_bytes = struct.pack(&#39;i&#39;, len_head_dic_json_bytes)
+    6.发送固定的4个字节
+            conn.send(four_head_bytes)
+    7.发送报头数据
+            conn.send(head_dic_json_bytes)  
+    8.发送总数据
+            conn.send(result)
+
+客户端:
+    1.接收报头
+        head_bytes = phone.recv(4)
+    2.获得bytes类型字典的总字节数
+        len_head_dic_json_bytes = struct.unpack(&#39;i&#39;, head_bytes)[0]
+    3.接收bytes类型的dic数据
+        head_dic_json_bytes = phone.recv(len_head_dic_json_bytes)
+    4.转化成json类型dic
+        head_dic_json = head_dic_json_bytes.decode(&#39;utf-8&#39;)
+    5.转化成字典形式的报头
+        head_dic = json.loads(head_dic_json)</code></pre>
+<pre><code><code># 服务端
+import socket
+import subprocess
+import struct
+import json
+
+phone = socket.socket()
+
+phone.bind((&#39;192.168.14.230&#39;, 8849))
+
+phone.listen(2)  # listen 允许2个人链接,剩下的链接等待
+
+while 1:
+    conn, addr = phone.accept()  # 等待客户端连接我,阻塞的状态中
+    # print(f&#39;链接来了{conn,addr}&#39;)
+
+    while 1:
+        try:
+            from_client_data = conn.recv(1024)
+
+            if from_client_data.upper() == b&#39;Q&#39;:  # 正常退出 服务端跟着关闭
+                print(&#39;客户正常退出聊天了&#39;)
+                break
+
+            obj = subprocess.Popen(from_client_data.decode(&#39;utf-8&#39;),
+                                   shell=True,  # shell: 命令解释器，相当于调用cmd 执行指定的命令。
+                                   stdout=subprocess.PIPE,  # stdout:正确结果丢到管道中。
+                                   stderr=subprocess.PIPE,  # stderr:错误丢到另一个管道中。
+                                   )
+            result = obj.stdout.read() + obj.stderr.read()  # 接收正确或者错误的命令
+
+            total_size = len(result)  # 字节
+            print(f&#39;总字节数:{total_size}&#39;)  # 查看字节
+
+            head_dic = {  # 1 自定义报头
+                &#39;file_name&#39;: &#39;test1&#39;,  # 需要操作的文件名.使用变量
+                &#39;md5&#39;: 987654321,  # 文件字节的md5加密,校验使用.变量
+                &#39;total_size&#39;: total_size,  # 字节总长度
+            }
+
+            head_dic_json = json.dumps(head_dic)  # 2 json形式的报头
+
+            head_dic_json_bytes = head_dic_json.encode(&#39;utf-8&#39;)  # 3 bytes形式报头
+
+            len_head_dic_json_bytes = len(head_dic_json_bytes)  # 4 获取bytes形式的报头的总字节数
+
+            four_head_bytes = struct.pack(&#39;i&#39;, len_head_dic_json_bytes)  # 5 将不固定的int总字节数编程固定长度的4个字节
+
+            conn.send(four_head_bytes)  # 6 发送固定的4个字节
+
+            conn.send(head_dic_json_bytes)  # 7 发送报头数据
+
+            conn.send(result)  # 8 发送总数据
+
+        except ConnectionResetError:  # 异常退出 会报错 写提示内容
+            print(&#39;客户端链接中断了&#39;)
+            break
+    conn.close()
+phone.close()</code></pre>
+<pre><code><code># 客户端
+import socket
+import struct
+import json
+
+phone = socket.socket()
+
+phone.connect((&#39;192.168.14.230&#39;, 8849))
+
+while 1:
+    to_server_data = input(&#39;&gt;&gt;&gt;&#39;).strip().encode(&#39;utf-8&#39;)
+    if not to_server_data:  # 服务端如果收到了空的内容,服务端就会一直阻塞中.无论是那一端发送,都不能为空
+        print(&#39;发送内容不能为空&#39;)
+        continue
+
+    phone.send(to_server_data)
+    if to_server_data.upper() == b&#39;Q&#39;:  # 判断如果是Q的话就退出,正常退出
+        break
+
+    head_bytes = phone.recv(4)  # 1. 接收报头
+
+    len_head_dic_json_bytes = struct.unpack(&#39;i&#39;, head_bytes)[0]  # 2 获得bytes类型字典的总字节数
+
+    head_dic_json_bytes = phone.recv(len_head_dic_json_bytes)  # 3 接收bytes类型的dic数据
+
+    head_dic_json = head_dic_json_bytes.decode(&#39;utf-8&#39;)  # 4 转化成json类型dic
+
+    head_dic = json.loads(head_dic_json)  # 5 转化成字典形式的报头
+
+    &#39;&#39;&#39;
+    head_dic = {
+            head_dic = {  # 1 自定义报头
+                &#39;file_name&#39;: &#39;test1&#39;,  # 需要操作的文件名.使用变量
+                &#39;md5&#39;: 987654321,  # 文件字节的md5加密,校验使用.变量
+                &#39;total_size&#39;: total_size,  # 字节总长度
+            }
+    &#39;&#39;&#39;
+
+    total_data = b&#39;&#39;  # 接收内容,依次相加bytes类型,如果只是英文可以不加ASCII码
+
+    while len(total_data) &lt; head_dic[&#39;total_size&#39;]:  # 接收的内容长度不会超过反解包头的长度,所以用判断
+        total_data += phone.recv(1024)  # 本来就是反解报头,然后直接全部接收,然后每1024处理一次,直到结束
+
+    print(len(total_data))
+    print(total_data.decode(&#39;gbk&#39;))
+
+phone.close()</code></pre>
+<h3 id="基于udp协议的socket通信">15.基于UDP协议的socket通信</h3>
+<pre><code><code>1. 基于udp协议的socket无须建立管道,先开启服务端或者客户端都行.
+2. 基于udp协议的socket接收一个消息,与发送一个消息都是无连接的.
+3. 只要拿到我的ip地址和端口就都可以给我发消息,我按照顺序接收消息.
+
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)  
+基于网络的UDP协议的socket  socket.SOCK_DGRAM</code></pre>
+<pre><code><code># 服务端
+import socket
+
+server = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# 基于网络的UDP协议的socket
+server.bind((&#39;192.168.14.198&#39;, 9000))
+
+while 1:
+    from_client_data = server.recvfrom(1024)  # 阻塞,等待客户来消息
+    print(f&#39;\033[1;35;0m来自客户端{from_client_data[1]}: {from_client_data[0].decode(&quot;utf-8&quot;)} \033[0m&#39;)
+    to_client_data = input(&#39;&gt;&gt;&gt;&#39;).strip()
+    server.sendto(to_client_data.encode(&#39;utf-8&#39;), from_client_data[1])
+    
+    最后如果不注释,接收一次必须回复一次才能继续接收
+    两行如果注释,只接受不发送,可以无限接收.</code></pre>
+<pre><code><code>import socket
+
+client = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+# 基于网络的UDP协议的socket
+
+while 1:
+    to_server_data = input(&#39;&gt;&gt;&gt;:&#39;).strip()
+    client.sendto(to_server_data.encode(&#39;utf-8&#39;), (&#39;127.0.0.1&#39;, 9000))
+    data,addr = client.recvfrom(1024)
+    print(f&#39;来自服务端{addr}消息:{data.decode(&quot;utf-8&quot;)}&#39;)
+    
+    最后如果不注释,回复一次必须接收一次才能再次回复
+    两行如果注释,只发送不接收,可以无限发送.</code></pre>
+<h3 id="socketserver待">16.socketserver(待)</h3>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

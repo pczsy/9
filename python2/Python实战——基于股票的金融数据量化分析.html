@@ -1,0 +1,169 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python实战——基于股票的金融数据量化分析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python实战——基于股票的金融数据量化分析</center></div><div class='banquan'>原文出处:本文由博客园博主~Sunshine~提供。<br/>
+原文连接:https://www.cnblogs.com/liuxiaomin/p/my_python.html</div><br>
+    <p><strong>说明：本文只是通过自己的已学知识对股票数据进行了一个简单的量化分析，只考虑了收盘情况，真实的量化交易中仅仅考虑收盘情况是不够的，还有很多的复杂因素，而且仅仅三年数据是不足以来指导真实的股票交易的，因此本文只是作为一个简单的python练手项目。</strong></p>
+<p><strong>一、分析目的</strong></p>
+<p>利用预先设定的策略，通过对股票交易的历史数据进行回测，验证该策略是否能指导股票交易。</p>
+<p><strong>二、数据处理</strong></p>
+<p>1、数据集描述</p>
+<p>数据集来源：<a href="https://www.nasdaq.com/symbol/baba/historical" target="_blank">https://www.nasdaq.com/symbol/baba/historical</a></p>
+<p>数据集简介：此数据集来源于Nasdaq网站，本文获取的是2016/04/15&mdash;&mdash;2019/04/15三年的数据。</p>
+<p>列名称理解：</p>
+<p>原数据表的字段列名非常规范，无需进行重命名，以下是每个列名称的理解：</p>
+<p style="text-align: left;"><span style="font-family: 'Microsoft YaHei';">date:日期</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">close：收盘价格</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">volumn：成交量</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">open：开盘价格</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">high：日最高价格</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">low：日最低价格</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">本次只是简单针对收盘价格进行了分析。</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">2、 数据清洗</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">该数据集比较规范，没有重复值以及它异常值需要处理。</span></p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;">3、数据导入</span></p>
+<p style="text-align: left;">&nbsp;</p>
+<div class="cnblogs_Highlighter">
+<pre><code># 加载库
+import numpy as np
+import pandas as pd
+# 加载数据（本次只用到了日期和收盘价）
+df = pd.read_csv('E:/相关文件夹/BABA_stock.csv',index_col = 'date',usecols = [0,1])
+df.head()
+</pre>
+</div>
+<p style="text-align: left;">&nbsp;</p>
+<p>　<img src="./images/Python实战——基于股票的金融数据量化分析0.png" alt="" width="262" height="168" /></p>
+<p><strong>三、数据分析</strong></p>
+<div class="cnblogs_Highlighter">
+<pre><code># 将索引转化为日期索引
+df.index = pd.to_datetime(df.index)
+# df.index = pd.DatetimeIndex(df.index.str.strip("'"))
+df.index
+# 按索引排序
+df.sort_index(inplace = True )
+df.head()
+</pre>
+</div>
+<p><img src="./images/Python实战——基于股票的金融数据量化分析1.png" alt="" />&nbsp;</p>
+<p>买卖策略：前一天低于60日平均线第二天高于60日平均线时买入，前一天高于60日平均线第二天低于60日平均线时卖出。</p>
+<p>1、计算60日移动平均值</p>
+<div class="cnblogs_Highlighter">
+<pre><code>ma60 = df.rolling(60).mean().dropna()
+ma60</pre>
+</div>
+<p style="text-align: left;">&nbsp;</p>
+<p style="text-align: left;"><span style="font-family: arial, helvetica, sans-serif;"><em><em><em><em><em><em>2、</em></em></em></em></em></em>找到值从False变为True时买入，True变为False时卖出</span></p>
+<div class="cnblogs_Highlighter">
+<pre><code>ma60_model = df['close'] - ma60['close'] &gt;0
+ma60_model
+</pre>
+</div>
+<p>3、找出买点和卖点</p>
+<div class="cnblogs_Highlighter">
+<pre><code># 自定义方法找出买点和卖点
+def get_deal_date(w,is_buy = True):
+    if is_buy == True:
+        return True if w[0] == False and w[1] == True else False
+    else:
+        return True if w[0] == True and w[1] == False else False
+# raw=False没有的话会有警告信息
+# 如果删除Na值，会有缺失，所以这里用0填充，转换为bool值方便后面取值
+se_buy = ma60_model.rolling(2).apply(get_deal_date,raw = False).fillna(0).astype('bool')
+se_buy
+# apply的args接受数组或者字典给自定义函数传参
+se_sale = ma60_model.rolling(2).apply(get_deal_date,raw = False,args = [False]).fillna(0).astype('bool')
+se_sale
+
+
+# 使用布尔索引找出买点和卖点
+buy_info = df[se_buy.values]
+sale_info = df[se_sale.values]
+buy_info
+sale_info
+</pre>
+</div>
+<p>4、计算获利情况（每股交易获利情况）</p>
+<div class="cnblogs_Highlighter">
+<pre><code># 转换为数值索引：需要将索引进行处理后再进行运算
+no_index_buy_info = buy_info.reset_index(drop = True)
+no_index_sale_info = sale_info.reset_index(drop = True)
+print(no_index_buy_info.head())
+print(no_index_sale_info.head())
+# 获利情况
+profit = no_index_sale_info - no_index_buy_info
+# 最后一组数据中没有卖出点，可能会出现null值
+profit.dropna()
+
+# 计算总体利润情况
+profit.describe()
+# 总共赚了多少钱
+profit.sum()</pre>
+</div>
+<p>&nbsp;<img src="./images/Python实战——基于股票的金融数据量化分析2.png" alt="" width="137" height="295" />&nbsp;&nbsp;<img src="./images/Python实战——基于股票的金融数据量化分析3.png" alt="" width="153" height="298" /></p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 图a&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp; 图b</p>
+<pre><code><span style="font-size: 14pt;">close    57.66
+dtype: float64</span></pre>
+<p>从图a可以看出每次的买入和卖出有盈有亏，从图b的整体情况来看，总共交易12次，亏损最多的时候是8.61美元，平均每次获利4.8，最多的一次赚了75.5美元；通过对</p>
+<p>所有交易进行汇总分析，得出了获利总额为57.66美元，总体来说是盈利的。</p>
+<p><em><em><em><em>5、</em></em></em></em>1w美元的最终盈利情况</p>
+<p>策略：将每次卖出的钱投入到下一次进行买入</p>
+<div class="cnblogs_Highlighter">
+<pre><code>all_money = 10000
+remain = all_money
+# 如果加上每次交易金额的万分之三手续费
+fee = 0.0003
+# 由于最后一次未出现卖点，所以交易次数需要用买入次数减一
+for i in range(len(no_index_buy_info)-1):
+    buy_count = remain/no_index_buy_info.iloc[i]
+    remain = buy_count * no_index_sale_info.iloc[i]*(1-fee)
+    print(remain)
+</pre>
+</div>
+<pre><code><span style="font-size: 14pt;">close    12413.412104
+Name: 0, dtype: float64
+close    22301.278558
+dtype: float64
+close    22412.294488
+dtype: float64
+close    22024.926199
+dtype: float64
+close    21439.23349
+dtype: float64
+close    20885.390796
+dtype: float64
+close    20576.028522
+dtype: float64
+close    19640.163023
+dtype: float64
+close    19232.001776
+dtype: float64
+close    18857.206606
+dtype: float64
+close    18595.722503
+dtype: float64
+close    18044.391215
+dtype: float64<br /></span></pre>
+<p>从以上结果可以看出：三年获得的利润为8044.39美元，年化大概26%左右，收益总体来说还是很不错的，该策略可以放到其他周期或者其他股票里进行分析，如果都可以获利，说明该策略在指导股票交易上是有效的。</p>
+<p>&nbsp;</p>
+<pre><code><span style="font-size: 14pt;">&nbsp;</span></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

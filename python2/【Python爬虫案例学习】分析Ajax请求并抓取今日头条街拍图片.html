@@ -1,0 +1,250 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修【Python爬虫案例学习】分析Ajax请求并抓取今日头条街拍图片' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>【Python爬虫案例学习】分析Ajax请求并抓取今日头条街拍图片</center></div><div class='banquan'>原文出处:本文由博客园博主嗨学编程提供。<br/>
+原文连接:https://www.cnblogs.com/Pythonmiss/p/11308800.html</div><br>
+    <p>1.抓取索引页内容<br />
+利用requests请求目标站点，得到索引网页HTML代码，返回结果。</p>
+<pre><code><code>from urllib.parse import urlencode
+from requests.exceptions import RequestException
+import requests
+&#39;&#39;&#39;
+遇到不懂的问题？Python学习交流群：821460695满足你的需求，资料都已经上传群文件，可以自行下载！
+&#39;&#39;&#39;
+def get_page_index(offset, keyword):
+    headers = { &#39;User-Agent&#39;:&#39;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36&#39; }
+    data = {
+        &#39;format&#39;: &#39;json&#39;,
+        &#39;offset&#39;: offset,
+        &#39;keyword&#39;: keyword,
+        &#39;autoload&#39;: &#39;true&#39;,
+        &#39;count&#39;: 20,
+        &#39;cur_tab&#39;: 1,
+        &#39;from&#39;: &#39;search_tab&#39;,
+        &#39;pd&#39;: &#39;synthesis&#39;,
+    }
+    url = &#39;https://www.toutiao.com/search_content/?&#39; + urlencode(data)
+    response = requests.get(url, headers=headers);
+    try:
+        if response.status_code == 200:
+            return response.text
+        return None
+    except RequestException: 
+        print(&#39;请求索引页失败&#39;)
+        return None
+
+def main():
+    html = get_page_index(0,&#39;街拍&#39;)
+    print(html)
+
+if __name__==&#39;__main__&#39;:
+    main()</code></pre>
+<p>2.抓取详情页内容<br />
+解析返回结果，得到详情页的链接，并进一步抓取详情页的信息。</p>
+<ul>
+<li>获取页面网址：</li>
+</ul>
+<pre><code><code>def parse_page_index(html):
+  data = json.loads(html)
+  if data and &#39;data&#39; in data.keys():
+    for item in data.get(&#39;data&#39;):
+      yield item.get(&#39;article_url&#39;)</code></pre>
+<ul>
+<li>单个页面代码：</li>
+</ul>
+<pre><code><code>def get_page_detail(url):
+  headers = { &#39;User-Agent&#39;:&#39;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36&#39; }
+  try:
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+      return response.text
+    return None
+  except RequestException:
+    print(&#39;请求详情页页失败&#39;)
+    return None</code></pre>
+<ul>
+<li>图片地址</li>
+</ul>
+<pre><code><code>def parse_page_detail(html,url):
+  soup = BeautifulSoup(html,&#39;lxml&#39;)
+  title = soup.select(&#39;title&#39;)[0].get_text()
+  images_pattern = re.compile(&#39;gallery: JSON.parse\((.*?)\)&#39;, re.S)
+  result = re.search(images_pattern, html)
+  if result:
+    data = json.loads(result.group(1))
+    data = json.loads(data) #将字符串转为dict，因为报错了
+    if data and &#39;sub_images&#39; in data.keys():
+      sub_images = data.get(&#39;sub_images&#39;)
+      images = [item.get(&#39;url&#39;) for item in sub_images]
+      for image in images: download_image(image)
+      return {
+        &#39;title&#39;: title,
+        &#39;images&#39;:images,
+        &#39;url&#39;:url
+      }</code></pre>
+<p>3.下载图片与保存数据库<br />
+将图片下载到本地，并把页面信息及图片URL保存到MongDB。</p>
+<pre><code><code># 存到数据库
+def save_to_mongo(result):
+  if db[MONGO_TABLE].insert(result):
+    print(&#39;存储到MongoDb成功&#39;, result)
+    return True
+  return False
+
+# 下载图片
+def download_image(url):
+  print(&#39;正在下载&#39;,url)
+  headers = { &#39;User-Agent&#39;:&#39;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.    36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36&#39; }
+  try:
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+      save_image(response.content)
+    return None
+  except RequestException:
+    print(&#39;请求图片失败&#39;, url)
+    return None
+
+def save_image(content):
+  file_path = &#39;{0}/{1}.{2}&#39;.format(os.getcwd(),md5(content).hexdigest(),&#39;jpg&#39;)
+  if not os.path.exists(file_path):
+    with open(file_path,&#39;wb&#39;) as f:
+      f.write(content)</code></pre>
+<p>4.开启循环及多线程<br />
+对多页内容遍历，开启多线程提高抓取速度。</p>
+<pre><code><code>groups = [x*20 for x in range(GROUP_START, GROUP_END+1)]
+    pool = Pool()
+    pool.map(main,groups)</code></pre>
+<h3 id="完整代码">完整代码：</h3>
+<pre><code><code>from urllib.parse import urlencode
+from requests.exceptions import RequestException
+from bs4 import BeautifulSoup
+from hashlib import md5
+from multiprocessing import Pool
+from config import *
+import pymongo
+import requests
+import json
+import re
+import os
+&#39;&#39;&#39;
+遇到不懂的问题？Python学习交流群：821460695满足你的需求，资料都已经上传群文件，可以自行下载！
+&#39;&#39;&#39;
+client = pymongo.MongoClient(MONGO_URL)
+db = client[MONGO_DB]
+
+def get_page_index(offset, keyword):
+  headers = { &#39;User-Agent&#39;:&#39;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36&#39; }
+  data = { &#39;format&#39;: &#39;json&#39;,&#39;offset&#39;: offset,&#39;keyword&#39;: keyword,&#39;autoload&#39;: &#39;true&#39;,&#39;count&#39;: 20,&#39;cur_tab&#39;: 1,&#39;from&#39;: &#39;search_tab&#39;,&#39;pd&#39;: &#39;synthesis&#39; }
+  url = &#39;https://www.toutiao.com/search_content/?&#39; + urlencode(data)
+  try:
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+      return response.text
+    return None
+  except RequestException:
+    print(&#39;请求索引页失败&#39;)
+    return None
+
+def parse_page_index(html):
+  data = json.loads(html)
+  if data and &#39;data&#39; in data.keys():
+    for item in data.get(&#39;data&#39;):
+      yield item.get(&#39;article_url&#39;)
+
+def get_page_detail(url):
+  headers = { &#39;User-Agent&#39;:&#39;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36&#39; }
+  try:
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+      return response.text
+    return None
+  except RequestException:
+    print(&#39;请求详情页页失败&#39;)
+    return None
+
+def parse_page_detail(html,url):
+  soup = BeautifulSoup(html,&#39;lxml&#39;)
+  title = soup.select(&#39;title&#39;)[0].get_text()
+  images_pattern = re.compile(&#39;gallery: JSON.parse\((.*?)\)&#39;, re.S)
+  result = re.search(images_pattern, html)
+  if result:
+    data = json.loads(result.group(1))
+    data = json.loads(data) #将字符串转为dict，因为报错了
+    if data and &#39;sub_images&#39; in data.keys():
+      sub_images = data.get(&#39;sub_images&#39;)
+      images = [item.get(&#39;url&#39;) for item in sub_images]
+      for image in images: download_image(image)
+      return {
+        &#39;title&#39;: title,
+        &#39;images&#39;:images,
+        &#39;url&#39;:url
+      }
+
+def save_to_mongo(result):
+  if db[MONGO_TABLE].insert(result):
+    print(&#39;存储到MongoDb成功&#39;, result)
+    return True
+  return False
+
+def download_image(url):
+  print(&#39;正在下载&#39;,url)
+  headers = { &#39;User-Agent&#39;:&#39;Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.    36 (KHTML, like Gecko) Chrome/70.0.3538.77 Safari/537.36&#39; }
+  try:
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+      save_image(response.content)
+    return None
+  except RequestException:
+    print(&#39;请求图片失败&#39;, url)
+    return None
+
+def save_image(content):
+  file_path = &#39;{0}/{1}.{2}&#39;.format(os.getcwd(),md5(content).hexdigest(),&#39;jpg&#39;)
+  if not os.path.exists(file_path):
+    with open(file_path,&#39;wb&#39;) as f:
+      f.write(content)
+
+def main(offset):
+  html = get_page_index(offset,KEYWORD)
+  for url in parse_page_index(html):
+     html = get_page_detail(url)
+     if html:
+       result = parse_page_detail(html,url)
+       if isinstance(result,dict):
+         save_to_mongo(result)
+  
+if __name__==&#39;__main__&#39;:
+    groups = [x*20 for x in range(GROUP_START, GROUP_END+1)]
+    pool = Pool()
+    pool.map(main,groups)</code></pre>
+<p><strong>config.py</strong></p>
+<pre><code><code>MONGO_URL = &#39;localhost&#39;
+MONGO_DB = &#39;toutiao&#39;
+MONGO_TABLE = &#39;jiepai&#39;
+
+GROUP_START = 1 
+GROUP_END = 20
+
+KEYWORD = &#39;街拍&#39;
+~                 </code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

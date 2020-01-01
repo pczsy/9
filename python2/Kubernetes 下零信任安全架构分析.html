@@ -1,0 +1,148 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Kubernetes 下零信任安全架构分析' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Kubernetes 下零信任安全架构分析</center></div><div class='banquan'>原文出处:本文由博客园博主阿里巴巴云原生提供。<br/>
+原文连接:https://www.cnblogs.com/alisystemsoftware/p/12082646.html</div><br>
+    <p><a href="https://developer.aliyun.com/article/728327">点击下载《不一样的 双11 技术：阿里巴巴经济体云原生实践》</a><br />
+<a href="https://developer.aliyun.com/article/728327"><img src="./images/Kubernetes 下零信任安全架构分析0.png" alt="ban.jpg" /></a></p>
+<p><strong>本文节选自《不一样的 双11 技术：阿里巴巴经济体云原生实践》一书，点击上方图片即可下载！</strong></p>
+<p>作者<br />
+杨宁（麟童） 阿里云基础产品事业部高级安全专家<br />
+刘梓溪（寞白） 蚂蚁金服大安全基础安全安全专家<br />
+李婷婷（鸿杉） 蚂蚁金服大安全基础安全资深安全专家</p>
+<h1 id="简介">简介</h1>
+<p>零信任安全最早由著名研究机构 Forrester 的首席分析师约翰.金德维格在 2010 年提出。零信任安全针对传统边界安全架构思想进行了重新评估和审视，并对安全架构思路给出了新的建议。</p>
+<p>其核心思想是，默认情况下不应该信任网络内部和外部的任何人/设备/系统，需要基于认证和授权重构访问控制的信任基础。诸如 IP 地址、主机、地理位置、所处网络等均不能作为可信的凭证。零信任对访问控制进行了范式上的颠覆，引导安全体系架构从“网络中心化”走向“身份中心化”，其本质诉求是以身份为中心进行访问控制。</p>
+<p>目前落地零信任概念包括 Google BeyondCorp、Google ALTS、Azure Zero Trust Framework 等，云上零信任体系，目前还是一个新兴的技术趋势方向，同样的零信任模型也同样适用于 Kubernetes，本文重点讲解一下 Kubernetes 下零信任安全架构的技术分析。</p>
+<h1 id="传统零信任概念和目前落地情况">传统零信任概念和目前落地情况</h1>
+<h2 id="microsoft-azure">Microsoft Azure</h2>
+<p>Azure 的零信任相对来说还是比较完善的，从体系角度来看涵盖了端、云、On-Permises、SaaS 等应用，下面我们分析一下相关的组件：</p>
+<ul>
+<li>用户 Identity：然后通过 Identity Provider（创建、维护和管理用户身份的组件）的认证，再认证的过程中可以使用账号密码，也可以使用 MFA（Multi Factor Auth）多因素认证的方式，多因素认证包括软、硬 Token、SMS、人体特征等；</li>
+<li>设备 Identity：设备包含了公司的设备以及没有统一管理的设备，这些设备的信息，包含 IP 地址、MAC 地址、安装的软件、操作系统版本、补丁状态等存储到 Device Inventory；另外设备也会有相应的 Identity 来证明设备的身份；设备会有对应的设备状态、设备的风险进行判定；</li>
+<li>Security Policy Enforcement：通过收集的用户 Identity 以及状态、设备的信息，状态以及 Identity 后，SPE 策略进行综合的判定，同时可以结合 Threat Intelligence 来增强 SPE 的策略判定的范围和准备性；策略的例子包括可以访问后面的 Data、Apps、Infrastructure、Network；</li>
+<li>Data：针对数据（Emails、Documents）进行分类、标签、加密的策略；</li>
+<li>Apps：可以自适应访问对应的 SaaS 应用和 On-Permises 应用；</li>
+<li>Infrastructure：包括 IaaS、PaaS、Container、Serverless 以及 JIT（按需开启访问）和 GIT 版本控制软件；</li>
+<li>Network：针对网络交付过程以及内部的微隔离进行策略打通。</li>
+</ul>
+<p><img src="./images/Kubernetes 下零信任安全架构分析1.png" alt="1.png" /></p>
+<p>下面这张微软的图进行了更加细化的讲解，用户（员工、合作伙伴、用户等）包括 Azure AD、ADFS、MSA、Google ID 等，设备（可信的合规设备）包括 Android、iOS、MacOS、Windows、Windows Defender ATP，客户端（客户端 APP 以及认证方式）包括浏览器以及客户端应用，位置（物理和虚拟地址）包括地址位置信息、公司网络等，利用 Microsoft 的机器学习 ML、实时评估引擎、策略等进行针对用户、客户端、位置和设备进行综合判定，来持续自适应的访问 On-Permises、Cloud SaaS Apps、Microsoft Cloud，包含的策略包括 Allow、Deny，限制访问、开启 MFA、强制密码重置、阻止和锁定非法认证等；从下图可以看出 Azure 已经打通了 On-Permises、Cloud、SaaS 等各个层面，构建了一个大而全的零信任体系。</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析2.png" alt="2.png" /></p>
+<h2 id="google-beyondcorp">Google BeyondCorp</h2>
+<p>Google BeyondCorp 是为了应对新型网络威胁的一种网络安全解决方案，其实 Google BeyondCorp 本身并没有太多的技术上的更新换代，而是利用了持续验证的一种思路来做的，去掉了 VPN 和不再分内外网。Google 在 2014 年之前就预测到互联网和内网的安全性是一样危险的，因为一旦内网边界被突破的话，攻击者就很容易的访问企业的一些内部应用，由于安全意识的问题导致企业会认为<del>我的</del>内部很安全，<del>我</del>就对内部的应用进行低优先级别的处理，导致大量内部的安全问题存在。现在的企业越来越多的应用移动和云技术，导致边界保护越来越难。所以 Google 干脆一视同仁，不分内外部，用一样的安全手段去防御。</p>
+<p>从攻防角度来看一下 Google 的 BeyondCorp 模型，例如访问 Google 内部应用<a href="http://blackberry.corp.google.com/">http://blackberry.corp.google.com</a> ，它会跳转到<a href="https://login.corp.google.com/" class="uri">https://login.corp.google.com/</a> 也就是 Google Moma 系统，首先需要输入账号密码才能登陆，这个登录的过程中会针对设备信息、用户信息进行综合判定，账号密码正确以及设备信息通过规则引擎验证之后，会继续跳转到需要 YubiKey 登录界面，每个 Google 的员工都会有 Yubikey，通过 Yubikey 来做二次验证。Yubikey 的价值，Google 认为是可以完全杜绝钓鱼攻击的。另外类似的就是 Amazon 的 <a href="https://midway-auth.amazon.com/login?next=%2F">Midway-Auth 方式</a> （ <a href="https://midway-auth.amazon.com/login?next=%2F">https://midway-auth.amazon.com/login?next=%2F</a> ）。<br />
+<img src="./images/Kubernetes 下零信任安全架构分析3.png" alt="3.png" /></p>
+<h1 id="kubernetes-下容器零信任模型">Kubernetes 下容器零信任模型</h1>
+<h2 id="容器下网络零信任">容器下网络零信任</h2>
+<p>首先介绍一下容器下的网络零信任组件 Calico，Calico 是针对容器，虚拟机和基于主机的本机 Workload 的开源网络和网络安全解决方案产品。Calico 支持广泛的平台，包括 Kubernetes、OpenShift、Docker EE、OpenStack 和裸金属服务。零信任最大的价值就是即使攻击者通过其他各种手法破坏应用程序或基础架构，零信任网络也具有弹性。零信任架构使得使攻击者难以横向移动，针对性的踩点活动也更容易发现。</p>
+<p>在容器网络零信任体系下，Calico+Istio 目前是比较热的一套解决方案；先来看看两者的一些差别，从差别上可以看到 Istio 是针对 Pod 层 Workload 的访问控制，以及 Calico 针对 Node 层的访问控制：</p>
+<table>
+<thead>
+<tr class="header">
+<th style="text-align: left;"></th>
+<th style="text-align: left;">Istio</th>
+<th style="text-align: left;">Calico</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">Layer</td>
+<td style="text-align: left;">L3-L7</td>
+<td style="text-align: left;">L3-L4</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">实现方式</td>
+<td style="text-align: left;">用户态</td>
+<td style="text-align: left;">内核态</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">策略执行点</td>
+<td style="text-align: left;">Pod</td>
+<td style="text-align: left;">Node</td>
+</tr>
+</tbody>
+</table>
+<p>下面重点讲解一下 Calico 组件和 Istio 的一些技术细节，Calico 构建了一个 3 层可路由网络，通过 Calico 的 Felix（是运行在 Node 的守护程序，它在每个 Node 资源上运行。Felix 负责编制路由和 ACL 规则以及在该 Node 主机上所需的任何其他内容，以便为该主机上的资源正常运行提供所需的网络连接）运行在每个 Node 上，主要做路由和 ACL 的策略以及搭建网络；通过运行在 Node 上的 Iptables 进行细粒度的访问控制。可以通过 Calico 设置默认 Deny 的策略，然后通过自适应的访问控制来进行最小化的访问控制策略的执行，从而构建容器下的零信任体系；Dikastes/Envoy：可选的 Kubernetes sidecars，可以通过相互 TLS 身份验证保护 Workload 到 Workload 的通信，并增加相关的控制策略；</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析4.png" alt="4.png" /></p>
+<h2 id="istio">Istio</h2>
+<p>再讲解 Istio 之前先讲一下微服务的一些安全需求和风险分析：</p>
+<p>1、微服务被突破之后通过 Sniffer 监控流量，进而进行中间人攻击，为了解决这种风险需要对流量进行加密；<br />
+2、为了针对微服务和微服务之间的访问控制，需要双向 TLS 和细粒度的访问策略；<br />
+3、要审核谁在什么时候做了什么，需要审计工具；</p>
+<p>分析了对应的风险之后，下面来解释一下 Istio 如何实现的零信任架构。首先很明显的一个特点就是全链路都是双向 mTLS 进行加密的，第二个特点就是微服务和微服务之间的访问也可以进行鉴权，通过权限访问之后还需要进行审计。Istio 是数据面和控制面进行分离的，控制面是通过 Pilot 将授权策略和安全命名信息分发给 Envoy，然后数据面通过 Envoy 来进行微服务的通信。在每个微服务的 Workload 上都会部署 Envoy，每个 Envoy 代理都运行一个授权引擎，该引擎在运行时授权请求。当请求到达代理时，授权引擎根据当前授权策略评估请求上下文，并返回授权结果 ALLOW 或 DENY。</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析5.png" alt="5.png" /></p>
+<h2 id="微服务下的-zero-trust-api-安全">微服务下的 Zero Trust API 安全</h2>
+<p>42Crunch（ <a href="https://42crunch.com/" class="uri">https://42crunch.com/</a> ）将 API 安全从企业边缘扩展到了每个单独的微服务，并通过可大规模部署的超低延迟微 API 防火墙来进行保护。 42Crunch API 防火墙的部署模式是以 Kubernetes Pod 中以 Sidecar 代理模式部署，毫秒级别的性能响应。 这省去了编写和维护单个 API 安全策略过程，并实施了零信任安全体系结构，提升了微服务下的 API 安全性。42Crunch 的 API 安全能力包括：审核：运行 200 多个 OpenAPI 规范定义的安全审核测试，并进行详细的安全评分，以帮助开发人员定义和加强 API 安全；扫描：扫描实时 API 端点，以发现潜在的漏洞；保护：保护 API 并在应用上部署轻量级，低延迟 Micro API Firewall。</p>
+<h2 id="蚂蚁零信任架构体系落地最佳实践">蚂蚁零信任架构体系落地最佳实践</h2>
+<p>随着 Service Mesh 架构的演进，蚂蚁已经开始在内部落地 Workload 场景下的服务鉴权能力，如何建设一套符合蚂蚁架构的 Workload 间的服务鉴权能力，我们将问题分为一下三个子问题：</p>
+<p>1、Workload 的身份如何定义，如何能够实现一套通用的身份标识的体系；<br />
+2、Workload 间访问的授权模型的实现；<br />
+3、访问控制执行点如何选择。</p>
+<h4 id="workload-身份定义-认证方式">Workload 身份定义 &amp; 认证方式</h4>
+<p>蚂蚁内部使用 SPIFFE 项目中给出的 Identity 格式来描述 Workload 的身份，即：</p>
+<pre><code><code>spiffe://&lt;domain&gt;/cluster/&lt;cluster&gt;/ns/&lt;namespace&gt;</code></pre>
+<p>不过在工程落地过程中发现，这种维度的身份格式粒度不够细，并且与 K8s 对于 namespace 的划分规则有较强的耦合。蚂蚁的体量较大，场景较多，不同场景下 namespace 的划分规则都不完全一致。因此我们对格式进行了调整，在每一场景下梳理出能够标识一个 Workload 示例所须要的一组必备属性（例如应用名，环境信息等），并将这些属性携带在 Pod 的 Labels 中。调整后的格式如下：</p>
+<pre><code><code>spiffe://&lt;domain&gt;/cluster/&lt;cluster&gt;/&lt;required_attr_1_name&gt;/&lt;required_attr_1_value&gt;/&lt;required_attr_2_name&gt;/&lt;required_attr_2_value&gt;</code></pre>
+<p>配合这个身份格式标准，我们在 K8s API Server 中添加了 Validating Webhook 组件，对上述 Labels 中必须携带的属性信息进行校验。如果缺少其中一项属性信息，则实例 Pod 将无法创建。如下图所示：</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析6.png" alt="6.png" /></p>
+<p>在解决了 Workload 身份定义的问题后，剩下的就是如何将身份转换成某种可校验的格式，在 Workload 之间的服务调用链路中透传。为了支持不同的使用场景，我们选择了 X.509 证书与 JWT 这两种格式。</p>
+<p>对于 Service Mesh 架构的场景，我们将身份信息存放在 X.509 证书的 Subject 字段中，以此来携带 Workload 的身份信息。如下图所示：</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析7.png" alt="7.png" /></p>
+<p>对于其他场景，我们将身份信息存放在 JWT 的 Claims 中，而 JWT 的颁发与校验，采用了 Secure Sidecar 提供服务。如下图所示：</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析8.png" alt="8.png" /></p>
+<h4 id="授权模型">授权模型</h4>
+<p>在项目落地的初期，使用 RBAC 模型来描述 Workload 间服务调用的授权策略。举例描述，应用 A 的某一个服务，只能被应用 B 调用。这种授权策略在大多数场景下都没有问题，不过在项目推进过程中，我们发现这种授权策略不适用于部分特殊场景。</p>
+<p>我们考虑这样一个场景，生产网内部有一个应用 A，职责是对生产网内部的所有应用在运行时所需要使用的一些动态配置提供中心化的服务。这个服务的定义如下：A 应用 - 获取动态配置的 RPC 服务：</p>
+<pre><code><code>message FetchResourceRequest {
+// The appname of invoker
+string appname = 1;
+// The ID of resource
+string resource_id = 2;
+}
+message FetchResourceResponse {
+string data = 1;
+}
+service DynamicResourceService {
+rpc FetchResource (FetchResourceRequest) returns (FetchResourceResponse) {}
+}</code></pre>
+<p>在此场景下，如果依然使用 RBAC 模型，应用 A 的访问控制策略将无法描述，因为所有应用都需要访问 A 应用的服务。但是这样会导致显而易见的安全问题，调用方应用 B 可以通过该服务获取到其它应用的资源。因此我们将 RBAC 模型升级为 ABAC 模型来解决上述问题。 我们采用 DSL 语言来描述 ABAC 的逻辑，并且集成在 Secure Sidecar 中。</p>
+<h4 id="访问控制执行点的选择">访问控制执行点的选择</h4>
+<p>在执行点选择方面，考虑到 Service Mesh 架构推进需要一定的时间，我们提供了两不同的方式，可以兼容 Service Mesh 的架构，也可以兼容当前场景。</p>
+<p>在 Service Mesh 架构场景下，RBAC Filter 和 ABAC Filter（Access Control Filter）集成在 Mesh Sidecar 中。</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析9.png" alt="9.png" /></p>
+<p>在当前场景下，我们目前提供了 JAVA SDK，应用需要集成 SDK 来完成所有认证和授权相关的逻辑。与 Service Mesh 架构场景类似，所有 Identity 的颁发、校验，授权与 Secure Sidecar 交互，由 Secure Sidecar 完成。</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析10.png" alt="10.png" /></p>
+<h1 id="结语">结语</h1>
+<p>零信任的核心是“Never Trust， Always Verify”，未来会继续深化零信任在整个阿里巴巴的实践，赋予不同的角色不同的身份，例如企业员工、应用、机器，并将访问控制点下沉到云原生基础设施的各个点，实现全局细粒度的控制，打造安全防护的新边界。本文从业界的零信任体系的落地最佳实践，到基于 Kubernetes 的零信任落地方式进行了简单的描述，本文只是抛砖引玉，希望能引发更多关于 Cloud Native 下的零信任架构体系的更多讨论和能看到更多的业界优秀的方案和产品能出现。</p>
+<p><img src="./images/Kubernetes 下零信任安全架构分析11.png" alt="ban.jpg" /></p>
+<p><strong>本书亮点</strong></p>
+<ul>
+<li>双11 超大规模 K8s 集群实践中，遇到的问题及解决方法详述</li>
+<li>云原生化最佳组合：Kubernetes+容器+神龙，实现核心系统 100% 上云的技术细节</li>
+<li>双 11 Service Mesh 超大规模落地解决方案</li>
+</ul>
+<blockquote>
+<p>“<a href="https://developer.aliyun.com/group/alisoftwaretech/">阿里巴巴云原生</a>关注微服务、Serverless、容器、Service Mesh 等技术领域、聚焦云原生流行技术趋势、云原生大规模的落地实践，做最懂云原生开发者的技术圈。”</p>
+</blockquote>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

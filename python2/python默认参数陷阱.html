@@ -1,0 +1,104 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python默认参数陷阱' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python默认参数陷阱</center></div><div class='banquan'>原文出处:本文由博客园博主xMTx提供。<br/>
+原文连接:https://www.cnblogs.com/hellomt/p/11186030.html</div><br>
+    <div id="pageAnimationOffOn"><span id="pageAnimationOffOnIcon" class="iconfont icon-shandian"><span id="pageAnimationOffOnText"></span></span><span style="font-size: 2em;">python默认参数陷阱</span>&nbsp;</div>
+<div id="home">
+<div id="main">
+<div id="mainContent">
+<div class="forFlow">
+<div id="post_detail">
+<div id="topics">
+<div class="post">
+<div class="postBody">
+<div id="cnblogs_post_body" class="blogpost-body">
+<h2 id="autoid-0-0-0" class="header__dev"><strong class="dev__fe">0</strong><span class="dev__slash">|<strong class="dev__ux">1</strong><strong class="dev__developer"><span class="dev__title">陷阱？</span></strong></span></h2>
+<span class="header__span"><span class="header__span"><br /></span></span>
+<p>学过函数的人一定听说过函数的默认参数，关于函数的默认参数，请看以下的例子：</p>
+<div class="cnblogs_code">
+<div class="cnblogs_code_toolbar">&nbsp;</div>
+<pre><code>def extendList(val, lst=[]):
+    lst.append(val)
+    return lst
+list1 = extendList(10)
+list2 = extendList(123, [])
+print('list1 = %s' % list1)
+print('list2 = %s' % list2)</pre>
+<div class="cnblogs_code_toolbar">&nbsp;</div>
+</div>
+<p>打印的结果是<a class="lightbox" href="./images/python默认参数陷阱0.png"><img src="./images/python默认参数陷阱0.png" alt="" /></a>&nbsp;现在，我们将代码再添加一处，来看看最后的结果是什么：</p>
+<div class="cnblogs_code">
+<div class="cnblogs_code_toolbar">&nbsp;</div>
+<pre><code>def extendList(val, lst=[]):
+    lst.append(val)
+    return lst
+list1 = extendList(10)
+list2 = extendList(123, [])
+list3 = extendList('a')
+print('list1=%s' % list1)
+print('list2=%s' % list2)
+print('list3=%s' % list3)</pre>
+<div class="cnblogs_code_toolbar">&nbsp;</div>
+</div>
+<p>当list1处调用函数时，10被加入了列表；list2处调用函数，123被加入到了新传入的列表中；最后到list3调用函数，应该将&lsquo;a&rsquo;继续加入到列表中返回。因此得到的输出应该是：</p>
+<div class="cnblogs_code">
+<pre><code># list1 = [10]
+# list2 = [233]
+# list3 = ['a']</pre>
+</div>
+<h2 id="autoid-0-1-0" class="header__dev"><strong class="dev__fe">0</strong><span class="dev__slash">|<strong class="dev__ux">1</strong><strong class="dev__developer"><span class="dev__title">陷阱！</span></strong></span></h2>
+<span class="header__span"><span class="header__span"><span class="header__span"><br /></span></span></span>
+<p>然而，实际的打印结果变成了：</p>
+<p><a class="lightbox" href="./images/python默认参数陷阱1.png"><img src="./images/python默认参数陷阱1.png" alt="" /></a></p>
+<p>陷阱之所以称之为陷阱，代表我们不能以普通的思维来看待它，通过查阅资料，得到以下的一句解释：</p>
+<p>A new list is created&nbsp;<em>once</em>&nbsp;when the function is defined, and the same list is used in each successive call.</p>
+<p>在定义函数时，Python的默认参数会被计算<em>一次</em>，而不是每次调用函数时（比如Ruby）。这意味着如果你使用一个可变的默认参数并对其进行改变，那么你将会直接修改该对象，该影响将一直延续到未来关于该函数的调用（在默认参数没有被重新赋其他值的情况下）。</p>
+<p>众所周知，Python变量存储的是变量和值的引用关系，即实际变量对应一个内存地址。这意味着Python函数总是通过地址传递（传递参数）工作。调用函数时，不会将参数值复制到函数占位符。相反，我们将占位符指向变量本身。这有一个非常重要的结果：我们可以从函数内部更改变量的值。</p>
+<p><img src="./images/python默认参数陷阱2.png" alt="" /></p>
+<h2 id="autoid-0-2-0" class="header__dev"><strong class="dev__fe">0</strong><span class="dev__slash">|<strong class="dev__ux">1</strong><strong class="dev__developer"><span class="dev__title">如何避开陷阱？</span></strong></span></h2>
+
+<span class="header__span"><span class="header__span"><span class="header__span"><span class="header__span"><br /></span></span></span></span>
+<p>None通常是一个不错的选择:</p>
+<div class="cnblogs_code">
+<pre><code>def extendList(val, lst = None):
+    if not lst:
+        lst = []
+    lst.append(val)
+    return lst</pre>
+</div>
+<p>&nbsp;有时您可以专门利用此陷阱来维护函数调用之间的状态。这通常在编写缓存函数时完成。</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>参考资料：<a href="https://docs.python-guide.org/writing/gotchas/" target="_blank">https://docs.python-guide.org/writing/gotchas/</a></p>
+<p><a href="http://blog.thedigitalcatonline.com/blog/2015/02/11/default-arguments-in-python/" target="_blank">http://blog.thedigitalcatonline.com/blog/2015/02/11/default-arguments-in-python/</a></p>
+<p>&nbsp;</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

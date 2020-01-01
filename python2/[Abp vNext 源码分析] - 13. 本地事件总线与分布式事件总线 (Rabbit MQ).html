@@ -1,0 +1,496 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)</center></div><div class='banquan'>原文出处:本文由博客园博主myzony提供。<br/>
+原文连接:https://www.cnblogs.com/myzony/p/12017999.html</div><br>
+    <h2 id="一简要介绍">一、简要介绍</h2>
+<p>ABP vNext 封装了两种事件总线结构，第一种是 ABP vNext 自己实现的本地事件总线，这种事件总线无法跨项目发布和订阅。第二种则是分布式事件总线，ABP vNext 自己封装了一个抽象层进行定义，并使用 RabbitMQ 编写了一个基本实现。</p>
+<p>在使用方式上，两种事件总线的作用基本相同。</p>
+<p>事件总线分布在两个模块，在 <strong>Volo.Abp.EventBus</strong> 模块内部，定义了事件总线的抽象接口，以及本地事件总线 (<code>ILocalEventBus</code>) 的实现。分布式事件总线的具体实现，是在 <strong>Volo.Abp.EventBus.RabbitMQ</strong> 模块内部进行定义，从项目名称可以看出来，这个模块是基于 RabbitMQ 消息队列实现的。</p>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)0.png" /></p>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)1.png" /></p>
+<p>但是该项目并不是直接引用 <strong>RabbitMQ.Client</strong> 包，而是在 <strong>Volo.Abp.RabbitMQ</strong> 项目内部引用。这是因为除了分布式事件总线以外，ABP 还基于 RabbitMQ 实现了一个后台作业管理器。</p>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)2.png" /></p>
+<p>ABP vNext 框架便将一些对象抽象出来，放在 <strong>Volo.Abp.RabbitMQ</strong> 项目内部进行定义和实现。</p>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)3.png" /></p>
+<h2 id="二源码分析">二、源码分析</h2>
+<h3 id="事件处理器的注册">2.1 事件处理器的注册</h3>
+<p>分析源码，首先从一个项目的模块开始，<strong>Volo.Abp.EventBus</strong> 库的模块 <code>AbpEventBusModule</code> 只干了一件事情。在组件注册的时候，根据组件的实现接口 (<code>ILocalEventHandler</code> 或 <code>IDistributedEventHandler</code>) 不同，将其赋值给 <code>AbpLocalEventBusOptions</code> 与 <code>AbpDistributedEventBusOptions</code> 的 <code>Handlers</code> 属性。</p>
+<p>也就是说，开发人员定义的事件处理程序 (<code>Handler</code>) 都会在依赖注入的时候，都会将其类型 (<code>Type</code>) 添加到事件总线的配置类当中，方便后续进行使用。</p>
+<h3 id="事件总线的接口">2.2 事件总线的接口</h3>
+<p>通过事件总线模块的单元测试我们可以知道，事件的发布与订阅都是通过 <code>IEventBus</code> 的两个子接口 (<code>ILocalEventBus</code>/<code>IDistributedEventBus</code>) 进行的。在 <code>IEventBus</code> 接口的定义中，有三种行为，分别是 <strong>发布</strong>、<strong>订阅</strong>、<strong>取消订阅</strong>。</p>
+<p>对于 <code>ILocalEventBus</code> 接口和 <code>IDistributedEventBus</code> 接口来说，它们都提供了一个，针对本地事件处理器和分布式处理器的特殊订阅方法。</p>
+<p><strong><code>ILocalEventBus</code></strong>：</p>
+<pre><code><code>/// &lt;summary&gt;
+/// Defines interface of the event bus.
+/// &lt;/summary&gt;
+public interface ILocalEventBus : IEventBus
+{
+    /// &lt;summary&gt;
+    /// Registers to an event. 
+    /// Same (given) instance of the handler is used for all event occurrences.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TEvent&quot;&gt;Event type&lt;/typeparam&gt;
+    /// &lt;param name=&quot;handler&quot;&gt;Object to handle the event&lt;/param&gt;
+    IDisposable Subscribe&lt;TEvent&gt;(ILocalEventHandler&lt;TEvent&gt; handler)
+        where TEvent : class;
+}</code></pre>
+<p><strong><code>IDistributedEventBus</code></strong>：</p>
+<pre><code><code>public interface IDistributedEventBus : IEventBus
+{
+    /// &lt;summary&gt;
+    /// Registers to an event. 
+    /// Same (given) instance of the handler is used for all event occurrences.
+    /// &lt;/summary&gt;
+    /// &lt;typeparam name=&quot;TEvent&quot;&gt;Event type&lt;/typeparam&gt;
+    /// &lt;param name=&quot;handler&quot;&gt;Object to handle the event&lt;/param&gt;
+    IDisposable Subscribe&lt;TEvent&gt;(IDistributedEventHandler&lt;TEvent&gt; handler)
+        where TEvent : class;
+}</code></pre>
+<h3 id="事件总线基本流程和实现">2.3 事件总线基本流程和实现</h3>
+<p>同其他模块一样，因为有分布式事件总线和本地事件总线，ABP vNext 同样抽象了一个 <code>EventBusBase</code> 类型，作为它们的基类实现。</p>
+<p>一般的流程，我们是先定义某个事件，然后订阅该事件并指定事件处理器，最后在某个时刻发布事件。例如下面的代码：</p>
+<p>首先定义了一个事件处理器，专门用于处理 <code>EntityChangedEventData&lt;MyEntity&gt;</code> 事件。</p>
+<pre><code><code>public class MyEventHandler : ILocalEventHandler&lt;EntityChangedEventData&lt;MyEntity&gt;&gt;
+{
+    public int EntityChangedEventCount { get; set; }
+
+    public Task HandleEventAsync(EntityChangedEventData&lt;MyEntity&gt; eventData)
+    {
+        EntityChangedEventCount++;
+        return Task.CompletedTask;
+    }
+}</code></pre>
+<pre><code><code>var handler = new MyEventHandler();
+
+LocalEventBus.Subscribe&lt;EntityChangedEventData&lt;MyEntity&gt;&gt;(handler);
+
+await LocalEventBus.PublishAsync(new EntityCreatedEventData&lt;MyEntity&gt;(new MyEntity()));</code></pre>
+<h4 id="事件的订阅">2.3.1 事件的订阅</h4>
+<p>可以看到，这里使用的是 <code>ILocalEventBus</code> 定义的订阅方法，跳转到内部实现，它还是调用的 <code>EventBus</code> 的方法。</p>
+<pre><code><code>public virtual IDisposable Subscribe&lt;TEvent&gt;(ILocalEventHandler&lt;TEvent&gt; handler) where TEvent : class
+{
+    // 调用基类的 Subscribe 方法，并传递 TEvent 的类型，和事件处理器。
+    return Subscribe(typeof(TEvent), handler);
+}</code></pre>
+<pre><code><code>public virtual IDisposable Subscribe(Type eventType, IEventHandler handler)
+{
+    return Subscribe(eventType, new SingleInstanceHandlerFactory(handler));
+}</code></pre>
+<p>可以看到，这里传递了一个 <code>SingleInstanceHandlerFactory</code> 对象，这玩意儿是干嘛用的呢？从名字可以看出来，这是一个工厂，是用来创建 Handler (事件处理器) 的工厂，并且是一个单实例的事件处理器工厂。</p>
+<p>下面就是 <code>IEventHandlerFactory</code> 接口的定义，以及 <code>SingleInstanceHandlerFactory</code> 实现。</p>
+<pre><code><code>public interface IEventHandlerFactory
+{
+    // 获得一个事件处理器包装对象，即事件处理器执行完毕之后，可以调用
+    // IEventHandlerDisposeWrapper.Dispose() 进行释放。
+    IEventHandlerDisposeWrapper GetHandler();
+
+    // 判断在已有的事件处理器工厂集合中，是否已经存在了相同的事件处理器。
+    bool IsInFactories(List&lt;IEventHandlerFactory&gt; handlerFactories);
+}
+
+public class SingleInstanceHandlerFactory : IEventHandlerFactory
+{
+    // 构造工厂时，传递的事件处理器实例。
+    public IEventHandler HandlerInstance { get; }
+
+
+    public SingleInstanceHandlerFactory(IEventHandler handler)
+    {
+        HandlerInstance = handler;
+    }
+
+    // 通过 EventHandlerDisposeWrapper 包装事件处理器实例。
+    public IEventHandlerDisposeWrapper GetHandler()
+    {
+        return new EventHandlerDisposeWrapper(HandlerInstance);
+    }
+
+    // 判断针对 HandlerInstance 的事件处理器是否已经存在。
+    public bool IsInFactories(List&lt;IEventHandlerFactory&gt; handlerFactories)
+    {
+        return handlerFactories
+            .OfType&lt;SingleInstanceHandlerFactory&gt;()
+            .Any(f =&gt; f.HandlerInstance == HandlerInstance);
+    }
+}</code></pre>
+<p>针对 <code>IEventHandlerFactory</code> 工厂，还拥有 3 个不同的实现，下表分别说明它们的应用场景。</p>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)4.png" /></p>
+<table>
+<thead>
+<tr class="header">
+<th>实现类型</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>IocEventHandlerFactory</code></td>
+<td>每个工厂对应一个事件处理器的的类型，并通过 <code>ScopeFactory</code> 解析具体的事件处理器。生命周期由 <code>scope</code> 控制，当 <code>scope</code> 释放时，对应的事件处理器实例也会被销毁。</td>
+</tr>
+<tr class="even">
+<td><code>SingleInstanceHandlerFactory</code></td>
+<td>每个工厂对应单独的一个事件处理器实例，事件处理器实例是由创建者控制的。</td>
+</tr>
+<tr class="odd">
+<td><code>TransientEventHandlerFactory</code></td>
+<td>每个工厂对应一个事件处理器的类型，区别是它不由 IoC 解析实例，而是使用的 <code>Activator.CreateInstance()</code> 方法构造实例，是一个瞬时对象，调用包装器的 <code>Dispose</code> 即会进行释放。</td>
+</tr>
+<tr class="even">
+<td><code>TransientEventHandlerFactory&lt;THandler&gt;</code></td>
+<td>每个工厂对应指定的 <code>THandler</code> 事件处理器，生命周期同上面的工厂一样。</td>
+</tr>
+</tbody>
+</table>
+<p>这几种工厂都是在订阅操作时，不同的订阅重载使用不同的工厂，或者是自己指定事件处理器的工厂均可。</p>
+<pre><code><code>public virtual IDisposable Subscribe&lt;TEvent, THandler&gt;()
+    where TEvent : class
+    where THandler : IEventHandler, new()
+{
+    return Subscribe(typeof(TEvent), new TransientEventHandlerFactory&lt;THandler&gt;());
+}
+
+public virtual IDisposable Subscribe(Type eventType, IEventHandler handler)
+{
+    return Subscribe(eventType, new SingleInstanceHandlerFactory(handler));
+}</code></pre>
+<p>不过有一种特殊的行为，开发人员可以 <strong>不用显式订阅</strong>。在 <code>EventBus</code> 类型中，定义了一个 <code>SubscribeHandlers(ITypeList&lt;IEventHandler&gt; handlers)</code> 方法。该方法接收一个类型集合，通过遍历集合，从事件处理器的定义当中，取得事件处理器监听的事件类型 <code>TEvent</code>。</p>
+<p>在取得了事件类型，并知晓了事件处理器类型以后，事件总线就可以订阅 <code>TEvent</code> 类型的事件，并使用 <code>IocEventHandlerFactory</code> 工厂来构造事件处理器。</p>
+<pre><code><code>protected virtual void SubscribeHandlers(ITypeList&lt;IEventHandler&gt; handlers)
+{
+    // 遍历事件处理器的类型，其实这里的就是模块启动时，传递给 XXXOptions 的集合。
+    foreach (var handler in handlers)
+    {
+        // 获得事件处理器的所有接口定义，并遍历接口进行检查。
+        var interfaces = handler.GetInterfaces();
+        foreach (var @interface in interfaces)
+        {
+            // 如果接口没有实现 IEventHandler 类型，则忽略。
+            if (!typeof(IEventHandler).GetTypeInfo().IsAssignableFrom(@interface))
+            {
+                continue;
+            }
+
+            // 从泛型参数当中，获得定义的事件类型。
+            var genericArgs = @interface.GetGenericArguments();
+            // 泛型参数完全匹配 1 时，才进行订阅操作。
+            if (genericArgs.Length == 1)
+            {
+                Subscribe(genericArgs[0], new IocEventHandlerFactory(ServiceScopeFactory, handler));
+            }
+        }
+    }
+}</code></pre>
+<p>这个订阅方法在 <code>EventBus</code> 当中是一个抽象方法，分别在本地事件总线和分布式事件总线有实现，这里我们首先讲解本地事件的逻辑。</p>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)5.png" /></p>
+<pre><code><code>public class LocalEventBus : EventBusBase, ILocalEventBus, ISingletonDependency
+{
+    protected ConcurrentDictionary&lt;Type, List&lt;IEventHandlerFactory&gt;&gt; HandlerFactories { get; }
+
+    public LocalEventBus(
+        IOptions&lt;AbpLocalEventBusOptions&gt; options,
+        IServiceScopeFactory serviceScopeFactory)
+        : base(serviceScopeFactory)
+    {
+        Options = options.Value;
+        Logger = NullLogger&lt;LocalEventBus&gt;.Instance;
+
+        HandlerFactories = new ConcurrentDictionary&lt;Type, List&lt;IEventHandlerFactory&gt;&gt;();
+
+        // 调用父类的方法，将模块初始化时扫描到的事件处理器，都尝试进行订阅。
+        SubscribeHandlers(Options.Handlers);
+    }
+
+    public override IDisposable Subscribe(Type eventType, IEventHandlerFactory factory)
+    {
+        GetOrCreateHandlerFactories(eventType)
+            // 锁住集合，以确保线程安全。
+            .Locking(factories =&gt;
+                {
+                    // 如果在集合内部，已经有了对应的工厂，则不进行添加。
+                    if (!factory.IsInFactories(factories))
+                    {
+                        factories.Add(factory);
+                    }
+                }
+            );
+
+        // 返回一个事件处理器工厂注销器，当调用 Dispose() 方法时，会取消之前订阅的事件。
+        return new EventHandlerFactoryUnregistrar(this, eventType, factory);
+    }
+
+    private List&lt;IEventHandlerFactory&gt; GetOrCreateHandlerFactories(Type eventType)
+    {
+        // 根据事件的类型，从字典中获得该类型的所有事件处理器工厂。
+        return HandlerFactories.GetOrAdd(eventType, (type) =&gt; new List&lt;IEventHandlerFactory&gt;());
+    }
+}</code></pre>
+<p>上述流程结合 <code>EventBus</code> 和 <code>LocalEventBus</code> 讲解了事件的订阅流程，事件的订阅操作都是对 <code>HandlerFactories</code> 的操作，往里面添加指定事件的事件处理器工厂，而每个工厂都是跟具体的事件处理器实例/类型进行关联的。</p>
+<h4 id="事件的发布">2.3.2 事件的发布</h4>
+<p>当开发人员需要发布事件的时候，一般都是通过对应的 <code>EventBus</code>，调用响应的 <code>PublishAsync</code> 方法，传递要触发的事件类型与事件数据。接口和基类当中，定义了两种发布方法的签名与实现：</p>
+<pre><code><code>public virtual Task PublishAsync&lt;TEvent&gt;(TEvent eventData) where TEvent : class
+{
+    return PublishAsync(typeof(TEvent), eventData);
+}
+
+public abstract Task PublishAsync(Type eventType, object eventData);</code></pre>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)6.png" /></p>
+<p>第二种方法一共也分为本地事件总线的实现，和分布式事件总线的实现，本地事件比较简单，我们先分析本地事件总线的实现。</p>
+<pre><code><code>public override async Task PublishAsync(Type eventType, object eventData)
+{
+    // 定义了一个异常集合，用于接收多个事件处理器执行时，产生的所有异常。
+    var exceptions = new List&lt;Exception&gt;();
+
+    // 触发事件处理器。
+    await TriggerHandlersAsync(eventType, eventData, exceptions);
+
+    // 如果有任何异常产生，则抛出到之前的调用栈。
+    if (exceptions.Any())
+    {
+        if (exceptions.Count == 1)
+        {
+            exceptions[0].ReThrow();
+        }
+
+        throw new AggregateException(&quot;More than one error has occurred while triggering the event: &quot; + eventType, exceptions);
+    }
+}</code></pre>
+<p>可以看到真正的触发行为是在 <code>TriggerHandlersAsync(Type eventType, object eventData, List&lt;Exception&gt; exceptions)</code> 内部进行实现的。</p>
+<pre><code><code>protected virtual async Task TriggerHandlersAsync(Type eventType, object eventData, List&lt;Exception&gt; exceptions)
+{
+    // 针对于这个的作用，等同于 ConfigureAwait(false) 。
+    // 具体可以参考 https://blogs.msdn.microsoft.com/benwilli/2017/02/09/an-alternative-to-configureawaitfalse-everywhere/。
+    await new SynchronizationContextRemover();
+
+    // 根据事件的类型，得到它的所有事件处理器工厂。
+    foreach (var handlerFactories in GetHandlerFactories(eventType))
+    {
+        // 遍历所有的事件处理器工厂，通过 Factory 获得事件处理器，调用 Handler 的 HandleEventAsync 方法。
+        foreach (var handlerFactory in handlerFactories.EventHandlerFactories)
+        {
+            await TriggerHandlerAsync(handlerFactory, handlerFactories.EventType, eventData, exceptions);
+        }
+    }
+
+    // 如果类型继承了 IEventDataWithInheritableGenericArgument 接口，那么会检测泛型参数是否有父类。
+    // 如果有父类，则会使用当前的事件数据，为其父类发布一个事件。
+    if (eventType.GetTypeInfo().IsGenericType &amp;&amp;
+        eventType.GetGenericArguments().Length == 1 &amp;&amp;
+        typeof(IEventDataWithInheritableGenericArgument).IsAssignableFrom(eventType))
+    {
+        var genericArg = eventType.GetGenericArguments()[0];
+        var baseArg = genericArg.GetTypeInfo().BaseType;
+        if (baseArg != null)
+        {
+            // 构造基类的事件类型，使用当前一样的泛型定义，只是泛型参数使用基类。
+            var baseEventType = eventType.GetGenericTypeDefinition().MakeGenericType(baseArg);
+            // 构建类型的构造参数。
+            var constructorArgs = ((IEventDataWithInheritableGenericArgument)eventData).GetConstructorArgs();
+            // 通过事件类型和构造参数，构造一个新的事件数据实例。
+            var baseEventData = Activator.CreateInstance(baseEventType, constructorArgs);
+            // 发布父类的同类事件。
+            await PublishAsync(baseEventType, baseEventData);
+        }
+    }
+}</code></pre>
+<p>在上述代码内部，都还没有真正执行事件处理器，真正的事件处理器执行程序是在下面的方法进行执行的。ABP vNext 通过引入 <code>IEventDataWithInheritableGenericArgument</code> 接口，实现了 <strong>类型继承事件</strong> 的触发，该接口提供了一个 <code>GetConstructorArgs()</code> 方法定义，方便后面生成构造参数。</p>
+<p>例如有一个基础事件叫做 <code>EntityEventData&lt;Student&gt;</code>，如果 <code>Student</code> 继承自 <code>Person</code>，那么在触发该事件的时候，也会发布一个 <code>EntityEventData&lt;Person&gt;</code> 事件。</p>
+<h4 id="事件处理器的执行">2.3.3 事件处理器的执行</h4>
+<p>真正事件处理器的执行，是通过下面的方法实现的，大概思路就是通过事件总线工厂，构建了事件处理器的实例。通过反射，调用事件处理器的 <code>HandleEventAsync()</code> 方法。如果在处理过程当中，出现了异常，则将异常数据放置在 <code>List&lt;Exception&gt;</code> 集合当中。</p>
+<pre><code><code>protected virtual async Task TriggerHandlerAsync(IEventHandlerFactory asyncHandlerFactory, Type eventType, object eventData, List&lt;Exception&gt; exceptions)
+{
+    using (var eventHandlerWrapper = asyncHandlerFactory.GetHandler())
+    {
+        try
+        {
+            // 获得事件处理器的类型。
+            var handlerType = eventHandlerWrapper.EventHandler.GetType();
+
+            // 判断事件处理器是本地事件还是分布式事件。
+            if (ReflectionHelper.IsAssignableToGenericType(handlerType, typeof(ILocalEventHandler&lt;&gt;)))
+            {
+                // 获得方法定义。
+                var method = typeof(ILocalEventHandler&lt;&gt;)
+                    .MakeGenericType(eventType)
+                    .GetMethod(
+                        nameof(ILocalEventHandler&lt;object&gt;.HandleEventAsync),
+                        new[] { eventType }
+                    );
+
+                // 使用工厂创建的实例调用方法。
+                await (Task)method.Invoke(eventHandlerWrapper.EventHandler, new[] { eventData });
+            }
+            else if (ReflectionHelper.IsAssignableToGenericType(handlerType, typeof(IDistributedEventHandler&lt;&gt;)))
+            {
+                var method = typeof(IDistributedEventHandler&lt;&gt;)
+                    .MakeGenericType(eventType)
+                    .GetMethod(
+                        nameof(IDistributedEventHandler&lt;object&gt;.HandleEventAsync),
+                        new[] { eventType }
+                    );
+
+                await (Task)method.Invoke(eventHandlerWrapper.EventHandler, new[] { eventData });
+            }
+            else
+            {
+                // 如果都不是，则说明类型不正确，抛出异常。
+                throw new AbpException(&quot;The object instance is not an event handler. Object type: &quot; + handlerType.AssemblyQualifiedName);
+            }
+        }
+        // 捕获到异常都统一添加到异常集合当中。
+        catch (TargetInvocationException ex)
+        {
+            exceptions.Add(ex.InnerException);
+        }
+        catch (Exception ex)
+        {
+            exceptions.Add(ex);
+        }
+    }
+}</code></pre>
+<h3 id="分布式事件总线">2.4 分布式事件总线</h3>
+<p>分布式事件总线的实现都存放在 <strong>Volo.Abp.EventBus.RabbitMQ</strong>，该项目的代码比较少，由三个文件构成。</p>
+<p><img src="./images/[Abp vNext 源码分析] - 13. 本地事件总线与分布式事件总线 (Rabbit MQ)7.png" /></p>
+<p>在 RabbitMQ 模块的内部，只干了两件事情。首先从 JSON 配置文件当中，获取 <code>AbpRabbitMqEventBusOptions</code> 配置的三个参数，然后解析 <code>RabbitMqDistributedEventBus</code> 实例，并调用初始化方法 (<code>Initialize()</code>)。</p>
+<pre><code><code>[DependsOn(
+    typeof(AbpEventBusModule),
+    typeof(AbpRabbitMqModule))]
+public class AbpEventBusRabbitMqModule : AbpModule
+{
+    public override void ConfigureServices(ServiceConfigurationContext context)
+    {
+        var configuration = context.Services.GetConfiguration();
+
+        // 从配置文件读取配置。
+        Configure&lt;AbpRabbitMqEventBusOptions&gt;(configuration.GetSection(&quot;RabbitMQ:EventBus&quot;));
+    }
+
+    public override void OnApplicationInitialization(ApplicationInitializationContext context)
+    {
+        // 调用初始化方法。
+        context
+            .ServiceProvider
+            .GetRequiredService&lt;RabbitMqDistributedEventBus&gt;()
+            .Initialize();
+    }
+}</code></pre>
+<h4 id="分布式事件总线的初始化">2.4.1 分布式事件总线的初始化</h4>
+<pre><code><code>public void Initialize()
+{
+    // 创建一个消费者，并配置交换器和队列。
+    Consumer = MessageConsumerFactory.Create(
+        new ExchangeDeclareConfiguration(
+            AbpRabbitMqEventBusOptions.ExchangeName,
+            type: &quot;direct&quot;,
+            durable: true
+        ),
+        new QueueDeclareConfiguration(
+            AbpRabbitMqEventBusOptions.ClientName,
+            durable: true,
+            exclusive: false,
+            autoDelete: false
+        ),
+        AbpRabbitMqEventBusOptions.ConnectionName
+    );
+
+    // 消费者在消费消息的时候，具体的执行逻辑。
+    Consumer.OnMessageReceived(ProcessEventAsync);
+
+    // 调用基类的方法，自动订阅对应的事件。
+    SubscribeHandlers(AbpDistributedEventBusOptions.Handlers);
+}</code></pre>
+<h4 id="分布式事件的订阅">2.4.2 分布式事件的订阅</h4>
+<p>在定义分布式事件的时候，我们必须使用 <code>EventNameAttribute</code> 为事件声明路由键。</p>
+<pre><code><code>public override IDisposable Subscribe(Type eventType, IEventHandlerFactory factory)
+{
+    var handlerFactories = GetOrCreateHandlerFactories(eventType);
+
+    if (factory.IsInFactories(handlerFactories))
+    {
+        return NullDisposable.Instance;
+    }
+
+    handlerFactories.Add(factory);
+
+    if (handlerFactories.Count == 1) //TODO: Multi-threading!
+    {
+        // 为消费者绑定一个路由键，在收到对应的事件时，就会触发之前绑定的方法。
+        Consumer.BindAsync(EventNameAttribute.GetNameOrDefault(eventType));
+    }
+
+    return new EventHandlerFactoryUnregistrar(this, eventType, factory);
+}</code></pre>
+<p>订阅的时候，除了 <code>Consumer.BindAsync()</code> 以外，基本流程和本地事件总线基本一致。</p>
+<h4 id="分布式事件的发布">2.4.3 分布式事件的发布</h4>
+<p>分布式事件总线一样重写了发布方法，内部首先使用 <code>IRabbitMqSerializer</code> 序列化器 (基于 JSON.NET) 将事件数据进行序列化，然后将消息投递出去。</p>
+<pre><code><code>public override Task PublishAsync(Type eventType, object eventData)
+{
+    var eventName = EventNameAttribute.GetNameOrDefault(eventType);
+    // 序列化事件数据。
+    var body = Serializer.Serialize(eventData);
+
+    // 创建一个信道用于通讯。
+    using (var channel = ConnectionPool.Get(AbpRabbitMqEventBusOptions.ConnectionName).CreateModel())
+    {
+        channel.ExchangeDeclare(
+            AbpRabbitMqEventBusOptions.ExchangeName,
+            &quot;direct&quot;,
+            durable: true
+        );
+        
+        // 更改投递模式为持久化模式。
+        var properties = channel.CreateBasicProperties();
+        properties.DeliveryMode = RabbitMqConsts.DeliveryModes.Persistent;
+
+        // 发布一个新的事件。
+        channel.BasicPublish(
+            exchange: AbpRabbitMqEventBusOptions.ExchangeName,
+            routingKey: eventName,
+            mandatory: true,
+            basicProperties: properties,
+            body: body
+        );
+    }
+
+    return Task.CompletedTask;
+}</code></pre>
+<h4 id="分布式事件的执行">2.4.4 分布式事件的执行</h4>
+<p>执行逻辑都存放在 <code>ProcessEventAsync(IModel channel, BasicDeliverEventArgs ea)</code> 方法内部，基本就是监听到指定的消息，首先反序列化消息，调用父类的 <code>TriggerHandlersAsync</code> 去执行具体的事件处理器。</p>
+<pre><code><code>private async Task ProcessEventAsync(IModel channel, BasicDeliverEventArgs ea)
+{
+    var eventName = ea.RoutingKey;
+    var eventType = EventTypes.GetOrDefault(eventName);
+    if (eventType == null)
+    {
+        return;
+    }
+
+    var eventData = Serializer.Deserialize(ea.Body, eventType);
+
+    await TriggerHandlersAsync(eventType, eventData);
+}</code></pre>
+<h2 id="三总结">三、总结</h2>
+<p>ABP vNext 为我们实现了比较完善的本地事件总线，和基于 RabbitMQ 的分布式事件总线。在平时开发过程中，我们本地事件总线的使用频率应该还是比较高，而分布式事件总线目前仍处于一个半成品，很多高级特性还没实现，例如重试策略等。所以分布式事件总线要使用的话，建议使用较为成熟的 CAP 库替代 ABP vNext 的分布式事件总线。</p>
+<h2 id="四其他">四、其他</h2>
+<p><strong><a href="https://chou.360huzhubao.com/?dist=&amp;wx=1889537027&amp;chin_code=2XpDZ3&amp;from=timeline&amp;isappinstalled=0#/choukuan/index?item_id=yMgdR80yxsqEcTVFdJ7VuA">360 大病救助</a></strong> : 在这里向大家求助一下，病人是我亲戚，情况属实。对于他们家庭来说，经济压力很大，希望大家能帮助或转发一下，谢谢大家。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

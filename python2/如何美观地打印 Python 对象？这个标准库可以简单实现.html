@@ -1,0 +1,161 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修如何美观地打印 Python 对象？这个标准库可以简单实现' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>如何美观地打印 Python 对象？这个标准库可以简单实现</center></div><div class='banquan'>原文出处:本文由博客园博主豌豆花下猫提供。<br/>
+原文连接:https://www.cnblogs.com/pythonista/p/11407546.html</div><br>
+    <p><img src="./images/如何美观地打印 Python 对象？这个标准库可以简单实现0.png" /></p>
+<p>前不久，我写了一篇文章回顾 Python 中 <a href="https://mp.weixin.qq.com/s/NuzfuH_zCZzcrmSFR04NHw">print 的发展历史</a> ，提到了两条发展线索：</p>
+<ul>
+<li>明线：早期的 print 语句带有 C 和 Shell 的影子，是个应用程序级的 statement，在最初十几年里，经历过 PEP-214 和 PEP-259 的改进；再到 2009 年的大版本 3.0，由语句改成了 print() 函数，还在 3.3 版本，做过一次功能增强，最终上升成为一等的内置函数。</li>
+<li>暗线：介绍了 print 的竞争对手们，像传统的日志模块 logging、调试模块 pdb、主流 IDE 的调试功能，以及后起之秀 PySnooper，它们瞄准着 print 的位置，摩拳擦掌，虎视眈眈。</li>
+</ul>
+<p>本文依然跟 print 相关，想介绍的是标准库中的 <code>pprint</code> 模块。</p>
+<p>（未经授权，请勿转载。文章首发于：<a href="https://mp.weixin.qq.com/s/d1dQH1Fqaj_U3AXKYluhSw" class="uri">https://mp.weixin.qq.com/s/d1dQH1Fqaj_U3AXKYluhSw</a>）</p>
+<p>pprint 是“pretty printer”的简写，“pretty”的含义是“漂亮的、美观的”，还有表示“相当地”的程度语气，因此它的含义便是：（相当）美观的打印。</p>
+<p><strong>这是个相当简单却有用的模块，主要用于打印复杂的数据结构对象，例如多层嵌套的列表、元组和字典等。</strong></p>
+<p>先看看 print() 打印的一个例子：</p>
+<pre><code><code>mylist = [&quot;Beautiful is better than ugly.&quot;, &quot;Explicit is better than implicit.&quot;, &quot;Simple is better than complex.&quot;, &quot;Complex is better than complicated.&quot;]
+
+print(mylist)
+
+# 结果如下：
+[&#39;Beautiful is better than ugly.&#39;, &#39;Explicit is better than implicit.&#39;, &#39;Simple is better than complex.&#39;, &#39;Complex is better than complicated.&#39;]</code></pre>
+<p>这是一个简单的例子，全部打印在一行里。</p>
+<p>想象一下，如果对象中的元素是多层嵌套的内容（例如复杂的 Json 数据），或者有超多的元素（例如在列表中存了很多 URL 链接），再打印出来会是怎样？</p>
+<p>那肯定是一团糟的，不好阅读。</p>
+<p>使用 pprint 模块的 pprint() 替代 print()，可以解决如下痛点：</p>
+<ul>
+<li><strong>设置合适的行宽度，作适当的换行</strong></li>
+<li><strong>设置打印的缩进、层级，进行格式化打印</strong><br />
+</li>
+<li><strong>判断对象中是否出现无限循环，并优化打印内容</strong></li>
+</ul>
+<p><img src="./images/如何美观地打印 Python 对象？这个标准库可以简单实现1.png" /></p>
+<p><strong>1、简单使用</strong></p>
+<p>语法：pprint(object, stream=None, indent=1, width=80, depth=None, *,compact=False)</p>
+<p>默认的行宽度参数为 80，当打印的字符（character）小于 80 时，pprint() 基本上等同于内置函数 print()，当字符超出时，它会作美化，进行格式化输出：</p>
+<pre><code><code>import pprint
+
+# 打印上例的 mylist
+pprint.pprint(mylist)
+
+# 打印的元素是换行的（因为超出80字符）：
+[&#39;Beautiful is better than ugly.&#39;,
+ &#39;Explicit is better than implicit.&#39;,
+ &#39;Simple is better than complex.&#39;,
+ &#39;Complex is better than complicated.&#39;]</code></pre>
+<p><strong>2、设置缩进为 4 个空格（默认为1）</strong></p>
+<pre><code><code>pprint.pprint(mylist, indent=4)
+
+[   &#39;Beautiful is better than ugly.&#39;,
+    &#39;Explicit is better than implicit.&#39;,
+    &#39;Simple is better than complex.&#39;,
+    &#39;Complex is better than complicated.&#39;]</code></pre>
+<p><strong>3、设置打印的行宽</strong></p>
+<pre><code><code>mydict = {&#39;students&#39;: [{&#39;name&#39;:&#39;Tom&#39;, &#39;age&#39;: 18},{&#39;name&#39;:&#39;Jerry&#39;, &#39;age&#39;: 19}]}
+
+pprint.pprint(mydict)
+
+# 未超长：
+{&#39;students&#39;: [{&#39;age&#39;: 18, &#39;name&#39;: &#39;Tom&#39;}, {&#39;age&#39;: 19, &#39;name&#39;: &#39;Jerry&#39;}]}
+
+pprint.pprint(mydict, width=20)
+
+# 超长1：
+{&#39;students&#39;: [{&#39;age&#39;: 18,
+               &#39;name&#39;: &#39;Tom&#39;},
+              {&#39;age&#39;: 19,
+               &#39;name&#39;: &#39;Jerry&#39;}]}
+
+pprint.pprint(mydict, width=70)
+
+# 超长2：
+{&#39;students&#39;: [{&#39;age&#39;: 18, &#39;name&#39;: &#39;Tom&#39;},
+              {&#39;age&#39;: 19, &#39;name&#39;: &#39;Jerry&#39;}]}</code></pre>
+<p><strong>4、设置打印的层级（默认全打印）</strong></p>
+<pre><code><code>newlist = [1, [2, [3, [4, [5]]]]]
+
+pprint.pprint(newlist, depth=3)
+
+# 超出的层级会用...表示
+[1, [2, [3, [...]]]]</code></pre>
+<p><strong>5、优化循环结构的打印</strong></p>
+<p>当列表或其它数据结构中出现循环引用时，要完整打印出所有内容是不可能的。</p>
+<p>所以 print 作了简化处理，就像上例一样，只打印外层的壳，而不打印内层循环的东西。</p>
+<p>这种处理方式是简化了，但没有指出是谁导致了循环，还容易看漏。</p>
+<p>pprint() 方法作了改进，遇到无限循环结构时，会表示成<code>&lt;Recursion on typename with id=number&gt;</code> 的格式。</p>
+<p>还有个 saferepr() 方法，也是这样优化，而且返回的是个字符串：</p>
+<pre><code><code>newlist = [1, 2]
+newlist.insert(0, newlist)
+
+# 列表元素指向列表自身，造成循环引用
+# 直接 print 的结果是：[[...], 1, 2]
+
+pprint.pprint(newlist)
+# [&lt;Recursion on list with id=1741283656456&gt;, 1, 2]
+
+pprint.saferepr(newlist)
+# &#39;[&lt;Recursion on list with id=1741283656456&gt;, 1, 2]&#39;</code></pre>
+<p><strong>6、判断是否出现循环结构</strong></p>
+<p>有两个方法可以判断一个对象中是否出现无限循环：</p>
+<pre><code><code>pprint.isrecursive(newlist)
+# True
+
+pprint.isreadable(newlist)
+# False</code></pre>
+<p>isreadable() 除了能像 isrecursive() 一样判断循环，还能判断该格式化内容是否可被 eval() 重构。</p>
+<p>以上就是 pprint 模块的快捷入门介绍，除此之外，还有 pformat() 方法、PrettyPrinter 类，以及某些参数的使用等内容，我觉得没有大用，就不多说了。</p>
+<p>如若感兴趣，你可查阅：</p>
+<ul>
+<li>官方介绍：<a href="https://docs.python.org/zh-cn/3/library/pprint.html" class="uri">https://docs.python.org/zh-cn/3/library/pprint.html</a></li>
+<li>源码地址：<a href="https://github.com/python/cpython/blob/3.7/Lib/pprint.py" class="uri">https://github.com/python/cpython/blob/3.7/Lib/pprint.py</a></li>
+</ul>
+<p>最后，还有两个小小的点：</p>
+<p><strong>1、用 pprint() 替换 print() 的技巧</strong></p>
+<p>在不考虑 print() 函数本身的参数的情况下，可以在引入 pprint 模块后，写上 “print = pprint.pprint”，令 print() 起到改头换面的效果：</p>
+<pre><code><code>import pprint
+print = pprint.pprint
+
+mylist = [&quot;Beautiful is better than ugly.&quot;, &quot;Explicit is better than implicit.&quot;, &quot;Simple is better than complex.&quot;, &quot;Complex is better than complicated.&quot;]
+
+print(mylist)
+
+# 可对比本文开头的例子
+[&#39;Beautiful is better than ugly.&#39;,
+ &#39;Explicit is better than implicit.&#39;,
+ &#39;Simple is better than complex.&#39;,
+ &#39;Complex is better than complicated.&#39;]</code></pre>
+<p><strong>2、国人开发的 beeprint</strong></p>
+<p>国内某位 pan 同学在 Github 开源了个<code>beeprint</code>，明显是对标 <code>pprint</code> 的。</p>
+<p>项目地址：<a href="https://github.com/panyanyany/beeprint" class="uri">https://github.com/panyanyany/beeprint</a></p>
+<p>它优化了字典对象的打印，对于从其它语言转过来的同学而言（例如 Java），这是个福音：</p>
+<p><img src="./images/如何美观地打印 Python 对象？这个标准库可以简单实现2.png" /></p>
+<p>它还优化了长文本的打印，支持自定义对象的打印，看起来不错。</p>
+<p><img src="./images/如何美观地打印 Python 对象？这个标准库可以简单实现3.png" /></p>
+<p>但是，其它功能不够齐全，而且作者停止维护两年了，荒废已久……</p>
+<p>总体而言，pprint 算是 print() 的轻量级替代，简单实用，极其方便（毕竟是标准库），文档丰富而有保障。</p>
+<p>所以，若想要打印美观易读的数据，这个 pprint 标准库，不妨一试哦。</p>
+<p><strong>作者简介：</strong>豌豆花下猫，生于广东毕业于武大，现为苏漂程序员，有一些极客思维，也有一些人文情怀，有一些温度，还有一些态度。公众号：「Python猫」（python_cat）<br />
+<img src="./images/如何美观地打印 Python 对象？这个标准库可以简单实现4.png" /></p>
+<p>公众号【<strong>Python猫</strong>】， 本号连载优质的系列文章，有喵星哲学猫系列、Python进阶系列、好书推荐系列、技术写作、优质英文推荐与翻译等等，欢迎关注哦。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

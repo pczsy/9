@@ -1,0 +1,532 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python面向对象：杂七杂八的知识点' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python面向对象：杂七杂八的知识点</center></div><div class='banquan'>原文出处:本文由博客园博主python学习者0提供。<br/>
+原文连接:https://www.cnblogs.com/xxpythonxx/p/11695054.html</div><br>
+    <p><strong>为什么有这篇&quot;杂项&quot;文章</strong><br />
+实在是因为python中对象方面的内容太多、太乱、太杂，在写相关文章时比我所学过的几种语言都更让人&quot;糟心&quot;，很多内容似独立内容、又似相关内容，放这也可、放那也可、放这也不好、放那也不好。</p>
+<p>所以，用一篇单独的文章来收集那些在我其它文章中不好归类的知识点，而且会随时更新。</p>
+<p><strong>class、type、object的关系</strong></p>
+<p>在python 3.x中，类就是类型，类型就是类，它们变得完全等价。</p>
+<p>要理解class、type、object的关系，只需几句话：</p>
+<ul>
+<li>object是所有类的祖先类，包括type类也继承自object</li>
+<li>所有class自身也是对象，所有类/类型都是type的实例对象，包括object和type自身都是type的实例对象<br />
+论证略，网上一大堆。</li>
+</ul>
+<p><strong>鸭子模型(duck typing)</strong></p>
+<p>Duck typing的概念来源于的诗句&quot;When I see a bird that walks like a duck and swims like a duck and quacks like a duck, I call that bird a duck.&quot;。</p>
+<p>意思是：如果我看到一只鸟走路像一只鸭子，游泳像一只鸭子，叫起来像一只鸭子，那么我就认为这只鸟是一只鸭子。</p>
+<p>在python中，鸭子模型非常容易理解。下面是典型的鸭子模型示例：</p>
+<pre><code><code>class Duck():
+    def walk(self):
+        print(&quot;duck walk&quot;)
+    def swim(self):
+        print(&quot;duck swim&quot;)
+    def quacks(self):
+        print(&quot;duck quacks&quot;)
+
+class Bird():
+    def walk(self):
+        print(&quot;bird walk&quot;)
+    def swim(self):
+        print(&quot;bird swim&quot;)
+    def quacks(self):
+        print(&quot;bird quacks&quot;)</code></pre>
+<p>对于Python来说，鸭子模型的意思是：只要某个地方需要调用Duck的walk、swim、quacks方法，就可以让Bird也作为Duck，因为它也实现了这3个方法。</p>
+<p>Python并不强制检查类型，只要对象实现了某个所需要的方法，就认为这是可以接受的对象。</p>
+<p>它还传达一种思想，A类对象能放在一个地方，如果想让B类对象也可以放在这个地方，只需要让B实现这个地方所需要的方法就可以。</p>
+<p>鸭子模型贯穿了python中的运算符重载行为，也贯穿了整个Python的类设计理念。例如print()执行的时候需要调用__ str__方法，所以只要实现了__str__方法的类，都可以被print()调用。</p>
+<p><strong>绑定方法和非绑定方法</strong></p>
+<p>绑定之意，在于方法是否与实例对象(或类名)进行了绑定。</p>
+<p>当通过实例对象去调用方法时，或者说会自动传递self的方法是绑定方法，其它通过类名调用、手动传递self的方法调用是非绑定方法，在3.x中没有非绑定方法的概念，它直接被当作是普通函数。</p>
+<p>例如：</p>
+<pre><code><code>class cls():
+    def m1(self):
+        print(&quot;m1: &quot;, self)
+    def m2(arg1):
+        print(&quot;m2: &quot;, arg1)</code></pre>
+<p>当通过cls类的实例对象去调用m1、m2的时候，是绑定方法：</p>
+<pre><code><code>&gt;&gt;&gt; c = cls()
+&gt;&gt;&gt; c.m1
+&lt;bound method cls.m1 of &lt;__main__.cls object at 0x000001EE2DA75860&gt;&gt;
+&gt;&gt;&gt; c.m1()
+m1:  &lt;__main__.cls object at 0x000001EE2DA75860&gt;
+
+&gt;&gt;&gt; c.m2
+&lt;bound method cls.m2 of &lt;__main__.cls object at 0x000001EE2DA75860&gt;&gt;
+&gt;&gt;&gt; c.m2()
+m2:  &lt;__main__.cls object at 0x000001EE2DA75860&gt;</code></pre>
+<p>也就是说，绑定方法中是绑定了实例对象的，无需手动去传递实例对象。例如：</p>
+<pre><code><code>&gt;&gt;&gt; cc = c.m1
+&gt;&gt;&gt; cc()
+m1:  &lt;__main__.cls object at 0x000001EE2DA75860&gt;</code></pre>
+<p>当通过类名去访问的时候，是普通函数(非绑定方法)：</p>
+<pre><code><code>&gt;&gt;&gt; cls.m1
+&lt;function cls.m1 at 0x000001EE2DA78620&gt;
+&gt;&gt;&gt; cls.m2
+&lt;function cls.m2 at 0x000001EE2DA786A8&gt;
+
+&gt;&gt;&gt; cls.m1(c)
+m1:  &lt;__main__.cls object at 0x000001EE2DA75860&gt;
+&gt;&gt;&gt; cls.m2(c)
+m2:  &lt;__main__.cls object at 0x000001EE2DA75860&gt;</code></pre>
+<p>唯一需要在意的是，并非一定要通过实例对象去调用方法，通过类方法也能的调用，也能手动传递实例对象。此外，类中的方法并非一定要求有self参数。</p>
+<p><strong>静态方法和类方法</strong></p>
+<p>python的面向对象中有3种类型的方法：普通的实例方法、类方法、静态方法。</p>
+<ul>
+<li>普通实例方法：通过self参数传递实例对象自身</li>
+<li>类方法：传递的是类名而非对象</li>
+<li>静态方法：不通过self传递.</li>
+</ul>
+<p>从这些方法的简单定义上看，很容易知晓实例方法可以操作类属性、对象属性，而类方法和静态方法只能操作类属性，不能操作对象属性。</p>
+<p>所以，要实现类方法、静态方法需要合理地定义、传递参数。例如：</p>
+<pre><code><code>class cls():
+    def m1(self, arg1):
+        print(&quot;m1: &quot;, self, arg1)
+    def m2(arg1, arg2):
+        print(&quot;m2: &quot;, arg1)</code></pre>
+<p>显然这里m2()是静态方法，m1根据调用方式可以是类方法，也可以是实例方法，甚至是静态方法。例如：</p>
+<pre><code><code># m1作为实例方法
+&gt;&gt;&gt; c.m1(&quot;hello&quot;)
+m1:  &lt;__main__.cls object at 0x000001EE2DA75BA8&gt; hello
+
+# m1作为类方法，通过类名调用，并传递类名作为self参数
+&gt;&gt;&gt; cls.m1(cls,&quot;hello&quot;)
+m1:  &lt;class &#39;__main__.cls&#39;&gt; hello
+
+# m1作为静态方法，通过类名调用，随意处置self参数
+&gt;&gt;&gt; cls.m1(&quot;asdfas&quot;,&quot;hello&quot;)
+m1:  asdfas hello</code></pre>
+<p>这样的调用方式并没有什么问题，python是允许这样做的，很自由，但很容易犯错。比如想要通过对象名去调用上面的m2，arg1就必须当作self一样解释成对象自身，换句话说只能传递一个参数c.m2(&quot;arg2&quot;)，这显然有悖静态方法的编码方式。</p>
+<p>在python中，要定义严格的类方法、静态方法，需要使用内置的装饰器函数classmethod()、staticmethod()来装饰，装饰后无论使用对象名去调用还是使用类名去调用，都可以。</p>
+<p>例如：</p>
+<pre><code><code>class cls():
+    def m1(self,arg1):
+        print(&quot;m1: &quot;, self, arg1)
+    @classmethod
+    def m2(self,arg1):
+        print(&quot;m2: &quot;, self, arg1)
+    @staticmethod
+    def m3(arg1, arg2):
+        print(&quot;m3: &quot;, arg1, arg2)</code></pre>
+<p>上面定义了普通方法、类方法和静态方法。如果尚不了解装饰器的用法，暂时只需知道上面的@xxx将它下面的函数(方法)扩展成了类方法、静态方法即可。</p>
+<p>调用实例方法：</p>
+<pre><code><code>&gt;&gt;&gt; c = cls()
+&gt;&gt;&gt; c.m1(&quot;hello&quot;)
+m1:  &lt;__main__.cls object at 0x000001EE2DA840B8&gt; hello</code></pre>
+<p>注意输出的self是&quot;…object…&quot;，和下面的类方法调用注意区分比较。</p>
+<p>调用类方法。因为@classmethod已经将m2包装成了类方法，所以m2的第一个self参数将总是代表类名，而无论是使用对象去调用m2还是使用类名去调用m2。</p>
+<pre><code><code>&gt;&gt;&gt; c.m2(&quot;hello&quot;)
+m2:  &lt;class &#39;__main__.cls&#39;&gt; hello
+
+&gt;&gt;&gt; cls.m2(&quot;hello&quot;)
+m2:  &lt;class &#39;__main__.cls&#39;&gt; hello</code></pre>
+<p>如果输出m2方法，会发现它已经是绑定方法，也就是说和类名进行了绑定(这里不是和对象名进行绑定)。</p>
+<pre><code><code>&gt;&gt;&gt; c.m2
+&lt;bound method cls.m2 of &lt;class &#39;__main__.cls&#39;&gt;&gt;
+
+&gt;&gt;&gt; cls.m2
+&lt;bound method cls.m2 of &lt;class &#39;__main__.cls&#39;&gt;&gt;</code></pre>
+<p>调用静态方法。</p>
+<pre><code><code>&gt;&gt;&gt; c.m3(&quot;hello&quot;,&quot;world&quot;)
+m3:  hello world
+&gt;&gt;&gt; cls.m3(&quot;hello&quot;,&quot;world&quot;)
+m3:  hello world</code></pre>
+<p>静态方法都是未绑定的函数:</p>
+<pre><code><code>&gt;&gt;&gt; c.m3
+&lt;function cls.m3 at 0x000001EE2DA789D8&gt;
+&gt;&gt;&gt; cls.m3
+&lt;function cls.m3 at 0x000001EE2DA789D8&gt;</code></pre>
+<p>一般来说，类方法用于在类中操作/返回和类名有关的内容，静态方法用于在类中做和类或对象完全无关的操作。一个比较好理解的例子是，一个Employee类，要检查员工的年龄范围在16-35，如果年龄在这范围内，就返回一个员工对象，可以将这个逻辑定义为类方法。如果只是检查年龄范围来决定True或False这样和类/对象无关的操作，则定义为静态方法。</p>
+<pre><code><code>class Employee:
+    @staticmethod
+    def age_ok(age):
+        if 16&lt;age&lt;35:
+            return True
+        else:
+            return False
+
+    @classmethod
+    def age_check(cls, age):
+        if 16&lt;age&lt;35:
+            return cls(...)</code></pre>
+<p><strong>私有属性</strong></p>
+<p>python没有private关键字来修饰属性使其变成私有属性，但是带上双下划线前缀的属性且没有后缀下划线的属性(__X)可以认为是私有属性。它仅仅只是约定性的私有属性，不代表外界真的不能访问。</p>
+<p>实际上，使用__X这样的属性，在类的内部访问时会自动进行扩展为_clsname__X，也就是加个前缀下划线，再加个类名。因为扩展时加上了类名，使得这个属性在名称上是独属于这个类的。</p>
+<p>例如：</p>
+<pre><code><code>class cls():
+    __X = 12
+    def m1(self,y):
+        self.__Y = y
+        print(self.__X)
+        print(self.__Y)
+
+&gt;&gt;&gt; print(cls.__dict__.keys())
+dict_keys([..., &#39;_cls__X&#39;, &#39;m1&#39;, ....])
+
+&gt;&gt;&gt; c = cls()
+&gt;&gt;&gt; c.m1(22)
+12
+22
+&gt;&gt;&gt; print(c.__dict__.keys())
+dict_keys([&#39;_cls__Y&#39;])</code></pre>
+<p>因为已经扩展了属性的名称，所以无法在类的外界通过直接的名称__X去访问对应的属性。</p>
+<pre><code><code>&gt;&gt;&gt; c.__Y
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+AttributeError: &#39;cls&#39; object has no attribute
+&#39;__Y&#39;
+&gt;&gt;&gt; c.__X
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+AttributeError: &#39;cls&#39; object has no attribute
+&#39;__X&#39;
+
+&gt;&gt;&gt; cls.__X
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+AttributeError: type object &#39;cls&#39; has no attribute &#39;__X&#39;</code></pre>
+<p>前面说了，这种加双下划线前缀的属性仅仅只是一个约定形式，虽然在外界无法直接通过名称去访问，但是仍有不少方法去访问。例如通过扩展后的名称、通过字典__dict__：</p>
+<pre><code><code>&gt;&gt;&gt; cls._cls__X
+12
+&gt;&gt;&gt; c._cls__Y
+22
+&gt;&gt;&gt; c.__dict__[&#39;_cls__Y&#39;]
+22</code></pre>
+<p>要想严格地声明属性的私有性，可以编写装饰器类，在装饰器类中完成属性的判断。</p>
+<p><strong>方法的默认可变参数陷阱</strong></p>
+<p>如果一个方法的参数给了默认参数，且这个默认参数是一个可变类型，那么这里有一个陷阱：使用这个默认参数的时候各对象会共享这个可变默认值。</p>
+<p>例如：</p>
+<pre><code><code>class A:
+    def __init__(self, arg=[]):
+        self.data = arg
+    def add(self, value):
+        self.data.append(value)
+
+# 两个不同对象，且都使用参数arg的默认值
+a1 = A()
+a2 = A()
+
+# 向两个对象中添加元素
+a1.add(&quot;a1&quot;)
+a2.add(&quot;a2&quot;)
+
+print(a1.data)
+print(a2.data)
+执行结果：
+
+[&#39;a1&#39;, &#39;a2&#39;]
+[&#39;a1&#39;, &#39;a2&#39;]</code></pre>
+<p>发现a1和a2这两个不同的对象中的data竟然是相同的数据，如果输出下它们的data属性，会发现是同一个对象：</p>
+<pre><code><code>&gt;&gt;&gt; a1.data is a2.data
+True</code></pre>
+<p>这是因为参数的默认值是在申请变量之前就先评估好的，也就是在赋值给参数变量arg之前，这个空列表就已经存在了。然后使用默认值来构造对象时，这些对象都使用同一个空列表，而这个空列表是可变的类型，所以无论谁修改这个列表都会影响其它对象。</p>
+<p>如果不使用默认值，那么每个对象的列表就是独占的，不会被其它对象修改。</p>
+<pre><code><code>a3 = A([])
+a3.add(&quot;a3&quot;)
+print(a3.data)</code></pre>
+<p>结果：</p>
+<pre><code><code>[&#39;a3&#39;]</code></pre>
+<p><strong>MethodType：添加外部函数作为方法</strong></p>
+<p>python的types模块中提供了一个MethodType(funcName, instance)函数，它可以将类外部定义的函数funcName链接到实例对象或类上。</p>
+<p>例如连接到实例对象上：</p>
+<pre><code><code># 注意外部函数上加了self参数
+def func(self, age):
+    print(age)
+
+class cls:
+    pass
+
+&gt;&gt;&gt; c = cls
+&gt;&gt;&gt; import types
+&gt;&gt;&gt; c.printage = types.MethodType(func, c)
+&gt;&gt;&gt; c.printage(22)
+22</code></pre>
+<p>type.MethodType()是将某个可调用对象(这里的func)动态地链接到实例对象或类上，使其临时作为对象或类的方法属性，只有在被调用的时候才会进行属性的添加。</p>
+<p>需要注意的是，当外部函数链接到实例对象上时，这个链接只对这个实例对象有效，其它对象是不具备这个属性的。如果链接到类上，那么所有对象都可以访问这个链接的方法。</p>
+<p>**__ call __**</p>
+<p>正常情况下定义了一个类，调用这个类表示创建一个对象。</p>
+<pre><code><code>class cls:
+    pass
+
+c = cls()</code></pre>
+<p>但是，对象c不再是可调用的对象，也就是说，它不能再被执行。</p>
+<pre><code><code>&gt;&gt;&gt; callable(c)
+False</code></pre>
+<p>python对象的__call__可以让实例对象也变成可调用类型，就像函数一样。</p>
+<pre><code><code>class cls:
+    def __call__(self, *args, **kwargs):
+        print(&#39;__call__: &#39;, args, kwargs)
+
+&gt;&gt;&gt; c = cls()
+&gt;&gt;&gt; c(1,2,3,x=4,y=5)
+__call__:  (1, 2, 3) {&#39;x&#39;: 4, &#39;y&#39;: 5}
+
+&gt;&gt;&gt; callable(c)
+True</code></pre>
+<p>将类定义为一个可调用对象是非常有用的，它可以像函数一样去修饰、扩展其它内容的功能，特别是编写装饰器类的时候。</p>
+<p>例如，正常情况下写装饰器总要返回一个新装饰器函数，但是想要直接使用类作为装饰器，就需要在这个类中定义__call__，将__call__作为函数装饰器中的装饰器函数wrapped()。下面是一个示例：</p>
+<pre><code><code>import types
+from functools import wraps
+
+class DecoratorClass():
+    def __init__(self, func):
+        wraps(func)(self)
+        self.callcount = 0
+    def __call__(self, *args, **kwargs):
+        self.callcount += 1
+        return self.__wrapped__(*args, **kwargs)
+    def __get__(self, instance, cls):
+        if instance is None:
+            return self
+        else:
+            return types.MethodType(self, instance)</code></pre>
+<p>上面是装饰器类，可以像函数装饰器一样去装饰其它函数。</p>
+<pre><code><code>@DecoratorClass
+def add(x, y):
+    return x + y
+
+&gt;&gt;&gt; add(2,3)
+5
+&gt;&gt;&gt; add(3,4)
+7
+&gt;&gt;&gt; add.callcount
+2</code></pre>
+<p><strong>判断对象是否可调用的几种方式</strong></p>
+<p>根据前面的说明可知，判断一个对象是否是可调用的依据有2种方式：</p>
+<p>使用内置函数callable(X)，X可调用则返回True，否则False<br />
+注：返回False一定表示不可调用，但返回True不代表一定可调用<br />
+判断是否定义了call__<code>方法。使用</code>hasattr(obj,'__call')即可判断</p>
+<pre><code><code>&gt;&gt;&gt; callable(c)
+True
+
+&gt;&gt;&gt; hasattr(c,&#39;__call__&#39;)
+True
+__slots__</code></pre>
+<p>python是一门动态语言，而且是极其开放的动态语言。在面向对象上，它允许我们随意地、任意时间地添加属性。例如：</p>
+<pre><code><code>class cls():
+    attr1 = 111     # 在类中添加属性
+    def __init__(self):
+        self.attr2 = 222   # 添加实例对象的属性
+
+&gt;&gt;&gt; c = cls()
+&gt;&gt;&gt; c.attr3 = 333    # 在类的外部添加属性
+&gt;&gt;&gt; c.__dict__.keys()
+dict_keys([&#39;attr2&#39;, &#39;attr3&#39;])</code></pre>
+<p>如果想要限定对象只能拥有某些属性，可以使用__slots__来限定，__slots__可以指定为一个元组、列表、集合等。</p>
+<p>例如：</p>
+<pre><code><code>class cls():
+    __slots__ = [&#39;a&#39;, &#39;b&#39;]
+
+&gt;&gt;&gt; c = cls()
+&gt;&gt;&gt; c.a=13
+&gt;&gt;&gt; c.b=14
+&gt;&gt;&gt; c.cc=15     # 报错
+Traceback (most recent call last):
+  File &quot;&lt;stdin&gt;&quot;, line 1, in &lt;module&gt;
+AttributeError: &#39;cls&#39; object has no attribute
+&#39;cc&#39;</code></pre>
+<p>但注意：</p>
+<ul>
+<li><p>__slots__定义在类级别上，它仅仅只限定实例对象属性，不会限制类属性</p></li>
+<li><p>__slots__不会被子类继承</p></li>
+<li><p>slots__定义后,对象默认就没有了__dict属性</p>
+<ul>
+<li>但可以将__dict__放进__slots__的范围内来允许__dict__</li>
+</ul></li>
+</ul>
+<p>还有几个注意点在下面的示例中解释</p>
+<p>例如：</p>
+<pre><code><code>class cls():
+    __slots__ = [&#39;a&#39;, &#39;b&#39;]
+    x = 13      # 允许定义类属性
+
+c = cls()
+c.a = 14
+c.b = 15
+cls.y = 16   # 允许定义类属性
+
+print(c.x, c.a, c.b, c.y)
+
+print(cls.__dict__.keys()) # 类有__dict__属性
+print(c.__dict__.keys())   # 报错，对象没有__dict__属性</code></pre>
+<p>可以将__dict__放进__slots__中，使得对象可以带有属性字典。但这会让__slots__的限定失效：实例对象可以继续添加任意属性，那些不在__slots__中的属性会加入到__dict__中。</p>
+<pre><code><code>class cls1():
+    __slots__ = [&#39;a&#39;, &#39;b&#39;, &#39;__dict__&#39;]
+
+cc = cls1()
+cc.a = 14
+cc.b = 15
+cc.c = 16
+cc.d = 17
+print(cc.__slots__)
+print(cc.__dict__.keys())
+---------------------------------
+输出结果：
+
+[&#39;a&#39;, &#39;b&#39;, &#39;__dict__&#39;]
+dict_keys([&#39;c&#39;, &#39;d&#39;])</code></pre>
+<p>因为子类不会继承父类的__slots__，所以如果父类中没有定义__slots__的话，因为子类可以访问父类的__dict__，这会使得子类自身定义的__slots__的属性限定功能失效。</p>
+<pre><code><code>class cls1():
+    pass
+
+class cls2(cls1):
+    __slots__ = [&#39;a&#39;, &#39;b&#39;]
+
+ccc = cls2()
+ccc.a=13
+ccc.b=14
+ccc.ddd=15
+
+print(ccc.__slots__)
+print(ccc.__dict__.keys())
+----------------------------------
+结果：
+
+[&#39;a&#39;, &#39;b&#39;]
+dict_keys([&#39;ddd&#39;])</code></pre>
+<p>**多重继承和__ mro__和super()**</p>
+<p>python支持多重继承，只需将需要继承的父类放进子类定义的括号中即可。</p>
+<pre><code><code>class cls1():
+    ...
+
+class cls2():
+    ...
+
+class cls3(cls1,cls2):
+    ...</code></pre>
+<p>上面cls3继承了cls1和cls2，它的名称空间将连接到两个父类名称空间，也就是说只要cls1或cls2拥有的属性，cls3构造的对象就拥有(注意，cls3类是不拥有的，只有cls3类的对象才拥有)。</p>
+<p>但多重继承时，如果cls1和cls2都具有同一个属性，比如cls1.x和cls2.x，那么cls3的对象c3.x取哪一个？会取cls1中的属性x，因为规则是按照(括号中)从左向右的方式搜索父类。</p>
+<p>再考虑一个问题，如果cls1中没有属性x，但它继承自cls0，而cls0有x属性，那么，c3.x取哪个属性。</p>
+<p>这在python 3.x中是一个比较复杂的问题，它根据MRO(Method Resolution Order)算法来决定多重继承时的访问顺序，这个算法的规则可以总结为：先左后右，先深度再广度，但必须遵循共同的超类最后搜索。</p>
+<p>每个类都有一个__mro__属性，这个属性是一个元组，从左向右的元素顺序代表的是属性搜索顺序。</p>
+<pre><code><code>class D():
+    pass
+class C(D):
+    pass
+class B(D):
+    pass
+class A(B, C):
+    pass
+
+&gt;&gt;&gt; A.__mro__
+(&lt;class &#39;__main__.A&#39;&gt;, &lt;class &#39;__main__.B&#39;&gt;, &lt;class &#39;__main__.C&#39;&gt;, &lt;class &#39;__main__.D&#39;&gt;, &lt;class &#39;object&#39;&gt;)
+&gt;&gt;&gt; D.__mro__
+(&lt;class &#39;__main__.D&#39;&gt;, &lt;class &#39;object&#39;&gt;)</code></pre>
+<p>不仅多重继承时是按照MRO顺序进行属性搜索的，super()引用的时候也一样是按照mro算法来引用属性的，所以super并不一定总是引用父类属性。</p>
+<p>例如：</p>
+<pre><code><code>class D():
+    def __init__(self):
+        print(&quot;D&quot;)
+
+class C(D):
+    def __init__(self):
+        print(&quot;C&quot;)
+        super().__init__()
+
+class B(D):
+    def __init__(self):
+        print(&quot;B&quot;)
+        super().__init__()  # 调用的不是父类D的构造方法
+
+class A(B, C):
+    def __init__(self):
+        print(&quot;A&quot;)
+        super().__init__()
+
+a = A()
+-----------------------------------------------
+输出结果为：
+
+A
+B
+C
+D</code></pre>
+<p>面向对象中，一般不推荐使用多重继承，因为很容易出现属性引用混乱的问题，而且有些面向对象的语言根本就不支持多重继承。但在Python中，使用多重继承的情况也非常多，如果真的要使用多重继承，一定要设计好类。一种更好的方式是使用Mixin类，见下文。</p>
+<p><strong>关于Mixin</strong></p>
+<p>Mixin的wiki页：https://en.wikipedia.org/wiki/Mixin</p>
+<p>对于那些想要从多个类中继承的方法，如果想要避免多重继承可能引起的属性混乱，可以将这些方法单独编写到一个类中，而这个功能/方法相对单一的类称为Mixin类。</p>
+<p>Mixin类通过特殊的多重继承方法来扩展主类的功能，却又很安全，不会出现多重继承时属性混乱的问题。</p>
+<p>例如：</p>
+<pre><code><code>class Mixin1():
+    def test1(self):
+        print(&quot;test1 method provided by Mixin1&quot;)
+
+class Mixin2():
+    def test2(self):
+        print(&quot;test2 method provided by Mixin1&quot;)
+
+class Base():
+    def mymethod(self):
+        print(&quot;mymethod is the base method&quot;)
+
+class Myclass(Mixin1, Mixin2, Base):
+    pass</code></pre>
+<p>上面的Mixin1和Mixin2是Mixin类，它们都只有一个方法，功能非常单一，它们可以看作是Base类的功能扩充类，也可以认为Mixin类是主类Include的类。</p>
+<p>例如wiki页中给的一个例子，class TCPServer中提供了UDP/TCP server的功能，这时每个连接都通过一个相同的进程进行处理。但是可以将class ThreadingMixIn通过Mixin的方法对TCPServer进行扩充：</p>
+<p>class ThreadingTCPServer(ThreadMixIn, TCPServer):<br />
+pass<br />
+这相当于将ThreadingMixIn类中的方法添加到了TCPServer类中，使得每个新连接都会创建一个新的线程，这个功能是ThreadMixIn提供的，但看上去作用在TCPServer上。</p>
+<p>关于Mixin类，有几个编码规范需要遵守：</p>
+<ul>
+<li>类名使用Mixin结尾，例如ListMixin、AbcMixin</li>
+<li>多重继承时Mixin类放在主类的前面，或者说主类放在最后面，避免主类有和Mixin类中重名函数而使得Mixin类失效</li>
+<li>Mixin类中不规定只能定义一个方法，而是少定义一点，让功能尽量单一、独立</li>
+</ul>
+<p><strong>抽象类</strong></p>
+<p>抽象类是指：这个类的子类必须重写这个类中的方法，且这个类没法进行实例化产生对象。</p>
+<p>先说明在Python中如何定义抽象类。Python中的abc模块(Abstract Base Classes)专门用来实现抽象类、接口。</p>
+<p>例如，在设计某个程序的缓存接口时，想要让它未来既可以使用普通的cache，也可以使用redis缓存。那么只需要定义一个抽象的类Cache，里面实现两个抽象方法get()和set()，以后无论使用普通的cache还是redis缓存，都只需让这两种缓存类型实现且必须实现get()和set()即可。</p>
+<pre><code><code>import abc
+
+class Cache(metaclass=abc.ABCMeta):
+    @abc.abstractmethod
+    def get(self, key):
+        pass
+
+    @abc.abstractmethod
+    def get(self, key, value):
+        pass
+
+# 子类继承时，必须实现这两个方法
+class CacheBase(Cache):
+    def get(self, key):
+        pass
+    def set(self, key, value):
+        pass
+
+class Redis(Cache):
+    def get(self, key):
+        pass
+    def set(self, key, value):
+        pass</code></pre>
+<p>如果子类没有实现或者少实现了抽象类中的方法，在构造子类实例化对象的时候就会立即报错。</p>
+<p>在Python中大多数时候不建议直接定义抽象类，这可能会造成过度封装/过度抽象的问题。如果想要让子类必须实现父类的某个方法，可以在父类方法中加上raise来抛出异常NotImplementedError，这时如果子类对象没有实现该方法，就会查找到父类的这个方法，从而抛出异常。</p>
+<pre><code><code>class Cache():
+    def get(self, key):
+        raise NotImplementedError(&quot;must define get method&quot;)
+    def set(self, key):
+        raise NotImplementedError(&quot;must define set method&quot;)</code></pre>
+<p>使用raise NotImplementedError的方式来模拟抽象类，它只有在调用到set/get的时候才会抛异常，在实例化对象的时候或者没有调用到这两个方法的时候不会报错。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

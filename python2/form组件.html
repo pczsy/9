@@ -1,0 +1,172 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修form组件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>form组件</center></div><div class='banquan'>原文出处:本文由博客园博主我是渣渣聪提供。<br/>
+原文连接:https://www.cnblogs.com/missdx/p/11387997.html</div><br>
+    <h2>1.form组件的介绍</h2>
+<p>　　在之前的开发过程中，我们都会用一种最传统的方式写form表单。我们以注册为例子，分别讲解传统方式和用form组件的区别。</p>
+<p>　　<strong>传统方式：</strong></p>
+<p>　　　　首先创建一个注册页面，页面里面有form表单。</p>
+<p>　　　　然后form表单能够将数据提交到后端，并且后端对数据进行有效性校验。</p>
+<p>　　　　最后把校验的提示展示到页面上，方便使用者查看。</p>
+<p>　　<strong>form组件的方式：</strong></p>
+<p>　　　　1.可以自动生成html代码</p>
+<p>　　　　2.能够进行数据有效性校验</p>
+<p>　　　　3.校验信息并展示出来，同时会将原来的数据保存</p>
+<p>　　<strong>注：</strong>前端和后端都可以对数据进行校验。前端通过JS进行校验，开发时，最好前端设置校验，后端必须写一个校验，因为前端的校验可以被跳过。</p>
+<h2>2.form组件的使用</h2>
+<p>　　在这里我直接给出例子，以展示如何使用form组件。</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('be452439-05ad-49fe-88e9-0fbaa435cd4d')"><img id="code_img_closed_be452439-05ad-49fe-88e9-0fbaa435cd4d" class="code_img_closed" src="./images/form组件0.png" alt="" /><img id="code_img_opened_be452439-05ad-49fe-88e9-0fbaa435cd4d" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('be452439-05ad-49fe-88e9-0fbaa435cd4d',event)" src="./images/form组件1.png" alt="" />
+<div id="cnblogs_code_open_be452439-05ad-49fe-88e9-0fbaa435cd4d" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> render
+</span><span style="color: #0000ff;">from</span> django <span style="color: #0000ff;">import</span><span style="color: #000000;"> forms
+</span><span style="color: #0000ff;">from</span> django.forms <span style="color: #0000ff;">import</span><span style="color: #000000;"> widgets
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 定义一个form组件的类</span>
+<span style="color: #0000ff;">class</span><span style="color: #000000;"> RegForm(forms.Form):
+    name </span>=<span style="color: #000000;"> forms.CharField(
+        max_length</span>=16<span style="color: #000000;">,
+        label</span>=<span style="color: #800000;">'</span><span style="color: #800000;">用户名</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> widgets是Django对HTML输入元素的表示,后面的attrs能够设置样式</span>
+        widget=widgets.TextInput(attrs={<span style="color: #800000;">'</span><span style="color: #800000;">class</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">form-control</span><span style="color: #800000;">'</span><span style="color: #000000;">}),
+        error_messages</span>=<span style="color: #000000;">{
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">max_length</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">用户名长度不能超过16</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        }
+    )
+    pwd </span>=<span style="color: #000000;"> forms.CharField(
+        min_length</span>=6<span style="color: #000000;">,
+        label</span>=<span style="color: #800000;">'</span><span style="color: #800000;">密码</span><span style="color: #800000;">'</span><span style="color: #000000;">,
+        error_messages</span>=<span style="color: #000000;">{
+            </span><span style="color: #800000;">'</span><span style="color: #800000;">min_length</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">密码不可少于6位</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        },
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 当密码校验出错时，render_value=True可以将错误的密码填回去，不让他消失</span>
+        widget=widgets.PasswordInput(attrs={<span style="color: #800000;">'</span><span style="color: #800000;">class</span><span style="color: #800000;">'</span>:<span style="color: #800000;">'</span><span style="color: #800000;">form-control</span><span style="color: #800000;">'</span>},render_value=<span style="color: #000000;">True)
+    )
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> reg(request):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 使用这个类</span>
+    forms_obj =<span style="color: #000000;"> RegForm()
+    </span><span style="color: #0000ff;">if</span> request.method == <span style="color: #800000;">'</span><span style="color: #800000;">POST</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 获取页面上传来的信息</span>
+        forms_obj =<span style="color: #000000;"> RegForm(request.POST)
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 如果信息校验通过，则不处理，如果不通过，就把错误信息继续传到页面上</span>
+        <span style="color: #0000ff;">if</span><span style="color: #000000;"> forms_obj.is_valid:
+            </span><span style="color: #0000ff;">pass</span>
+    <span style="color: #0000ff;">return</span> render(request,<span style="color: #800000;">'</span><span style="color: #800000;">forms.html</span><span style="color: #800000;">'</span>,{<span style="color: #800000;">'</span><span style="color: #800000;">forms</span><span style="color: #800000;">'</span>:forms_obj})</pre>
+</div>
+<span class="cnblogs_code_collapse">views.py</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('b3a85da4-17a1-4db1-9456-15dd774517cb')"><img id="code_img_closed_b3a85da4-17a1-4db1-9456-15dd774517cb" class="code_img_closed" src="./images/form组件0.png" alt="" /><img id="code_img_opened_b3a85da4-17a1-4db1-9456-15dd774517cb" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('b3a85da4-17a1-4db1-9456-15dd774517cb',event)" src="./images/form组件1.png" alt="" />
+<div id="cnblogs_code_open_b3a85da4-17a1-4db1-9456-15dd774517cb" class="cnblogs_code_hide">
+<pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang=<span style="color: #800000;">"</span><span style="color: #800000;">en</span><span style="color: #800000;">"</span>&gt;
+&lt;head&gt;
+    &lt;meta charset=<span style="color: #800000;">"</span><span style="color: #800000;">UTF-8</span><span style="color: #800000;">"</span>&gt;
+    &lt;title&gt;表单&lt;/title&gt;
+    &lt;link rel=<span style="color: #800000;">"</span><span style="color: #800000;">stylesheet</span><span style="color: #800000;">"</span> href=<span style="color: #800000;">"</span><span style="color: #800000;">/static/bootstrap-3.3.7-dist/css/bootstrap.min.css</span><span style="color: #800000;">"</span>&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">.container</span><span style="color: #800000;">"</span>&gt;
+    &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">row</span><span style="color: #800000;">"</span>&gt;
+        &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">col-md-6 col-md-offset-3</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+            {</span><span style="color: #008000;">#</span><span style="color: #008000;">    novalidate表示不用浏览器自带的校验检查#}</span>
+            &lt;form action=<span style="color: #800000;">"</span><span style="color: #800000;">/reg/</span><span style="color: #800000;">"</span> method=<span style="color: #800000;">"</span><span style="color: #800000;">post</span><span style="color: #800000;">"</span> novalidate&gt;<span style="color: #000000;">
+                {</span>% csrf_token %<span style="color: #000000;">}
+                </span>&lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">.form-control</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+                    {{ forms.name.label }}{</span><span style="color: #008000;">#</span><span style="color: #008000;">显示label标签#}</span>
+                    {{ forms.name }}{<span style="color: #008000;">#</span><span style="color: #008000;">显示label标签后面的框#}</span>
+{<span style="color: #008000;">#</span><span style="color: #008000;">                    用来放置错误信息，为什么是error.0，这是因为错误信息里面可以放置多条，.0代表取第一条#}</span>
+                    &lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">help-block</span><span style="color: #800000;">"</span>&gt;{{ forms.name.errors.0 }}&lt;/span&gt;
+                &lt;/div&gt;<span style="color: #000000;">
+{</span><span style="color: #008000;">#</span><span style="color: #008000;">            {% if forms.pwd.errors %}has-error{% endif %}表示当有错误时，让input框变红#}</span>
+                &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">.form-control {% if forms.pwd.errors %}has-error{% endif %}</span><span style="color: #800000;">"</span>&gt;<span style="color: #000000;">
+                    {{ forms.pwd.label }}
+                    {{ forms.pwd }}
+                    </span>&lt;span <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">help-block</span><span style="color: #800000;">"</span>&gt;{{ forms.pwd.errors }}&lt;/span&gt;
+                &lt;/div&gt;
+                &lt;div <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">.form-control</span><span style="color: #800000;">"</span>&gt;
+                    &lt;input <span style="color: #0000ff;">class</span>=<span style="color: #800000;">"</span><span style="color: #800000;">btn btn-default</span><span style="color: #800000;">"</span> type=<span style="color: #800000;">"</span><span style="color: #800000;">submit</span><span style="color: #800000;">"</span> value=<span style="color: #800000;">"</span><span style="color: #800000;">提交</span><span style="color: #800000;">"</span>&gt;
+                &lt;/div&gt;
+            &lt;/form&gt;
+        &lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+</div>
+<span class="cnblogs_code_collapse">forms.html</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('1ceb17f6-7265-4268-9bec-d9852294a3a2')"><img id="code_img_closed_1ceb17f6-7265-4268-9bec-d9852294a3a2" class="code_img_closed" src="./images/form组件0.png" alt="" /><img id="code_img_opened_1ceb17f6-7265-4268-9bec-d9852294a3a2" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('1ceb17f6-7265-4268-9bec-d9852294a3a2',event)" src="./images/form组件1.png" alt="" />
+<div id="cnblogs_code_open_1ceb17f6-7265-4268-9bec-d9852294a3a2" class="cnblogs_code_hide">
+<pre><code>STATICFILES_DIRS =<span style="color: #000000;"> [
+    os.path.join(BASE_DIR,</span><span style="color: #800000;">'</span><span style="color: #800000;">static</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+]</span></pre>
+</div>
+<span class="cnblogs_code_collapse">settings.py</span></div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('d9a560d3-a936-4572-9ca0-5fce3e4e4623')"><img id="code_img_closed_d9a560d3-a936-4572-9ca0-5fce3e4e4623" class="code_img_closed" src="./images/form组件0.png" alt="" /><img id="code_img_opened_d9a560d3-a936-4572-9ca0-5fce3e4e4623" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('d9a560d3-a936-4572-9ca0-5fce3e4e4623',event)" src="./images/form组件1.png" alt="" />
+<div id="cnblogs_code_open_d9a560d3-a936-4572-9ca0-5fce3e4e4623" class="cnblogs_code_hide">
+<pre><code>path(<span style="color: #800000;">'</span><span style="color: #800000;">reg/</span><span style="color: #800000;">'</span>, views.reg),</pre>
+</div>
+<span class="cnblogs_code_collapse">urls.py</span></div>
+<p><strong>　　注：</strong></p>
+<div class="cnblogs_code">
+<pre><code>forms_obj =<span style="color: #000000;"> RegForm(request.POST)
+</span><span style="color: #0000ff;">print</span><span style="color: #000000;">(forms_obj.cleaned_data)
+</span><span style="color: #008000;">#</span><span style="color: #008000;">所有通过校验的数据都以字典的形式保存在cleaned_data中</span></pre>
+</div>
+<p>&nbsp;</p>
+<p><strong>　　效果图：</strong></p>
+<p><strong><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/form组件8.png" alt="" /></strong></p>
+<p>&nbsp;</p>
+<h2>3.自定义校验&nbsp;</h2>
+<p>　　往往别人为设置好的校验规则都不能满足我们所有的需求，这个时候我们需要自己写一个校验。比如若用户注册时，填写的注册名有骂人的词语时，那我们就要提示他&ldquo;该注册名不能&rdquo;，该怎么做呢？我们只需要在RegForm类里面加一个函数即可，RegForm类见上面的vies.py。</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('7cf3de6b-b8f1-4158-a292-fb73a669e03e')"><img id="code_img_closed_7cf3de6b-b8f1-4158-a292-fb73a669e03e" class="code_img_closed" src="./images/form组件0.png" alt="" /><img id="code_img_opened_7cf3de6b-b8f1-4158-a292-fb73a669e03e" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('7cf3de6b-b8f1-4158-a292-fb73a669e03e',event)" src="./images/form组件1.png" alt="" />
+<div id="cnblogs_code_open_7cf3de6b-b8f1-4158-a292-fb73a669e03e" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">from</span> django.core.exceptions <span style="color: #0000ff;">import</span><span style="color: #000000;"> ValidationError
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> RegForm(forms.Form):
+    ...
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> clean_name(self):
+        value </span>= self.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">name</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> <span style="color: #800000;">'</span><span style="color: #800000;">大傻逼</span><span style="color: #800000;">'</span> <span style="color: #0000ff;">in</span><span style="color: #000000;"> value:
+            </span><span style="color: #0000ff;">raise</span> ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">该注册名不能使用！</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">return</span> value</pre>
+</div>
+<span class="cnblogs_code_collapse">自定义校验</span></div>
+<p><strong>　　效果图：</strong></p>
+<p><strong><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/form组件11.png" alt="" /></strong></p>
+<p>　　在上面的代码中，我只给出来用户名和密码，没有给出确认密码，现在我加上确认密码，并且加上验证两次密码是否一致，该怎么写呢？</p>
+<div class="cnblogs_code" onclick="cnblogs_code_show('80f9336d-39d0-4d73-9d2a-c8c829ceb2dd')"><img id="code_img_closed_80f9336d-39d0-4d73-9d2a-c8c829ceb2dd" class="code_img_closed" src="./images/form组件0.png" alt="" /><img id="code_img_opened_80f9336d-39d0-4d73-9d2a-c8c829ceb2dd" class="code_img_opened" style="display: none;" onclick="cnblogs_code_hide('80f9336d-39d0-4d73-9d2a-c8c829ceb2dd',event)" src="./images/form组件1.png" alt="" />
+<div id="cnblogs_code_open_80f9336d-39d0-4d73-9d2a-c8c829ceb2dd" class="cnblogs_code_hide">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> RegForm(forms.Form):
+    ...
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> clean(self):
+        pwd </span>= self.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        re_pwd </span>= self.cleaned_data.get(<span style="color: #800000;">'</span><span style="color: #800000;">re_pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">if</span> pwd !=<span style="color: #000000;"> re_pwd:
+            self.add_error(</span><span style="color: #800000;">'</span><span style="color: #800000;">re_pwd</span><span style="color: #800000;">'</span>,ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">两次密码填写不一致！</span><span style="color: #800000;">'</span><span style="color: #000000;">))
+            </span><span style="color: #0000ff;">raise</span> ValidationError(<span style="color: #800000;">'</span><span style="color: #800000;">两次密码填写不一致！</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">return</span> self.cleaned_data</pre>
+</div>
+<span class="cnblogs_code_collapse">views.py</span></div>
+<p>　　只需要加上这一步即可，其他的代码自己完善一下。</p>
+<h2>3.推荐博文</h2>
+<p><a href="https://www.cnblogs.com/liwenzhou/p/8747872.html">https://www.cnblogs.com/liwenzhou/p/8747872.html</a></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

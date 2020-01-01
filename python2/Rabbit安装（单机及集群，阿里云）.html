@@ -1,0 +1,276 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Rabbit安装（单机及集群，阿里云）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Rabbit安装（单机及集群，阿里云）</center></div><div class='banquan'>原文出处:本文由博客园博主血夜之末提供。<br/>
+原文连接:https://www.cnblogs.com/Tiancheng-Duan/p/12050007.html</div><br>
+    <h1 id="rabbit安装单机及集群阿里云">Rabbit安装（单机及集群，阿里云）</h1>
+<h2 id="前言">前言</h2>
+<p>虽然我并不是部署人员，但是自己私人测试环境的各类东东还是得自己安装的。<br />
+尤其在规模不大的公司，基本安装部署工作都是后端的份内之事。</p>
+<p>那么最令人痛苦的，莫过于自己就是安装大佬教程走，但是就是过不去。尤其是初学者，解决问题的能力，还不足，往往就直接卡死了。</p>
+<p>其实还有另外一个问题，那就是很多的教程，包括许多视频的教学，大多采用不真实的环境。要么是多台虚拟机实现集群，要么是一台线上服务器走天下。当然作者们也有着诸多考虑，有的是为了学员可以零成本的感受安装，另一方面学员大多都是学习知识，而不是为了实际应用（真的懂得，又不大需要这个东东）。最重要的是，学习阶段，大部分安装都是单机的，可以满足需求了。</p>
+<p>但是，我发现在很多的扣扣群，微信群依然存在着那么一批正式环境安装遇到各类问题，苦求无门的朋友。在我回复之后，部分人提议我可以将这部分经验发出来，帮助更多的人。</p>
+<p>所以有了这个系列，我会通过真实的阿里服务器集群（三台），搭建各个中间件的集群等。</p>
+<p>最后，由于打马赛克太麻烦了。并且我之后可能会开放安装视频，所以有的IP什么的，我并不方便打马赛克。但是希望你们不要做坏事儿哈。</p>
+<h2 id="rabbit安装概述">Rabbit安装概述</h2>
+<h3 id="简介">简介</h3>
+<p>RabbitMQ是一款消息中间件，其安装分为：</p>
+<ul>
+<li>单机安装（只有一台服务器，上面只有一个RabbitMQ的Broker实例）</li>
+<li>多主集群转发数据（即RabbitMQ普通模式）：
+<ul>
+<li>多机多节点安装（每台服务器一个RabbitMQ的Broker实例）</li>
+<li>单机多节点安装（只有一台服务器，上面有多个RabbitMQ的Broker实例）</li>
+</ul></li>
+<li>多主集群同步数据（即RabbitMQ镜像模式）</li>
+</ul>
+<p>PS：以后有机会，会科普MQ的基本集群种类（如主从，集群，同步数据，转发数据，混合方案等）</p>
+<p>RabbitMQ是基于erlang语言，所以在安装RabbitMQ前，需要安装erlang。</p>
+<h3 id="应用">应用</h3>
+<p>可以通过systemctl指令对RabbitMQ进行操作。</p>
+<p>rabbitMQ服务器名：rabbitmq-server</p>
+<p>所以可以有如下操作：</p>
+<h4 id="启动服务">启动服务：</h4>
+<pre><code><code>sudo systemctl start rabbitmq-server</code></pre>
+<h4 id="停止服务">停止服务：</h4>
+<pre><code><code>sudo systemctl stop rabbitmq-server</code></pre>
+<h4 id="查看状态">查看状态：</h4>
+<pre><code><code>sudo systemctl status rabbitmq-server</code></pre>
+<h4 id="自启动设置">自启动设置：</h4>
+<pre><code><code>sudo systemctl enable rabbitmq-server</code></pre>
+<h3 id="插件应用">插件应用</h3>
+<p>RabbitMQ的一大特色，就是支持诸多插件，其中最广为人知的就是Web管理插件。</p>
+<h4 id="开启插件">开启插件</h4>
+<pre><code><code>rabbitmq-plugins enable rabbitmq_management</code></pre>
+<h4 id="添加用户">添加用户</h4>
+<p>RabbitMQ有一个默认的guest（密码也是guest）用户，但是只能通过localhost访问（即本地访问）。所以需要建立一个新的管理员用户，用于远程访问。</p>
+<pre><code><code>rabbitmqctl add_user admin admin</code></pre>
+<h4 id="分配操作权限管理员">分配操作权限（管理员）</h4>
+<pre><code><code> rabbitmqctl set_user_tags admin administrator</code></pre>
+<h4 id="分配资源权限所有资源">分配资源权限（所有资源）</h4>
+<pre><code><code>rabbitmqctl set_permissions -p / admin &quot;.*&quot; &quot;.*&quot; &quot;.*&quot;</code></pre>
+<h3 id="安装环境">安装环境</h3>
+<p>平台：阿里云</p>
+<p>ECS实例规格：ecs.t5-lc1m1.small (性能约束实例)</p>
+<p>CPU：单核</p>
+<p>内存：1G</p>
+<p>硬盘：40G</p>
+<p>操作系统：CentOS7.6（已经测试CentOS7.3会出现问题）</p>
+<p>购买ECS，用于平时测试，学习的话，四点建议：</p>
+<ul>
+<li>只需要购买共享型，比较适合平时用得不多，测试也负担不大，偶尔压测。</li>
+<li>如果资金允许，直接购买将长时间，比较划算。日后需要也可以提升配置。</li>
+<li>阿里云部分地区有优惠（目前有两个地区）</li>
+<li>如果想要尝试集群等操作，并且打算购买多个服务器，请一定要在同一个内网内，这样才可以利用内网通信。</li>
+</ul>
+<p>如果还有什么需要的，可以询问我。必要的话，我会更新这里。</p>
+<h3 id="防火墙">防火墙</h3>
+<p>云服务器的防火墙，部分人将其分为两个。一个是云服务器的firewall，另一个是云平台的安全策略。</p>
+<p>而<strong>阿里云的官方CentOS7.6镜像，是不开启firewall</strong>。可以通过systemctl status firewalld来进行确认。</p>
+<p>而云平台的安全策略是需要在安全组内进行设置的。这个部分网上很多资料，就不在此赘述了。</p>
+<p>而RabbitMQ需要开放4396，5672，15672，25672四个端口。</p>
+<p>如果需要的话，可以@我或私信我。如果需求较大，我会回来，在此进行补充。</p>
+<h2 id="单机安装">单机安装</h2>
+<h3 id="下载安装包">下载安装包</h3>
+<p>首先是下载。</p>
+<p>在阿里云的Linux上可以通过以下方式，进行下载。</p>
+<h4 id="erlangcentos7">erlang（CentOS7）</h4>
+<pre><code><code> wget -P /home/download https://github.com/rabbitmq/erlang-rpm/releases/download/v21.2.3/erlang-21.2.3-1.el7.centos.x86_64.rpm</code></pre>
+<h4 id="rabbitmqcentos7">RabbitMQ（CentOS7）</h4>
+<pre><code><code>wget -P /home/download https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.7.9/rabbitmq-server-3.7.9-1.el7.noarch.rpm`</code></pre>
+<p>但是，由于墙的缘故，阿里云的下载速度会非常感人（大约20kb/s）。</p>
+<p>所以，建议有梯子的小伙伴，先下载到本地，再进行上传。</p>
+<p>没有梯子的，那就没办法了。算了，我分享一下吧。</p>
+<blockquote>
+<p><a href="https://pan.baidu.com/s/17oskhDPav95MAqYBiLilZQ">erlang（CentOS7）</a>：提取码：aee8</p>
+</blockquote>
+<blockquote>
+<p><a href="https://pan.baidu.com/s/1qgvX4C8a1f6YOx0ynkDErw">RabbitMQ（CentOS7）</a>：提取码：84lg</p>
+</blockquote>
+<h3 id="安装">安装</h3>
+<h4 id="安装erlang">安装erlang</h4>
+<pre><code><code>sudo rpm -Uvh /home/download/erlang-21.2.3-1.el7.centos.x86_64.rpm</code></pre>
+<h4 id="安装socat">安装socat</h4>
+<pre><code><code>sudo yum install -y socat</code></pre>
+<h4 id="安装rabbitmq">安装RabbitMQ</h4>
+<pre><code><code>sudo rpm -Uvh /home/download/rabbitmq-server-3.7.9-1.el7.noarch.rpm</code></pre>
+<h3 id="校验">校验</h3>
+<p>没有校验的安装是不合理的。</p>
+<p>此时，我们可以通过系统服务的方式，启动RabbitMQ服务。</p>
+<p>见到如下页面就表示安装OK了。</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）0.png" alt="在这里插入图片描述" /></p>
+<h2 id="rabbitmq普通模式多机多节点安装">RabbitMQ普通模式（多机多节点安装）：</h2>
+<p>简单说一下内存节点和磁盘节点。RabbitMQ中硬盘节点负责数据落地，负责将元数据落地到硬盘等工作。而内存节点不会进行元数据到硬盘的落地。所以如果一个集群只有内存节点，那么一旦断电，就彻底GG。另外，建议实际生产，配备多个磁盘节点，避免单点故障。</p>
+<h3 id="rabbitmq的node名">RabbitMQ的Node名</h3>
+<p>首先，在安装RabbitMQ之前，需要对阿里云服务器的HostName进行变更。</p>
+<p>具体看下图：</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）1.png" alt="在这里插入图片描述" /></p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）2.png" alt="在这里插入图片描述" /></p>
+<p>我的服务器集群，是node0,node1,node2。有需要的可以改一下。</p>
+<p>详细的原因，以及替代方案，会在后面提及。</p>
+<h3 id="修改hosts文件">修改hosts文件</h3>
+<p>通过以下命令</p>
+<pre><code><code>sudo vim /etc/hosts</code></pre>
+<p>修改hosts文件：</p>
+<pre><code><code>::1 localhost   localhost.localdomain   localhost6  localhost6.localdomain6
+127.0.0.1   localhost   localhost.localdomain   localhost4  localhost4.localdomain4
+
+172.26.40.223       node0   node0
+172.26.40.224       node1   node1
+172.26.40.225       node2   node2</code></pre>
+<p>前两行，一般为系统默认生成，可以不进行修改。</p>
+<p>而后三行，就是我们需要进行修改和添加的。</p>
+<p>后三行，首先IP地址，一般采用内网（因为内网速度快）。如果由于某些原因，无法使用内网IP，那就只能外网IP了。后两者其实就是RabbitMQ的节点名，此处等同于服务器的HostName，原因后面再说。</p>
+<p>然后，通过SCP，将上述文件同步到所有集群服务器。</p>
+<pre><code><code>sudo scp /etc/hosts root@node1:/etc/
+
+sudo scp /etc/hosts root@node2:/etc/</code></pre>
+<p>PS：期间，会需要你输入另外两台服务器的对应密码（否则，岂不是谁都可以向你服务器传文件）。</p>
+<h3 id="同步erlang的cookie文件">同步erlang的cookie文件</h3>
+<p>由于RabbitMQ的集群是基于其实现语言erlang自身的分布式实现。所以我们需要通过同步erlang的cookie文件，来帮助RabbitMQ实现集群。就类似于，大家都有相同的erlang.cookie，表示大家是自己人，可以相互通信。</p>
+<p>在node0服务器上，执行以下语句：</p>
+<pre><code><code>scp /var/lib/rabbitmq/.erlang.cookie root@node1:/var/lib/rabbitmq/
+
+scp /var/lib/rabbitmq/.erlang.cookie root@node2:/var/lib/rabbitmq/</code></pre>
+<h3 id="防火墙-1">防火墙</h3>
+<p>之前已经介绍了。不再赘述。</p>
+<h3 id="集群添加">集群添加</h3>
+<h4 id="启动rabbitmq">启动RabbitMQ</h4>
+<p>通过以下命令，启动所有节点的RabbitMQ实例。</p>
+<pre><code><code>sudo systemctl start rabbitmq-server</code></pre>
+<h4 id="将node1添加到集群node0的集群">将node1添加到集群（node0的集群）</h4>
+<h4 id="停止rabbitmq应用与停止实例是不同的">停止RabbitMQ应用（与停止实例是不同的）</h4>
+<pre><code><code>rabbitmqctl stop_app</code></pre>
+<h4 id="重置rabbitmq设置">重置RabbitMQ设置</h4>
+<pre><code><code>rabbitmqctl reset</code></pre>
+<h4 id="加入集群">加入集群</h4>
+<pre><code><code>rabbitmqctl join_cluster rabbit@node0 --ram</code></pre>
+<p>PS：集群添加节点成功，应该可以看到如下效果：</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）3.png" alt="在这里插入图片描述" /></p>
+<h4 id="启动rabbitmq应用">启动RabbitMQ应用</h4>
+<pre><code><code>rabbitmqctl start_app</code></pre>
+<h4 id="校验集群">校验集群</h4>
+<pre><code><code>rabbitmqctl cluster_status</code></pre>
+<p>PS：当然，也可以直接从Web管理界面，更直观地看到。</p>
+<p>PS：其实，单机模式下，各个节点就是集群。不过是由单个磁盘节点组成的单节点集群。</p>
+<p>**重复该过程，将其它节点也添入到node0的集群中。</p>
+<p>最终可以在Web管理界面，看到如下效果图，表示RabbitMQ多机多节点集群构建成功。</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）4.png" alt="在这里插入图片描述" /></p>
+<p>PS：图中Info中有标明，当前node0为disc节点，而node1与node2为RAM节点。</p>
+<h3 id="扩展改变节点类型">扩展（改变节点类型）</h3>
+<p>按照上述的方式，构建出来的集群，是一个磁盘节点+多个内存节点。为了提高可用性。往往需要复数个磁盘节点。所以，这里简单介绍一下切换节点类型的方式。</p>
+<h4 id="停止rabbitmq应用">停止RabbitMQ应用</h4>
+<pre><code><code>rabbitmqctl stop_app</code></pre>
+<h4 id="改变当前rabbitmq实例在集群中的节点类型">改变当前RabbitMQ实例在集群中的节点类型</h4>
+<pre><code><code>rabbitmqctl change_cluster_node_type disc</code></pre>
+<p>PS：集群节点类型切换成功，应该可以看到如下效果：</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）5.png" alt="在这里插入图片描述" /></p>
+<h4 id="启动rabbitmq应用-1">启动RabbitMQ应用</h4>
+<pre><code><code>rabbitmqctl start_app</code></pre>
+<p>PS：集群节点类型修改成功，应该可以看到如下Web管理界面：</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）6.png" alt="在这里插入图片描述" /></p>
+<h3 id="常见bug修复">常见Bug修复</h3>
+<h4 id="集群节点添加失败">集群节点添加失败</h4>
+<p>也就是执行以下语句时，出现异常：</p>
+<pre><code><code>rabbitmqctl join_cluster rabbit@node1 --ram</code></pre>
+<p>异常截图：</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）7.png" alt="在这里插入图片描述" /></p>
+<p>其实，根本原因就是由于RabbitMQ的节点名称造成的。</p>
+<p>其中异常信息，已经明确地说了：Hostname mismatch:XXXXXX</p>
+<p>就是由于阿里云的默认HostName是随机生成的，而RabbitMQ的节点名，默认采用了服务器的HostName。</p>
+<p>解决方案有两个：</p>
+<ul>
+<li>如之前提到的，直接修改阿里云服务器的HostName，一劳永逸。</li>
+<li>修改RabbitMQ的默认节点名。在/etc/rabbitmq/rabbitmq-env.conf（初始不存在）增加以下内容：</li>
+</ul>
+<pre><code><code> NODENAME=node1</code></pre>
+<h4 id="节点停止应用失败无法查看节点集群信息">节点停止应用失败/无法查看节点集群信息</h4>
+<p>也就是执行以下语句时，出现异常：</p>
+<pre><code><code>rabbitmqctl stop_app</code></pre>
+<p>或</p>
+<pre><code><code>rabbitmqctl cluster_status</code></pre>
+<p>异常截图：</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）8.png" alt="在这里插入图片描述" /><br />
+或</p>
+<p><img src="./images/Rabbit安装（单机及集群，阿里云）9.png" alt="在这里插入图片描述" /></p>
+<p>其实这是由于erlang.cookie是在RabbitMQ启动后替换，而导致的冲突。</p>
+<p>解决办法：</p>
+<p>通过以下命令重启服务即可</p>
+<pre><code><code>systemctl restart rabbitmq-server</code></pre>
+<h2 id="rabbitmq普通模式单机多节点安装">RabbitMQ普通模式（单机多节点安装）</h2>
+<p>由于这个不涉及多个真实服务器，所以比较简单。我就不再赘述。</p>
+<p>简单引用一下WizMime大佬的过程。</p>
+<h3 id="准备工作">准备工作</h3>
+<p>准备一台已经安装好RabbitMQ的机器</p>
+<h3 id="启动rabbitmq-1">启动RabbitMQ</h3>
+<h4 id="修改默认节点名非必要在etcrabbitmqrabbitmq-env.conf增加以下内容">修改默认节点名（非必要），在/etc/rabbitmq/rabbitmq-env.conf增加以下内容</h4>
+<pre><code><code>NODENAME=rabbit1</code></pre>
+<h4 id="rabbitmq单机多节点时需要改为手动启动先停止运行中的rabbitmq服务">RabbitMQ单机多节点时需要改为手动启动，先停止运行中的RabbitMQ服务。</h4>
+<pre><code><code>sudo systemctl stop rabbitmq-server</code></pre>
+<h4 id="启动第一个节点">启动第一个节点</h4>
+<pre><code><code>rabbitmq-server -detached</code></pre>
+<h4 id="启动第二个节点">启动第二个节点</h4>
+<pre><code><code>RABBITMQ_NODE_PORT=5673 RABBITMQ_SERVER_START_ARGS=&quot;-rabbitmq_management listener [{port,15673}]&quot; RABBITMQ_NODENAME=rabbit2 rabbitmq-server -detached</code></pre>
+<h4 id="启动第三个节点">启动第三个节点</h4>
+<pre><code><code>RABBITMQ_NODE_PORT=5674 RABBITMQ_SERVER_START_ARGS=&quot;-rabbitmq_management listener [{port,15674}]&quot; RABBITMQ_NODENAME=rabbit3 rabbitmq-server -detached</code></pre>
+<h4 id="将第二个节点rabbit2加入到集群中">将第二个节点rabbit2加入到集群中</h4>
+<h5 id="停止rabbit2的应用">停止rabbit2的应用</h5>
+<pre><code><code>rabbitmqctl -n rabbit2 stop_app</code></pre>
+<p>PS：-n表示针对特定节点进行操作</p>
+<h5 id="重置-rabbit2-的设置">重置 rabbit2 的设置</h5>
+<pre><code><code>rabbitmqctl -n rabbit2 reset</code></pre>
+<h5 id="rabbit2-节点加入到-rabbit1的集群中">rabbit2 节点加入到 rabbit1的集群中</h5>
+<pre><code><code>rabbitmqctl -n rabbit2 join_cluster rabbit1 --ram</code></pre>
+<h5 id="启动-rabbit2-节点">启动 rabbit2 节点</h5>
+<pre><code><code>rabbitmqctl -n rabbit2 start_app</code></pre>
+<h4 id="rabbit3类似操作">rabbit3类似操作</h4>
+<h4 id="校验-1">校验</h4>
+<p>通过</p>
+<pre><code><code>rabbitmqctl cluster_status</code></pre>
+<p>查看集群状态，看到{running_nodes,[rabbit3@node1,rabbit2@node1,rabbit1@node1]}说明节点已启动成功。</p>
+<p>PS：同样也可以从Web管理界面查看。</p>
+<h4 id="防火墙-2">防火墙</h4>
+<p>注意防火墙相关配置，尤其这次增加了许多端口。</p>
+<pre><code><code>sudo firewall-cmd --zone=public --add-port=4369/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=5672/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=25672/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=15672/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=5673/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=25673/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=15673/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=5674/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=25674/tcp --permanent
+
+sudo firewall-cmd --zone=public --add-port=15674/tcp --permanent</code></pre>
+<h2 id="镜像队列模式集群">镜像队列模式集群</h2>
+<p>其实就是依赖之前实现的多主集群转发数据模式，再通过Web管理页面的一些设置即可实现。</p>
+<p>所以不存在部署方面的问题。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

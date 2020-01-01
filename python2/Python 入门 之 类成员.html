@@ -1,0 +1,280 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python 入门 之 类成员' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python 入门 之 类成员</center></div><div class='banquan'>原文出处:本文由博客园博主永亮提供。<br/>
+原文连接:https://www.cnblogs.com/caiyongliang/p/11598343.html</div><br>
+    <h1 id="python-入门-之-类成员">Python 入门 之 类成员</h1>
+<h2 id="类的私有成员">1、类的私有成员：</h2>
+<h3 id="私有-只能自己拥有">私有： 只能自己拥有</h3>
+<h4 id="以-__-开头就是私有内容">以 __ 开头就是私有内容</h4>
+<pre><code><code>对于每一个类的成员而言都有两种形式：
+
+- 公有成员，在任何地方都能访问
+- 私有成员，只有在类的内部才能使用
+
+私有成员和公有成员的访问限制不同：
+    静态字段(静态属性)
+        - 公有静态字段：类可以访问；类内部可以访问；派生类中可以访问
+        - 私有静态字段：仅类内部可以访问；</code></pre>
+<pre class="python"><code>class Human:
+
+    live = &quot;有思想&quot;        # 类公有的属性
+    __desires = &quot;有欲望&quot;   # (程序级别)类私有的属性
+    _desires = &quot;有欲望&quot;    # (程序员之间约定俗成)类私有的属性
+
+    def __init__(self,name,age,sex,hobby):
+        self.name = name
+        self.age = age
+        self.sex = sex        # 对象的公有属性
+        self.__hobby = hobby  # 对象的私有属性
+
+    def func(self):
+        # 类内部可以查看对象的私有属性
+        print(self.__hobby)
+
+    def foo(self):            # 公有方法
+        # 类内部可以查看类的私有属性
+        print(self.__desires)
+
+    def __abc(self):          # 私有方法
+        print(&quot;is abc&quot;)
+
+class B(Human):
+    pass
+    
+    def run(self):
+        print(self.__desires)
+        self._Human__abc()    # 强制继承(非常不推荐使用)
+
+b = B(&quot;天魔&quot;,28,&quot;男&quot;,&quot;女孩子&quot;)
+print(b.__desires)
+b.run()
+b._Human__abc()         # _类名私有的属性和方法
+                        # 子类不能继承父类中私有的方法和属性
+
+# 类的外部查看
+print(Human.live)
+print(Human._desires)
+
+ # 保证数据的安全性
+Human.live = &quot;无脑&quot;
+print(Human.live)</code></pre>
+<p>​ 为什么可以通过.类__私有成员名访问呢?因为类在创建时,如果遇到了私有成员(包括私有静态字段,私有普通字段,私有方法)它会将其保存在内存时自动在前面加上类名.</p>
+<h2 id="类的其他成员">2、类的其他成员</h2>
+<h3 id="类方法">（1）类方法：</h3>
+<pre class="python"><code>class A:
+
+    def func(self):         #实例方法
+        print(&quot;is A func&quot;)
+
+a = A()  # 实例化 一个对象(实例)
+A.func()  # 添加参数
+a.func()</code></pre>
+<pre class="python"><code>class A:
+
+    def func(self):             #实例方法
+        print(&quot;is A func&quot;)
+
+import time
+class Times:
+
+    t = time.time()   # 类属性
+
+    @classmethod    
+    def func(cls):
+        print(cls)   # 类的地址
+        print(&quot;is A func&quot;)
+        object = cls()    # 使用类方法可以获取到类地址进行实例化
+        cls.t = 1010101
+
+a = A()
+a.func()
+
+Times.func()
+print(Times.t)</code></pre>
+<pre class="python"><code>class Human:
+    count = 0
+
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+    @classmethod
+    def add_count(cls):
+        cls.count += 1       # 可以通过类名修改类属性
+
+    @classmethod
+    def get(cls):
+        return cls.count
+
+Human(&quot;天魔&quot;,56)
+Human(&quot;天魔&quot;,56)
+Human(&quot;天魔&quot;,56)
+Human(&quot;天魔&quot;,56)
+Human(&quot;天魔&quot;,56)
+Human(&quot;天魔&quot;,56)
+Human(&quot;天魔&quot;,56)
+print(Human.get())     # 输出实例化的次数</code></pre>
+<h4 id="类方法的作用">&lt;1&gt; 类方法的作用：</h4>
+<h5 id="类方法可以自动变换类名最大的作用">类方法可以自动变换类名（最大的作用）</h5>
+<h6 id="使用类方法可以获取到类地址进行实例化">1&gt; 使用类方法可以获取到类地址进行实例化</h6>
+<h6 id="可以通过类名修改类属性">2&gt; 可以通过类名修改类属性</h6>
+<p>类方法偶然会使用，使用最多的还是实例化方法</p>
+<h3 id="静态方法使用更少">（2）静态方法（使用更少）</h3>
+<pre class="python"><code>class A:
+
+    def func(self):        # 实例方法
+        print(&quot;is A func&quot;)
+
+    @classmethod
+    def cls_func(cls):     # 类方法
+        print(&quot;is A cls_func&quot;)
+
+    @staticmethod
+    def static_func():      # 静态方法
+        print(&quot;他就是普通的函数了&quot;)
+        
+def static_func():
+    print(&quot;他就是普通的函数了&quot;)
+
+A.static_func()
+a = A()
+a.static_func()</code></pre>
+<h4 id="静态方法不依赖于对象和类静态方法就是一个普通的函数">&lt;1&gt; 静态方法不依赖于对象和类（静态方法就是一个普通的函数）</h4>
+<h3 id="属性-组合伪装">2、属性 ：组合（伪装）</h3>
+<pre class="python"><code>class A:
+
+    live = &quot;有思想&quot;
+
+    def func(self):
+        print(&quot;is A func&quot;)
+
+A.live
+A.func()</code></pre>
+<pre class="python"><code>class A:
+
+    @property 
+    def func(self):
+        print(&quot;is A func&quot;)
+
+a = A()
+a.func</code></pre>
+<pre class="python"><code>class Bmi:
+
+    live = &quot;有思想&quot;
+
+    def __init__(self, height, weight):
+        self.height = height
+        self.weight = weight
+
+    @property
+    def bmi(self):
+        return self.weight / self.height ** 2
+
+    @bmi.setter            # 设置属性时执行
+    def bmi(self,value):
+        print(value)
+        print(&quot;设置属性时执行我&quot;)
+
+    @bmi.getter            # 查看属性时执行
+    def bmi(self):
+        print(&quot;查看属性时执行我&quot;)
+
+    @bmi.deleter           # 删除属性时执行
+    def bmi(self):
+        print(&quot;删除属性时执行我&quot;)
+
+rimo = Bmi(1.8,100)
+print(rimo.live) # 真属性
+
+rimo.live = &quot;无脑&quot;
+del Bmi.live
+print(rimo.live)
+print(rimo.bmi)
+print(Bmi.__dict__)
+
+rimo.bmi = 20    # 伪装成属性进行设置
+print(rimo.bmi)  # 伪装成属性
+del rimo.bmi
+</code></pre>
+<pre class="python"><code>class Foo:
+
+    def get_AAA(self):
+        print(&#39;get的时候运行我啊&#39;)
+
+    def set_AAA(self,value):
+        print(&#39;set的时候运行我啊&#39;)
+
+    def delete_AAA(self):
+        print(&#39;delete的时候运行我啊&#39;)
+
+    AAA = property(get_AAA,set_AAA,delete_AAA) #内置property三个参数与get,set,delete一一对应
+
+f1=Foo()
+f1.AAA
+f1.AAA = &#39;aaa&#39;
+del f1.AAA
+</code></pre>
+<h2 id="元类">3、元类</h2>
+<h3 id="type-查看数据类型能够查看出当前内容从属于那个类">（1）type 查看数据类型（能够查看出当前内容从属于那个类）</h3>
+<pre class="python"><code>print(type(&quot;alex&quot;))
+print(type([1,2,3,4]))
+print(type((1,2,3,40)))
+</code></pre>
+<pre class="python"><code>class A:
+    pass
+
+a = A()
+
+print(type(a))
+</code></pre>
+<pre class="python"><code>print(type(A))
+print(type(str))
+print(type(list))
+print(type(tuple))
+print(type(object))
+</code></pre>
+<h5 id="python自带的strlisttuple也是某一个类的对象python中一切皆对象">python自带的str、list、tuple也是某一个类的对象(python中一切皆对象)</h5>
+<h4 id="isinstance-判断参数1是不是参数2的对象">（2）isinstance 判断参数1是不是参数2的对象</h4>
+<pre class="python"><code>print(isinstance([1,2,3],list))
+print(isinstance(str,type))
+print(isinstance(list,type))
+print(isinstance(object,type))
+</code></pre>
+<h4 id="issubclass-判断参数1是不是参数2的子类">（3）issubclass 判断参数1是不是参数2的子类</h4>
+<pre class="python"><code>class A:
+    pass
+
+class B(A):
+    pass
+
+print(issubclass(B,A))
+</code></pre>
+<h3 id="元类----构建类">4、元类 -- 构建类</h3>
+<h4 id="object-与-type的关系">（1）object 与 type的关系</h4>
+<h5 id="object是type的对象">&lt;1&gt; object是type的对象</h5>
+<h5 id="新式类都默认继承object">&lt;2&gt; 新式类都默认继承object</h5>
+<pre class="python"><code>print(issubclass(type,object))  # type是object的子类
+print(isinstance(object,type))  # object是type的对象
+</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

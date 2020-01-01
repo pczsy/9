@@ -1,0 +1,152 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修drf框架serializers中ModelSerializer类简化序列化和反序列化操作' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>drf框架serializers中ModelSerializer类简化序列化和反序列化操作</center></div><div class='banquan'>原文出处:本文由博客园博主小小咸鱼YwY提供。<br/>
+原文连接:https://www.cnblogs.com/pythonywy/p/11469449.html</div><br>
+    <h1 id="自我总结">0905自我总结</h1>
+<h1 id="drf框架serializers中modelserializer类">drf框架serializers中ModelSerializer类</h1>
+<p><code>基于seriallizer类进行简化</code></p>
+<p>https://www.cnblogs.com/pythonywy/p/11455508.html</p>
+<h2 id="一.简单的使用">一.简单的使用</h2>
+<p>导入<code>from rest_framework import serializers</code></p>
+<p><code>与基础serializer类后续使用的作用相似</code></p>
+<pre><code><code>class 自定义名称(serializers.ModelSerializer):
+    class Meta:
+        model=对应的模型
+        fields=(&#39;参与序列化和反序列的字段1&#39;,&#39;参与序列化和反序列的字段2&#39;)
+        #fields=&#39;__all__&#39;  为所有字段
+        # exclude = (&#39;id&#39;, &#39;is_delete&#39;)  # 刨除某些字段
+        # depth = 1  # 跨表自动深度（展示外键表的所有字段）</code></pre>
+<p>注意点</p>
+<ul>
+<li>其中<code>fields</code>与<code>exclude</code>不能共存</li>
+<li><code>depth</code>不能控制显示字段,与外键相关的表会全部显示出来</li>
+</ul>
+<h2 id="二.利用模型类中的方法进行指导字典的生成">二.利用模型类中的方法进行指导字典的生成</h2>
+<p>例如有两个模型<code>A</code>与<code>B</code>,他们的c字段有外键关联</p>
+<p>modles.py</p>
+<pre><code><code>class B(models.Model):
+    name = models.CharField(max_length=60)
+    
+class A(models.Model):
+    uid = models.ForeignKey(B,&#39;id&#39;)
+    
+    @property    #下面调用函数名的时候自动运行函数
+    def b_name(self):  #这里的self是A类
+        return self.uid.name
+        
+class AModelSerializer(serializers.ModelSerializer):
+        class Meta:
+            model=A   #这里导入A会把A里面的所有名称空间存在的都进行导入
+            fields=(&#39;b_name&#39;)</code></pre>
+<h2 id="三.另外总方法完成深度查询">三.另外总方法完成深度查询</h2>
+<pre><code><code>class B(models.Model):
+    name = models.CharField(max_length=60)
+    
+class A(models.Model):
+    uid = models.ForeignKey(B,&#39;id&#39;)
+
+#方法一
+class BModelSerializer(serializers.ModelSerializer):
+        class Meta:
+            model=B   
+            fields=(&#39;b_name&#39;)
+ 
+class BModelSerializer(serializers.ModelSerializer):
+        b_name = BModelSerializer()
+        class Meta:
+            model=A   #这里导入A会把A里面的所有名称空间存在的都进行导入
+            fields=(&#39;b_name&#39;)
+            
+#方法二
+#通过自定义字段
+class BModelSerializer(serializers.ModelSerializer):
+          b_name = serializers.SerializerMethodField()
+          def get_b_name(self, obj: models.A):
+               return A.uid.name
+        class Meta:
+            model=A   #这里导入A会把A里面的所有名称空间存在的都进行导入
+            fields=(&#39;b_name&#39;)</code></pre>
+<h2 id="四.modelserializer对于反序列话约数条件设置及只读只写属性设置">四.ModelSerializer对于反序列话约数条件设置及只读只写属性设置</h2>
+<p><code>反序列话约数条件设置</code></p>
+<pre><code><code>class 自定义名称(serializers.ModelSerializer):
+    class Meta:
+        model=对应的模型
+        fields=(&#39;参与序列化和反序列的字段1&#39;,&#39;参与序列化和反序列的字段2&#39;)
+        extra_kwargs ={
+            参与序列化和反序列的字段1:{
+                &#39;required&#39;: True,  #必须填写的字段
+                 &#39;min_length&#39;: 3,
+                #.....约数条件
+                &#39;error_messages&#39;: {
+                    &#39;min_length&#39;: &#39;太短&#39;
+                   
+                }
+            }
+        }</code></pre>
+<p><code>只读只写属性设置</code></p>
+<pre><code><code>class 自定义名称(serializers.ModelSerializer):
+    class Meta:
+        model=对应的模型
+        fields=(&#39;参与序列化和反序列的字段1&#39;,&#39;参与序列化和反序列的字段2&#39;)
+        extra_kwargs ={
+            参与序列化和反序列的字段1:{
+                 &#39;write_only&#39;: True #只写
+            }
+            参与序列化和反序列的字段2:{
+                 &#39;read_only&#39;: True #只读
+            }
+        }</code></pre>
+<h2 id="五.视图层使用">五.视图层使用</h2>
+<p><code>数据没有修改</code></p>
+<pre><code><code>class BookAPIView(APIView):    
+    def get(self, request, *args, **kwargs):
+        book_query = models.Book.objects.all()  #假设查我们定义的书的这个模型
+        book_ser = serializers.BookModelSerializer(book_query, many=True)
+        return Response(0, &#39;ok&#39;, results=book_ser.data) #用drf框架自带的Response</code></pre>
+<p><code>有添加修改相关操作</code></p>
+<pre><code><code>class BookAPIView(APIView):    
+    def post(self, request, *args, **kwargs):
+        pk=kwargs.get(&#39;pk&#39;)
+        book_obj = models.Book.objects.get(&#39;pk&#39;)
+        book_ser = serializers.BookModelSerializer(instance=book_obj,data=request.data) #根据传进来的数据机芯判断
+        #如果多个数据为book_set = serializers.BookModelSerializer(data=request.data many=true)
+        if book_ser.is_valid():  #这里是我们设置的ModelSerializer的约数条件看是否能通过
+            book_ser.save()  #这里他会自动进行判断是create方法还是update方法
+            return Response(0, &#39;ok&#39;,results=book_ser.data)
+        else:
+            return Response(1, &#39;添加失败&#39;, results=book_ser.errors)#用drf框架自带的Response</code></pre>
+<ul>
+<li><code>注意点</code>:save源码中我们可以看到<code>instance</code>有值调用updata方法,没有值调用create方法.所以修改必须加instance参数,传的参数基本上是修改之前的对象</li>
+</ul>
+<p><code>有关删除</code></p>
+<pre><code><code>class BookAPIView(APIView):    
+    def post(self, request, *args, **kwargs):
+        book_ser = serializers.BookModelSerializer(data=request.data) #根据传进来的数据机芯判断
+        #如果多个数据为book_set = serializers.BookModelSerializer(data=request.data many=true)
+        if book_ser.is_valid():  #这里是我们设置的ModelSerializer的约数条件看是否能通过
+            book_ser.deleter()  #这里他会自动进行判断是create方法还是update方法
+            return Response(0, &#39;ok&#39;,results=book_ser.data)
+        else:
+            return Response(1, &#39;删除失败&#39;, results=book_ser.errors)#用drf框架自带的Response</code></pre>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

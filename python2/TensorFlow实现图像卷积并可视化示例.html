@@ -1,0 +1,77 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修TensorFlow实现图像卷积并可视化示例' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>TensorFlow实现图像卷积并可视化示例</center></div><div class='banquan'>原文出处:本文由博客园博主正态分个布提供。<br/>
+原文连接:https://www.cnblogs.com/zrmw/p/11677349.html</div><br>
+    <p>图片尺寸要自己修改。</p>
+<p>看起来好像没啥意思，不知道下一步能干什么，先卷了再说。由于weights是随机生成的（tf.random_normal作用：用于从服从指定正太分布的数值中取出随机数），所以每次卷积后的图像会不一样。</p>
+<p>代码：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> func19(img_path):
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 读取图片，矩阵化，转换为张量</span>
+    img_data =<span style="color: #000000;"> cv2.imread(img_path)
+    img_data </span>= tf.constant(img_data, dtype=<span style="color: #000000;">tf.float32)
+
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(img_data.shape)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 将张量转化为4维</span>
+    img_data = tf.reshape(img_data, shape=[1, 454, 700, 3<span style="color: #000000;">])
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(img_data.shape)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 权重（也叫filter、过滤器）</span>
+    weights = tf.Variable(tf.random_normal(shape=[2, 2, 3, 3] , dtype=<span style="color: #000000;">tf.float32))
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(weights.shape)
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;"> 卷积</span>
+    conv = tf.nn.conv2d(img_data, weights, strides=[1, 3, 3, 1], padding=<span style="color: #800000;">'</span><span style="color: #800000;">SAME</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(conv.shape)
+
+    img_conv </span>= tf.reshape(conv, shape=[152, 234, 3<span style="color: #000000;">])
+    </span><span style="color: #0000ff;">print</span><span style="color: #000000;">(img_conv.shape)
+
+    img_conv </span>=<span style="color: #000000;"> tf.nn.relu(img_conv)
+
+    with tf.Session() as sess:
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> 全局初始化</span>
+<span style="color: #000000;">        sess.run(tf.global_variables_initializer())
+
+        img_conv </span>=<span style="color: #000000;"> sess.run(img_conv)
+        plt.title(</span><span style="color: #800000;">'</span><span style="color: #800000;">conv</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        plt.imshow(img_conv)
+        plt.show()
+
+    </span><span style="color: #0000ff;">return</span>
+
+<span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">'</span><span style="color: #800000;">__main__</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+    img_path </span>= r<span style="color: #800000;">'</span><span style="color: #800000;">你的图片路径</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    func19(img_path)</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>原图（尺寸：(454, 700, 3)）：</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/TensorFlow实现图像卷积并可视化示例0.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>效果（尺寸：&nbsp;(152, 234, 3)&nbsp;）：</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/TensorFlow实现图像卷积并可视化示例1.png" alt="" /></p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

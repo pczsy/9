@@ -1,0 +1,142 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)</center></div><div class='banquan'>原文出处:本文由博客园博主一只帅气的IT小昂提供。<br/>
+原文连接:https://www.cnblogs.com/ITXiaoAng/p/11553402.html</div><br>
+    <p>&nbsp; &nbsp; &nbsp; &nbsp; 在最近刷今日头条以及其他媒体软件时，经常会发现一些AI换脸的视频，于是我想，可不可以自己实现一个可以进行人脸识别的软件程序。我的具体流程是先配合python网络爬虫先进行万张PubFig人脸公共图片的爬取，分析出图片具体特征，然后再配合机器学习的OpenCV视觉库进行软件的构建。有一篇Github的文章讲得很详细，大家可以参考：<a href="https://github.com/Hironsan/BossSensor">https://github.com/Hironsan/BossSensor</a>。</p>
+<p>&nbsp;</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; &nbsp;前几篇博客先向大家讲解如何爬取PubFig人脸数据，然后本片的话先用一些动漫人脸图片，向大家展示基本的opencv库的操作，以及用一些公共人脸数据进行简单的人脸识别技术学习。</p>
+<p><strong>1.OpenCV简介</strong></p>
+<p>　　OpenCV是一个开源的跨平台计算机视觉库，提供的有python接口，并实现了图像处理和计算机视觉方面的很多通用算法。</p>
+<p>&nbsp;</p>
+<p><strong>2.需要安装的包</strong></p>
+<p>　　本篇先安装Opencv和numpy，pandas等数据分析包即可，如果感觉麻烦的话，可以直接安装Anaconda科学包(数据分析，挖掘，机器学习库合集)，安装与不同编译器配置环境过程这里就不讲解了。</p>
+<p>　　下载地址(官网太慢了，推荐下面的地址)：<a href="https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/opencv-python/">https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/opencv-python/</a>。python3.5以上的需要下载opencv_python-4.0之类的版本，这里用到的是opencv_python-4.0.0.21-cp37-cp37m-win_amd64.whl这个文件。<a href="https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple/opencv-python/"><br /></a></p>
+<p>　　安装完后，我们先用下面的代码输出一个图片：<br />　　</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> cv2
+
+
+img </span>= cv2.imread(<span style="color: #800000;">"</span><span style="color: #800000;">1.jpg</span><span style="color: #800000;">"</span>, 1<span style="color: #000000;">)
+cv2.imshow(</span><span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span><span style="color: #000000;">, img)
+cv2.waitKey()</span></pre>
+</div>
+<p>结果如下：<br /><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)0.png" alt="" /></p>
+<p>发现我们的环境已经成功安装了。</p>
+<p>&nbsp;</p>
+<p><strong>3.初步人脸识别</strong></p>
+<p>由于本篇文章是第一篇，因此这里先简单的展示一下opencv的一些机器视觉的基础方法，下面就进行介绍。</p>
+<p>(1)导入人脸图片，这里用一张动漫图<br /><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)1.png" alt="" width="381" height="402" /></p>
+<p>代码和上面的类似，更改图片即可：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> cv2
+
+
+img </span>= cv2.imread(<span style="color: #800000;">"</span><span style="color: #800000;">firstPer.jpg</span><span style="color: #800000;">"</span>, 1<span style="color: #000000;">)
+cv2.imshow(</span><span style="color: #800000;">"</span><span style="color: #800000;">1</span><span style="color: #800000;">"</span><span style="color: #000000;">, img)
+cv2.waitKey()
+cv2.destroyAllWindows()</span></pre>
+</div>
+<p>这里我们把这段代码封装成一个函数：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> viewImage(image, name_of_window):
+    </span><span style="color: #800000;">'''</span><span style="color: #800000;">
+    image:图像对象
+    name_of_window:图像窗口名称
+    </span><span style="color: #800000;">'''</span><span style="color: #000000;">
+    cv2.namedWindow(name_of_window, cv2.WINDOW_NORMAL)
+    cv2.imshow(name_of_window, image)
+    cv2.waitKey()
+    cv2.destroyAllWindows()</span></pre>
+</div>
+<p>(2)一些基础图像处理的方法</p>
+<p><span style="color: #ff0000;">cropped</span>：cropped =&nbsp;image[y:y+h, x:x+w]，就是以(y, x)为起点，裁剪大小为(h, w)的图像，以左上角为起点，竖直向下的方向为y轴，横向为x轴。</p>
+<p><span style="color: #ff0000;">resized</span>：dim = (width, height)</p>
+<p>　　　　&nbsp;resized = cv2.resize(img, dim, interpolation = cv2.INTER_AREA)</p>
+<p>　　　　调整图像的大小。</p>
+<p>用下面的代码分别进行这两种图像的处理：</p>
+<div class="cnblogs_code">
+<pre><code>img = cv2.imread(<span style="color: #800000;">"</span><span style="color: #800000;">firstPer.jpg</span><span style="color: #800000;">"</span>, 1<span style="color: #000000;">)
+</span><span style="color: #008000;">#</span><span style="color: #008000;"> 裁剪图片大小，裁剪100范围的图片</span>
+cropped = img[0:100, 0:100<span style="color: #000000;">]
+viewImage(cropped,</span><span style="color: #800000;">"</span><span style="color: #800000;">firstPer</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)2.png" alt="" /></p>
+<div class="cnblogs_code">
+<pre><code>img = cv2.imread(<span style="color: #800000;">"</span><span style="color: #800000;">firstPer.jpg</span><span style="color: #800000;">"</span>, 1<span style="color: #000000;">)
+scale_percent </span>= 30    <span style="color: #008000;">#</span><span style="color: #008000;">调整30%的大小</span>
+width = int(img.shape[1] * scale_percent / 100<span style="color: #000000;">)
+height </span>= int(img.shape[0] * scale_percent / 100<span style="color: #000000;">)
+dim </span>=<span style="color: #000000;"> (width, height)
+resized </span>= cv2.resize(img, dim, interpolation =<span style="color: #000000;"> cv2.INTER_AREA)
+viewImage(resized,</span><span style="color: #800000;">"</span><span style="color: #800000;">firstPer</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)3.png" alt="" /></p>
+<p>还有一一些用的操作方法，就是旋转，调节亮度，变模糊/平滑，绘制边框，绘制线段等，在这里并不是进行图像处理，因此就先不先向大家讲解。哈哈。</p>
+<p>(3)图像灰度处理</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp;在进行人脸识别时，好多地方都先进行图像变灰度的操作，这里也给大家介绍一下：</p>
+<p>这里有一个阈值函数，gray_image，将所有图像变为比127更暗直至0或者增加亮度到255，将图像的彩色边框的内容略过。</p>
+<p>灰度处理代码：</p>
+<div class="cnblogs_code">
+<pre><code>gray_image =<span style="color: #000000;"> cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+viewImage(gray_image,</span><span style="color: #800000;">"</span><span style="color: #800000;">gray Image</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p>结果：</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)4.png" alt="" /></p>
+<p>亮度彩色阈值处理代码：</p>
+<div class="cnblogs_code">
+<pre><code>one,threshold_image = cv2.threshold(img, 127, 255<span style="color: #000000;">, 0)
+viewImage(threshold_image,</span><span style="color: #800000;">"</span><span style="color: #800000;">firstPer</span><span style="color: #800000;">"</span>)</pre>
+</div>
+<p>结果：</p>
+<p><img style="display: block; margin-left: auto; margin-right: auto;" src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)5.png" alt="" /></p>
+<p>主要是有后面的三个参数控制，大家有兴趣可以自行学习。</p>
+<p>(4)人脸识别初讲</p>
+<p>　　如果我们需要进行人脸识别，需要下载一些opencv配置文件，地址为：<a href="https://github.com/opencv/opencv/tree/master/data/haarcascades">https://github.com/opencv/opencv/tree/master/data/haarcascades</a>，这里我们用到的是haarcascade_frontalface_default.xml文件。用下面的代码进行检测：</p>
+<div class="cnblogs_code">
+<pre><code>face_cascade = cv2.CascadeClassifier(<span style="color: #800000;">'</span><span style="color: #800000;">haarcascade_frontalface_default.xml</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+img </span>= cv2.imread(<span style="color: #800000;">"</span><span style="color: #800000;">firstPer.jpg</span><span style="color: #800000;">"</span><span style="color: #000000;">)
+gray </span>=<span style="color: #000000;"> cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+faces </span>=<span style="color: #000000;"> face_cascade.detectMultiScale(
+gray,                </span><span style="color: #008000;">#</span><span style="color: #008000;"> 灰度图</span>
+scaleFactor= 1.1,    <span style="color: #008000;">#</span><span style="color: #008000;"> 缩放比例</span>
+minNeighbors= 2,    <span style="color: #008000;">#</span><span style="color: #008000;"> 识别出一个人脸之前在当前物体周围需要检测的物体数目</span>
+minSize=(50, 50)    <span style="color: #008000;">#</span><span style="color: #008000;">窗口的大小</span>
+<span style="color: #000000;">)
+
+firstPer </span>= format(len(faces)) + <span style="color: #800000;">"</span><span style="color: #800000;">faces detected!</span><span style="color: #800000;">"</span>
+<span style="color: #0000ff;">print</span>(firstPer)<span style="color: #008000;">#</span><span style="color: #008000;"> Draw a rectangle around the faces</span>
+<span style="color: #0000ff;">for</span> (x, y, w, h) <span style="color: #0000ff;">in</span><span style="color: #000000;"> faces:
+    cv2.rectangle(img, (x, y), (x</span>+w, y+h), (255, 255, 0), 2<span style="color: #000000;">)
+viewImage(img,firstPer)</span></pre>
+</div>
+<p>detectMultiScale函数是一个检测物体的通用函数。当我们把它用于人脸检测时，它就会从图像中检测出人脸。</p>
+<p>但是我们却发现，根本没有检测出我们可爱的小樱的脸，这是为什么呢？不急，我们先用其他图片检测：</p>
+<p><img src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)6.png" alt="" /><img src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)7.png" alt="" /></p>
+<p><img src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)8.png" alt="" /><img src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)9.png" alt="" /></p>
+<p><img src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)10.png" alt="" /></p>
+<p>再来一张最美的图片：</p>
+<p><img src="./images/万张PubFig人脸数据实现基于python+OpenCV的人脸特征定位程序(1)11.png" alt="" width="585" height="300" /></p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp;这时我们发现，识别程序识别的时候会有两个要注意的地方，第一个是动漫图片线条简单，有时候并不能识别出；而且识别的能力和图片的清晰度也有关系。</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp;针对第一个问题，在接下来的教程中，我会使用哥伦比亚大学的公共PubFig人脸库作为人脸识别数据集，进行机器视觉的训练。向大家讲解一下如何用机器学习训练一个不仅仅能够识别人脸，而且还能够识别表情的软件，欢迎大家继续关注我的博客，如果有宝贵建议的话，请在下方评论。</p>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

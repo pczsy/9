@@ -1,0 +1,157 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修基于tornado---异步并发接口' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>基于tornado---异步并发接口</center></div><div class='banquan'>原文出处:本文由博客园博主kakawith提供。<br/>
+原文连接:https://www.cnblogs.com/kakawith/p/11232756.html</div><br>
+    <p>1、目的</p>
+<p>　　由于有多个程序和脚本需要对mysql进行读写数据库，每次在脚本中进行数据库的连接、用cursor进行操作过于麻烦，因此希望可以有一个脚本开放接口，只需要传入sql语句，就可以返回结果回来。因此有需要一个可以支持并发量较大的脚本来进行数据库操作。以上就要求我的接口具有<span style="color: #ff0000;">异步非阻塞、在结果返回前保持长连接、并发大</span>。因此单纯的多线程和协程没办法满足要求，就需要用到tornado框架。</p>
+<p>2、程序</p>
+<p>&nbsp; &nbsp; 1）客户端代码(通过requests 调用接口)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import reuqests<br /></span></pre>
+<pre><code>POST = requests.post # post请求方式</pre>
+<pre><code><span style="color: #0000ff;">def</span> db_query(sql, method=<span style="color: #800000;">'</span><span style="color: #800000;">query</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+    db_api </span>= <span style="color: #800000;">'</span><span style="color: #800000;">http://127.0.0.1:8000/db/api</span><span style="color: #800000;">'</span><span style="color: #000000;">
+    db_base </span>= <span style="color: #800000;">"</span><span style="color: #800000;">dbbase</span><span style="color: #800000;">"</span><span style="color: #000000;">
+    db_ret </span>= POST(db_api, data=json_encode({<span style="color: #800000;">'</span><span style="color: #800000;">method</span><span style="color: #800000;">'</span>: method, <span style="color: #800000;">'</span><span style="color: #800000;">sql</span><span style="color: #800000;">'</span>: sql, <span style="color: #800000;">'</span><span style="color: #800000;">dbbase</span><span style="color: #800000;">'</span>: db_base, <span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">password123</span><span style="color: #800000;">'</span><span style="color: #000000;">}))
+    </span><span style="color: #0000ff;">if</span> db_ret.status_code == 200<span style="color: #000000;">:
+        </span><span style="color: #0000ff;">if</span> json_decode(db_ret.text)[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>] == <span style="color: #800000;">'</span><span style="color: #800000;">True</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+            db_ret_data </span>= json_decode(db_ret.text)[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span><span style="color: #000000;">]
+            </span><span style="color: #0000ff;">return</span> {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">ok</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: db_ret_data, <span style="color: #800000;">'</span><span style="color: #800000;">err</span><span style="color: #800000;">'</span>: <span style="color: #800000;">''</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">return</span> {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">False</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: [], <span style="color: #800000;">'</span><span style="color: #800000;">err</span><span style="color: #800000;">'</span>: json_decode(db_ret.text)[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span><span style="color: #000000;">]}
+    </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+        </span><span style="color: #0000ff;">return</span> {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">False</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: [], <span style="color: #800000;">'</span><span style="color: #800000;">err</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">connect error</span><span style="color: #800000;">'</span>}</pre>
+</div>
+<p>　2）服务端代码(基于tornado框架)</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;"> coding=utf8</span>
+<span style="color: #0000ff;">import</span><span style="color: #000000;"> MySQLdb
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> MySQLdb.cursors
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> tornado
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> tornado.ioloop
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> tornado.web
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> tornado.gen
+</span><span style="color: #0000ff;">from</span> tornado.concurrent <span style="color: #0000ff;">import</span><span style="color: #000000;"> run_on_executor
+</span><span style="color: #0000ff;">from</span> concurrent.futures <span style="color: #0000ff;">import</span><span style="color: #000000;"> ThreadPoolExecutor
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> DB_CONFIG:
+    config </span>=<span style="color: #000000;"> {
+        </span><span style="color: #800000;">'</span><span style="color: #800000;">dbbase</span><span style="color: #800000;">'</span>: (<span style="color: #800000;">'</span><span style="color: #800000;">authentic</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">password</span><span style="color: #800000;">'</span>), <span style="color: #008000;">#</span><span style="color: #008000;"> 数据库user、password</span>
+<span style="color: #000000;">    }
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> DB:
+    </span><span style="color: #0000ff;">def</span> <span style="color: #800080;">__init__</span><span style="color: #000000;">(self, dbbase):
+        user, password </span>=<span style="color: #000000;"> DB_CONFIG.config.get(dbbase, (None, None))
+        </span><span style="color: #0000ff;">if</span> user == None <span style="color: #0000ff;">or</span> password ==<span style="color: #000000;"> None:
+            </span><span style="color: #0000ff;">raise</span> Exception(<span style="color: #800000;">'</span><span style="color: #800000;">KeyError</span><span style="color: #800000;">'</span><span style="color: #000000;">, dbbase)
+        db_host </span>= <span style="color: #800000;">'</span><span style="color: #800000;">192.168.xx.xx</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        db_port </span>= 1234<span style="color: #000000;">
+
+        self.db </span>= MySQLdb.connect(db_host, user, password, dbbase, port=db_port, cursorclass=<span style="color: #000000;">MySQLdb.cursors.DictCursor)
+
+        self.cursor </span>=<span style="color: #000000;"> self.db.cursor()
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> query(self, sql):
+        self.cursor.execute(sql)
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.cursor.fetchall()
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> commit(self, sql):
+        </span><span style="color: #0000ff;">try</span><span style="color: #000000;">:
+            self.cursor.execute(sql)
+            self.db.commit()
+            </span><span style="color: #0000ff;">return</span> {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: True, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: <span style="color: #800000;">''</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">except</span><span style="color: #000000;"> Exception as e:
+            self.db.rollback()
+            </span><span style="color: #0000ff;">return</span> {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: False, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span><span style="color: #000000;">: e}
+
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> close(self):
+        self.db.close()
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> ServiceHandler(tornado.web.RequestHandler):
+    executor </span>= ThreadPoolExecutor(900)  <span style="color: #008000;">#</span><span style="color: #008000;"> 必须定义一个executor的属性，然后run_on_executor装饰器才会游泳。</span>
+<span style="color: #000000;">
+    @run_on_executor  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 线程内运行；query函数被run_on_executor包裹(语法糖)，将该函数的执行传递给线程池executor的线程执行，优化了处理耗时性任务，以致达到不阻塞主线程的效果。</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> query(self, dbname, method, sql):
+        db </span>=<span style="color: #000000;"> DB(dbname)
+        ret </span>= <span style="color: #800000;">''</span>
+        <span style="color: #0000ff;">if</span> method == <span style="color: #800000;">'</span><span style="color: #800000;">query</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+            ret </span>=<span style="color: #000000;"> db.query(sql)
+        </span><span style="color: #0000ff;">elif</span> method == <span style="color: #800000;">'</span><span style="color: #800000;">commit</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+            ret </span>=<span style="color: #000000;"> db.commit(sql)
+        db.close()
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> ret
+
+    @tornado.web.asynchronous  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 保持长连接，直到处理后返回</span>
+    @tornado.gen.coroutine  <span style="color: #008000;">#</span><span style="color: #008000;"> 异步、协程处理；增加并发量</span>
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> post(self):
+        data </span>= tornado.escape.json_decode(self.request.body)  <span style="color: #008000;">#</span><span style="color: #008000;"> 获取参数，json.loads()解码</span>
+        r = {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">''</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: <span style="color: #800000;">''</span><span style="color: #000000;">}
+        </span><span style="color: #0000ff;">if</span> <span style="color: #0000ff;">not</span> data.get(<span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span><span style="color: #000000;">, None):
+            r[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>], r[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>] = (<span style="color: #800000;">'</span><span style="color: #800000;">False</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">not password</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">elif</span> <span style="color: #0000ff;">not</span> data.get(<span style="color: #800000;">'</span><span style="color: #800000;">dbbase</span><span style="color: #800000;">'</span><span style="color: #000000;">, None):
+            r[</span><span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>], r[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>] = (<span style="color: #800000;">'</span><span style="color: #800000;">False</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">not DB select</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+            </span><span style="color: #0000ff;">if</span> data[<span style="color: #800000;">'</span><span style="color: #800000;">pwd</span><span style="color: #800000;">'</span>] != <span style="color: #800000;">'</span><span style="color: #800000;">password123)</span><span style="color: #800000;">'</span>: <span style="color: #008000;">#</span><span style="color: #008000;"> 接口的密码认证</span>
+                r = {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">False</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">password error</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+            </span><span style="color: #0000ff;">elif</span> data[<span style="color: #800000;">'</span><span style="color: #800000;">method</span><span style="color: #800000;">'</span>] == <span style="color: #800000;">'</span><span style="color: #800000;">query</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+
+                d </span>= <span style="color: #0000ff;">yield</span> self.query(data[<span style="color: #800000;">'</span><span style="color: #800000;">dbbase</span><span style="color: #800000;">'</span>], <span style="color: #800000;">'</span><span style="color: #800000;">query</span><span style="color: #800000;">'</span>, data[<span style="color: #800000;">'</span><span style="color: #800000;">sql</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                r </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">True</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span><span style="color: #000000;">: d}
+            </span><span style="color: #0000ff;">elif</span> data[<span style="color: #800000;">'</span><span style="color: #800000;">method</span><span style="color: #800000;">'</span>] == <span style="color: #800000;">'</span><span style="color: #800000;">commit</span><span style="color: #800000;">'</span><span style="color: #000000;">:
+
+                db_r </span>= <span style="color: #0000ff;">yield</span> self.query(data[<span style="color: #800000;">'</span><span style="color: #800000;">dbbase</span><span style="color: #800000;">'</span>], <span style="color: #800000;">'</span><span style="color: #800000;">commit</span><span style="color: #800000;">'</span>, data[<span style="color: #800000;">'</span><span style="color: #800000;">sql</span><span style="color: #800000;">'</span><span style="color: #000000;">])
+                </span><span style="color: #0000ff;">if</span> db_r[<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span><span style="color: #000000;">]:
+                    r </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">True</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">commit sucessful</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+                </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                    r </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">False</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: db_r[<span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span><span style="color: #000000;">]}
+            </span><span style="color: #0000ff;">else</span><span style="color: #000000;">:
+                r </span>= {<span style="color: #800000;">'</span><span style="color: #800000;">status</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">False</span><span style="color: #800000;">'</span>, <span style="color: #800000;">'</span><span style="color: #800000;">data</span><span style="color: #800000;">'</span>: <span style="color: #800000;">'</span><span style="color: #800000;">method Invaild</span><span style="color: #800000;">'</span><span style="color: #000000;">}
+        self.write(tornado.escape.json_encode(r))  </span><span style="color: #008000;">#</span><span style="color: #008000;"> 写入返回信息写入response</span>
+        self.finish()  <span style="color: #008000;">#</span><span style="color: #008000;"> 结束服务</span>
+
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> get(self):
+        </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> self.post()
+
+
+</span><span style="color: #0000ff;">if</span> <span style="color: #800080;">__name__</span> == <span style="color: #800000;">"</span><span style="color: #800000;">__main__</span><span style="color: #800000;">"</span><span style="color: #000000;">:
+    application </span>=<span style="color: #000000;"> tornado.web.Application([
+        (r</span><span style="color: #800000;">"</span><span style="color: #800000;">/db/api</span><span style="color: #800000;">"</span>, ServiceHandler),  <span style="color: #008000;">#</span><span style="color: #008000;"> 路由映射</span>
+<span style="color: #000000;">    ])
+    application.listen(</span>8000)  <span style="color: #008000;">#</span><span style="color: #008000;"> 监听端口</span>
+    tornado.ioloop.IOLoop.instance().start()  <span style="color: #008000;">#</span><span style="color: #008000;"> 启动服务</span></pre>
+</div>
+<p>&nbsp;</p>
+<p>3、请求举例(post请求)</p>
+<p>　　1) sql语句</p>
+<div class="cnblogs_code">
+<pre><code> sql = <span style="color: #ff0000;">'</span><span style="color: #ff0000;">select vid from video where status=1 group by vid ORDER BY num ASC limit 100</span><span style="color: #ff0000;">'</span></pre>
+</div>
+<p>　&nbsp; 2)客户端调用db_query函数</p>
+<div class="cnblogs_code">
+<pre><code>db_ret = db_query(sql, <span style="color: #800000;">'</span><span style="color: #800000;">query</span><span style="color: #800000;">'</span>) # 其中query是数据库操作的方法 query为查询/commit 为insert/update/delete等数据库修改操作时使用</pre>
+</div>
+<p>　　通过调用db_query传入参数sql语句和操作方式，返回结果或错误内容</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

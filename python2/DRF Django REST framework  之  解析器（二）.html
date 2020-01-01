@@ -1,0 +1,101 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修DRF Django REST framework  之  解析器（二）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>DRF Django REST framework  之  解析器（二）</center></div><div class='banquan'>原文出处:本文由博客园博主Nolinked提供。<br/>
+原文连接:https://www.cnblogs.com/pungchur/p/12015521.html</div><br>
+    <h2>引入</h2>
+<p>Django Rest framework帮助我们实现了处理application/json协议请求的数据，如果不使用DRF，直接从&nbsp;<span class="cnblogs_code">request.body</span>&nbsp;里面拿到原始的客户端请求的字节数据，经过&nbsp;<span class="cnblogs_code">decode</span>&nbsp;，然后&nbsp;<span class="cnblogs_code">json</span>&nbsp;反序列化之后，也可以得到一个Python字典类型的数据。</p>
+<p>但是，这种方式并不被推荐，因为已经有了非常优秀的第三方工具，那就是Django Rest framework的解析器组件。</p>
+<h2>解析器使用</h2>
+<p>使用方式非常简单，分为如下两步：</p>
+<ul>
+<li>&nbsp;<span class="cnblogs_code"><span style="color: #0000ff;">from</span> rest_framework.views <span style="color: #0000ff;">import</span> APIView</span>&nbsp;</li>
+<li>继承&nbsp;<span class="cnblogs_code">APIView</span>&nbsp;</li>
+<li>直接使用&nbsp;<span class="cnblogs_code">request.data</span>&nbsp;就可以获取Json数据</li>
+</ul>
+<p>如果你只需要解析Json数据，不允许任何其他类型的数据请求，可以这样做：</p>
+<ul>
+<li>&nbsp;<span class="cnblogs_code"><span style="color: #0000ff;">from</span> rest_framework.parsers <span style="color: #0000ff;">import</span> JsonParser</span>&nbsp;</li>
+<li>给视图类定义一个&nbsp;<span class="cnblogs_code">parser_classes</span>&nbsp;变量，值为列表类型&nbsp;<span class="cnblogs_code">[JsonParser]</span>&nbsp;</li>
+<li>如果&nbsp;<span class="cnblogs_code">parser_classes = []</span>&nbsp;, 那就不处理任何数据类型的请求了。</li>
+</ul>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> django.shortcuts <span style="color: #0000ff;">import</span><span style="color: #000000;"> render, HttpResponse
+
+</span><span style="color: #0000ff;">from</span> rest_framework.views <span style="color: #0000ff;">import</span><span style="color: #000000;"> APIView
+</span><span style="color: #0000ff;">from</span> rest_framework.parsers <span style="color: #0000ff;">import</span><span style="color: #000000;"> FormParser
+
+
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> CourseView(APIView):
+    parser_classes </span>=<span style="color: #000000;"> [FormParser]
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(self, request):
+        </span><span style="color: #0000ff;">pass</span>
+
+    <span style="color: #0000ff;">def</span><span style="color: #000000;"> post(self, request):
+        </span><span style="color: #008000;">#</span><span style="color: #008000;"> request是被DRF封装的新对象，基于django的request</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> request.data是一个property，用于对数据进行校验</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> request.data最后会找到self.parser_classes中的解析器</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 来实现对数据进行解析</span>
+        data =<span style="color: #000000;"> request.data
+        </span><span style="color: #0000ff;">print</span>(data)     <span style="color: #008000;">#</span><span style="color: #008000;"> {"course_name": "高数", "description": "烧脑..."}</span>
+        <span style="color: #0000ff;">return</span> HttpResponse(data)</pre>
+</div>
+<h2>解析器请求流程</h2>
+<h3><span style="font-size: 16px;"><strong>1. 路由层加载as_view()方法，url和视图函数之间的绑定关系建立。</strong></span></h3>
+<blockquote>
+<p><span style="font-size: 14px;"><strong>与<a title="DRF Django REST framework 之 APIView" href="https://www.cnblogs.com/pungchur/p/12005996.html" target="_blank">&nbsp;APIView&nbsp;</a>执行方式相同</strong></span></p>
+</blockquote>
+<h3><span style="font-size: 16px;"><strong>2. 用户发起请求，www.xxx.com/course/&nbsp; &nbsp; POST请求方式</strong></span></h3>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">class</span><span style="color: #000000;"> CourseView(APIView):
+    parser_classes </span>=<span style="color: #000000;"> [FormParser]
+    </span><span style="color: #0000ff;">def</span><span style="color: #000000;"> get(self, request):
+        </span><span style="color: #0000ff;">pass</span>
+
+    <span style="color: #0000ff;">def</span> post(self, request): <span style="color: #008000;">#</span><span style="color: #008000;"> 执行</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> request是被DRF封装的新对象，基于django的request</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> request.data是一个property，用于对数据进行校验</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> request.data最后会找到self.parser_classes中的解析器</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;"> 来实现对数据进行解析</span>
+        data =<span style="color: #000000;"> request.data
+        </span><span style="color: #0000ff;">print</span>(data)     <span style="color: #008000;">#</span><span style="color: #008000;"> {"course_name": "高数", "description": "烧脑..."}</span>
+        <span style="color: #0000ff;">return</span> HttpResponse(data)</pre>
+</div>
+<h3><span style="font-size: 16px;"><strong>3. request.data 触发解析操作</strong></span></h3>
+<h4><strong>　　（1）在 APIView&nbsp;中的重写了 request 对象，在该对象中找&nbsp; request.data</strong></h4>
+<p><strong>　　<img src="./images/DRF Django REST framework  之  解析器（二）0.png" alt="" /></strong></p>
+<h4>　　<strong>(2) 在&nbsp;self.load_data_and_files()&nbsp;中把解析之后的数据赋值给了&nbsp;self._full_data</strong></h4>
+<p><strong>　　<img src="./images/DRF Django REST framework  之  解析器（二）1.png" alt="" /></strong></p>
+<h4><strong>　　</strong><strong>(3) 执行 _parse()&nbsp;方法, 返回解析之后的数据</strong></h4>
+<p><strong>　　<img src="./images/DRF Django REST framework  之  解析器（二）2.png" alt="" /></strong></p>
+<p>&nbsp;　　<strong>实例化&nbsp;<span class="cnblogs_code">Request</span>&nbsp;对象时,传入了&nbsp;<span class="cnblogs_code">parsers</span>&nbsp;</strong></p>
+<p>　　<img src="./images/DRF Django REST framework  之  解析器（二）3.png" alt="" /></p>
+<p>&nbsp;　　<strong>&nbsp;<span class="cnblogs_code">get_parsers()</span>&nbsp;返回的是一个列表</strong></p>
+<p>　　<img src="./images/DRF Django REST framework  之  解析器（二）4.png" alt="" /></p>
+<p>&nbsp;　　<strong>调用&nbsp;<span class="cnblogs_code">parser_classes</span>&nbsp;属性</strong></p>
+<p>　　<img src="./images/DRF Django REST framework  之  解析器（二）5.png" alt="" /></p>
+<p><strong>　　&nbsp;<span class="cnblogs_code">api_settings</span>&nbsp;是个实例化对象，而且该对象中没有&nbsp;<span class="cnblogs_code">DEFAULT_PARSER_CLASSES</span>&nbsp;属性，所以执行&nbsp;<span class="cnblogs_code"><span style="color: #800080;">__getattr__</span>()</span>&nbsp;方法。</strong></p>
+<p>　　<img src="./images/DRF Django REST framework  之  解析器（二）6.png" alt="" /></p>
+<p>　　<strong>&nbsp;<span class="cnblogs_code">perform_import()</span>&nbsp;方法</strong></p>
+<p><strong>　　<img src="./images/DRF Django REST framework  之  解析器（二）7.png" alt="" /></strong></p>
+<p>　　<strong>以上是选择解析类的流程</strong></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

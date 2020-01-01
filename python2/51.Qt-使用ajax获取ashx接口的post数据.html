@@ -1,0 +1,200 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修51.Qt-使用ajax获取ashx接口的post数据' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>51.Qt-使用ajax获取ashx接口的post数据</center></div><div class='banquan'>原文出处:本文由博客园博主NQian提供。<br/>
+原文连接:https://www.cnblogs.com/lifexy/p/12088454.html</div><br>
+    <p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">由于当前C++项目需要使用ajax库去post调用ashx接口,接口地址如下所示:</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp;<img src="./images/51.Qt-使用ajax获取ashx接口的post数据0.png" alt="" width="521" height="217" /></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">需要传递的参数如下:</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp;<img src="./images/51.Qt-使用ajax获取ashx接口的post数据1.png" alt="" width="583" height="185" /></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">然后<span style="color: #0000ff;">发现qml比较好调用ajax.js库</span>,所以本章通过C++界面去获取qml方法来实现调用ashx接口<span style="color: #ff0000;"><strong>(以一个C++界面demo程序为例)</strong></span></span></p>
+<p>&nbsp;</p>
+<p><span style="color: #008000; background-color: #ffff99; font-size: 18px;"><strong><span style="font-family: 'Microsoft YaHei';">&nbsp;1.</span><span style="font-family: 'Microsoft YaHei';">抓post数据</span></strong></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">通过网页获取到的post数据如下所示:</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp;<img src="./images/51.Qt-使用ajax获取ashx接口的post数据2.png" alt="" width="782" height="214" /></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">所以查询20191121~20191122期间时则填入内容: "deptCode=021&amp;startDate=20191121&amp;endDate=20191122"</span></p>
+<p><span style="color: #008000; background-color: #ffff99; font-size: 18px;"><strong><span style="font-family: 'Microsoft YaHei';">2.</span><span style="font-family: 'Microsoft YaHei';">导入ajax.js库</span></strong></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">ajax.js文件如下所示:</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;"> GET</span><span style="color: #000000;">
+function </span><span style="color: #0000ff;">get</span><span style="color: #000000;">(url, success, failure)
+{
+    </span><span style="color: #0000ff;">var</span> xhr = <span style="color: #0000ff;">new</span><span style="color: #000000;"> XMLHttpRequest;
+    xhr.open(</span><span style="color: #800000;">"</span><span style="color: #800000;">GET</span><span style="color: #800000;">"</span><span style="color: #000000;">, url);
+    xhr.onreadystatechange </span>=<span style="color: #000000;"> function() {
+        handleResponse(xhr, success, failure);
+    }
+    xhr.send();
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> POST</span><span style="color: #000000;">
+function post(url, arg, success, failure)
+{
+    </span><span style="color: #0000ff;">var</span> xhr = <span style="color: #0000ff;">new</span><span style="color: #000000;"> XMLHttpRequest;
+    xhr.open(</span><span style="color: #800000;">"</span><span style="color: #800000;">POST</span><span style="color: #800000;">"</span><span style="color: #000000;">, url);
+    xhr.setRequestHeader(</span><span style="color: #800000;">"</span><span style="color: #800000;">Content-Length</span><span style="color: #800000;">"</span><span style="color: #000000;">, arg.length);
+    xhr.setRequestHeader(</span><span style="color: #800000;">"</span><span style="color: #800000;">Content-Type</span><span style="color: #800000;">"</span>, <span style="color: #800000;">"</span><span style="color: #800000;">application/x-www-form-urlencoded;</span><span style="color: #800000;">"</span>);  <span style="color: #008000;">//</span><span style="color: #008000;">用POST的时候一定要有这句</span><span style="color: #000000;">
+    xhr.onreadystatechange </span>=<span style="color: #000000;"> function() {
+        handleResponse(xhr, success, failure);
+    }
+    xhr.send(arg);
+}
+
+</span><span style="color: #008000;">//</span><span style="color: #008000;"> 处理返回值</span><span style="color: #000000;">
+function handleResponse(xhr, success, failure){
+    </span><span style="color: #0000ff;">if</span> (xhr.readyState ==<span style="color: #000000;"> XMLHttpRequest.DONE) {
+        </span><span style="color: #0000ff;">if</span> (xhr.status ==  <span style="color: #800080;">200</span><span style="color: #000000;">){
+            </span><span style="color: #0000ff;">if</span> (success != <span style="color: #0000ff;">null</span> &amp;&amp; success !=<span style="color: #000000;"> undefined)
+            {
+                </span><span style="color: #0000ff;">var</span> result =<span style="color: #000000;"> xhr.responseText;
+                </span><span style="color: #0000ff;">try</span><span style="color: #000000;">{
+                    success(result, JSON.parse(result));
+                }</span><span style="color: #0000ff;">catch</span><span style="color: #000000;">(e){
+                    success(result, {});
+                }
+            }
+        }
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+            </span><span style="color: #0000ff;">if</span> (failure != <span style="color: #0000ff;">null</span> &amp;&amp; failure !=<span style="color: #000000;"> undefined)
+                failure(xhr.responseText, xhr.status);
+        }
+    }
+}</span></pre>
+</div>
+<p><span style="color: #008000; background-color: #ffff99; font-size: 18px;"><strong><span style="font-family: 'Microsoft YaHei';">3.写main.qml</span></strong></span></p>
+<div class="cnblogs_code">
+<pre><code>import QtQuick <span style="color: #800080;">2.3</span><span style="color: #000000;">
+import QtQuick.Window </span><span style="color: #800080;">2.2</span><span style="color: #000000;">
+import </span><span style="color: #800000;">"</span><span style="color: #800000;">ajax.js</span><span style="color: #800000;">"</span> <span style="color: #0000ff;">as</span><span style="color: #000000;"> Ajax
+Item {
+    </span><span style="color: #000000;">
+    function getWrenchTools(deptCode,startDate,endDate) {
+        console.log(</span><span style="color: #800000;">"</span><span style="color: #800000;">Got message:</span><span style="color: #800000;">"</span><span style="color: #000000;">, deptCode,startDate,endDate) </span><span style="color: #008000;">//</span><span style="color: #008000;">打印参数数据</span>
+<span style="color: #000000;">
+Ajax.post(</span><span style="color: #800000;">"</span><span style="color: #800000;">http://10.194.102.253/WLPTService/Pages/Tools/GetNLToolsByDeptCode.ashx</span><span style="color: #800000;">"</span>,<span style="color: #800000;">"</span><span style="color: #800000;">deptCode=</span><span style="color: #800000;">"</span>+deptCode+<span style="color: #800000;">"</span><span style="color: #800000;">&amp;startDate=</span><span style="color: #800000;">"</span>+startDate+<span style="color: #800000;">"</span><span style="color: #800000;">&amp;endDate=</span><span style="color: #800000;">"</span>+endDate+<span style="color: #800000;">""</span><span style="color: #000000;">,
+                  Widget.invokeFunc);
+
+}</span></pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">这里表示定义一个getWrenchTools()方法,当post成功并返回数据时,则调用Widget.invokeFunc()回调函数<span style="color: #ff0000;">(Widget: 该qml对应的C++类,后面会讲怎么捆绑的)</span></span></p>
+<p>&nbsp;</p>
+<p><span style="color: #008000; background-color: #ffff99; font-size: 18px;"><strong><span style="font-family: 'Microsoft YaHei';">4.widget界面如下</span></strong></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp;<img src="./images/51.Qt-使用ajax获取ashx接口的post数据3.png" alt="" /></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">然后写widget.h</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #000000;">#ifndef WIDGET_H
+</span><span style="color: #0000ff;">#define</span> WIDGET_H<span style="color: #000000;">
+ 
+#include </span>&lt;QWidget&gt;<span style="color: #000000;">
+#include </span>&lt;QString&gt;<span style="color: #000000;">
+#include </span>&lt;QDebug&gt;<span style="color: #000000;">
+#include </span>&lt;QTimer&gt;<span style="color: #000000;">
+#include </span>&lt;QQmlApplicationEngine&gt;<span style="color: #000000;">
+#include </span>&lt;QQmlComponent&gt;
+<span style="color: #0000ff;">namespace</span><span style="color: #000000;"> Ui {
+</span><span style="color: #0000ff;">class</span><span style="color: #000000;"> widget;
+}
+ 
+</span><span style="color: #0000ff;">class</span> widget : <span style="color: #0000ff;">public</span><span style="color: #000000;"> QWidget
+{
+    Q_OBJECT
+ 
+    QQmlApplicationEngine engine;
+    QObject </span>*engineObject;      <span style="color: #008000;">//</span><span style="color: #008000;">指向运行的qml对象</span>
+ 
+<span style="color: #0000ff;">public</span><span style="color: #000000;">:
+    </span><span style="color: #0000ff;">explicit</span> widget(QWidget *parent = <span style="color: #800080;">0</span><span style="color: #000000;">);
+    </span>~<span style="color: #000000;">widget();
+ 
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;">:
+    Ui::widget </span>*<span style="color: #000000;">ui;
+ 
+</span><span style="color: #0000ff;">public</span><span style="color: #000000;">:
+     Q_INVOKABLE </span><span style="color: #0000ff;">void</span><span style="color: #000000;"> invokeFunc(QVariant data1,QVariant data2);   
+ 
+</span><span style="color: #0000ff;">private</span><span style="color: #000000;"> slots:
+    </span><span style="color: #0000ff;">void</span><span style="color: #000000;"> on_pushButton_clicked();
+};
+ 
+</span><span style="color: #0000ff;">#endif</span> <span style="color: #008000;">//</span><span style="color: #008000;"> WIDGET_H</span></pre>
+</div>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">写widget.cpp</span></p>
+<div class="cnblogs_code">
+<pre><code>#include <span style="color: #800000;">"</span><span style="color: #800000;">widget.h</span><span style="color: #800000;">"</span><span style="color: #000000;">
+#include </span><span style="color: #800000;">"</span><span style="color: #800000;">ui_widget.h</span><span style="color: #800000;">"</span><span style="color: #000000;">
+#include </span>&lt;QTimer&gt;<span style="color: #000000;">
+#include </span>&lt;QQmlContext&gt;<span style="color: #000000;">
+widget::widget(QWidget </span>*<span style="color: #000000;">parent) :
+    QWidget(parent),
+    ui(</span><span style="color: #0000ff;">new</span><span style="color: #000000;"> Ui::widget)
+{
+ 
+    ui</span>-&gt;setupUi(<span style="color: #0000ff;">this</span><span style="color: #000000;">);
+ 
+    engine.rootContext()</span>-&gt;setContextProperty(<span style="color: #800000;">"</span><span style="color: #800000;">Widget</span><span style="color: #800000;">"</span>,<span style="color: #0000ff;">this</span><span style="color: #000000;">);
+</span><span style="color: #008000;">    //</span><span style="color: #008000;">将QML中的Widget变量指向为当前类.从而使QML和widget类连接起来</span>
+<span style="color: #000000;"> 
+    engineObject </span>= QQmlComponent(&amp;engine, <span style="color: #800000;">"</span><span style="color: #800000;">qrc:/main.qml</span><span style="color: #800000;">"</span>).create();        <span style="color: #008000;">//</span><span style="color: #008000;">创建qml并获取运行中的qml对象</span>
+<span style="color: #000000;">}
+ 
+widget::</span>~<span style="color: #000000;">widget()
+{
+    </span><span style="color: #0000ff;">delete</span><span style="color: #000000;"> ui;
+}
+ 
+ 
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> widget::invokeFunc(QVariant data1,QVariant data2)
+{
+    ui</span>-&gt;plainTextEdit-&gt;<span style="color: #000000;">setPlainText(data1.toString());
+ 
+}
+ 
+</span><span style="color: #0000ff;">void</span><span style="color: #000000;"> widget::on_pushButton_clicked()
+{
+     QVariant depatment</span>= <span style="color: #800000;">"</span><span style="color: #800000;">021</span><span style="color: #800000;">"</span><span style="color: #000000;">;
+     QVariant start</span>= ui-&gt;start-&gt;<span style="color: #000000;">text();
+     QVariant end </span>= ui-&gt;end-&gt;text();    <span style="color: #008000;">//</span><span style="color: #008000;">"结束日期"</span>
+<span style="color: #000000;"> 
+     QMetaObject::invokeMethod(engineObject, </span><span style="color: #800000;">"</span><span style="color: #800000;">getWrenchTools</span><span style="color: #800000;">"</span><span style="color: #000000;">,Q_ARG(QVariant, depatment)\
+                             ,Q_ARG(QVariant, start),Q_ARG(QVariant, end));
+ 
+}</span></pre>
+</div>
+<ul>
+<li><span style="font-family: 'Microsoft YaHei'; font-size: 16px; color: #ff0000;">engine.rootContext()-&gt;setContextProperty("Widget",this)的作用:</span></li>
+</ul>
+<pre><code><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">将QML中的Widget变量指向为当前类.从而使<span style="color: #800000;">QML和widget类连接起来</span>, 然后<strong><span style="color: #0000ff;">main.qml</span></strong>如果post成功则调用当前类的<span style="color: #800000;">invokeFunc(QVariant data1,QVariant data2)</span>方法,从而实现数据返回.</span></pre>
+<ul>
+<li><span style="font-family: 'Microsoft YaHei'; font-size: 16px; color: #ff0000;">当按下同步按钮时,则调用on_pushButton_clicked():</span></li>
+</ul>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">由于engineObject指向运行中的qml对象,然后我们通过<strong><span style="color: #0000ff;">invokeMethod()</span></strong>就可以方便的请求调用<span style="color: #800000;">qml对象中的getWrenchTools()</span>函数.从而<span style="color: #800000;">实现post请求</span></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp;</span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 16px; color: #800000;">点击同步后,效果如下</span><span style="color: #800000;"><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">所示(然后可</span><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">以</span><span style="font-family: 'Microsoft YaHei'; font-size: 16px;">参考</span><strong><span style="text-decoration: underline; color: #0000ff;"><a id="cb_post_title_url" class="postTitle2" href="https://www.cnblogs.com/lifexy/p/11930436.html"><span style="color: #0000ff; text-decoration: underline;">50.Qt-QJsonDocument读写json</span></a></span></strong>来提取数据<span style="font-family: 'Microsoft YaHei'; font-size: 16px;">):</span></span></p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;"><img src="./images/51.Qt-使用ajax获取ashx接口的post数据4.png" alt="" width="634" height="524" /></span></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p><span style="font-family: 'Microsoft YaHei'; font-size: 15px;">&nbsp;</span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

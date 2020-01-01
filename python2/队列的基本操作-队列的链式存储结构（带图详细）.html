@@ -1,0 +1,215 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修队列的基本操作-队列的链式存储结构（带图详细）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>队列的基本操作-队列的链式存储结构（带图详细）</center></div><div class='banquan'>原文出处:本文由博客园博主陈晓晨不吃香菜提供。<br/>
+原文连接:https://www.cnblogs.com/it1997/p/12071309.html</div><br>
+    <h1>什么是队列？&nbsp; &nbsp; &nbsp; &nbsp;&nbsp;</h1>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; 队列是一种特殊的线性表，特殊之处在于它只允许在表的前端（front）进行删除操作，而在表的后端（rear）进行插入操作，和栈一样，队列是一种操作受限制的线性表。进行插入操作的端称为队尾，进行删除操作的端称为队头。队列中没有元素时，称为空队列。</p>
+<p>&nbsp; &nbsp; &nbsp; &nbsp; <span style="background-color: #ff0000; font-size: 18px;">链式队列是用单链表的形式来表示队列，但是要符合队列&ldquo;尾进头出&rdquo;的规则</span></p>
+<p><span style="background-color: #ffffff;"><img src="./images/队列的基本操作-队列的链式存储结构（带图详细）0.png" alt="" /></span></p>
+<h1>链式队列的构建：</h1>
+<p><span style="background-color: #ff0000;">链式队列=单链表+队列</span>。</p>
+<p>如下代码是对一个队列的链式存储的定义：首先定义一个构成单链表基本单元的结点，然后定义由指向结点的头指针、指向结点的尾指针和表示队列长度的变量组成的队列</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">链式队列    链式结构+队列
+</span><span style="color: #008000;">//</span><span style="color: #008000;">链式结构体 =单链表的基本单元：结点 </span>
+<span style="color: #0000ff;">struct</span><span style="color: #000000;"> Node{
+    </span><span style="color: #0000ff;">int</span> data;<span style="color: #008000;">//</span><span style="color: #008000;">数据域 </span>
+    <span style="color: #0000ff;">struct</span> Node* next;     <span style="color: #008000;">//</span><span style="color: #008000;">指针域 </span>
+<span style="color: #000000;">}; 
+</span><span style="color: #008000;">//</span><span style="color: #008000;">队列结构体=头指针+尾指针+队列大小 </span>
+ <span style="color: #0000ff;">struct</span><span style="color: #000000;"> Queue{
+    </span><span style="color: #0000ff;">struct</span> Node* front;<span style="color: #008000;">//</span><span style="color: #008000;">指向结点的头指针 </span>
+    <span style="color: #0000ff;">struct</span> Node* rear;<span style="color: #008000;">//</span><span style="color: #008000;">指向结点的尾指针 </span>
+    <span style="color: #0000ff;">int</span> queueSize; <span style="color: #008000;">//</span><span style="color: #008000;">队列大小/长度 </span>
+}; </pre>
+</div>
+<h1>创建结点：</h1>
+<p>队列是由一个一个结点通过指针链接起来的</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">创建结点</span>
+<span style="color: #0000ff;">struct</span> Node* createNode(<span style="color: #0000ff;">int</span><span style="color: #000000;"> data){
+    </span><span style="color: #0000ff;">struct</span> Node* newNode=(<span style="color: #0000ff;">struct</span> Node*)<span style="color: #0000ff;">malloc</span>(<span style="color: #0000ff;">sizeof</span>(<span style="color: #0000ff;">struct</span><span style="color: #000000;"> Node));
+    newNode</span>-&gt;next=<span style="color: #000000;">NULL;
+    newNode</span>-&gt;data=<span style="color: #000000;">data;
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> newNode;    
+}; </span></pre>
+</div>
+<h1>队列的初始化：</h1>
+<p>首先使用malloc函数为队列分配一块内存，初始状态队列的头指针和尾指针在一起都为空（不带头结点），然后设置队列的大小为0。这样队列的初始化操作就完成了。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">队列初始化</span>
+<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> createQueue(){
+    </span><span style="color: #0000ff;">struct</span> Queue* queue=(<span style="color: #0000ff;">struct</span> Queue*)<span style="color: #0000ff;">malloc</span>(<span style="color: #0000ff;">sizeof</span>(<span style="color: #0000ff;">struct</span> Queue));<span style="color: #008000;">//</span><span style="color: #008000;">分配内存空间 </span>
+    queue-&gt;front=queue-&gt;rear=NULL;<span style="color: #008000;">//</span><span style="color: #008000;">头指针和尾指针在一起为空 </span>
+    queue-&gt;queueSize=<span style="color: #800080;">0</span>;<span style="color: #008000;">//</span><span style="color: #008000;">队列大小为0 </span>
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> queue;
+} </span></pre>
+</div>
+<h1>入队操作：</h1>
+<p>准备工作：首先创建入队函数push()传入两个参数，一个是需要插入那个队列另一个是需要插入的数据。然后调用createNode()函数创建一个新的结点，保存插入的数据。</p>
+<p>准备工作完成后：先判断队列是否是空队列，如果为空队列直接将front和rear指针指向这个新建结点即可，<span style="background-color: #ff0000;">若不为空，则将尾指针的下一个位置指向新建结点，然后再将尾指针修改为这个新建结点。</span>（这个地方我个人感觉比较难懂，我的理解是 先告诉这个新建结点在哪里，然后在移动rear指针到新建结点把他设为队尾）。</p>
+<p><strong>最后别忘记queueSize自增，表示队列长度的增加。</strong></p>
+<p><img src="./images/队列的基本操作-队列的链式存储结构（带图详细）1.png" alt="" width="527" height="280" />&nbsp;<img src="./images/队列的基本操作-队列的链式存储结构（带图详细）2.png" alt="" width="562" height="268" /></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">void</span> push(<span style="color: #0000ff;">struct</span> Queue* queue,<span style="color: #0000ff;">int</span><span style="color: #000000;"> data){
+    </span><span style="color: #0000ff;">struct</span> Node* newNode=<span style="color: #000000;">createNode(data);
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">)
+        queue</span>-&gt;front=<span style="color: #000000;">newNode;
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+        queue</span>-&gt;rear-&gt;next=<span style="color: #000000;">newNode;
+        queue</span>-&gt;rear=<span style="color: #000000;">newNode;
+        queue</span>-&gt;queueSize++<span style="color: #000000;">;
+    
+} </span></pre>
+</div>
+<h1>&nbsp;获取对头元素：</h1>
+<p>首先判断队列queueSize是否为0如果为0说明队列为空，如果不为空直接返回队列头指针的data值。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">获取对头元素</span>
+<span style="color: #0000ff;">int</span> queryFront(<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> queue) {
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">){
+        printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">队列为空无法获取对头元素</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+        printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">\n</span><span style="color: #800000;">"</span><span style="color: #000000;">); 
+        </span><span style="color: #0000ff;">return</span> -<span style="color: #800080;">1</span><span style="color: #000000;">; 
+    }
+    </span><span style="color: #0000ff;">return</span> queue-&gt;front-&gt;<span style="color: #000000;">data;
+}</span></pre>
+</div>
+<h1>判断队列是否为空：</h1>
+<p>&nbsp;代码很简单就不一一解释了。</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">判断队列是否为空</span>
+<span style="color: #0000ff;">int</span> empty(<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> queue){
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">0</span><span style="color: #000000;">;
+    </span><span style="color: #0000ff;">else</span>
+    <span style="color: #0000ff;">return</span> <span style="color: #800080;">1</span><span style="color: #000000;">;
+} </span></pre>
+</div>
+<h1>出队操作：</h1>
+<p>新建头结点指针指向队列front指针所指结点的下一个位置（因为出队操作是在对头进行的），然后释放原来的队头结点，最后设置这个新的头结点为队头。最后队列的大小减1.</p>
+<p><img src="./images/队列的基本操作-队列的链式存储结构（带图详细）3.png" alt="" /></p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">//</span><span style="color: #008000;">出队操作</span>
+<span style="color: #0000ff;">void</span> pop (<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> queue){
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">){
+
+    printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">队列为空不能出队</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+    exit(</span><span style="color: #800080;">0</span><span style="color: #000000;">);
+     }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+         </span><span style="color: #0000ff;">struct</span> Node* newFrontNode=queue-&gt;front-&gt;<span style="color: #000000;">next;
+         </span><span style="color: #0000ff;">free</span>(queue-&gt;<span style="color: #000000;">front); 
+         queue</span>-&gt;front=<span style="color: #000000;">newFrontNode;
+         queue</span>-&gt;queueSize--<span style="color: #000000;">;
+     }
+}</span></pre>
+</div>
+<h1>&nbsp;最后附上完整代码：</h1>
+<div class="cnblogs_code">
+<pre><code>#include &lt;stdio.h&gt;<span style="color: #000000;">
+#include </span>&lt;stdlib.h&gt;
+<span style="color: #008000;">//</span><span style="color: #008000;">链式队列    链式结构+队列
+</span><span style="color: #008000;">//</span><span style="color: #008000;">链式结构体 =单链表的基本单元：结点 </span>
+<span style="color: #0000ff;">struct</span><span style="color: #000000;"> Node{
+    </span><span style="color: #0000ff;">int</span> data;<span style="color: #008000;">//</span><span style="color: #008000;">数据域 </span>
+    <span style="color: #0000ff;">struct</span> Node* next;     <span style="color: #008000;">//</span><span style="color: #008000;">指针域 </span>
+<span style="color: #000000;">}; 
+</span><span style="color: #008000;">//</span><span style="color: #008000;">队列结构体=头指针+尾指针+队列大小 </span>
+ <span style="color: #0000ff;">struct</span><span style="color: #000000;"> Queue{
+    </span><span style="color: #0000ff;">struct</span> Node* front;<span style="color: #008000;">//</span><span style="color: #008000;">指向结点的头指针 </span>
+    <span style="color: #0000ff;">struct</span> Node* rear;<span style="color: #008000;">//</span><span style="color: #008000;">指向结点的尾指针 </span>
+    <span style="color: #0000ff;">int</span> queueSize; <span style="color: #008000;">//</span><span style="color: #008000;">队列大小/长度 </span>
+<span style="color: #000000;">}; 
+</span><span style="color: #008000;">//</span><span style="color: #008000;">创建结点</span>
+<span style="color: #0000ff;">struct</span> Node* createNode(<span style="color: #0000ff;">int</span><span style="color: #000000;"> data){
+    </span><span style="color: #0000ff;">struct</span> Node* newNode=(<span style="color: #0000ff;">struct</span> Node*)<span style="color: #0000ff;">malloc</span>(<span style="color: #0000ff;">sizeof</span>(<span style="color: #0000ff;">struct</span><span style="color: #000000;"> Node));
+    newNode</span>-&gt;next=<span style="color: #000000;">NULL;
+    newNode</span>-&gt;data=<span style="color: #000000;">data;
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> newNode;    
+}; 
+</span><span style="color: #008000;">//</span><span style="color: #008000;">队列初始化</span>
+<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> createQueue(){
+    </span><span style="color: #0000ff;">struct</span> Queue* queue=(<span style="color: #0000ff;">struct</span> Queue*)<span style="color: #0000ff;">malloc</span>(<span style="color: #0000ff;">sizeof</span>(<span style="color: #0000ff;">struct</span> Queue));<span style="color: #008000;">//</span><span style="color: #008000;">分配内存空间 </span>
+    queue-&gt;front=queue-&gt;rear=NULL;<span style="color: #008000;">//</span><span style="color: #008000;">头指针和尾指针在一起为空 </span>
+    queue-&gt;queueSize=<span style="color: #800080;">0</span>;<span style="color: #008000;">//</span><span style="color: #008000;">队列大小为0 </span>
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> queue;
+} 
+</span><span style="color: #008000;">//</span><span style="color: #008000;">入队</span>
+<span style="color: #0000ff;">void</span> push(<span style="color: #0000ff;">struct</span> Queue* queue,<span style="color: #0000ff;">int</span><span style="color: #000000;"> data){
+    </span><span style="color: #0000ff;">struct</span> Node* newNode=<span style="color: #000000;">createNode(data);
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">)
+        queue</span>-&gt;front=<span style="color: #000000;">newNode;
+        </span><span style="color: #0000ff;">else</span><span style="color: #000000;">
+        queue</span>-&gt;rear-&gt;next=<span style="color: #000000;">newNode;
+        queue</span>-&gt;rear=<span style="color: #000000;">newNode;
+        queue</span>-&gt;queueSize++<span style="color: #000000;">;
+    
+} 
+</span><span style="color: #008000;">//</span><span style="color: #008000;">获取对头元素</span>
+<span style="color: #0000ff;">int</span> queryFront(<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> queue) {
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">){
+        printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">队列为空无法获取对头元素</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+        printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">\n</span><span style="color: #800000;">"</span><span style="color: #000000;">); 
+        </span><span style="color: #0000ff;">return</span> -<span style="color: #800080;">1</span><span style="color: #000000;">; 
+    }
+    </span><span style="color: #0000ff;">return</span> queue-&gt;front-&gt;<span style="color: #000000;">data;
+}
+</span><span style="color: #008000;">//</span><span style="color: #008000;">判断队列是否为空</span>
+<span style="color: #0000ff;">int</span> empty(<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> queue){
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">)
+    </span><span style="color: #0000ff;">return</span> <span style="color: #800080;">0</span><span style="color: #000000;">;
+    </span><span style="color: #0000ff;">else</span>
+    <span style="color: #0000ff;">return</span> <span style="color: #800080;">1</span><span style="color: #000000;">;
+} 
+</span><span style="color: #008000;">//</span><span style="color: #008000;">出队操作</span>
+<span style="color: #0000ff;">void</span> pop (<span style="color: #0000ff;">struct</span> Queue*<span style="color: #000000;"> queue){
+    </span><span style="color: #0000ff;">if</span>(queue-&gt;queueSize==<span style="color: #800080;">0</span><span style="color: #000000;">){
+
+    printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">队列为空不能出队</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+    exit(</span><span style="color: #800080;">0</span><span style="color: #000000;">);
+     }</span><span style="color: #0000ff;">else</span><span style="color: #000000;">{
+         </span><span style="color: #0000ff;">struct</span> Node* newFrontNode=queue-&gt;front-&gt;<span style="color: #000000;">next;
+         </span><span style="color: #0000ff;">free</span>(queue-&gt;<span style="color: #000000;">front); 
+         queue</span>-&gt;front=<span style="color: #000000;">newFrontNode;
+         queue</span>-&gt;queueSize--<span style="color: #000000;">;
+     }
+}
+</span><span style="color: #0000ff;">int</span><span style="color: #000000;"> main(){
+    </span><span style="color: #0000ff;">struct</span> Queue* myQueue=<span style="color: #000000;">createQueue();
+    push(myQueue,</span><span style="color: #800080;">1</span><span style="color: #000000;">);
+    push(myQueue,</span><span style="color: #800080;">2</span><span style="color: #000000;">);
+    push(myQueue,</span><span style="color: #800080;">3</span><span style="color: #000000;">);
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;">(empty(myQueue)){
+        printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">%d\t</span><span style="color: #800000;">"</span><span style="color: #000000;">,queryFront(myQueue));
+        pop(myQueue);
+    }
+    printf(</span><span style="color: #800000;">"</span><span style="color: #800000;">\n</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+    system(</span><span style="color: #800000;">"</span><span style="color: #800000;">pause</span><span style="color: #800000;">"</span><span style="color: #000000;">);
+</span><span style="color: #0000ff;">return</span> <span style="color: #800080;">0</span><span style="color: #000000;">;
+}
+ </span></pre>
+</div>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

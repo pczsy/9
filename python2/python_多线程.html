@@ -1,0 +1,95 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修python_多线程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>python_多线程</center></div><div class='banquan'>原文出处:本文由博客园博主半仙儿~~~提供。<br/>
+原文连接:https://www.cnblogs.com/myfy/p/11720975.html</div><br>
+    <p>1.多线程的实现与阻塞</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> threading
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> fun_yellow(num):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1,num+1<span style="color: #000000;">):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">正在拿第：</span><span style="color: #800000;">'</span>+str(i)+<span style="color: #800000;">"</span><span style="color: #800000;">个黄苹果，当前时间：</span><span style="color: #800000;">"</span>+time.ctime()+<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        time.sleep(</span>1<span style="color: #000000;">)
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> fun_red(num):
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1,num+1<span style="color: #000000;">):
+        </span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">正在拿第：</span><span style="color: #800000;">'</span>+str(i)+<span style="color: #800000;">"</span><span style="color: #800000;">个红苹果，当前时间：</span><span style="color: #800000;">"</span>+time.ctime()+<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        time.sleep(</span>1<span style="color: #000000;">)
+
+thread_yellow</span>=threading.Thread(target=fun_yellow,args=(5<span style="color: #000000;">,))
+thread_yellow.start()
+
+thread_red</span>=threading.Thread(target=fun_red,args=(5<span style="color: #000000;">,))
+thread_red.start()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">阻塞主线程</span>
+<span style="color: #000000;">thread_yellow.join()
+thread_red.join()
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">所有任务都已执行完成！</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>2.多线程同步：</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> time
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> threading
+
+all_num</span>=<span style="color: #000000;">0
+lock</span>=<span style="color: #000000;">threading.Lock()
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> fun_li(num):
+    </span><span style="color: #0000ff;">global</span><span style="color: #000000;"> all_num
+    </span><span style="color: #0000ff;">global</span><span style="color: #000000;"> lock
+
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">加锁</span>
+<span style="color: #000000;">    lock.acquire()
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1,num+1<span style="color: #000000;">):
+        all_num</span>+=1
+        <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">李正在放第：</span><span style="color: #800000;">'</span>+str(i)+<span style="color: #800000;">'</span><span style="color: #800000;">个苹果，当前总共有：</span><span style="color: #800000;">'</span>+str(all_num)+<span style="color: #800000;">'</span><span style="color: #800000;">个苹果，当前时间：</span><span style="color: #800000;">'</span>+time.ctime()+<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        time.sleep(</span>1<span style="color: #000000;">)
+    </span><span style="color: #008000;">#</span><span style="color: #008000;">解锁</span>
+<span style="color: #000000;">    lock.release()
+
+</span><span style="color: #0000ff;">def</span><span style="color: #000000;"> fun_zhang(num):
+    </span><span style="color: #0000ff;">global</span><span style="color: #000000;"> all_num
+    </span><span style="color: #0000ff;">global</span><span style="color: #000000;"> lock
+
+    lock.acquire()
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span> range(1,num+1<span style="color: #000000;">):
+        all_num</span>+=1
+        <span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">张正在放第：</span><span style="color: #800000;">'</span>+str(i)+<span style="color: #800000;">'</span><span style="color: #800000;">个苹果，当前总共有：</span><span style="color: #800000;">'</span>+str(all_num)+<span style="color: #800000;">'</span><span style="color: #800000;">个苹果，当前时间：</span><span style="color: #800000;">'</span>+time.ctime()+<span style="color: #800000;">'</span><span style="color: #800000;">\n</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+        time.sleep(</span>1<span style="color: #000000;">)
+    lock.release()
+
+thread_yellow</span>=threading.Thread(target=fun_li,args=(5<span style="color: #000000;">,))
+thread_yellow.start()
+
+thread_red</span>=threading.Thread(target=fun_zhang,args=(5<span style="color: #000000;">,))
+thread_red.start()
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">阻塞主线程</span>
+<span style="color: #000000;">thread_yellow.join()
+thread_red.join()
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">所有任务都已执行完成！</span><span style="color: #800000;">'</span>)</pre>
+</div>
+<p>&nbsp;</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

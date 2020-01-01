@@ -1,0 +1,164 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修[Java并发] AQS抽象队列同步器源码解析--独占锁释放过程' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>[Java并发] AQS抽象队列同步器源码解析--独占锁释放过程</center></div><div class='banquan'>原文出处:本文由博客园博主流浪的小耿提供。<br/>
+原文连接:https://www.cnblogs.com/zyg-coding/p/12057392.html</div><br>
+    <p>[<a href="https://www.cnblogs.com/zyg-coding/p/12045194.html">Java并发] AQS抽象队列同步器源码解析--独占锁获取过程</a></p>
+<p><a href="https://www.cnblogs.com/zyg-coding/p/12045194.html">上一篇</a>已经讲解了AQS独占锁的获取过程，接下来就是对AQS独占锁的释放过程进行详细的分析说明，废话不多说，直接进入正文...</p>
+<h4 id="锁释放入口releaseint-arg">锁释放入口release(int arg)</h4>
+<p>首先进行说明下，能够正常执行到release方法这里来的线程都是获取到锁的，从下面代码可以看出释放锁步骤只有两个重要的方法：<font color=#0000FF >tryRelease </font>与<font color=#0000FF >unparkSuccessor</font> ，tryRelease尝试释放锁，unparkSuccessor唤醒后继节点所封装的线程。</p>
+<pre><code><code>public final boolean release(int arg) {
+    // 尝试释放锁
+    if (tryRelease(arg)) {
+        Node h = head;
+        // 如果头节点不为空，并且waitStatus不为0则唤醒后继节点
+        if (h != null &amp;&amp; h.waitStatus != 0)
+            unparkSuccessor(h);
+        // 无论是否执行唤醒后继节点，总会返回true
+        return true;
+    }
+    // 释放失败
+    return false;
+}</code></pre>
+<p>接下来就开始分析<font color=#0000FF >tryRelease </font>与<font color=#0000FF >unparkSuccessor</font>这两个主要的方法。</p>
+<h4 id="尝试释放锁tryreleaseint-arg">尝试释放锁tryRelease(int arg)</h4>
+<p>tryRelease方法在AQS是默认不实现具体逻辑的，如下：</p>
+<pre><code><code>protected boolean tryRelease(int arg) {
+    throw new UnsupportedOperationException();
+}</code></pre>
+<p>因此，我们就拿ReentrantLock的tryRelease的具体实现加以说明，</p>
+<pre><code><code>protected final boolean tryRelease(int releases) {
+    // 释放后的锁的计数（可重入锁）
+    int c = getState() - releases;
+    // 当前释放锁的必须为锁持有的线程
+    if (Thread.currentThread() != getExclusiveOwnerThread())
+        throw new IllegalMonitorStateException();
+    boolean free = false;
+    // 当锁计数为0时说明已锁已完全释放，将AQS中占有线程设为空
+    if (c == 0) {
+        free = true;
+        setExclusiveOwnerThread(null);
+    }
+    setState(c);
+    return free;
+}</code></pre>
+<h4 id="唤醒后继节点unparksuccessor">唤醒后继节点unparkSuccessor</h4>
+<pre><code><code> private void unparkSuccessor(Node node) {// 唤醒后继节点
+     int ws = node.waitStatus;
+     // waitStatus，直接将waitStatus设为0
+     if (ws &lt; 0)
+         compareAndSetWaitStatus(node, ws, 0);
+     Node s = node.next;
+     // waitStatus &gt; 0 ，说明该节点已被取消，从后往前遍历找到未被取消距离该节点最近的节点并唤醒
+     if (s == null || s.waitStatus &gt; 0) {
+         s = null;
+         for (Node t = tail; t != null &amp;&amp; t != node; t = t.prev)
+             if (t.waitStatus &lt;= 0)
+                 s = t;
+     }
+     if (s != null)
+         // 唤醒线程
+         LockSupport.unpark(s.thread);
+ }</code></pre>
+<p>unparkSuccessor的方法执行逻辑：</p>
+<p>1.如果头节点waitStatus &lt; 0,就直接将waitStatus 设为0</p>
+<p>2.从后往前遍历，找出waitStatus &lt;=0 的节点，并且是离头节点最近的节点，也就是头节点的后继节点</p>
+<p>3.找到待唤醒的后继节点后唤醒该节点对应的线程。</p>
+<p>以上就是本节要讲的主要内容了，下次再会.....</p>
+<h4 id="等等等等...">等等，等等...</h4>
+<p>以为AQS独占锁的释放过程就此结束了吗?没那么简单。</p>
+<p>重新往前看下锁释放的代码，不知道有没有发现问题？</p>
+<h4 id="问题">问题</h4>
+<p>1.tryRelease方法为什么不用CAS进行减少锁计数</p>
+<p>2.unparkSuccessor方法中为什么只判断头节点waitStatus&lt;0时，将waitStatus设为0，那么waitStatus&gt;0的情况怎么不判断</p>
+<p>3.unparkSuccessor中if (s == null || s.waitStatus &gt; 0) {... }，为什么需要判断waitStatus &gt;0</p>
+<p>4.为什么需要从后往前遍历找到离头节点最近的并且waitStatus&lt;=0的后继节点进行线程唤醒，不可以从前往后遍历吗？</p>
+<p>接下来我们逐一的对以上上个问题进行解释。</p>
+<h4 id="问题1-tryrelease方法为什么不用cas进行减少锁计数">问题1 tryRelease方法为什么不用CAS进行减少锁计数</h4>
+<p>这个问题其实是最简单的一个问题，就是前面也提到的，能够执行到release方法这里来的线程都是已经获取到锁的线程，并且独占锁也只能是一个线程，因此不需要进行CAS进行比较后才赋值。</p>
+<h4 id="问题2-unparksuccessor方法中为什么只判断头节点waitstatus0时将waitstatus设为0那么waitstatus0的情况怎么不判断">问题2 unparkSuccessor方法中为什么只判断头节点waitStatus&lt;0时，将waitStatus设为0，那么waitStatus&gt;0的情况怎么不判断</h4>
+<p>不知道大家还记不记得<a href="https://www.cnblogs.com/zyg-coding/p/12045194.html">上一篇</a>分析的内容，重新回顾一下shouldParkAfterFailedAcquire方法，当前驱节点的waitStatus&gt;0时，我们会遍历剔除掉waitStatus&gt;0的节点，因此，当前头节点waitStatus一定不会大于0</p>
+<pre><code><code>private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
+    int ws = pred.waitStatus;
+    // 如果ws == Node.SIGNAL，则说明当前线程已经准备好被唤醒，因此现在可以被阻塞，之后等待被唤醒
+    if (ws == Node.SIGNAL)
+        return true;
+    if (ws &gt; 0) {
+        // 如果ws &gt; 0,说明当前节点已经被取消，因此循环剔除ws&gt;0的前驱节点
+        do {
+            node.prev = pred = pred.prev;
+        } while (pred.waitStatus &gt; 0);
+        pred.next = node;
+    } else {
+        //如果ws&lt;=0,则将标志位设置为Node.SIGNAL，当还不可被阻塞，需要的等待下次执行shouldParkAfterFailedAcquire判断是否需要阻塞
+        compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
+    }
+    return false;
+}</code></pre>
+<h4 id="问题3-unparksuccessor中if-s-null-s.waitstatus-0-...-为什么需要判断waitstatus-0">问题3 unparkSuccessor中if (s == null || s.waitStatus &gt; 0) {... }，为什么需要判断waitStatus &gt;0</h4>
+<p>在执行过程中，头节点的第一个后继节点的waitStatus &gt;0 时就是节点是被取消的，有可能时因为获取锁超时被取消，因此我们需要跳过该节点的，所以需要重新找下个需要被唤醒的节点，而如果头节点的第一个后继节点的waitStatus&lt;=0直接唤醒。</p>
+<h4 id="问题4-为什么需要从后往前遍历找到离头节点最近的并且waitstatus0的后继节点进行线程唤醒不可以从前往后遍历吗">问题4 为什么需要从后往前遍历找到离头节点最近的并且waitStatus&lt;=0的后继节点进行线程唤醒，不可以从前往后遍历吗？</h4>
+<p>这个问题我们需要重新回顾<a href="https://www.cnblogs.com/zyg-coding/p/12045194.html">上一篇</a>的一个方法addWaiter 跟 enq方法</p>
+<h5 id="addwaiter-方法">addWaiter 方法</h5>
+<pre><code><code>private Node addWaiter(Node mode) {// 首先尝试快速添加到队尾，失败再正常执行添加到队尾
+    Node node = new Node(Thread.currentThread(), mode);
+    // 快速方式尝试直接添加到队尾
+    Node pred = tail;
+    if (pred != null) {
+        node.prev = pred;
+        if (compareAndSetTail(pred, node)) {
+            pred.next = node;
+            return node;
+        }
+    }
+    // 如果快速添加到队尾失败则执行enq(node)添加到队尾
+    enq(node);
+    return node;
+}</code></pre>
+<h5 id="enq方法">enq方法</h5>
+<pre><code><code>private Node enq(final Node node) {
+    for (;;) {
+        Node t = tail;
+        if (t == null) { // Must initialize
+            if (compareAndSetHead(new Node()))
+                tail = head;
+        } else {
+            // 添加到队列尾部
+            node.prev = t;
+            if (compareAndSetTail(t, node)) {
+                t.next = node;
+                return t;
+            }
+        }
+    }
+}</code></pre>
+<p>从这两个方法可以取出添加节点到同步节点队尾的关键部分进行分析</p>
+<pre><code><code>node.prev = pred; // 步骤1
+if (compareAndSetTail(pred, node)) {
+    pred.next = node; // 步骤2
+    return node;
+}</code></pre>
+<p>从上面代码可以看出在执行插入节点的过程中，总是先执行node.prev = pred，然后再执行pred.next = node，因此关于问题4的答案就可以解释了：</p>
+<p>如果我们从头往后遍历的话，再并发的环境下如果添加新节点的话可能node.prev = pre已经执行了，但pred.next=node 还未执行，但此时也已经开始执行了unparkSuccessor方法，所以会导致新添加的节点可能没被遍历到，但如果是从后往前遍历的话就不会有该问题。</p>
+<p>以上就是AQS独占锁的释放过程，如果有什么问题，欢迎各位不吝指正。</p>
+
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

@@ -1,0 +1,204 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修Python学习' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>Python学习</center></div><div class='banquan'>原文出处:本文由博客园博主甜田甜甜田提供。<br/>
+原文连接:https://www.cnblogs.com/cloris-Zhang/p/11764856.html</div><br>
+    <h1>sklearn</h1>
+<h1>一、获取数据</h1>
+<p>1.导入数据：</p>
+<p>from sklearn import datasets</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>from sklearn import datasets</p>
+<p>iris=datasets.load_iris()&nbsp;&nbsp;&nbsp;&nbsp; #导入数据集</p>
+<p>x=iris.data&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #获得特征向量</p>
+<p>y=iris.target&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; #获得样本lable</p>
+<p>2.</p>
+<pre><code>from sklearn.datasets.samples_generator import make_classification</pre>
+<pre><code>&nbsp;</pre>
+<pre><code>X, y = make_classification(n_samples=6, n_features=5, n_informative=2, </pre>
+<pre><code>&nbsp;&nbsp;&nbsp;&nbsp;n_redundant=2, n_classes=2, n_clusters_per_class=2, scale=1.0, </pre>
+<pre><code>&nbsp;&nbsp;&nbsp;&nbsp;random_state=20)</pre>
+<pre><code>&nbsp;</pre>
+<pre><code># n_samples：指定样本数</pre>
+<pre><code># n_features：指定特征数</pre>
+<pre><code># n_classes：指定几分类</pre>
+<pre><code># random_state：随机种子，使得随机状可重</pre>
+<p>&nbsp;</p>
+<p>二、数据预处理</p>
+<p>2.1 数据归一化（使得训练数据的标准化规则与测试数据的标准化规则同步）</p>
+<pre><code>from sklearn import preprocessing</pre>
+<pre><code>data = [[0, 0], [0, 0], [1, 1], [1, 1]]</pre>
+<pre><code># 1. 基于mean和std的标准化</pre>
+<pre><code><em>scaler = preprocessing.StandardScaler().fit(train_data)</em></pre>
+<pre><code><em>scaler.transform(train_data)</em></pre>
+<pre><code><em>scaler.transform(test_data)</em></pre>
+<pre><code>&nbsp;</pre>
+<pre><code># 2. 将每个特征值归一化到一个固定范围</pre>
+<pre><code><em>scaler = preprocessing.MinMaxScaler(feature_range=(0, 1)).fit(train_data)</em></pre>
+<pre><code><em>scaler.transform(train_data)</em></pre>
+<pre><code><em>scaler.transform(test_data)</em></pre>
+<pre><code>#feature_range: 定义归一化范围，注用（）括起来</pre>
+<p>&nbsp;</p>
+<p>2.2 数据正则化（使得训练数据的标准化规则与测试数据的标准化规则同步，最终使得每个样本的范数都为1。）</p>
+<pre><code><em>&gt;&gt;&gt; X = [[ 1., -1.,&nbsp; 2.],</em></pre>
+<pre><code><em>...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ 2.,&nbsp; 0.,&nbsp; 0.],</em></pre>
+<pre><code><em>...&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ 0.,&nbsp; 1., -1.]]</em></pre>
+<pre><code><em>&gt;&gt;&gt; X_normalized = preprocessing.normalize(X, norm='l2')</em></pre>
+<pre><code><span style="text-decoration: underline;">&nbsp;</span></pre>
+<pre><code><em>&gt;&gt;&gt; X_normalized&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </em></pre>
+<pre><code><em>array([[ 0.40..., -0.40...,&nbsp; 0.81...],</em></pre>
+<pre><code><em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ 1.&nbsp; ...,&nbsp; 0.&nbsp; ...,&nbsp; 0.&nbsp; ...],</em></pre>
+<pre><code><em>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; [ 0.&nbsp; ...,&nbsp; 0.70..., -0.70...]])</em></pre>
+<p>2.3 one-shot编码</p>
+<p>one-hot编码是一种对离散特征值的编码方式，在LR模型中常用到，用于给线性模型增加非线性能力。</p>
+<pre><code><em>data = [[0, 0, 3], [1, 1, 0], [0, 2, 1], [1, 0, 2]]</em></pre>
+<pre><code><em>encoder = preprocessing.OneHotEncoder().fit(data)</em></pre>
+<pre><code><em>enc.transform(data).toarray()</em></pre>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>一、&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 空格</p>
+<ol>
+<li>赋值&ldquo;=&rdquo;前后 各一个空格。</li>
+<li>所有二元运算符都用空格与操作数分开。</li>
+<li>括号内不要有空格</li>
+<li>逗号，冒号，分号前不要有空格，而是后面有一个空格。</li>
+</ol>
+<p><em>if x==88:</em></p>
+<p><em>print&nbsp; x, y</em></p>
+<p><em>&nbsp;&nbsp; x, y = y, x</em></p>
+<ol>
+<li>参数列表，索引或切片的左括号前不应有空格。</li>
+</ol>
+<p><em>dogs[&ldquo;key&rdquo;] = list[index]</em></p>
+<p>二、&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 断行</p>
+<ol>
+<li>逗号后面断开</li>
+<li>运算符前断开</li>
+<li>在括号中断开，尽量不要用续行符&ldquo;\&rdquo;。&ldquo;\&rdquo;可以作为续行时使用。但在大括号，中括号，小括号中续行是隐式的。</li>
+</ol>
+<p>三、&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 数据类型</p>
+<ol>
+<li>type()函数可以返回传入数据的类型：&lt;class&rdquo;float&rdquo;&gt;</li>
+<li>{0} 的年龄是 {1:d} 岁。 d表示整型，f表示浮点型，指明数据类型。</li>
+</ol>
+<p><em>print('test:{0:.3f}'.format(math.pi))<br />
+.3f </em><em>表示浮点数的精度为3</em><em>（小数位保留3</em><em>位）</em></p>
+<p>3.{1:d}&nbsp;&nbsp;&nbsp; 格式化十进制数；{0:5d}&nbsp;&nbsp;&nbsp;&nbsp; 输出长度为5的字符串，不足用空格补齐</p>
+<p>&nbsp;&nbsp; {1:.2f}&nbsp;&nbsp;
+保留两位小数&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p>
+<p>{1:10.2f}&nbsp;&nbsp;&nbsp; 10表示总长度，包括小数点和小数部分，不足用空格补齐</p>
+<ol>
+<li>可以用str（）函数将任何类型的数字转换为字符串</li>
+
+
+
+</ol>
+<p><em>&gt;&gt;&gt;str(3.24)</em></p>
+<p><em>&lsquo;3.24&rsquo;</em></p>
+<ol>
+<li>int（）和float（）可以将字符串转换为数字。</li>
+
+
+
+</ol>
+<p><em>&gt;&gt;&gt;int(&lsquo;9&rsquo;)</em></p>
+<p><em>9</em></p>
+<p><em>float(&lsquo;9.6&rsquo;)</em></p>
+<p><em>&nbsp; 9.6</em></p>
+<p>四、控制语句</p>
+<p>1. for I in
+range(1,10)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 1&le;i&lt;10</p>
+<p>2.跳转语句：break，continue，return</p>
+<p>2.1&nbsp;&nbsp; break：强行退出循环体，不再执行循环体剩下语句。</p>
+<p><em>for
+item in range (10)</em><em>：</em></p>
+<p><em>if item ==3</em><em>：</em></p>
+<p><em>&nbsp;&nbsp;&nbsp;&nbsp; break&nbsp;&nbsp;&nbsp;
+#</em><em>跳出循环</em></p>
+<p><em>&nbsp;&nbsp;&nbsp;&nbsp; print(&ldquo;count is : {0}&rdquo;.format(item))</em></p>
+<p><em>运行结果：</em></p>
+<p><em>count
+is </em><em>：0</em></p>
+<p><em>count
+is </em><em>：1</em></p>
+<p><em>count
+is </em><em>：2</em></p>
+<p>2.2&nbsp; continue：结束本次循环，跳过循环体中尚未执行的语句，接着进行终止条件的判断，以决定是否继续循环。</p>
+<p><em>for
+item in range (5)</em><em>：</em></p>
+<p><em>if item ==3</em><em>：</em></p>
+<p><em>&nbsp;&nbsp;&nbsp;&nbsp; &nbsp;continue</em></p>
+<p><em>&nbsp;&nbsp;&nbsp;&nbsp; print(&ldquo;count is : {0}&rdquo;.format(item))</em></p>
+<p><em>运行结果：</em></p>
+<p><em>count
+is </em><em>：0</em></p>
+<p><em>count
+is </em><em>：1</em></p>
+<p><em>count
+is </em><em>：2</em></p>
+<p><em>count
+is </em><em>：4</em></p>
+<p><em>count is </em><em>：5</em></p>
+<p>五、列表</p>
+<p>1.创建列表：可以用list([iterable])创建，或者用[ ]把元素括起来。</p>
+<p>&gt;&gt;&gt;[20,10,15,'hello']</p>
+<p>2.追加元素：</p>
+<p>list.append(x):追加单个元素x</p>
+<p>list.extend(['x','y']):追加多个元素</p>
+<p>3.插入元素：list.insert(i,'x')：参数i为要插入的索引，x为要插入的元素数值</p>
+<p>&gt;&gt;&gt;student_list=['张三','李四','王五']</p>
+<p>&gt;&gt;&gt;student_list.insert(2,'董六')</p>
+<p>&gt;&gt;&gt;student_list</p>
+<p>['张三','李四','董六','王五']</p>
+<p>4.reverse():倒置列表</p>
+<p>copy():复制列表</p>
+<p>clear():清除列表中的所有元素</p>
+<p>index(x[,i[,j]]):返回查找x第一次出现的索引，i是开始查找索引，j是结束查找索引。</p>
+<p>count(x):返回x出现的次数</p>
+<p>5.获得0-9中偶数的平方列：</p>
+<p>&nbsp;&gt;&gt;&gt;n_list=[]</p>
+<p>&gt;&gt;&gt;for x in range (10):</p>
+<p>&gt;&gt;&gt;&nbsp;&nbsp;&nbsp;&nbsp; if x%2=0:</p>
+<p>&gt;&gt;&gt;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; n_list.append(x**2)&nbsp; #x**2为求x的2次幂</p>
+<p>&gt;&gt;&gt;print(n_list)</p>
+<p>[0,4,16,36,64]</p>
+<p>六、集合</p>
+<p>1.集合（set）是一种可迭代的，无序的，不能包含重复元素的数据结构。与序列比较，序列中的元素是有序的，可以重复出现，但集合中的元素是无序的，且不能有重复元素。集合分为可变集合（set）和不可变集合（frozenset）</p>
+<p>2.创建可变集合：用set([iterable])或者用 { }把元素括起来，元素之间用逗号隔开：a={'张三','李四','王五'}。创建空集只能用：b=set( )表示。</p>
+<p>3.创建不可变集合：只能使用frozenset([iterable])函数。</p>
+<p>&gt;&gt;&gt;student_set=frozenset({'张三','李四','王五'})</p>
+<p>4.创建字典：可以使用dict函数，或者用{ }把&ldquo;键：值&rdquo;括起来。</p>
+<p>&gt;&gt;&gt;dict1={102:'张三'，105:'李四',109:'王五'}</p>
+<p>&gt;&gt;&gt;len(dict1)</p>
+<p>3</p>
+<p>5.遍历字典：</p>
+<p>student_dict={102:'张三'，105:'李四'，106:'王五'}</p>
+<p>print('---遍历键---&rsquo;)</p>
+<p>&nbsp;&nbsp;&nbsp; for student _id in student_dict.keys():</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; print('学号:'+str(student_id))</p>
+<p>---遍历键---</p>
+<p>学号：102</p>
+<p>学号：105</p>
+<p>学号：109</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

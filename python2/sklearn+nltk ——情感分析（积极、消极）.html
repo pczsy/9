@@ -1,0 +1,239 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修sklearn+nltk ——情感分析（积极、消极）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>sklearn+nltk ——情感分析（积极、消极）</center></div><div class='banquan'>原文出处:本文由博客园博主DHuifang004提供。<br/>
+原文连接:https://www.cnblogs.com/DHuifang004/p/11406211.html</div><br>
+    <p>转载：<a href="https://www.iteye.com/blog/dengkane-2406703">https://www.iteye.com/blog/dengkane-2406703</a></p>
+<p>步骤：</p>
+<p>1 <span style="background-color: #ffffff;">有标签的数据。<span style="color: #339966;">数据：好评文本:pos_text.txt&nbsp; 差评文本:neg_text.txt</span></span></p>
+<p>2 构造特征：词，双词搭配(Bigrams)，比如&ldquo;手机 非常&rdquo;，&ldquo;非常 好用&rdquo;，&ldquo;好用 !&rdquo;这三个搭配作为分类的特征。以此类推，三词搭配(Trigrams)，四词搭配都是可以被作为特征的.</p>
+<p>3 特征降维：使用统计方法找到信息量丰富的特征。包括：词频(Term Frequency)、文档频率(Document Frequency)、互信息(Pointwise Mutual Information)、信息熵(Information Entropy)、卡方统计(Chi-Square)等等。</p>
+<p>4 特征表示：nltk&mdash;&mdash;[ {&ldquo;特征1&rdquo;: True, &ldquo;特征2&rdquo;: True, &ldquo;特征N&rdquo;: True, }, 类标签 ]</p>
+<p>5 构建分类器并预测：选出最佳算法后可以调整特征的数量来测试准确度。（1）用分类算法训练里面的训练集(Training Set)，得出分类器。（2）用分类器给开发测试集分类(Dev-Test Set)，得出分类结果。（3）对比分类器给出的分类结果和人工标注的正确结果，给出分类器的准确度。</p>
+<p>其中，nltk 主要负责处理特征提取(双词或多词搭配需要使用nltk 来做)和特征选择(需要nltk 提供的统计方法)。scikit-learn 主要负责分类算法，评价分类效果，进行分类等任务。</p>
+<p>&nbsp;实验：</p>
+<p>1.<span style="color: #ff0000;">处理数据</span>。str 是全部pos+neg的数据。类型是：str（）</p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">def</span><span style="color: #000000;"> text():
+    f1 </span>= open(<span style="color: #800000;">'</span><span style="color: #800000;">pos_text.txt</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span><span style="color: #000000;">) 
+    f2 </span>= open(<span style="color: #800000;">'</span><span style="color: #800000;">neg_text.txt</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    line1 </span>=<span style="color: #000000;"> f1.readline()
+    line2 </span>=<span style="color: #000000;"> f2.readline()
+    str </span>= <span style="color: #800000;">''</span>
+    <span style="color: #0000ff;">while</span><span style="color: #000000;"> line1:
+        str </span>+=<span style="color: #000000;"> line1
+        line1 </span>=<span style="color: #000000;"> f1.readline()
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> line2:
+        str </span>+=<span style="color: #000000;"> line2
+        line2 </span>=<span style="color: #000000;"> f2.readline()
+    f1.close()
+    f2.close()
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> str<br /></span></pre>
+</div>
+<p>2.<span style="color: #ff0000;">构建特征</span></p>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">把单个词作为特征</span>
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> bag_of_words(words):
+    d</span>=<span style="color: #000000;">{}
+    </span><span style="color: #0000ff;">for</span> word <span style="color: #0000ff;">in</span><span style="color: #000000;"> words:
+        d[word]</span>=<span style="color: #000000;">True
+    </span><span style="color: #0000ff;">return</span><span style="color: #000000;"> d
+
+</span><span style="color: #0000ff;">print</span>(bag_of_words(text()[:5]))</pre>
+</div>
+<pre><code>{'除': True, '了': True, '电': True, '池': True, '不': True}</pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> nltk
+</span><span style="color: #0000ff;">from</span> nltk.collocations <span style="color: #0000ff;">import</span><span style="color: #000000;">  BigramCollocationFinder
+</span><span style="color: #0000ff;">from</span> nltk.metrics <span style="color: #0000ff;">import</span><span style="color: #000000;">  BigramAssocMeasures
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">把双个词作为特征，并使用卡方统计的方法，选择排名前1000的双词</span>
+<span style="color: #0000ff;">def</span> bigram(words,score_fn=BigramAssocMeasures.chi_sq,n=1000<span style="color: #000000;">):
+    bigram_finder</span>=BigramCollocationFinder.from_words(words)  <span style="color: #008000;">#</span><span style="color: #008000;">把文本变成双词搭配的形式</span>
+    bigrams = bigram_finder.nbest(score_fn,n)  <span style="color: #008000;">#</span><span style="color: #008000;">使用卡方统计的方法，选择排名前1000的双词</span>
+    newBigrams = [u+v <span style="color: #0000ff;">for</span> (u,v) <span style="color: #0000ff;">in</span> bigrams]  <span style="color: #008000;">#</span><span style="color: #008000;"> bigrams知识个双词列表</span>
+    <span style="color: #0000ff;">return</span> bag_of_words(newBigrams)  <span style="color: #008000;">#</span><span style="color: #008000;">调用bag_of_words 变成{词：True}的字典</span>
+
+<span style="color: #0000ff;">print</span>(bigram(text()[:5],score_fn=BigramAssocMeasures.chi_sq,n=1000))</pre>
+</div>
+<pre><code>{'了电': True, '池不': True, '电池': True, '除了': True}</pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">把单个词和双个词一起作为特征</span>
+<span style="color: #0000ff;">def</span> bigram_words(words,score_fn=BigramAssocMeasures.chi_sq,n=1000<span style="color: #000000;">):
+    bigram_finder</span>=<span style="color: #000000;">BigramCollocationFinder.from_words(words)
+    bigrams </span>=<span style="color: #000000;"> bigram_finder.nbest(score_fn,n)
+    newBigrams </span>= [u+v <span style="color: #0000ff;">for</span> (u,v) <span style="color: #0000ff;">in</span><span style="color: #000000;"> bigrams]
+    
+    word_dict </span>= bag_of_words(words) <span style="color: #008000;">#</span><span style="color: #008000;">单个字的字典</span>
+    bigrams_dict = bag_of_words(newBigrams)<span style="color: #008000;">#</span><span style="color: #008000;">二元词组的字典</span>
+    word_dict.update(bigrams_dict)  <span style="color: #008000;">#</span><span style="color: #008000;">把字典bigrams_dict合并到字典word_dict中</span>
+    <span style="color: #0000ff;">return</span><span style="color: #000000;"> word_dict
+
+</span><span style="color: #0000ff;">print</span>(bigram_words(text()[:10],score_fn=BigramAssocMeasures.chi_sq,n=1000))</pre>
+</div>
+<pre><code>{'除': True, '了': True, '电': True, '池': True, '不': True, '给': True, '力': True, ' ': True, '都': True, '很': True, ' 都': True, '不给': True, <br />'了电': True, '力 ': True, '池不': True, '电池': True, '给力': True, '都很': True, '除了': True}</pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">import</span><span style="color: #000000;"> jieba
+<span style="color: #339966;">#结巴分词作为特征<br />
+</span></span><span style="color: #0000ff;">def</span><span style="color: #000000;"> read_file(filename):
+    stop </span>= [line.strip() <span style="color: #0000ff;">for</span> line <span style="color: #0000ff;">in</span>  open(<span style="color: #800000;">'</span><span style="color: #800000;">stopword.txt</span><span style="color: #800000;">'</span>,<span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span>,encoding=<span style="color: #800000;">'</span><span style="color: #800000;">utf-8</span><span style="color: #800000;">'</span>).readlines()]  <span style="color: #008000;">#</span><span style="color: #008000;">停用词</span>
+    f = open(filename,<span style="color: #800000;">'</span><span style="color: #800000;">r</span><span style="color: #800000;">'</span><span style="color: #000000;">)
+    line </span>=<span style="color: #000000;"> f.readline()
+    str </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">while</span><span style="color: #000000;"> line:
+        s </span>= line.split(<span style="color: #800000;">'</span><span style="color: #800000;">\t</span><span style="color: #800000;">'</span>)<span style="color: #008000;">#</span><span style="color: #008000;">去掉换行符</span><span style="color: #008000;">       #print('s:',s)#['&hellip;&hellip;\n']</span><span style="color: #008000;">       #print('s[0]:',s[0])#['&hellip;&hellip;']</span>
+        fenci = jieba.cut(s[0],HMM=True)  <span style="color: #008000;">#</span><span style="color: #008000;">False默认值：精准模式  参数HMM=True时，就有了新词发现的能力</span>
+        str.append(list(set(fenci)-<span style="color: #000000;">set(stop)))
+        line </span>=<span style="color: #000000;"> f.readline()
+    </span><span style="color: #0000ff;">return</span> str  <span style="color: #008000;">#</span><span style="color: #008000;">str 是一个整个评论的列表了<br /></span></pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">print</span>(read_file(<span style="color: #800000;">'</span><span style="color: #800000;">pos_text.txt</span><span style="color: #800000;">'</span>)[:2])</pre>
+</div>
+<pre><code>[['真的', '大屏', '僵尸', '好', '敢', '出色', '300', '14', '多买块', '都', '大战', '双核', '秒杀', '帮', '苹果', '一点', '一张', 'G11', '分辨率', '入手',<br /> '地方', '植物', '会', '\n', '值得', '16G', '请', '电池', '不给力', '才', '4', '2820', '拿下', '综合', '盖', '感觉', '回答', 'C6', '选', '10', '留言', '玩机',<br /> '大屏幕', '一起', '放', '照相', '3', '不在乎', '哥', '不是', '非常', '画面', '水果', '游戏', '本来', '再', '贵', '机子', '朋友', '之间', '果断', ' ', '不敢',<br /> 'G14', '一会', '咨询', '差', '判定', '觉得', '小', '尽量', '办公室', '想', '高', '多天', '开后', '心动', '打算', '不会', '极品飞车', '纠结', '买', '玩', '很无语',<br /> '不到', '安徽', '阜阳', '老婆', '很', '块', '卡', '俩', '差不多', '价格', '带', '500W'], ['9', '希望', '能够', '电池', '很漂亮', '很棒', '屏幕', '不错', '寸',<br /> '几乎', '完机', '高', '性价比', '4', 'sense', '运行', '都', '值得', '现在', '烫手', '16', '2.3', '一点', '4.3', '长时间', '霸气', '行', '软件', '解决', '入手',<br /> '很', '确实', '瑕不掩瑜', '其实', ' ', '流畅', '兼容', '还', '3.0', '问题', '真机', '整体', '清晰', '机无', '\n']]</pre>
+<div class="cnblogs_code">
+<pre><code><span style="color: #0000ff;">from</span> nltk.probability <span style="color: #0000ff;">import</span><span style="color: #000000;">  FreqDist,ConditionalFreqDist
+</span><span style="color: #0000ff;">from</span> nltk.metrics <span style="color: #0000ff;">import</span><span style="color: #000000;">  BigramAssocMeasures
+
+</span><span style="color: #008000;">#</span><span style="color: #008000;">获取信息量最高(前number个)的特征(卡方统计)</span>
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> jieba_feature(number):   
+    posWords </span>=<span style="color: #000000;"> []
+    negWords </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">for</span> items <span style="color: #0000ff;">in</span> read_file(<span style="color: #800000;">'</span><span style="color: #800000;">pos_text.txt</span><span style="color: #800000;">'</span>):<span style="color: #008000;">#</span><span style="color: #008000;">把集合的集合变成集合</span>
+        <span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> items:
+            posWords.append(item)
+    </span><span style="color: #0000ff;">for</span> items <span style="color: #0000ff;">in</span> read_file(<span style="color: #800000;">'</span><span style="color: #800000;">neg_text.txt</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+        </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> items:
+            negWords.append(item)
+
+    word_fd </span>= FreqDist() <span style="color: #008000;">#</span><span style="color: #008000;">可统计所有词的词频</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">FreqDist中的键为单词，值为单词的出现总次数。实际上FreqDist构造函数接受任意一个列表，</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">它会将列表中的重复项给统计起来，在本例中我们传入的其实就是一个文本的单词列表。</span>
+<span style="color: #000000;">    
+    cond_word_fd </span>= ConditionalFreqDist() <span style="color: #008000;">#</span><span style="color: #008000;">可统计积极文本中的词频和消极文本中的词频</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">条件频率分布是频率分布的集合，每个频率分布有一个不同的条件，这个条件通常是文本的类别。</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">条件频率分布需要处理的是配对列表，每对的形式是（条件，事件），在示例中条件为文体类别，事件为单词。</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">成员方法</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">conditions()，返回条件列表</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">tabulate(conditions, samples)，根据指定的条件和样本，打印条件频率分布表格</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">plot(conditions, samples)，根据给定的条件和样本，绘制条件频率分布图</span>
+
+    <span style="color: #0000ff;">for</span> word <span style="color: #0000ff;">in</span><span style="color: #000000;"> posWords:
+        word_fd[word] </span>+= 1<span style="color: #000000;">
+        cond_word_fd[</span><span style="color: #800000;">'</span><span style="color: #800000;">pos</span><span style="color: #800000;">'</span>][word] += 1
+
+    <span style="color: #0000ff;">for</span> word <span style="color: #0000ff;">in</span><span style="color: #000000;"> negWords:
+        word_fd[word] </span>+= 1<span style="color: #000000;">
+        cond_word_fd[</span><span style="color: #800000;">'</span><span style="color: #800000;">neg</span><span style="color: #800000;">'</span>][word] += 1<span style="color: #000000;">
+
+    pos_word_count </span>= cond_word_fd[<span style="color: #800000;">'</span><span style="color: #800000;">pos</span><span style="color: #800000;">'</span>].N() <span style="color: #008000;">#</span><span style="color: #008000;">积极词的数量</span>
+    neg_word_count = cond_word_fd[<span style="color: #800000;">'</span><span style="color: #800000;">neg</span><span style="color: #800000;">'</span>].N() <span style="color: #008000;">#</span><span style="color: #008000;">消极词的数量</span>
+    total_word_count = pos_word_count +<span style="color: #000000;"> neg_word_count
+
+    word_scores </span>= {}<span style="color: #008000;">#</span><span style="color: #008000;">包括了每个词和这个词的信息量</span>
+
+    <span style="color: #0000ff;">for</span> word, freq <span style="color: #0000ff;">in</span> word_fd.items():<span style="color: #008000;">#</span><span style="color: #008000;">word_fd={'word':count}</span>
+        pos_score = BigramAssocMeasures.chi_sq(cond_word_fd[<span style="color: #800000;">'</span><span style="color: #800000;">pos</span><span style="color: #800000;">'</span><span style="color: #000000;">][word],  (freq, pos_word_count), total_word_count) 
+        </span><span style="color: #008000;">#</span><span style="color: #008000;">计算积极词的卡方统计量，这里也可以计算互信息等其它统计量.</span>
+        <span style="color: #008000;">#</span><span style="color: #008000;">卡方x2值描述了自变量与因变量之间的相关程度：x2值越大，相关程度也越大</span>
+<span style="color: #000000;">        
+        neg_score </span>= BigramAssocMeasures.chi_sq(cond_word_fd[<span style="color: #800000;">'</span><span style="color: #800000;">neg</span><span style="color: #800000;">'</span><span style="color: #000000;">][word],  (freq, neg_word_count), total_word_count) 
+        
+        word_scores[word] </span>= pos_score + neg_score <span style="color: #008000;">#</span><span style="color: #008000;">一个词的信息量等于积极卡方统计量加上消极卡方统计量</span>
+<span style="color: #000000;">
+    best_vals </span>= sorted(word_scores.items(), key=<span style="color: #0000ff;">lambda</span> item:item[1],  reverse=True)[:number] <span style="color: #008000;">#</span><span style="color: #008000;">把词按信息量倒序排序。number是特征的维度，是可以不断调整直至最优的</span>
+    best_words = set([w <span style="color: #0000ff;">for</span> w,s <span style="color: #0000ff;">in</span><span style="color: #000000;"> best_vals])
+     
+    </span><span style="color: #0000ff;">return</span> dict([(word, True) <span style="color: #0000ff;">for</span> word <span style="color: #0000ff;">in</span> best_words])</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">调整设置，分别从四种特征选取方式开展并比较效果</span>
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> build_features():
+    feature </span>= bag_of_words(text())<span style="color: #008000;">#</span><span style="color: #008000;">第一种：单个词</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">feature = bigram(text(),score_fn=BigramAssocMeasures.chi_sq,n=500)#第二种：双词</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">feature = bigram_words(text(),score_fn=BigramAssocMeasures.chi_sq,n=500)#第三种：单个词和双个词</span>
+    <span style="color: #008000;">#</span><span style="color: #008000;">feature = jieba_feature(300)#第四种：结巴分词</span>
+<span style="color: #000000;">
+    posFeatures </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">for</span> items <span style="color: #0000ff;">in</span> read_file(<span style="color: #800000;">'</span><span style="color: #800000;">pos_text.txt</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+        a </span>=<span style="color: #000000;"> {}
+        </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span> items: <span style="color: #008000;">#</span><span style="color: #008000;">item是每一句的分词列表</span>
+            <span style="color: #0000ff;">if</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> feature.keys():
+                a[item]</span>=<span style="color: #800000;">'</span><span style="color: #800000;">True</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        posWords </span>= [a,<span style="color: #800000;">'</span><span style="color: #800000;">pos</span><span style="color: #800000;">'</span>] <span style="color: #008000;">#</span><span style="color: #008000;">为积极文本赋予"pos"</span>
+<span style="color: #000000;">        posFeatures.append(posWords)
+        
+    negFeatures </span>=<span style="color: #000000;"> []
+    </span><span style="color: #0000ff;">for</span> items <span style="color: #0000ff;">in</span> read_file(<span style="color: #800000;">'</span><span style="color: #800000;">neg_text.txt</span><span style="color: #800000;">'</span><span style="color: #000000;">):
+        a </span>=<span style="color: #000000;"> {}
+        </span><span style="color: #0000ff;">for</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> items:
+            </span><span style="color: #0000ff;">if</span> item <span style="color: #0000ff;">in</span><span style="color: #000000;"> feature.keys():
+                a[item]</span>=<span style="color: #800000;">'</span><span style="color: #800000;">True</span><span style="color: #800000;">'</span><span style="color: #000000;">
+        negWords </span>= [a,<span style="color: #800000;">'</span><span style="color: #800000;">neg</span><span style="color: #800000;">'</span>] <span style="color: #008000;">#</span><span style="color: #008000;">为消极文本赋予"neg"</span>
+<span style="color: #000000;">        negFeatures.append(negWords)
+        
+    </span><span style="color: #0000ff;">return</span> posFeatures,negFeatures</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code><span style="color: #008000;">#</span><span style="color: #008000;">获得训练数据</span>
+<span style="color: #000000;">
+posFeatures,negFeatures </span>=<span style="color: #000000;"> build_features()
+
+</span><span style="color: #0000ff;">from</span> random <span style="color: #0000ff;">import</span><span style="color: #000000;"> shuffle
+</span><span style="color: #0000ff;">import</span><span style="color: #000000;"> sklearn
+</span><span style="color: #0000ff;">from</span> nltk.classify.scikitlearn <span style="color: #0000ff;">import</span><span style="color: #000000;">  SklearnClassifier
+</span><span style="color: #0000ff;">from</span> sklearn.svm <span style="color: #0000ff;">import</span><span style="color: #000000;"> SVC, LinearSVC,  NuSVC
+</span><span style="color: #0000ff;">from</span> sklearn.naive_bayes <span style="color: #0000ff;">import</span><span style="color: #000000;">  MultinomialNB, BernoulliNB
+</span><span style="color: #0000ff;">from</span> sklearn.linear_model <span style="color: #0000ff;">import</span><span style="color: #000000;">  LogisticRegression
+</span><span style="color: #0000ff;">from</span> sklearn.metrics <span style="color: #0000ff;">import</span><span style="color: #000000;">  accuracy_score
+
+shuffle(posFeatures) 
+shuffle(negFeatures) </span><span style="color: #008000;">#</span><span style="color: #008000;">把文本的排列随机化 </span>
+<span style="color: #000000;">
+train </span>=  posFeatures[300:]+negFeatures[300:]<span style="color: #008000;">#</span><span style="color: #008000;">训练集(70%)</span>
+test = posFeatures[:300]+negFeatures[:300]<span style="color: #008000;">#</span><span style="color: #008000;">验证集(30%)</span>
+<span style="color: #000000;">
+data,tag </span>= zip(*test)<span style="color: #008000;">#</span><span style="color: #008000;">分离测试集合的数据和标签，便于验证和测试</span>
+
+<span style="color: #0000ff;">def</span><span style="color: #000000;"> score(classifier):
+    classifier </span>=<span style="color: #000000;"> SklearnClassifier(classifier) 
+    classifier.train(train) </span><span style="color: #008000;">#</span><span style="color: #008000;">训练分类器</span>
+    pred = classifier.classify_many(data) <span style="color: #008000;">#</span><span style="color: #008000;">给出预测的标签</span>
+    n =<span style="color: #000000;"> 0
+    s </span>=<span style="color: #000000;"> len(pred)
+    </span><span style="color: #0000ff;">for</span> i <span style="color: #0000ff;">in</span><span style="color: #000000;"> range(0,s):
+        </span><span style="color: #0000ff;">if</span> pred[i]==<span style="color: #000000;">tag[i]:
+            n </span>= n+1
+    <span style="color: #0000ff;">return</span> n/s <span style="color: #008000;">#</span><span style="color: #008000;">分类器准确度</span>
+
+<span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">BernoulliNB`s accuracy is %f</span><span style="color: #800000;">'</span> %<span style="color: #000000;">score(BernoulliNB()))
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">MultinomiaNB`s accuracy is %f</span><span style="color: #800000;">'</span> %<span style="color: #000000;">score(MultinomialNB()))
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">LogisticRegression`s accuracy is %f</span><span style="color: #800000;">'</span> %score(LogisticRegression(solver=<span style="color: #800000;">'</span><span style="color: #800000;">lbfgs</span><span style="color: #800000;">'</span><span style="color: #000000;">)))
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">SVC`s accuracy is %f</span><span style="color: #800000;">'</span> %score(SVC(gamma=<span style="color: #800000;">'</span><span style="color: #800000;">scale</span><span style="color: #800000;">'</span><span style="color: #000000;">)))
+</span><span style="color: #0000ff;">print</span>(<span style="color: #800000;">'</span><span style="color: #800000;">LinearSVC`s accuracy is %f</span><span style="color: #800000;">'</span> %<span style="color: #000000;">score(LinearSVC()))
+</span><span style="color: #008000;">#</span><span style="color: #008000;">print('NuSVC`s accuracy is %f' %score(NuSVC()))</span></pre>
+</div>
+<p>3.<span style="color: #ff0000;">结果</span></p>
+<p># BernoulliNB`s accuracy is 0.858333<br /># <span style="color: #ff0000;">**** MultinomiaNB`s accuracy is 0.871667*****</span><br /># LogisticRegression`s accuracy is 0.820000<br /># SVC`s accuracy is 0.805000<br /># LinearSVC`s accuracy is 0.795000<br />#第四种：结巴分词<br /># <span style="color: #ff0000;">**** BernoulliNB`s accuracy is 0.761667*****</span><br /># MultinomiaNB`s accuracy is 0.701667<br /># LogisticRegression`s accuracy is 0.756667<br /># SVC`s accuracy is 0.688333<br /># LinearSVC`s accuracy is 0.733333<br />#第三种：单个词和双个词<br /># <span style="color: #ff0000;">***** BernoulliNB`s accuracy is 0.773333******</span><br /># MultinomiaNB`s accuracy is 0.688333<br /># LogisticRegression`s accuracy is 0.726667<br /># SVC`s accuracy is 0.661667<br /># LinearSVC`s accuracy is 0.726667<br />#第二种：双词<br /># BernoulliNB`s accuracy is 0.641667<br /># MultinomiaNB`s accuracy is 0.616667<br />#<span style="color: #ff0000;">*****  LogisticRegression`s accuracy is 0.668333*****</span><br /># SVC`s accuracy is 0.545000<br /># LinearSVC`s accuracy is 0.653333<br />#第一种：单个词</p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

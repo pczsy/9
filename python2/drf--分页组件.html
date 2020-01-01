@@ -1,0 +1,127 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修drf--分页组件' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>drf--分页组件</center></div><div class='banquan'>原文出处:本文由博客园博主蔚蓝的爱提供。<br/>
+原文连接:https://www.cnblogs.com/Hades123/p/11716067.html</div><br>
+    <div class="toc">
+    <p class="toc-title">目录</p>
+    <div class="toc-list">
+        <ul>
+        <li><a href="#rest-framework之分页器">rest-framework之分页器</a><ul>
+        <li><a href="#简单分页pagenumberpagination">简单分页(PageNumberPagination)</a></li>
+        <li><a href="#偏移分页limitoffsetpagination">偏移分页(LimitOffsetPagination)</a></li>
+        <li><a href="#加密分页cursorpagination">加密分页(CursorPagination)</a></li>
+        </ul></li>
+        </ul>
+    </div>
+</div>
+<h1 id="rest-framework之分页器">rest-framework之分页器</h1>
+<h2 id="简单分页pagenumberpagination">简单分页(PageNumberPagination)</h2>
+<p>可以达到查看第几页以及每一页显示几条的效果</p>
+<pre><code><code>from rest_framework.pagination import PageNumberPagination
+
+# 一 基本使用：url=url=http://127.0.0.1:8000/page/?page=2&amp;size=3，size无效
+class  Pager(APIView):
+    def get(self,request,*args,**kwargs):
+        # 获取所有数据
+        ret=models.Book.objects.all()
+        # 创建分页对象
+        page=PageNumberPagination()
+        # 在数据库中获取分页的数据
+        page_list=page.paginate_queryset(ret,request,view=self)
+        # 对分页进行序列化
+        ser=BookSerializer1(instance=page_list,many=True)
+        return Response(ser.data)
+    
+# 二 自定制 url=http://127.0.0.1:8000/page/?page=2&amp;size=3
+# size=30，无效，最多5条
+class Mypage(PageNumberPagination):
+    page_size = 2
+    page_query_param = &#39;page&#39;
+    # 定制传参
+    page_size_query_param = &#39;size&#39;
+    # 最大一页的数据
+    max_page_size = 5
+    
+class  Page(APIView):
+    def get(self,request,*args,**kwargs):
+        # 获取所有数据
+        ret=models.Book.objects.all()
+        # 创建分页对象
+        page=Mypage()
+        # 在数据库中获取分页的数据
+        page_list=page.paginate_queryset(ret,request,view=self)
+        # 对分页进行序列化
+        ser=BookSerializer1(instance=page_list,many=True)
+        # return Response(ser.data)
+        # 这个也是返回Response对象，但是比基本的多了上一页，下一页，和总数据条数（了解即可）
+        return page.get_paginated_response(ser.data)</code></pre>
+<p><strong>settings.py中配置</strong></p>
+<pre><code><code>REST_FRAMEWORK = {
+    # 每页显示两条
+    &#39;PAGE_SIZE&#39;:2
+}</code></pre>
+<p><strong>路由：urls.py</strong></p>
+<pre><code><code>url(r&#39;^page/$&#39;, views.Page.as_view()),</code></pre>
+<p><strong>序列化 Serializers</strong></p>
+<pre><code><code>class BookSerializer1(serializers.ModelSerializer):
+    class Meta:
+        model=models.Book
+        # fields=&quot;__all__&quot;
+        exclude=(&#39;authors&#39;,)</code></pre>
+<h2 id="偏移分页limitoffsetpagination">偏移分页(LimitOffsetPagination)</h2>
+<p>效果：在第n个位置，向后查看n条数据</p>
+<pre><code><code># url: http://127.0.0.1:8000/pager/?offset=4&amp;limit=3
+from rest_framework.pagination import LimitOffsetPagination
+
+# 也可以自定制，同简单分页
+class  Page(APIView):
+    def get(self,request,*args,**kwargs):
+        # 获取所有数据
+        ret=models.Book.objects.all()
+        # 创建分页对象
+        page=LimitOffsetPagination()
+        # 在数据库中获取分页的数据
+        page_list=page.paginate_queryset(ret,request,view=self)
+        # 对分页进行序列化
+        ser=BookSerializer1(instance=page_list,many=True)
+        # return page.get_paginated_response(ser.data)
+        return Response(ser.data)</code></pre>
+<h2 id="加密分页cursorpagination">加密分页(CursorPagination)</h2>
+<p>效果：只能看上一页和下一页，速度快且url进行了加密</p>
+<pre><code><code>from rest_framework.pagination import CursorPagination
+
+# 看源码，是通过sql查询，大于id和小于id
+class  Pager(APIView):
+    def get(self,request,*args,**kwargs):
+        # 获取所有数据
+        ret=models.Book.objects.all()
+        # 创建分页对象
+        page=CursorPagination()
+        page.ordering=&#39;nid&#39;
+        # 在数据库中获取分页的数据
+        page_list=page.paginate_queryset(ret,request,view=self)
+        # 对分页进行序列化
+        ser=BookSerializer1(instance=page_list,many=True)
+        # 可以避免页码被猜到
+        return page.get_paginated_response(ser.data)</code></pre>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>

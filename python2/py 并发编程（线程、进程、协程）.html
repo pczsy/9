@@ -1,0 +1,722 @@
+<html><head><meta charset='utf-8'><meta name='viewport' content='width=device-width, initial-scale=1'>
+<meta name='applicable-device' content='pc'><meta name='keywords' content='电脑,电脑讲解,电脑技术,编程,电脑故障维修py 并发编程（线程、进程、协程）' />
+<script src='../../highlight/highlight.pack.js'></script>
+<link rel='stylesheet' type='text/css' href='../../highlight/styles/monokai.css'/>
+
+<link rel='stylesheet' href='../../fenxiang/dist/css/share.min.css'>
+<script src='../../fenxiang/src/js/social-share.js'></script>
+<script src='../../fenxiang/src/js/qrcode.js'></script>
+
+</head><body><script>hljs.initHighlightingOnLoad();</script><script>
+var system ={};  
+var p = navigator.platform;       
+system.win = p.indexOf('Win') == 0;  
+system.mac = p.indexOf('Mac') == 0;  
+system.x11 = (p == 'X11') || (p.indexOf('Linux') == 0);     
+if(system.win||system.mac||system.xll){
+document.write("<link href='../css/3.css' rel='stylesheet' type='text/css'>");}else{ document.write("<link href='../css/3wap.css' rel='stylesheet' type='text/css'>");}</script><script src='../../js/3.js'></script><div class='div2'><div class='heading_nav'><ul><div><li><a href='../../index.html'>首页</a></li>
+</div><div onclick='hidden1()' >分享</div>
+</ul></div></div>
+<div id='heading_nav2'> 
+<li class='row' >
+<div class='social-share' data-mode='prepend'><a href='javascript:' class='social-share-icon icon-heart'></a></div></li></div><script charset='utf-8' src='../../3/js/hengfu.js'></script><script charset='utf-8' src='../../3/js/hengfu2.js'></script><hr><div class='div1'><div class='biaoti'><center>py 并发编程（线程、进程、协程）</center></div><div class='banquan'>原文出处:本文由博客园博主feel_different提供。<br/>
+原文连接:https://www.cnblogs.com/bind/p/11512412.html</div><br>
+    <h1 align="center"><span style="font-size: small;">一、操作系统</span></h1>
+<blockquote><span style="font-size: small;">操作系统是一个用来协调、管理和控制计算机硬件和软件资源的系统程序，它位于硬件和应用程序之间。</span></blockquote>
+<blockquote><span style="font-size: small;">程序是运行在系统上的具有某种功能的软件，比如说浏览器，音乐播放器等。<span style="font-size: small;">操作系统的内核的定义：操作系统的内核是一个管理和控制程序，负责管理计算机的所有物理资源，其中包括：文件系统、内存管理、设备管理和进程管理</span></span></blockquote>
+<h1 align="left">二、进程和线程</h1>
+<h2><span style="font-size: small;">进程：</span></h2>
+<div align="left"><span style="font-size: small;"> 假如有两个程序A和B，程序A在执行到一半的过程中，需要读取大量的数据输入（I/O操作）， 而此时CPU只能静静地等待任务A读取完数据才能继续执行，这样就白白浪费了CPU资源。 是不是在程序A读取数据的过程中，让程序B去执行，当程序A读取完数据之后，让程序B暂停，然后让程序A继续执行？ 当然没问题，但这里有一个关键词：切换 既然是切换，那么这就涉及到了状态的保存，状态的恢复，加上程序A与程序B所需要的系统资 源（内存，硬盘，键盘等等）是不一样的。自然而然的就需要有一个东西去记录程序A和程序B 分别需要什么资源，怎样去识别程序A和</span>
+<pre><code>程序B等等</pre>
+<span style="font-size: small;">，所以就有了一个叫进程的抽象概念。</span></div>
+<div align="left">
+<pre><code></pre>
+</div>
+<div>
+<pre><code><strong><span style="font-size: small;">进程定义：</span></strong></pre>
+</div>
+<div align="left"><span style="font-size: small;"> 进程就是一个程序在一个数据集上的一次动态执行过程。 进程一般由程序、数据集、进程控制块三部分组成。</span></div>
+<div align="left"><span style="font-size: small;">&nbsp;</span></div>
+<div align="left"><span style="font-size: small;">    数据集是程序在执行过程中所需要使用的资源；
+    进程控制块用来记录进程的外部特征，描述进程的执行变化过程，系统可以利用它来控制和管理进程，它是系
+    统感知进程存在的唯一标志。</span></div>
+<pre><code></pre>
+<h2><span style="font-size: medium;">线程：</span></h2>
+<pre><code>   线程的出现是为了降低上下文切换的消耗，提高系统的并发性，并突破一个进程只能干一样事的缺陷，
+使到进程内并发成为可能。</pre>
+<pre><code>   线程也叫轻量级进程，它是一个基本的CPU执行单元，也是程序执行过程中的最小单元，由线程ID、程序
+计数器、寄存器集合和堆栈共同组成。</pre>
+<pre><code>   线程的引入减小了程序并发执行时的开销，提高了操作系统的并发性能。</pre>
+<pre><code>   线程没有自己的系统资源。</pre>
+<h2><span style="font-size: small;">线程进程的关系区别：</span></h2>
+<div class="cnblogs_code">
+<pre><code><span style="color: rgb(0, 128, 128);">  1</span> 一个程序至少有一个进程,一个进程至少有一个线程.(进程可以理解成线程的容器)
+<span style="color: rgb(0, 128, 128);">  2</span> 进程在执行过程中拥有独立的内存单元，而多个线程共享内存，从而极大地提高了程序的运行效率。
+<span style="color: rgb(0, 128, 128);">  3</span> 线程在执行过程中与进程还是有区别的。每个独立的线程有一个程序运行的入口、顺序执行序列和
+<span style="color: rgb(0, 128, 128);">  4</span>   程序的出口。但是线程不能够独立执行，必须依存在应用程序中，由应用程序提供多个线程执行控制。
+<span style="color: rgb(0, 128, 128);">  5</span> 进程是具有一定独立功能的程序关于某个数据集合上的一次运行活动,进程是系统进行资源分配和调
+<span style="color: rgb(0, 128, 128);">  6</span>   度的一个独立单位.
+<span style="color: rgb(0, 128, 128);">  7</span>   线程是进程的一个实体,是CPU调度和分派的基本单位,它是比进程更小的能独立运行的基本单位.线程
+<span style="color: rgb(0, 128, 128);">  8</span>   自己基本上不拥有系统资源,只拥有一点在运行中必不可少的资源(如程序计数器,一组寄存器和栈)但是
+<span style="color: rgb(0, 128, 128);">  9</span>   它可与同属一个进程的其他的线程共享进程所拥有的全部资源.
+<span style="color: rgb(0, 128, 128);"> 10</span>   一个线程可以创建和撤销另一个线程;同一个进程中的多个线程之间可以并发执行.</pre>
+</div>
+<p><span style="font-size: small;"><strong>但是python的GIL（全局解释锁）会限制同一时刻被CPU调度的线程数量，也就是说无论你启多少个线程，你有多少个cpu, Python在执行的时候在同一时刻只允许一个线程运行。为实现多CPU并行效果只能开多线程+协程。</strong></span></p>
+<pre><code><strong><span style="font-size: small;">对于IO密集型的任务，python的多线程是有意义的，对于计算密集型的任务</span></strong></pre>
+<pre><code><strong><span style="font-size: small;">python不适用。</span></strong></pre>
+<h2>线程与threading模块</h2>
+<blockquote>
+<p>threading 模块建立在thread 模块之上。thread模块以低级、原始的方式来处理和控制线程，而threading 模块通过对thread进行二次封装，提供了更方便的api来处理线程。</p>
+</blockquote>
+<h3><span style="font-size: small;">直接调用：</span></h3>
+<div class="cnblogs_code">
+<pre><code>import threading
+import time
+
+def sayhi(num): #定义每个线程要运行的函数
+
+    print("running on number:%s" %num)
+
+    time.sleep(3)
+
+if __name__ == '__main__':
+
+    t1 = threading.Thread(target=sayhi,args=(1,)) #生成一个线程实例
+    t2 = threading.Thread(target=sayhi,args=(2,)) #生成另一个线程实例
+
+    t1.start() #启动线程
+    t2.start() #启动另一个线程
+
+    print(t1.getName()) #获取线程名
+    print(t2.getName())</pre>
+</div>
+<h3>继承式调用：</h3>
+<div class="cnblogs_code">
+<pre><code>import threading
+import time
+
+class MyThread(threading.Thread):
+    def __init__(self,num):
+        threading.Thread.__init__(self)
+        self.num = num
+
+    def run(self):#定义每个线程要运行的函数
+
+        print("running on number:%s" %self.num)
+
+        time.sleep(3)
+
+if __name__ == '__main__':
+
+    t1 = MyThread(1)
+    t2 = MyThread(2)
+    t1.start()
+    t2.start()
+
+    print("ending......")</pre>
+</div>
+<h5>threading.thread的实例方法</h5>
+<div class="cnblogs_code">
+<pre><code>import threading
+from time import ctime,sleep
+import time
+
+def ListenMusic(name):
+
+        print ("Begin listening to %s. %s" %(name,ctime()))
+        sleep(3)
+        print("end listening %s"%ctime())
+
+def RecordBlog(title):
+
+        print ("Begin recording the %s! %s" %(title,ctime()))
+        sleep(5)
+        print('end recording %s'%ctime())
+
+
+threads = []
+
+
+t1 = threading.Thread(target=ListenMusic,args=('水手',))
+t2 = threading.Thread(target=RecordBlog,args=('python线程',))
+
+threads.append(t1)
+threads.append(t2)
+
+if __name__ == '__main__':
+
+    for t in threads:
+        #t.setDaemon(True) #注意:一定在start之前设置
+        t.start()
+        # t.join()在子线程完成运行之前，这个子线程的父线程将一直被阻塞。
+    # t1.join()
+    t1.setDaemon(True)
+
+    #t2.join()########考虑这三种join位置下的结果？
+    print ("all over %s" %ctime())</pre>
+</div>
+<h3>守护线程</h3><p>setDaemon(True)：</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 将线程声明为守护线程，必须在start() 方法调用之前设置， 如果不设置为守护线程程序会被无限挂起。这个方法基本和join是相反的。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 当我们 在程序运行中，执行一个主线程，如果主线程又创建一个子线程，主线程和子线程 就分兵两路，分别运行，那么当主线程完成想退出时，会检验子线程是否完成。如 果子线程未完成，则主线程会等待子线程完成后再退出。但是有时候我们需要的是 只要主线程完成了，不管子线程是否完成，都要和主线程一起退出，这时就可以 用setDaemon方法</p>
+<p>其他方法：</p>
+<div class="cnblogs_code">
+<pre><code># run():  线程被cpu调度后自动执行线程对象的run方法
+# start():启动线程活动。
+# isAlive(): 返回线程是否活动的。
+# getName(): 返回线程名。
+# setName(): 设置线程名。
+
+threading模块提供的一些方法：
+# threading.currentThread(): 返回当前的线程变量。
+# threading.enumerate(): 返回一个包含正在运行的线程的list。正在运行指线程启动后、结束前，不包括启动前和终止后的线程。
+# threading.activeCount(): 返回正在运行的线程数量，与len(threading.enumerate())有相同的结果。</pre>
+</div>
+<h1 align="center"><span style="font-size: small;">三、同步锁</span></h1>
+<div class="cnblogs_code">
+<pre><code>import time
+import threading
+
+def addNum():
+    global num #在每个线程中都获取这个全局变量
+    #num-=1
+
+    temp=num
+    #print('--get num:',num )
+    time.sleep(0.1)#当<strong>time.sleep(0.1)&nbsp; /0.001/0.0000001 时结果出错</strong>
+    num =temp-1 #对此公共变量进行-1操作
+
+num = 100  #设定一个共享变量
+thread_list = []
+for i in range(100):#启动100个线程，每一个线程都去执行addNum
+    t = threading.Thread(target=addNum)
+    t.start()
+    thread_list.append(t)
+
+for t in thread_list: #等待所有线程执行完毕
+    t.join()
+
+print('final num:', num )</pre>
+</div>
+<pre><code>   <strong>CPU时间轮询的时间片小于线程的执行时间时，在多个线程调用全局变量时，会造成多个线程执行同一任务，出现错误结果，线程不安全。</strong></pre>
+<pre><code><strong>而join会造成串行，失去所线程的意义，所以需要同步锁，在线程执行任务时间内禁止CPU时间轮询切换其他线程。</strong></pre>
+<div class="cnblogs_code">
+<pre><code>R=threading.Lock()
+
+####
+def sub():
+    global num
+    R.acquire()#上锁
+    temp=num-1
+    time.sleep(0.1)
+    num=temp
+    R.release()#解锁</pre>
+</div>
+<h2>线程死锁和递归锁</h2>
+<h3><span style="font-size: small;">线程死锁：</span></h3>
+<pre><code>   在线程间共享多个资源的时候，如果两个线程分别占有一部分资源并且同时等待对方的资源，就会造成死锁，因为系统判断这部分资源都正在使用，所有这两个线程在无外力作用下将一直等待下去。下面是一个死锁的例子：</pre>
+<div class="cnblogs_code">
+<pre><code>import threading,time
+
+class myThread(threading.Thread):
+    def doA(self):
+        lockA.acquire()
+        print(self.name,"gotlockA",time.ctime())
+        time.sleep(3)
+        lockB.acquire()
+        print(self.name,"gotlockB",time.ctime())
+        lockB.release()
+        lockA.release()
+
+    def doB(self):
+        lockB.acquire()
+        print(self.name,"gotlockB",time.ctime())
+        time.sleep(2)
+        lockA.acquire()
+        print(self.name,"gotlockA",time.ctime())
+        lockA.release()
+        lockB.release()
+
+    def run(self):
+        self.doA()
+        self.doB()
+if __name__=="__main__":
+
+    lockA=threading.Lock()
+    lockB=threading.Lock()
+    threads=[]
+    for i in range(5):
+        threads.append(myThread())
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()</pre>
+</div>
+<pre><code>使用递归锁可以避免线程死锁，</pre>
+<p><span style="font-size: small;">&nbsp;</span></p>
+<div class="cnblogs_code">
+<pre><code>lockB=threading.Lock()#--------------》lock=threading.RLock()</pre>
+</div>
+<pre><code>为了支持在同一线程中多次请求同一资源，python提供了“可重入锁”：threading.RLock。RLock内部维护着一个Lock和一个counter变量，counter记录了acquire的次数，从而使得资源可以被多次acquire。直到一个线程所有的acquire都被release，其他的线程才能获得资源。</pre>
+<div class="cnblogs_code">
+<pre><code></pre>
+<pre><code>import threading,time<br><br>class myThread(threading.Thread):<br>    def doA(self):<br>        lockA.acquire()<br>        print(self.name,"gotlockA",time.ctime())<br>        time.sleep(3)<br>        lockB.acquire()<br>        print(self.name,"gotlockB",time.ctime())<br>        lockB.release()<br>        lockA.release()<br><br>    def doB(self):<br>        lockB.acquire()<br>        print(self.name,"gotlockB",time.ctime())<br>        time.sleep(2)<br>        lockA.acquire()<br>        print(self.name,"gotlockA",time.ctime())<br>        lockA.release()<br>        lockB.release()<br><br>    def run(self):<br>        self.doA()<br>        self.doB()<br>if __name__=="__main__":<br><br>    lockA=threading.Lock()<br>    lockB=threading.Lock()<br>    threads=[]<br>    for i in range(5):<br>        threads.append(myThread())<br>    for t in threads:<br>        t.start()<br>    for t in threads:<br>        t.join()</pre>
+</div>
+<h2><span style="font-size: small;">同步条件（Event）</span></h2>
+<p><span style="font-size: small;">event = threading.Event()</span></p>
+<p># a client thread can wait for the flag to be set<br>event.wait()<br># a server thread can set or reset it<br>event.set()<br>event.clear()</p>
+<p>If the flag is set, the wait method doesn’t do anything.<br>If the flag is cleared, wait will block until it becomes set again.<br>Any number of threads may wait for the same event.</p>
+<div class="cnblogs_code">
+<pre><code>import threading,time
+class Boss(threading.Thread):
+    def run(self):
+        print("BOSS：今晚大家都要加班到22:00。")
+        print(event.isSet())#False
+        event.set()
+        time.sleep(5)
+        print("BOSS：<span style="color: rgb(0, 0, 255);">&lt;</span>22:00<span style="color: rgb(0, 0, 255);">&gt;</span>可以下班了。")
+        print(event.isSet())
+        event.set()
+class Worker(threading.Thread):
+    def run(self):
+        event.wait() #一旦event被设定，等同于pass
+        print("Worker：命苦啊！")
+        time.sleep(1)
+        event.clear()
+        event.wait()
+        print("Worker：OhYeah!")
+if __name__=="__main__":
+    event=threading.Event()
+    threads=[]
+    for i in range(5):
+        threads.append(Worker())
+    threads.append(Boss())
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()</pre>
+</div>
+<p><span style="font-size: small;">&nbsp;</span></p>
+<h2>信号量(Semaphore)</h2>
+<p>信号量用来控制线程并发数的，BoundedSemaphore或Semaphore管理一个内置的计数 器，每当调用acquire()时-1，调用release()时+1。</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 计数器不能小于0，当计数器为 0时，acquire()将阻塞线程至同步锁定状态，直到其他线程调用release()。(类似于停车位的概念)</p>
+<p>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; BoundedSemaphore与Semaphore的唯一区别在于前者将在调用release()时检查计数 器的值是否超过了计数器的初始值，如果超过了将抛出一个异常。</p>
+<div class="cnblogs_code">
+<pre><code>import threading,time
+class myThread(threading.Thread):
+    def run(self):
+        if semaphore.acquire():
+            print(self.name)
+            time.sleep(5)
+            semaphore.release()
+if __name__=="__main__":
+    semaphore=threading.Semaphore(5)#线程并发数量为5
+    thrs=[]
+    for i in range(100):
+        thrs.append(myThread())
+    for t in thrs:
+        t.start()</pre>
+</div>
+<h2>队列(queue)</h2>
+<div class="cnblogs_code">
+<pre><code>创建一个“队列”对象
+import Queue
+q = Queue.Queue(maxsize = 10)
+Queue.Queue类即是一个队列的同步实现。队列长度可为无限或者有限。可通过Queue的构造函数的可选参数maxsize来设定队列长度。如果maxsize小于1就表示队列长度无限。
+
+将一个值放入队列中
+q.put(10)
+调用队列对象的put()方法在队尾插入一个项目。put()有两个参数，第一个item为必需的，为插入项目的值；第二个block为可选参数，默认为
+1。如果队列当前为空且block为1，put()方法就使调用线程暂停,直到空出一个数据单元。如果block为0，put方法将引发Full异常。
+
+将一个值从队列中取出
+q.get()
+调用队列对象的get()方法从队头删除并返回一个项目。可选参数为block，默认为True。如果队列为空且block为True，
+get()就使调用线程暂停，直至有项目可用。如果队列为空且block为False，队列将引发Empty异常。
+
+Python Queue模块有三种队列及构造函数:
+1、Python Queue模块的FIFO队列先进先出。   class queue.Queue(maxsize)
+2、LIFO类似于堆，即先进后出。               class queue.LifoQueue(maxsize)
+3、还有一种是优先级队列级别越低越先出来。        class queue.PriorityQueue(maxsize)
+
+此包中的常用方法(q = Queue.Queue()):
+q.qsize() 返回队列的大小
+q.empty() 如果队列为空，返回True,反之False
+q.full() 如果队列满了，返回True,反之False
+q.full 与 maxsize 大小对应
+q.get([block[, timeout]]) 获取队列，timeout等待时间
+q.get_nowait() 相当q.get(False)
+非阻塞 q.put(item) 写入队列，timeout等待时间
+q.put_nowait(item) 相当q.put(item, False)
+q.task_done() 在完成一项工作之后，q.task_done() 函数向任务已经完成的队列发送一个信号
+q.join() 实际上意味着等到队列为空，再执行别的操作</pre>
+</div>
+<pre><code></pre>
+<h2><strong><span style="font-size: small;">生产者消费者模型</span></strong></h2>
+<pre><code>在线程世界里，生产者就是生产数据的线程，消费者就是消费数据的线程。在多线程开发当中，如果生产者处理速度很快，而消费者处理速度很慢，那么生产者就必须等待消费者处理完，才能继续生产数据。同样的道理，如果消费者的处理能力大于生产者，那么消费者就必须等待生产者。为了解决这个问题于是引入了生产者和消费者模式。</pre>
+<pre><code></pre>
+<pre><code>生产者消费者模式是通过一个容器来解决生产者和消费者的强耦合问题。生产者和消费者彼此之间不直接通讯，而通过阻塞队列来进行通讯，所以生产者生产完数据之后不用等待消费者处理，直接扔给阻塞队列，消费者不找生产者要数据，而是直接从阻塞队列里取，阻塞队列就相当于一个缓冲区，平衡了生产者和消费者的处理能力。</pre>
+<pre><code></pre>
+<div class="cnblogs_code">
+<pre><code>import time,random
+import queue,threading
+
+q = queue.Queue()
+
+def Producer(name):
+  count = 0
+  while count <span style="color: rgb(0, 0, 255);">&lt;</span>10:
+    print("making........")
+    time.sleep(random.randrange(3))
+    q.put(count)
+    print('Producer %s has produced %s baozi..' %(name, count))
+    count +=1
+    #q.task_done()
+    #q.join()
+    print("ok......")
+def Consumer(name):
+  count = 0
+  while count <span style="color: rgb(0, 0, 255);">&lt;</span>10:
+    time.sleep(random.randrange(4))
+    if not q.empty():
+        data = q.get()
+        #q.task_done()
+        #q.join()
+        print(data)
+        print('\033[32;1mConsumer %s has eat %s baozi...\033[0m' %(name, data))
+    else:
+        print("-----no baozi anymore----")
+    count +=1
+
+p1 = threading.Thread(target=Producer, args=('A',))
+c1 = threading.Thread(target=Consumer, args=('B',))
+# c2 = threading.Thread(target=Consumer, args=('C',))
+# c3 = threading.Thread(target=Consumer, args=('D',))
+p1.start()
+c1.start()
+# c2.start()
+# c3.start()</pre>
+</div>
+<p><span style="font-size: small;">&nbsp;</span></p>
+<h2><code>多进程模块 <code>multiprocessing</code></code></h2>
+<p>由于GIL的存在，python中的多线程其实并不是真正的多线程，如果想要充分地使用多核CPU的资源，在python中大部分情况需要使用多进程。</p>
+<p>multiprocessing包是Python中的多进程管理包。与threading.Thread类似，它可以利用multiprocessing.Process对象来创建一个进程。该进程可以运行在Python程序内部编写的函数。该Process对象与Thread对象的用法相同，也有start(), run(), join()的方法。此外multiprocessing包中也有Lock/Event/Semaphore/Condition类 (这些对象可以像多线程那样，通过参数传递给各个进程)，用以同步进程，其用法与threading包中的同名类一致。所以，<strong>multiprocessing的很大一部份与threading使用同一套API，只不过换到了多进程的情境。</strong></p>
+<p><strong>进程的调用也和线程类似分为直接调用和继承式调用</strong></p>
+<div class="cnblogs_code">
+<pre><code>from multiprocessing import Process
+import time
+def f(name):
+    time.sleep(1)
+    print('hello', name,time.ctime())
+
+if __name__ == '__main__':
+    p_list=[]
+    for i in range(3):
+        p = Process(target=f, args=('alvin',))
+        p_list.append(p)
+        p.start()
+    for i in p_list:
+        p.join()
+    print('end')</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>from multiprocessing import Process
+import time
+
+class MyProcess(Process):
+    def __init__(self):
+        super(MyProcess, self).__init__()
+        #self.name = name
+
+    def run(self):#重写run方法
+        time.sleep(1)
+        print ('hello', self.name,time.ctime())
+
+
+if __name__ == '__main__':
+    p_list=[]
+    for i in range(3):
+        p = MyProcess()
+        p.start()
+        p_list.append(p)
+
+    for p in p_list:
+        p.join()
+
+    print('end')</pre>
+</div>
+<div class="cnblogs_code">
+<pre><code>Process类
+
+构造方法：
+
+Process([group [, target [, name [, args [, kwargs]]]]])
+
+　　group: 线程组，目前还没有实现，库引用中提示必须是None；
+　　target: 要执行的方法；
+　　name: 进程名；
+　　args/kwargs: 要传入方法的参数。
+
+实例方法：
+
+　　is_alive()：返回进程是否在运行。
+
+　　join([timeout])：阻塞当前上下文环境的进程程，直到调用此方法的进程终止或到达指定的timeout（可选参数）。
+
+　　start()：进程准备就绪，等待CPU调度
+
+　　run()：strat()调用run方法，如果实例进程时未制定传入target，这star执行t默认run()方法。
+
+　　terminate()：不管任务是否完成，立即停止工作进程
+
+属性：
+
+　　daemon：和线程的setDeamon功能一样
+
+　　name：进程名字。
+
+　　pid：进程号。</pre>
+</div>
+<p><span style="font-size: small;">&nbsp;</span></p>
+<div class="cnblogs_code">
+<pre><code>import time
+from  multiprocessing import Process
+
+def foo(i):
+    time.sleep(1)
+    print (p.is_alive(),i,p.pid)
+    time.sleep(1)
+
+if __name__ == '__main__':
+    p_list=[]
+    for i in range(10):
+        p = Process(target=foo, args=(i,))
+        #p.daemon=True
+        p_list.append(p)
+
+    for p in p_list:
+        p.start()
+    # for p in p_list:
+    #     p.join()
+
+    print('main process end')</pre>
+</div>
+<h2 align="center"><span style="font-size: small;">进程间通信</span></h2>
+<h3><strong><span style="font-size: small;">1、进程队列Queue</span></strong></h3>
+<div class="cnblogs_code">
+<pre><code>from multiprocessing import Process, Queue
+import queue
+
+def f(q,n):
+    #q.put([123, 456, 'hello'])
+    q.put(n*n+1)
+    print("son process",id(q))
+
+if __name__ == '__main__':
+    q = Queue()  # q=queue.Queue()线程队列
+    print("main process",id(q))
+
+    for i in range(3):
+        p = Process(target=f, args=(q,i))
+        p.start()
+
+    print(q.get())
+    print(q.get())
+    print(q.get())</pre>
+</div>
+<h3><span style="font-size: small;">2、管道</span></h3>
+<div class="cnblogs_code">
+<pre><code>from multiprocessing import Process, Pipe
+
+def f(conn):   #conn=child_conn
+    conn.send([12, {"name":"yuan"}, 'hello'])
+    response=conn.recv()
+    print("response",response)
+    conn.close()
+    print("q_ID2:",id(child_conn))
+
+if __name__ == '__main__':
+
+    parent_conn, child_conn = Pipe() #生成双向管道
+    print("q_ID1:",id(child_conn))
+    p = Process(target=f, args=(child_conn,))#主进程生成Process实例，调用function f 传递 child_conn
+    p.start()
+    print(parent_conn.recv())   # prints "[42, None, 'hello']"
+    parent_conn.send("你好!")
+    p.join()</pre>
+</div>
+<h3><span style="font-size: small;">3、Managers</span></h3>
+<pre><code><strong>Queue和pipe只是实现了数据交互，并没实现数据共享，即一个进程去更改另一个进程的数据。</strong></pre>
+<pre><code><strong>&nbsp;</strong></pre>
+<pre><code>A manager object returned by <code>Manager()</code> controls a server process which holds Python objects and allows other processes to manipulate them using proxies.</pre>
+<pre><code>manager()返回的manager对象控制一个服务器进程，该进程持有Python对象，并允许其他进程使用代理操作它们。</pre>
+<pre><code>A manager returned by <code>Manager()</code> will support types <a href="https://docs.python.org/3.5/library/stdtypes.html#list"><code>list</code></a>, <a href="https://docs.python.org/3.5/library/stdtypes.html#dict"><code>dict</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.managers.Namespace"><code>Namespace</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Lock"><code>Lock</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.RLock"><code>RLock</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Semaphore"><code>Semaphore</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.BoundedSemaphore"><code>BoundedSemaphore</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Condition"><code>Condition</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Event"><code>Event</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Barrier"><code>Barrier</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Queue"><code>Queue</code></a>, <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Value"><code>Value</code></a> and <a href="https://docs.python.org/3.5/library/multiprocessing.html#multiprocessing.Array"><code>Array</code></a>.</pre>
+<div class="cnblogs_code">
+<pre><code>from multiprocessing import Process, Manager</pre>
+<pre><code>#managers数据共享
+def f(d, l,n):
+    d[n] = '1'
+    d['2'] = 2
+    d[0.25] = None
+    l.append(n)
+    print("son process:",id(d),id(l))
+if __name__ == '__main__':
+    with Manager() as manager:
+        d = manager.dict()#
+        l = manager.list(range(5))
+        print("main process:",id(d),id(l))
+        p_list = []
+        for i in range(10):
+            p = Process(target=f, args=(d,l,i))
+            p.start()
+            p_list.append(p)
+        for res in p_list:
+            res.join()
+        print(d)
+        print(l)</pre>
+</div>
+<h2><span style="font-size: small;">进程同步</span></h2>
+<div class="cnblogs_code">
+<pre><code>from multiprocessing import Process,Lock
+
+def f(l,i):
+    # with l:
+    l.acquire()
+    print('hello world %s' % i)
+    l.release()
+    #进程上锁，防止抢夺资源
+if __name__ == '__main__':
+    lock=Lock()
+
+    for num in range(10):
+        Process(target=f,args=(lock,num)).start()</pre>
+</div>
+<p><span style="font-size: small;">&nbsp;</span></p>
+<h2><span style="font-size: small;">进程池</span></h2>
+<div class="cnblogs_code">
+<pre><code>from  multiprocessing import Process,Pool
+import time,os
+
+def Foo(i):
+    time.sleep(1)
+    print(i)
+    return 'hello %s' %i
+
+def Bar(arg):
+    print('hello')
+    print(os.getpid())
+    print(os.getppid())
+    print('logger:',arg)
+if __name__ == '__main__':
+
+    pool = Pool(8) #进程池对象
+
+    # Bar(1)
+    # print("----------------")
+
+    for i in range(100):
+        #pool.apply(func=Foo, args=(i,)) 同步接口
+        #pool.apply_async(func=Foo, args=(i,))  异步接口
+        #回调函数，就是某个动作或者函数执行成功后再去执行的函数。主进程调用
+        pool.apply_async(func=Foo, args=(i,),callback=Bar)
+
+    pool.close()
+    pool.join() #close与join调用顺序是固定的
+    print('end')</pre>
+</div>
+<p><span style="font-size: small;">&nbsp;</span></p>
+<h1 align="center"><span style="font-size: large;">协程</span></h1>
+<p>协程，又称微线程，纤程。英文名Coroutine。</p>
+<p>优点1: 协程极高的执行效率。因为子程序切换不是线程切换，而是由程序自身控制，因此，没有线程切换的开销，和多线程比，线程数量越多，协程的性能优势就越明显。</p>
+<p>优点2: 不需要多线程的锁机制，因为只有一个线程，也不存在同时写变量冲突，在协程中控制共享资源不加锁，只需要判断状态就好了，所以执行效率比多线程高很多。</p>
+<p>因为协程是一个线程执行，那怎么利用多核CPU呢？最简单的方法是多进程+协程，既充分利用多核，又充分发挥协程的高效率，可获得极高的性能。</p>
+<h2><strong>yield的简单实现：</strong></h2>
+<div class="cnblogs_code">
+<pre><code>import time
+import queue</pre>
+<pre><code>def consumer(name):
+    print("---&gt;ready to eat baozi...")
+    while True:
+        new_baozi = yield #生成器
+        print("[%s] is eating baozi %s" % (name,new_baozi))
+        #time.sleep(1)
+
+def producer():
+
+    r = con.__next__()
+    r = con2.__next__()
+    n = 0
+    while 1:
+        time.sleep(1)
+        print("\033[32;1m[producer]\033[0m is making baozi %s and %s" %(n,n+1) )
+        #切换条件
+        con.send(n)
+        con2.send(n+1)
+        n +=2
+
+#不用线程实现的并发效果
+if __name__ == '__main__':
+    con = consumer("c1")
+    con2 = consumer("c2")
+    p = producer()</pre>
+</div>
+<h2>Greenlet</h2>
+<pre><code>greenlet是一个用C实现的协程模块，相比与python自带的yield，它可以使你在任意函数之间随意切换，而不需把这个函数先声明为generator（生成器）</pre>
+<div class="cnblogs_code">
+<pre><code>from greenlet import greenlet
+
+
+def test1():
+    print(12)
+    gr2.switch()
+    print(34)
+    gr2.switch()
+
+
+def test2():
+    print(56)
+    gr1.switch()
+    print(78)
+
+
+gr1 = greenlet(test1)
+gr2 = greenlet(test2)
+gr1.switch()</pre>
+</div>
+<div class="cnblogs_code" onclick="cnblogs_code_show('f4e73068-9965-4a61-bd15-4929631517dd')"><img class="code_img_closed" id="code_img_closed_f4e73068-9965-4a61-bd15-4929631517dd" alt="" src="./images/py 并发编程（线程、进程、协程）0.png"><img class="code_img_opened" id="code_img_opened_f4e73068-9965-4a61-bd15-4929631517dd" style="display: none;" onclick="cnblogs_code_hide('f4e73068-9965-4a61-bd15-4929631517dd',event)" alt="" src="./images/py 并发编程（线程、进程、协程）1.png">
+<div class="cnblogs_code_hide" id="cnblogs_code_open_f4e73068-9965-4a61-bd15-4929631517dd">
+<pre><code><span style="color: rgb(0, 0, 255);">import</span> gevent
+
+<span style="color: rgb(0, 0, 255);">import</span> requests,<span style="color: rgb(0, 0, 255);">time</span>
+
+
+<span style="color: rgb(0, 0, 255);">start</span>=<span style="color: rgb(0, 0, 255);">time</span>.<span style="color: rgb(0, 0, 255);">time</span>()
+
+<span style="color: rgb(0, 0, 255);">def</span> f(url):
+    <span style="color: rgb(0, 0, 255);">print</span>('GET: %s' % url)
+    resp =requests.get(url)
+    <span style="color: rgb(0, 0, 255);">data</span> = resp.text
+    <span style="color: rgb(0, 0, 255);">print</span>('%d bytes received from %s.' % (len(<span style="color: rgb(0, 0, 255);">data</span>), url))
+
+gevent.joinall([
+
+        gevent.spawn(f, 'https:<span style="color: rgb(0, 128, 0);">//www.python.org/'),</span>
+        gevent.spawn(f, 'https:<span style="color: rgb(0, 128, 0);">//www.yahoo.com/'),</span>
+        gevent.spawn(f, 'https:<span style="color: rgb(0, 128, 0);">//www.baidu.com/'),</span>
+        gevent.spawn(f, 'https:<span style="color: rgb(0, 128, 0);">//www.sina.com.cn/'),</span>
+
+])
+
+# f('https:<span style="color: rgb(0, 128, 0);">//www.python.org/')</span>
+#
+# f('https:<span style="color: rgb(0, 128, 0);">//www.yahoo.com/')</span>
+#
+# f('https:<span style="color: rgb(0, 128, 0);">//baidu.com/')</span>
+#
+# f('https:<span style="color: rgb(0, 128, 0);">//www.sina.com.cn/')</span>
+
+<span style="color: rgb(0, 0, 255);">print</span>("<span style="color: rgb(139, 0, 0);">cost time:</span>",<span style="color: rgb(0, 0, 255);">time</span>.<span style="color: rgb(0, 0, 255);">time</span>()-<span style="color: rgb(0, 0, 255);">start</span>)</pre>
+</div>
+<span class="cnblogs_code_collapse">gevent</span></div>
+<p><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span><span style="font-size: small;"><br></span></p>
+</div>
+</div><hr><script charset='utf-8' src='../../js/sming.js'></script></body></html>
